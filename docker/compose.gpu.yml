@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: docker/Dockerfile.gpu
+      args:
+        user_name: $user_name
+        group_name: $group_name
+    image: $pj_name.app
+    container_name: $pj_name.app
+    tty: true
+    init: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu, utility, compute, video]
+    volumes:
+      - .:/home/$user_name/workspace
+    working_dir: /home/$user_name/workspace
+    environment:
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+    sysctls:
+      - net.core.somaxconn=$somaxconn
+      - net.ipv4.tcp_syncookies=0
+    ports:
+      - "8502:8501" # streamlit
+

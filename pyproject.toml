@@ -1,0 +1,90 @@
+[tool.poetry]
+name = "cursor_dev"
+version = "0.1.0"
+description = "cursor development project"
+authors = ["tkosht"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "app"}]
+
+
+[tool.poetry.dependencies]
+python = ">=3.10, <3.12"        # <3.12 for sktime
+
+# for data science
+numpy = "*"
+pandas = "*"
+scikit-learn = "*"
+scipy = "*"
+sympy = "*"
+tqdm = "*"
+matplotlib = "*"
+seaborn = "*"
+plotly = "*"
+pandasgui = "*"
+scikit-optimize = "*"
+optuna = "*"
+
+# for experiment management
+mlflow = "*"
+hydra-core = "*"
+
+# other tools
+omegaconf = "*"
+notebook = "*"
+python-dotenv = "*"
+ulid-py = "*"
+typer = "*"
+
+# # for project
+fastapi = "*"
+uvicorn = "*"
+
+tensorflow-datasets = "*"
+datasets = "*"
+
+# LLM relatives
+# # for langchain
+openai = "*"
+google-genai = "*"
+google-search-results = "*"
+google-api-python-client = "*"
+google-generativeai = "*"
+langchain = "*"
+langchain-google-genai = "*"
+
+wikipedia = "*"
+
+
+# for LLM
+huggingface_hub = "*"
+codeboxapi = "*"
+llama-cpp-python = "*"
+
+# webapp
+gradio = "^3.21.0"
+streamlit = "^1.24.0"
+streamlit-chat = "*"
+streamlit-extras = "*"
+hugchat = "*"
+
+
+[tool.poetry.dev-dependencies]
+# for sqa
+pudb = "*"
+pylint = "*"
+flake8 = "*"
+black = "*"
+coverage = "*"
+pytest = "*"
+pytest-flake8 = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
+pytest-html = "*"
+docutils = "*"
+Sphinx = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
