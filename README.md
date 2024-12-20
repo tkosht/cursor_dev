@@ -1,2 +1,2 @@
-# cursor_dev
-cursor development project
+# render
+Render apps
