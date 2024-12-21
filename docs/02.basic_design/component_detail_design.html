@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>企業情報クロール・分析システム コンポーネント詳細設計書</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2em;
+            line-height: 1.6;
+        }
+        h1, h2, h3, h4 {
+            color: #333;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+        ul, ol {
+            margin-bottom: 1em;
+        }
+        li {
+            margin-bottom: 0.3em;
+        }
+        table {
+            border-collapse: collapse;
+            margin-bottom: 1em;
+            width: 100%;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 0.5em;
+            text-align: left;
+        }
+        .note {
+            color: #666;
+            font-size: 0.9em;
+            padding: 0.5em;
+            background-color: #f8f8f8;
+            border-left: 3px solid #ddd;
+            margin: 1em 0;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 1em;
+            overflow-x: auto;
+        }
+        code {
+            font-family: monospace;
+            background-color: #f5f5f5;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+        }
+        .sequence-diagram {
+            margin: 2em 0;
+            padding: 1em;
+            border: 1px solid #ddd;
+            background-color: #f8f8f8;
+        }
+    </style>
+</head>
+<body>
+    <h1>企業情報クロール・分析システム コンポーネント詳細設計書</h1>
+
+    <div class="note">
+        本ドキュメントは、企業情報クロール・分析システムの各コンポーネントの詳細設計を定義するものです。<br>
+        システム基本設計書と合わせて参照してください。
+    </div>
+
+    <h2>1. クローリングサービス詳細設計</h2>
+    
+    <h3>1.1 Spiderコンポーネント</h3>
+    <h4>1.1.1 BaseSpider クラス</h4>
+    <pre>
+class BaseSpider(scrapy.Spider):
+    """基底Spiderクラス"""
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.rate_limiter = RateLimiter()
+        self.robots_checker = RobotsChecker()
+    
+    def start_requests(self):
+        """クロール開始時の共通処理"""
+        pass
+
+    def parse(self, response):
+        """レスポンス解析の��本実装"""
+        pass
+
+    def handle_error(self, failure):
+        """エラーハンドリング共通処理"""
+        pass</pre>
+
+    <h4>1.1.2 CompanySpider クラス</h4>
+    <pre>
+class CompanySpider(BaseSpider):
+    """企業情報取得用Spider"""
+    name = 'company_spider'
+    
+    def parse_company_info(self, response):
+        """企業基本情報の抽出処理
+        - 企業名
+        - 所在地
+        - 設立年月日
+        - 代表者名
+        など
+        """
+        pass</pre>
+
+    <h4>1.1.3 FinanceSpider クラス</h4>
+    <pre>
+class FinanceSpider(BaseSpider):
+    """財務情報取得用Spider"""
+    name = 'finance_spider'
+    
+    def parse_finance_info(self, response):
+        """財務情報の抽出処理
+        - 売上高
+        - 営業利益
+        - 純利益
+        - 決算期
+        など
+        """
+        pass</pre>
+
+    <h3>1.2 ミドルウェアコンポーネント</h3>
+    <h4>1.2.1 RateLimiter</h4>
+    <pre>
+class RateLimiter:
+    """アクセス頻度制御"""
+    
+    def __init__(self, requests_per_second=2):
+        self.requests_per_second = requests_per_second
+        self.last_request_time = {}
+    
+    def should_throttle(self, domain):
+        """ドメインごとのアクセス制御判定"""
+        pass</pre>
+
+    <h4>1.2.2 RobotsChecker</h4>
+    <pre>
+class RobotsChecker:
+    """robots.txt準拠チェック"""
+    
+    def __init__(self):
+        self.parsers = {}
+    
+    def is_allowed(self, url, user_agent):
+        """クロール許可判定"""
+        pass</pre>
+
+    <h3>1.3 パイプラインコンポーネント</h3>
+    <h4>1.3.1 DataCleaner</h4>
+    <pre>
+class DataCleaner:
+    """データクレンジング処理"""
+    
+    def process_item(self, item, spider):
+        """
+        - HTML特殊文字の変換
+        - 空白・改行の正規化
+        - 数値・日付のフォーマット統一
+        など
+        """
+        pass</pre>
+
+    <h4>1.3.2 DBWriter</h4>
+    <pre>
+class DBWriter:
+    """DB書き込み処理"""
+    
+    def process_item(self, item, spider):
+        """
+        - バリデーション
+        - 重複チェック
+        - DB保存
+        など
+        """
+        pass</pre>
+
+    <h2>2. データ処理サービス詳細設計</h2>
+    
+    <h3>2.1 バリデータコンポーネント</h3>
+    <h4>2.1.1 CompanyValidator</h4>
+    <pre>
+class CompanyValidator:
+    """企業情報バリデーション"""
+    
+    def validate(self, data):
+        """
+        - 必須項目チェック
+        - 形式チェック
+        - 整合性チェック
+        など
+        """
+        pass</pre>
+
+    <h4>2.1.2 FinanceValidator</h4>
+    <pre>
+class FinanceValidator:
+    """財務情報バリデーション"""
+    
+    def validate(self, data):
+        """
+        - 数値範囲チェック
+        - 決算期の妥当性チェック
+        - 前期比異常値チェック
+        など
+        """
+        pass</pre>
+
+    <h3>2.2 トランスフォーマーコンポーネント</h3>
+    <h4>2.2.1 CompanyTransformer</h4>
+    <pre>
+class CompanyTransformer:
+    """企業情報変換処理"""
+    
+    def transform(self, data):
+        """
+        - 企業名の正規化
+        - 住所の正規化
+        - 代表者名の正規化
+        など
+        """
+        pass</pre>
+
+    <h4>2.2.2 FinanceTransformer</h4>
+    <pre>
+class FinanceTransformer:
+    """財務情報変換処理"""
+    
+    def transform(self, data):
+        """
+        - 通貨単位の統一
+        - 決算期の標準化
+        - 比率・増減の計算
+        など
+        """
+        pass</pre>
+
+    <h2>3. 分析・可視化サービス詳細設計</h2>
+    
+    <h3>3.1 APIエンドポイント</h3>
+    <h4>3.1.1 企業情報API</h4>
+    <pre>
+@router.get("/api/v1/companies")
+async def list_companies(
+    industry: str = None,
+    offset: int = 0,
+    limit: int = 100
+):
+    """企業一覧取得API"""
+    pass
+
+@router.get("/api/v1/companies/{company_id}")
+async def get_company(company_id: int):
+    """企業詳細取得API"""
+    pass</pre>
+
+    <h4>3.1.2 財務情報API</h4>
+    <pre>
+@router.get("/api/v1/companies/{company_id}/financials")
+async def get_financials(
+    company_id: int,
+    from_date: date = None,
+    to_date: date = None
+):
+    """財務情報取得API"""
+    pass</pre>
+
+    <h4>3.1.3 分析API</h4>
+    <pre>
+@router.get("/api/v1/analytics/industry")
+async def analyze_industry(
+    industry_code: str,
+    metrics: List[str]
+):
+    """業種別分析API"""
+    pass</pre>
+
+    <h3>3.2 データエクスポート</h3>
+    <h4>3.2.1 CSVエクスポート</h4>
+    <pre>
+class CSVExporter:
+    """CSV形式エクスポート"""
+    
+    def export_companies(self, companies):
+        """企業情報のCSV出力"""
+        pass
+    
+    def export_financials(self, financials):
+        """財務情報のCSV出力"""
+        pass</pre>
+
+    <h4>3.2.2 Tableauデータソース</h4>
+    <pre>
+class TableauExporter:
+    """Tableau用データソース生成"""
+    
+    def generate_datasource(self, data):
+        """
+        - データソース定義の生成
+        - メタデータの設定
+        - 計算フィールドの定義
+        など
+        """
+        pass</pre>
+
+    <h2>4. シーケンス図</h2>
+    
+    <h3>4.1 クローリング実行シーケンス</h3>
+    <div class="sequence-diagram">
+        <pre>
+[Airflow] → [Spider]     : クロール開始
+[Spider]  → [RateLimiter]: アクセス制御確認
+[Spider]  → [Target Site]: データ取得要求
+[Spider]  ← [Target Site]: レスポンス
+[Spider]  → [Cleaner]    : データクレンジング
+[Spider]  → [Validator]  : バリデーション
+[Spider]  → [DB]         : 保存
+[Airflow] ← [Spider]     : 完了通知</pre>
+    </div>
+
+    <h3>4.2 データ分析シーケンス</h3>
+    <div class="sequence-diagram">
+        <pre>
+[Client] → [API]        : データ要求
+[API]    → [DB]         : クエリ実行
+[API]    ← [DB]         : 結果取得
+[API]    → [Transformer]: データ変換
+[API]    → [Analyzer]   : 分析処理
+[Client] ← [API]        : 結果返却</pre>
+    </div>
+
+    <h2>5. エラーハンドリング</h2>
+    
+    <h3>5.1 クローリングエラー</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>エラー種別</th>
+                <th>対応方法</th>
+                <th>リトライ設定</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>接続エラー</td>
+                <td>一時的な接続エラーとして扱い、リトライ</td>
+                <td>最大3回、指数バックオフ</td>
+            </tr>
+            <tr>
+                <td>HTMLパースエラー</td>
+                <td>構造変更の可能性があるため、ログ記録して停止</td>
+                <td>リトライなし</td>
+            </tr>
+            <tr>
+                <td>レート制限</td>
+                <td>待機時間を増やして再試行</td>
+                <td>最大3回、待機時間2倍</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>5.2 データ処理エラー</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>エラー種別</th>
+                <th>対応方法</th>
+                <th>データ処理</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>バリデーションエラー</td>
+                <td>エラーログ記録、警告通知</td>
+                <td>該当データをスキップ</td>
+            </tr>
+            <tr>
+                <td>変換エラー</td>
+                <td>エラー内容を記録、デフォルト値使用</td>
+                <td>部分的に処理継続</td>
+            </tr>
+            <tr>
+                <td>DB書き込みエラー</td>
+                <td>トランザクションロールバック</td>
+                <td>一時ファイルに退避</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>6. パフォーマンスチューニング</h2>
+    
+    <h3>6.1 クローリング最適化</h3>
+    <ul>
+        <li>同一ドメインへの同時接続数制限: 2</li>
+        <li>リクエスト間隔: 0.5秒以上</li>
+        <li>コネクションプール: 最大10接続</li>
+        <li>タイムアウト設定: 30秒</li>
+    </ul>
+
+    <h3>6.2 データベース最適化</h3>
+    <ul>
+        <li>インデックス設計
+            <ul>
+                <li>companies: company_code, legal_id</li>
+                <li>financials: (company_id, fiscal_period_id)</li>
+                <li>company_news: url, (company_id, published_at)</li>
+            </ul>
+        </li>
+        <li>パーティショニング
+            <ul>
+                <li>financials: fiscal_period_id でパーティション</li>
+                <li>company_news: published_at で月次パーティション</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h2>7. 開発ガイドライン</h2>
+    
+    <h3>7.1 コーディング規約</h3>
+    <ul>
+        <li>PEP 8に準拠</li>
+        <li>型ヒントの使用を推奨</li>
+        <li>docstringによるドキュメント化必須</li>
+        <li>ログレベルの適切な使用
+            <ul>
+                <li>ERROR: 異常終了する問題</li>
+                <li>WARNING: 処理は継続できる問題</li>
+                <li>INFO: 通常の実行状況</li>
+                <li>DEBUG: 詳細なデバッグ情報</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h3>7.2 テスト要件</h3>
+    <ul>
+        <li>単体テスト
+            <ul>
+                <li>各クラスのパブリックメソッドのカバレッジ80%以上</li>
+                <li>主要なバリデーション・変換ロジックのテスト必須</li>
+            </ul>
+        </li>
+        <li>統合テスト
+            <ul>
+                <li>クローリング〜DB保存までの一連のフロー</li>
+                <li>API全エンドポイントの疎通確認</li>
+            </ul>
+        </li>
+        <li>負荷テスト
+            <ul>
+                <li>同時実行時のレート制限動作確認</li>
+                <li>大量データ処理時のメモリ使用量確認</li>
+            </ul>
+        </li>
+    </ul>
+
+    <div class="note">
+        本設計書は実装フェーズで必要となる詳細な技術情報を定義したものです。<br>
+        実装時の状況に応じて、適宜設計の調整・詳細化を行ってください。
+    </div>
+
+    <h2>8. 改訂履歴</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>バージョン</th>
+                <th>日付</th>
+                <th>更新内容</th>
+                <th>担当者</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1.0.0</td>
+                <td>YYYY-MM-DD</td>
+                <td>初版作成</td>
+                <td>作成者名</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html> 

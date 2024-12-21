@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>企業情報クロール・分析システム 基本設計書</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2em;
+            line-height: 1.6;
+        }
+        h1, h2, h3, h4 {
+            color: #333;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+        ul, ol {
+            margin-bottom: 1em;
+        }
+        li {
+            margin-bottom: 0.3em;
+        }
+        table {
+            border-collapse: collapse;
+            margin-bottom: 1em;
+            width: 100%;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 0.5em;
+            text-align: left;
+        }
+        .note {
+            color: #666;
+            font-size: 0.9em;
+            padding: 0.5em;
+            background-color: #f8f8f8;
+            border-left: 3px solid #ddd;
+            margin: 1em 0;
+        }
+        .architecture-diagram {
+            margin: 2em 0;
+            padding: 1em;
+            border: 1px solid #ddd;
+            background-color: #f8f8f8;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 1em;
+            overflow-x: auto;
+        }
+        code {
+            font-family: monospace;
+            background-color: #f5f5f5;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>企業情報クロール・分析システム 基本設計書</h1>
+
+    <div class="note">
+        本ドキュメントは、企業情報クロール・分析システムの基本設計を定義するものです。<br>
+        要件定義書に基づき、システムの技術的な実現方法を具体化します。
+    </div>
+
+    <h2>1. システム概要</h2>
+    <h3>1.1 アーキテクチャ概要</h3>
+    <div class="architecture-diagram">
+        <pre>
+[クローリングサービス] → [データ処理サービス] → [データストア] → [分析・可視化サービス]
+     ↓                         ↓                    ↑              ↓
+[ジョブスケジューラ]      [データ変換キュー]    [バックアップ]   [エクスポート機能]
+     ↓
+[監視・ログ管理]
+        </pre>
+    </div>
+
+    <h3>1.2 システムコンポーネント</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>コンポーネント</th>
+                <th>説明</th>
+                <th>使用技術</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>クローリングサービス</td>
+                <td>Web情報の収集を行う中核コンポーネント</td>
+                <td>Python, Scrapy, Playwright</td>
+            </tr>
+            <tr>
+                <td>データ処理サービス</td>
+                <td>収集データの変換・クレンジングを行うコンポーネント</td>
+                <td>Python, pandas</td>
+            </tr>
+            <tr>
+                <td>データストア</td>
+                <td>標準化されたデータを保存・管理するDB</td>
+                <td>PostgreSQL</td>
+            </tr>
+            <tr>
+                <td>分析・可視化サービス</td>
+                <td>データの分析と可視化を行うコンポーネント</td>
+                <td>Python, Tableau Public</td>
+            </tr>
+            <tr>
+                <td>ジョブスケジューラ</td>
+                <td>定期的なクローリング実行を管理</td>
+                <td>Apache Airflow</td>
+            </tr>
+            <tr>
+                <td>監視・ログ管理</td>
+                <td>システムの状態監視とログ集</td>
+                <td>Prometheus, Grafana</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>2. 技術スタック</h2>
+    <h3>2.1 開発言語・フレームワーク</h3>
+    <ul>
+        <li>プログラミング言語: Python 3.11</li>
+        <li>クローリングフレームワーク: Scrapy 2.11</li>
+        <li>ブラウザ自動化: Playwright</li>
+        <li>データ処理: pandas 2.1</li>
+        <li>API開発: FastAPI</li>
+    </ul>
+
+    <h3>2.2 インフラストラクチャ</h3>
+    <ul>
+        <li>実行環境: Docker コンテナ</li>
+        <li>データベース: PostgreSQL 15</li>
+        <li>ジョブスケジューラ: Apache Airflow 2.7</li>
+        <li>監視: Prometheus + Grafana</li>
+    </ul>
+
+    <h2>3. データモデル設計</h2>
+    <h3>3.1 エンティティ関連図</h3>
+    <div class="architecture-diagram">
+        <pre>
+[Company]  1 ----< [Financial] >---- 1 [FiscalPeriod]
+    |
+    1
+    |
+    ∨
+[CompanyNews] >---- 1 [NewsSource]
+        </pre>
+    </div>
+
+    <h3>3.2 テーブル定義</h3>
+    <h4>3.2.1 Company（企業情報）</h4>
+    <pre>
+CREATE TABLE companies (
+    id SERIAL PRIMARY KEY,
+    company_code VARCHAR(10) UNIQUE NOT NULL,  -- 企業コード（独自採番）
+    legal_id VARCHAR(13),                      -- 法人番号（13桁）
+    name_ja VARCHAR(100) NOT NULL,             -- 企業名（日本語）
+    name_en VARCHAR(100),                      -- 企業名（英語）
+    established_date DATE,                     -- 設立日
+    headquarters_address TEXT,                 -- 本社所在地
+    representative_name VARCHAR(100),          -- 代表者名
+    website_url TEXT,                         -- 企業Webサイト
+    industry_code VARCHAR(10),                -- 業種コード
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+    </pre>
+
+    <h4>3.2.2 Financial（財務情報）</h4>
+    <pre>
+CREATE TABLE financials (
+    id SERIAL PRIMARY KEY,
+    company_id INTEGER REFERENCES companies(id),
+    fiscal_period_id INTEGER REFERENCES fiscal_periods(id),
+    revenue BIGINT,                           -- 売上高（千円）
+    operating_income BIGINT,                  -- 営業利益（千円）
+    net_income BIGINT,                        -- 純利益（千円）
+    report_date DATE NOT NULL,                -- 報告日
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(company_id, fiscal_period_id)
+);
+    </pre>
+
+    <h4>3.2.3 FiscalPeriod（会計期間）</h4>
+    <pre>
+CREATE TABLE fiscal_periods (
+    id SERIAL PRIMARY KEY,
+    period_type VARCHAR(10) NOT NULL,         -- 年次/四半期
+    year INTEGER NOT NULL,                    -- 会計年度
+    quarter INTEGER,                          -- 四半期（1-4）
+    start_date DATE NOT NULL,                 -- 開始日
+    end_date DATE NOT NULL,                   -- 終了日
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(year, quarter)
+);
+    </pre>
+
+    <h4>3.2.4 CompanyNews（企業ニュース）</h4>
+    <pre>
+CREATE TABLE company_news (
+    id SERIAL PRIMARY KEY,
+    company_id INTEGER REFERENCES companies(id),
+    news_source_id INTEGER REFERENCES news_sources(id),
+    title TEXT NOT NULL,                      -- ニュースタイトル
+    content TEXT,                             -- 本文または要約
+    published_at TIMESTAMP NOT NULL,          -- 公開日時
+    url TEXT NOT NULL,                        -- ニュースURL
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(url)
+);
+    </pre>
+
+    <h4>3.2.5 NewsSource（ニュースソース）</h4>
+    <pre>
+CREATE TABLE news_sources (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,               -- ソース名
+    base_url TEXT NOT NULL,                   -- ベースURL
+    type VARCHAR(20) NOT NULL,                -- タイプ（RSS/API/HTML）
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(base_url)
+);
+    </pre>
+
+    <h2>4. システムコンポーネント詳細設計</h2>
+    <h3>4.1 クローリングサービス</h3>
+    <h4>4.1.1 アーキテクチャ</h4>
+    <ul>
+        <li>Scrapyフレームワークをベースとした分散クローリングシステム</li>
+        <li>サイトごとにSpiderクラスを実装</li>
+        <li>robots.txtパーサーとレート制限機能を実装</li>
+        <li>Playwrightによる動的コンテンツのハンドリング</li>
+    </ul>
+
+    <h4>4.1.2 主要クラス構成</h4>
+    <pre>
+crawlers/
+  ├── spiders/
+  │   ├── base_spider.py      # 基底Spiderクラス
+  │   ├── company_spider.py   # 企業情報取得Spider
+  │   ├── finance_spider.py   # 財務情報取得Spider
+  │   └── news_spider.py      # ニュース取得Spider
+  ├── middlewares/
+  │   ├── rate_limiter.py     # レート制限ミドルウェア
+  │   └── robots_checker.py   # robots.txt検証ミドルウェア
+  └── pipelines/
+      ├── data_cleaner.py     # データクレンジング
+      └── db_writer.py        # DB書き込み
+    </pre>
+
+    <h3>4.2 データ処理サービス</h3>
+    <h4>4.2.1 データ変換フロー</h4>
+    <ol>
+        <li>クローリングデータの受信（キュー経由）</li>
+        <li>データのバリデーションと型変換</li>
+        <li>名寄せ処理（企業名の正規化）</li>
+        <li>データクレンジング（数値・日付の正規化）</li>
+        <li>DBへの保存</li>
+    </ol>
+
+    <h4>4.2.2 主要クラス構成</h4>
+    <pre>
+processors/
+  ├── validators/
+  │   ├── company_validator.py
+  │   ├── finance_validator.py
+  │   └── news_validator.py
+  ├── transformers/
+  │   ├── company_transformer.py
+  │   ├── finance_transformer.py
+  │   └── news_transformer.py
+  └── writers/
+      ├── db_writer.py
+      └── export_writer.py
+    </pre>
+
+    <h3>4.3 分析・可視化サービス</h3>
+    <h4>4.3.1 データ集計API</h4>
+    <ul>
+        <li>FastAPIによるREST API実装</li>
+        <li>主要エンドポイント:
+            <ul>
+                <li>GET /api/v1/companies - 企業一覧</li>
+                <li>GET /api/v1/companies/{id}/financials - 財務情報</li>
+                <li>GET /api/v1/companies/{id}/news - ニュース一覧</li>
+                <li>GET /api/v1/analytics/industry - 業種別分析</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h4>4.3.2 データエクスポート機能</h4>
+    <ul>
+        <li>CSV/JSON形式でのデータエクスポート</li>
+        <li>Tableau Public用データソース生成</li>
+    </ul>
+
+    <h2>5. 監視・運用設計</h2>
+    <h3>5.1 監視項目</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>監視対象</th>
+                <th>メトリクス</th>
+                <th>アラート条件</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>クローリング成功率</td>
+                <td>成功数/全試行数</td>
+                <td>90%未満</td>
+            </tr>
+            <tr>
+                <td>データ鮮度</td>
+                <td>最終更新からの経過時間</td>
+                <td>48時間超過</td>
+            </tr>
+            <tr>
+                <td>エラーログ数</td>
+                <td>エラーログ発生頻度</td>
+                <td>10件/時間以上</td>
+            </tr>
+            <tr>
+                <td>API応答時間</td>
+                <td>95パーセンタイル値</td>
+                <td>1秒超過</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>5.2 バックアップ設計</h3>
+    <ul>
+        <li>データベース
+            <ul>
+                <li>日次フルバックアップ</li>
+                <li>1時間ごとのWALバックアップ</li>
+                <li>30日間の保持期間</li>
+            </ul>
+        </li>
+        <li>クローリング設定
+            <ul>
+                <li>Git管理による変更履歴管理</li>
+                <li>設定変更時のバックアップ</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h2>6. セキュリティ設計</h2>
+    <h3>6.1 アクセス制御</h3>
+    <ul>
+        <li>データベース接続は内部ネットワークに限定</li>
+        <li>API認証はBearer tokenを使用</li>
+        <li>クローリング実行環境は分離</li>
+    </ul>
+
+    <h3>6.2 データ保護</h3>
+    <ul>
+        <li>個人情報は原則として収集しない</li>
+        <li>機密情報の暗号化保存</li>
+        <li>アクセスログの保存（90日間）</li>
+    </ul>
+
+    <h2>7. 開発・展開プロセス</h2>
+    <h3>7.1 開発環境</h3>
+    <ul>
+        <li>ローカル開発環境: Docker Compose</li>
+        <li>テスト環境: CI/CD環境（GitHub Actions）</li>
+        <li>本番環境: クラウド環境</li>
+    </ul>
+
+    <h3>7.2 デプロイメントフロー</h3>
+    <ol>
+        <li>開発者によるローカルテスト</li>
+        <li>プルリクエスト作成</li>
+        <li>自動テスト実行</li>
+        <li>コードレビュー</li>
+        <li>テスト環境へのデプロイ</li>
+        <li>動作確認</li>
+        <li>本番環境へのデプロイ</li>
+    </ol>
+
+    <h2>8. 今後の拡張性</h2>
+    <ul>
+        <li>分散クローリング対応</li>
+        <li>リアルタイムデータ処理</li>
+        <li>機械学習による分析機能</li>
+        <li>外部システム連携API</li>
+    </ul>
+
+    <div class="note">
+        本設計書は初期MVP開発のための基本設計を定義したものです。<br>
+        実装フェーズでの詳細な技術検証により、一部設計が変更される可能性があります。
+    </div>
+
+    <h2>9. 改訂履歴</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>バージョン</th>
+                <th>日付</th>
+                <th>更新内容</th>
+                <th>担当者</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1.0.0</td>
+                <td>YYYY-MM-DD</td>
+                <td>初版作成</td>
+                <td>作成者名</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html> 
