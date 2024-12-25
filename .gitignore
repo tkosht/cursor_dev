@@ -19,9 +19,8 @@ bkup/
 ?.sh
 .env
 
-# Allow cursorrules files
+# Allow cursorrules file
 !.cursorrules
-!.cursorrules.yml
 
 # Ignore other dot files/directories
 .*
