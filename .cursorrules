@@ -26,31 +26,30 @@ workflow_definition:
       name: "コード実装を実行します"
       details:
         - "4-1. 「python_code_quality」、「security」、「version_management」、「directory_structure」、「error_analysis」、「quality_management」に従い、app/ ディレクトリに保存してください"
+        - "4-2. エラーが発生した場合、下記の「error_analysis」に従い実行します"
 
     - step_number: 5
       name: "テストコード実装を実行します"
       details:
         - "5-1. 「python_code_quality」、「security」、「version_management」、「directory_structure」、「error_analysis」、「quality_management」に従い、tests/ ディレクトリに保存してください"
+        - "5-2. エラーが発生した場合、下記の「error_analysis」に従い実行します"
 
     - step_number: 6
       name: "テスト実行を実行します"
 
     - step_number: 7
-      name: "エラーが発生した場合、下記の「error_analysis」に従い実行します"
-
-    - step_number: 8
       name: "上記実装に正確に対応するREADME.md 等のドキュメントを「documents」に従い更新します"
 
-    - step_number: 9
+    - step_number: 8
       name: "進捗状況を「progress_management」に従い更新します"
 
-    - step_number: 10
+    - step_number: 9
       name: "ここまでを 1サイクルとして、ユーザに進捗を報告します。必要に応じてユーザの指示に従い、10. へ進みます"
 
-    - step_number: 11
+    - step_number: 10
       name: "最新の進捗状況と要件定義内容を確認し、要件定義や基本設計、詳細設計の内容を見直し、必要に応じて更新します"
       details:
-        - "11-1. つまり、1. ～ 10. を繰り返し実行し実行します"
+        - "10-1. つまり、1. ～ 10. を繰り返し実行し実行します"
 
 python_code_quality:
   basic_conventions:
@@ -114,7 +113,9 @@ directory_structure:
 error_analysis:
   description: "エラー解析"
   rules:
-    - "エラー発生時は、以下情報を docs/errors/ ディレクトリに新規ファイル(YYYY-MM-DD-HH-MM-SS.md)を作成して保存してください："
+    - "エラー内容を正確に把握します"
+    - "直接的な要因と根源的な要因を分析し修正を試みます"
+    - "エラー解析が困難な場合(3回以上試行しても解消しない場合)は、以下情報を docs/errors/ ディレクトリに新規ファイル(YYYY-MM-DD-HH-MM-SS.md)を作成して保存してください："
       - "現在のディレクトリ構成"
       - "エラー情報"
       - "ログ情報"
