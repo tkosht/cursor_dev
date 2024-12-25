@@ -7,6 +7,7 @@
 from datetime import date
 
 import pytest
+from sqlalchemy.exc import IntegrityError
 
 from app.models.financial import Financial, PeriodType
 
@@ -70,10 +71,20 @@ def test_financial_relationship(session, sample_financial):
 
 def test_invalid_period_type(session, sample_company):
     """無効な決算期間種類をテストします。"""
+    # None値の指定（nullable=Falseのため）
+    financial = Financial(
+        company_id=sample_company.id,
+        fiscal_year="2023年度",
+        period_type=None,  # None値は許可されない
+        period_end_date=date(2024, 2, 20)
+    )
+    session.add(financial)
+    
+    # コミット時にエラーが発生することを確認
+    with pytest.raises(IntegrityError):
+        session.commit()
+    session.rollback()
+    
+    # 無効な値の指定
     with pytest.raises(ValueError):
-        Financial(
-            company_id=sample_company.id,
-            fiscal_year="2023年度",
-            period_type="invalid_type",  # 無効な値
-            period_end_date=date(2024, 2, 20)
-        ) 
+        PeriodType("invalid_type") 
