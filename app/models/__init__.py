@@ -1,17 +1,25 @@
 """
-データモデルパッケージ
+デデルパッケージ
 
-このパッケージは、アプリケーションで使用するデータモデルを定義します。
-SQLAlchemyを使用してORMモデルを実装しています。
+このパッケージは、アプリケーションのデータモデルを定義します。
 """
 
 from typing import Optional
 
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session
+from sqlalchemy import create_engine
+from sqlalchemy.orm import (Session, declarative_base, scoped_session,
+                            sessionmaker)
 
+# データベースエンジンの作成
+engine = create_engine('sqlite:///:memory:', echo=True)
+
+# セッションの作成
+session_factory = sessionmaker(bind=engine)
+SessionLocal = scoped_session(session_factory)
+
+# ベースモデルの作成
 Base = declarative_base()
-
+Base.query = SessionLocal.query_property()
 
 # グローバルなデータベースセッション
 _session: Optional[Session] = None
