@@ -9,13 +9,19 @@ LLMを活用して動的に解析を行い、構造化されたデータとし�
 
 1. 解析アプローチ
    - PDFをテキストとして抽出
+   - OCRが必要な場合はLLMのVision機能を使用してHTML形式に変換
    - LLMを使用して必要な情報を特定
    - 構造化データとしてJSON形式で保存
 
 2. 使用技術
    - PDF抽出: `pdfplumber`
+   - OCR: OpenAI GPT-4 Vision
    - LLM: OpenAI GPT-4
    - データ保存: JSON
+
+3. 出力形式の統一
+   - OCRを含むすべての変換結果はHTML形式で統一
+   - 統一されたHTML形式を用いてLLMによる解析を実施
 
 ## 3. 機能要件
 
@@ -62,6 +68,7 @@ app/
 │   ├── __init__.py
 │   ├── base.py          # 基本パーサークラス
 │   ├── pdf.py           # PDF処理クラス
+│   ├── ocr.py           # OCR処理クラス
 │   ├── llm.py          # LLM連携クラス
 │   └── normalizer.py    # データ正規化クラス
 ```
@@ -76,12 +83,17 @@ app/
    - テキスト抽出処理
    - ページ管理
 
-3. `LLMAnalyzer`
+3. `OCRProcessor`
+   - GPT-4 Visionを使用したOCR処理
+   - 画像からHTML形式への変換
+   - OCR結果の品質チェック
+
+4. `LLMAnalyzer`
    - LLMとの通信
    - プロンプト管理
    - 結果の解析
 
-4. `DataNormalizer`
+5. `DataNormalizer`
    - データの正規化
    - 形式の統一化
    - バリデーション
@@ -142,7 +154,7 @@ app/
 
 2. 精度要件
    - 数値の抽出精度: 99%以上
-   - テキストの認識精度: 95%以上
+   - ��キストの認識精度: 95%以上
 
 3. スケーラビリティ
    - 並列処理対応
