@@ -18,8 +18,15 @@ bkup/
 .*.swp
 ?.sh
 .env
+
+# Allow cursorrules files
+!.cursorrules
+!.cursorrules.yml
+
+# Ignore other dot files/directories
 .*
 .*/
+
 *logs/
 
 # LLM
