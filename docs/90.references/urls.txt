@@ -1,0 +1,19 @@
+# AutoGen
+https://microsoft.github.io/autogen/0.2/docs/
+https://microsoft.github.io/autogen/0.2/docs/tutorial/introduction
+https://microsoft.github.io/autogen/0.2/docs/tutorial/human-in-the-loop
+https://microsoft.github.io/autogen/0.2/docs/tutorial/code-executors
+https://microsoft.github.io/autogen/0.2/docs/tutorial/tool-use
+https://microsoft.github.io/autogen/0.2/docs/tutorial/conversation-patterns
+https://microsoft.github.io/autogen/0.2/docs/Use-Cases/agent_chat
+https://microsoft.github.io/autogen/0.2/docs/Use-Cases/enhanced_inference
+
+
+# LangGraph
+https://langchain-ai.github.io/langgraph/tutorials/introduction/
+
+# Swarm
+https://github.com/openai/swarm
+https://zenn.dev/dalab/articles/1d4f649c8005a0
+
+
