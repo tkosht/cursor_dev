@@ -1,0 +1,184 @@
+---
+ai_communication_rules:
+  - internal_processing: 英語で可
+  - user_communication: 
+      language: 日本語
+      style: ユーザの立場に立った会話
+
+workflow:
+  1_requirements:
+    description: 要求・要件定義
+    sub_tasks:
+      - read_references:
+          source: urls.txt
+          condition: 必要に応じて
+
+  2_basic_design:
+    description: 基本設計・外部設計
+    output_directory: docs/01.requirements/
+
+  3_detail_design:
+    description: 詳細設計・内部設計
+    output_directory: docs/02.basic_design/
+
+  4_implementation:
+    description: コード実装
+    output_directory: app/
+    guidelines:
+      - python_code_quality
+      - security
+      - version_control
+      - directory_structure
+      - error_analysis
+      - progress_management
+
+  5_test_implementation:
+    description: テストコード実装
+    output_directory: tests/
+    guidelines:
+      - python_code_quality
+      - security
+      - version_control
+      - directory_structure
+      - error_analysis
+      - progress_management
+
+  6_test_execution:
+    description: テスト実行
+
+  7_error_handling:
+    description: エラー発生時の対応
+    reference: error_analysis
+
+  8_version_control:
+    description: バージョン管理の実行
+    condition: エラー解消後
+
+  9_progress_update:
+    description: 進捗状況の更新
+
+  10_review_and_update:
+    description: 要件定義から設計内容の見直しと更新
+    cycle: 1から9を繰り返し実行
+
+python_code_quality:
+  basic_rules:
+    python_version: 3.10-3.12
+    linter: flake8
+    principles:
+      - DRY原則の遵守
+      - コードの重複を避けモジュール化を優先
+    test_framework: pytest
+
+  coding_conventions:
+    naming:
+      variables: snake_case
+      functions: snake_case
+      classes: PascalCase
+      constants: UPPER_SNAKE_CASE
+      private_members: _prefix
+    documentation:
+      style: Google
+      type_hints: required
+    formatting:
+      max_line_length: 79
+      indentation: 4 spaces
+    comments: 必要最小限で意図が明確
+
+security:
+  guidelines:
+    - secret_management: 環境変数
+    - password_storage: ハッシュ化
+    - sql_injection: パラメータ化クエリ
+    - input_validation: 適切なバリデーション
+
+version_control:
+  system: Git
+  commit_messages:
+    feat: 新機能
+    fix: バグ修正
+    docs: ドキュメントのみの変更
+    style: コードの意味に影響を与えない変更
+    refactor: リファクタリング
+    test: テストコードの追加・修正
+    chore: ビルドプロセスやツールの変更
+  pull_requests:
+    review: required
+
+directory_structure:
+  root:
+    LICENSE:
+      type: file
+      default: MIT
+    Makefile:
+      type: file
+      purpose: アプリケーション起動タスク定義
+    README.md:
+      type: file
+      update: 実装に応じて
+    app:
+      type: directory
+      purpose: アプリケーションコード
+    bin:
+      type: directory
+      purpose: バッチスクリプト、Pythonラッパー
+    docs:
+      type: directory
+      subdirectories:
+        01.requirements: 要求・要件定義文書
+        02.basic_design: 基本設計・外部設計文書
+        03.detail_design: 詳細設計・内部設計文書
+        90.references: 参考資料
+        errors: エラー情報
+        fixes: エラー原因分析と対策
+        progress: 進捗情報
+    tests:
+      type: directory
+      purpose: テストコード
+    pyproject.toml:
+      type: file
+      purpose: poetry依存関係定義
+
+error_analysis:
+  output_directory: docs/errors/
+  file_naming: YYYY-MM-DD-HH-MM-SS.md
+  required_info:
+    - directory_structure
+    - error_info
+    - log_info
+    - current_issues
+  analysis_output:
+    directory: docs/fixes/
+    file_naming: same_as_error_file
+
+quality_management:
+  test_coverage:
+    minimum: 80%
+  requirements:
+    - CI/CD自動テスト
+    - コードレビュー
+    - 定期的な依存パッケージ更新
+
+documentation:
+  readme:
+    required_sections:
+      - プロジェクト概要
+      - セットアップ手順
+      - 使用方法
+      - 開発環境構築方法
+      - ライセンス
+  api_spec:
+    format: OpenAPI (Swagger)
+  changelog:
+    file: CHANGELOG.md
+
+progress_management:
+  timing:
+    - git_commit時
+    - 進捗更新必要時
+  output:
+    directory: docs/progress/
+    file_naming: YYYY-MM-DD-HH-MM-SS.md
+  content:
+    - 現在の対応状況
+    - 今後の課題 
