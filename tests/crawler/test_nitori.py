@@ -20,6 +20,7 @@ def test_crawler_initialization(crawler):
     assert crawler.company_info_url == "https://www.nitorihd.co.jp/company/"
 
 
+@pytest.mark.skip(reason="Requires browser interaction")
 def test_crawler_context_manager(crawler):
     """Test crawler context manager."""
     with crawler as c:
@@ -30,6 +31,7 @@ def test_crawler_context_manager(crawler):
     assert crawler.page is None
 
 
+@pytest.mark.skip(reason="Requires browser interaction")
 @pytest.mark.integration
 def test_get_company_info(crawler):
     """Test getting company information."""
@@ -41,6 +43,7 @@ def test_get_company_info(crawler):
         assert "updated_at" in company_info
 
 
+@pytest.mark.skip(reason="Requires browser interaction")
 @pytest.mark.integration
 def test_get_financial_info(crawler):
     """Test getting financial information."""
