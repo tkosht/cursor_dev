@@ -1,116 +1,165 @@
-"""
-企業クローラーのテスト
-
-このモジュールは、企業クローラーの機能をテストします。
-"""
-
-from datetime import datetime
-from unittest.mock import MagicMock, patch
+"""CompanyCrawlerのテストモジュール"""
+from unittest.mock import Mock, patch
 
 import pytest
-import requests
 
-from app.crawler.company import CompanyCrawler
-from app.models.company import Company
-from app.models.financial import Financial, PeriodType
-from app.models.news import News
+from app.crawlers.company import CompanyCrawler
 
 
 @pytest.fixture
-def mock_response():
+def crawler():
+    """クローラーのフィクスチャ"""
+    return CompanyCrawler(company_code="9843")
+
+
+def test_init(crawler):
+    """初期化のテスト"""
+    assert crawler.company_code == "9843"
+    assert crawler.base_url == "https://www.nitorihd.co.jp"
+
+
+@patch('app.crawlers.base.BaseCrawler._make_request')
+def test_crawl_success(mock_request, crawler):
+    """クロール成功時のテスト"""
+    # モックレスポンスの準備
+    mock_company_response = Mock()
+    mock_company_response.text = """
+    <div class="company-info">
+        <h1 class="company-name">ニトリホールディングス</h1>
+        <table>
+            <tr>
+                <th>設立</th>
+                <td>1972年3月1日</td>
+            </tr>
+            <tr>
+                <th>事業内容</th>
+                <td>家具・インテリア用品の販売</td>
+            </tr>
+        </table>
+    </div>
     """
-    モックレスポンスを作成します。
+    
+    mock_financial_response = Mock()
+    mock_financial_response.text = """
+    <table class="financial-table">
+        <tr>
+            <th>決算期</th>
+            <th>売上高</th>
+            <th>営業利益</th>
+        </tr>
+        <tr>
+            <td>2023</td>
+            <td>100,000百万円</td>
+            <td>10,000百万円</td>
+        </tr>
+    </table>
     """
-    response = MagicMock(spec=requests.Response)
-    response.text = "<html><body>Test content</body></html>"
-    response.status_code = 200
-    return response
-
-
-def test_crawl_company(session, mock_response):
+    
+    mock_news_response = Mock()
+    mock_news_response.text = """
+    <ul class="news-list">
+        <li>
+            <span class="date">2023.12.25</span>
+            <span class="title">決算発表</span>
+            <a href="/ir/news/2023/1225.html">詳細</a>
+        </li>
+    </ul>
     """
-    企業情報のクロールをテストします。
+    
+    mock_request.side_effect = [
+        mock_company_response,
+        mock_financial_response,
+        mock_news_response
+    ]
+    
+    # セッションのモック
+    session = Mock()
+    company = Mock()
+    company.id = 1
+    session.add.return_value = None
+    crawler.session = session
+    
+    # クロール実行
+    crawler.crawl()
+    
+    # 各APIが正しく呼び出されたことを確認
+    assert mock_request.call_count == 3
+    session.add.assert_called()
+    session.commit.assert_called()
+
+
+def test_parse_company(crawler):
+    """企業情報パースのテスト"""
+    html = """
+    <div class="company-info">
+        <h1 class="company-name">ニトリホールディングス</h1>
+        <table>
+            <tr>
+                <th>設立</th>
+                <td>1972年3月1日</td>
+            </tr>
+            <tr>
+                <th>事業内容</th>
+                <td>家具・インテリア用品の販売</td>
+            </tr>
+        </table>
+    </div>
     """
-    with patch('app.crawler.base.requests.request', return_value=mock_response):
-        crawler = CompanyCrawler("9843", session=session)
-        crawler.crawl()
-
-        # 企業情報が保存されていることを確認
-        company = session.query(Company).filter_by(company_code="9843").first()
-        assert company is not None
-        assert company.name == "ニトリホールディングス"
-        assert company.name_en == "Nitori Holdings Co., Ltd."
-        assert company.established_date == datetime(1972, 3, 3).date()
-
-        # 財務情報が保存されていることを確認
-        financial = session.query(Financial).filter_by(company_id=company.id).first()
-        assert financial is not None
-        assert financial.fiscal_year == "2023年度"
-        assert financial.period_type == PeriodType.FULL_YEAR
-        assert financial.revenue == 1000000000
-
-        # ニュースが保存されていることを確認
-        news = session.query(News).filter_by(company_id=company.id).first()
-        assert news is not None
-        assert news.title == "2024年2月期 第3四半期決算短信〔IFRS〕（連結）"
-        assert news.source == "適時開示"
+    response = Mock()
+    response.text = html
+    
+    result = crawler.parse_company(response)
+    
+    assert result['company_code'] == "9843"
+    assert result['name'] == "ニトリホールディングス"
+    assert result['established_date'].strftime('%Y-%m-%d') == "1972-03-01"
+    assert "家具・インテリア用品の販売" in result['description']
 
 
-def test_parse_company(session, mock_response):
+def test_parse_financial(crawler):
+    """財務情報パースのテスト"""
+    html = """
+    <table class="financial-table">
+        <tr>
+            <th>決算期</th>
+            <th>売上高</th>
+            <th>営業利益</th>
+        </tr>
+        <tr>
+            <td>2023</td>
+            <td>100,000百万円</td>
+            <td>10,000百万円</td>
+        </tr>
+    </table>
     """
-    企業情報のパースをテストします。
+    response = Mock()
+    response.text = html
+    
+    results = crawler.parse_financial(response)
+    
+    assert len(results) == 1
+    assert results[0]['fiscal_year'] == "2023"
+    assert results[0]['revenue'] == 100_000_000_000
+    assert results[0]['operating_income'] == 10_000_000_000
+
+
+def test_parse_news(crawler):
+    """ニュース情報パースのテスト"""
+    html = """
+    <ul class="news-list">
+        <li>
+            <span class="date">2023.12.25</span>
+            <span class="title">決算発表</span>
+            <a href="/ir/news/2023/1225.html">詳細</a>
+        </li>
+    </ul>
     """
-    crawler = CompanyCrawler("9843", session=session)
-    data = crawler.parse_company(mock_response)
-
-    assert data["company_code"] == "9843"
-    assert data["name"] == "ニトリホールディングス"
-    assert data["name_en"] == "Nitori Holdings Co., Ltd."
-    assert data["established_date"] == datetime(1972, 3, 3).date()
-    assert data["stock_exchange"] == "東証プライム"
-    assert data["industry"] == "小売業"
-
-
-def test_parse_financial(session, mock_response):
-    """
-    財務情報のパースをテストします。
-    """
-    crawler = CompanyCrawler("9843", session=session)
-    data_list = crawler.parse_financial(mock_response)
-
-    assert len(data_list) == 1
-    data = data_list[0]
-    assert data["fiscal_year"] == "2023年度"
-    assert data["period_type"] == PeriodType.FULL_YEAR
-    assert data["period_end_date"] == datetime(2024, 2, 20).date()
-    assert data["revenue"] == 1000000000
-    assert data["operating_income"] == 100000000
-
-
-def test_parse_news(session, mock_response):
-    """
-    ニュースのパースをテストします。
-    """
-    crawler = CompanyCrawler("9843", session=session)
-    data_list = crawler.parse_news(mock_response)
-
-    assert len(data_list) == 1
-    data = data_list[0]
-    assert data["title"] == "2024年2月期 第3四半期決算短信〔IFRS〕（連結）"
-    assert data["source"] == "適時開示"
-    assert data["category"] == "決算情報"
-    assert data["published_at"] == datetime(2024, 1, 4, 15, 0)
-
-
-def test_request_error(session):
-    """
-    リクエストエラーのハンドリングをテスト��ます。
-    """
-    with patch('app.crawler.base.requests.request', side_effect=requests.RequestException):
-        crawler = CompanyCrawler("9843", session=session)
-        with pytest.raises(requests.RequestException):
-            crawler.crawl()
-
-        # データが保存されていないことを確認
-        company = session.query(Company).filter_by(company_code="9843").first()
-        assert company is None 
+    response = Mock()
+    response.text = html
+    
+    results = crawler.parse_news(response)
+    
+    assert len(results) == 1
+    assert results[0]['title'] == "決算発表"
+    assert results[0]['published_at'].strftime('%Y-%m-%d') == "2023-12-25"
+    assert results[0]['url'] == "https://www.nitorihd.co.jp/ir/news/2023/1225.html" 

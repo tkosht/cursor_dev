@@ -7,8 +7,9 @@
 from datetime import datetime
 from typing import Any, Dict
 
-from sqlalchemy import Column, DateTime, Integer
+from sqlalchemy import BigInteger, Column, DateTime, Integer
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm import DeclarativeBase
 
 from . import Base
 
@@ -82,3 +83,14 @@ class BaseModel(Base):
         for k, v in data.items():
             if hasattr(self, k):
                 setattr(self, k, v) 
+
+
+class Base(DeclarativeBase):
+    """
+    モデルの基底クラス
+    
+    Attributes:
+        id (int): 主キー
+    """
+    
+    id = Column(BigInteger, primary_key=True, autoincrement=True) 

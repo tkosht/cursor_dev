@@ -4,48 +4,53 @@
 このモジュールは、企業のニュース情報を管理するモデルを定義します。
 """
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import relationship
+from datetime import datetime
 
-from .base import BaseModel
+from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, relationship
+
+from .base import Base
 
 
-class News(BaseModel):
+class News(Base):
     """
-    ニュース情報モデル
-
+    ニュースモデル
+    
     Attributes:
+        id (int): 主キー
         company_id (int): 企業ID（外部キー）
-        title (str): ニュースタイトル
-        content (str): ニュース本文
-        url (str): ニュースURL
+        title (str): タイトル
+        content (str): 本文
+        url (str): ソースURL
         published_at (datetime): 公開日時
-        source (str): 情報ソース（例: 日経新聞、プレスリリースなど）
-        category (str): カテゴリ（例: IR情報、プレスリリース、ニュースなど）
-        company (Company): 企業情報への参照
+        source (str): 情報ソース
+        category (str): カテゴリ
+        created_at (datetime): 作成日時
+        updated_at (datetime): 更新日時
+        company (Company): 企業
     """
-
-    company_id = Column(Integer, ForeignKey('company.id'), nullable=False, index=True)
-    title = Column(String(500), nullable=False)
+    
+    __tablename__ = 'news'
+    
+    company_id = Column(BigInteger, ForeignKey('companies.id'), nullable=False)
+    title = Column(String(255), nullable=False)
     content = Column(Text)
-    url = Column(String(1000), nullable=False)
-    published_at = Column(DateTime, nullable=False, index=True)
-    source = Column(String(100), nullable=False)
+    url = Column(String(255))
+    published_at = Column(DateTime, nullable=False)
+    source = Column(String(50))
     category = Column(String(50))
-
-    # リレーションシップ
-    company = relationship("Company", back_populates="news")
-
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=datetime.now,
+        onupdate=datetime.now,
+        nullable=False
+    )
+    
+    company: Mapped["Company"] = relationship(
+        "Company",
+        back_populates="news"
+    )
+    
     def __repr__(self) -> str:
-        """
-        モデルの文字列表現を返します。
-
-        Returns:
-            str: モデルの文字列表現
-        """
-        return (
-            f"<News("
-            f"company_id={self.company_id}, "
-            f"title={self.title[:30]}..."
-            f")>"
-        ) 
+        return f"<News(company_id={self.company_id}, title={self.title})>" 
