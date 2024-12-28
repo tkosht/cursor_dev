@@ -4,12 +4,15 @@
 このモジュールは、企業のニュース情報を管理するモデルを定義します。
 """
 
-from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, relationship
 
 from .base import Base
+
+if TYPE_CHECKING:
+    from .company import Company
 
 
 class News(Base):
@@ -30,22 +33,13 @@ class News(Base):
         company (Company): 企業
     """
     
-    __tablename__ = 'news'
-    
-    company_id = Column(BigInteger, ForeignKey('companies.id'), nullable=False)
+    company_id = Column(BigInteger, ForeignKey('company.id'), nullable=False)
     title = Column(String(255), nullable=False)
     content = Column(Text)
     url = Column(String(255))
     published_at = Column(DateTime, nullable=False)
     source = Column(String(50))
     category = Column(String(50))
-    created_at = Column(DateTime, default=datetime.now, nullable=False)
-    updated_at = Column(
-        DateTime,
-        default=datetime.now,
-        onupdate=datetime.now,
-        nullable=False
-    )
     
     company: Mapped["Company"] = relationship(
         "Company",

@@ -85,3 +85,52 @@ clean-container:
 	docker compose down --rmi all
 	rm -rf app/__pycache__
 
+.PHONY: help
+help: ## ヘルプを表示
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+.PHONY: install
+install: ## 依存パッケージをインストール
+	poetry install
+
+.PHONY: update
+update: ## 依存パッケージを更新
+	poetry update
+
+.PHONY: lint
+lint: ## コードをチェック
+	poetry run flake8 app tests
+	poetry run mypy app tests
+
+.PHONY: format
+format: ## コードをフォーマット
+	poetry run black app tests
+	poetry run isort app tests
+
+.PHONY: test
+test: ## ユニットテストを実行
+	poetry run pytest tests --ignore=tests/integration
+
+.PHONY: test-integration
+test-integration: ## 統合テストを実行
+	poetry run pytest tests/integration -v
+
+.PHONY: test-all
+test-all: test test-integration ## 全てのテストを実行
+
+.PHONY: coverage
+coverage: ## カバレッジレポートを生成
+	poetry run pytest --cov=app tests --cov-report=html
+
+.PHONY: clean
+clean: ## 一時ファイルを削除
+	rm -rf .pytest_cache
+	rm -rf .mypy_cache
+	rm -rf .coverage
+	rm -rf htmlcov
+	find . -type d -name "__pycache__" -exec rm -rf {} +
+
+.PHONY: run
+run: ## アプリケーションを実行
+	poetry run python -m app
+

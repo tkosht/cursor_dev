@@ -3,19 +3,41 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from app.config.crawler import CompanyConfig
 from app.crawlers.company import CompanyCrawler
 
 
 @pytest.fixture
-def crawler():
+def company_config():
+    """企業設定のフィクスチャ"""
+    return CompanyConfig(
+        company_code="9843",
+        base_url="https://www.nitorihd.co.jp"
+    )
+
+
+@pytest.fixture
+def crawler(company_config):
     """クローラーのフィクスチャ"""
-    return CompanyCrawler(company_code="9843")
+    with patch('app.crawlers.company.get_company_config') as mock_get_config:
+        mock_get_config.return_value = company_config
+        crawler = CompanyCrawler(company_code="9843")
+        yield crawler
 
 
-def test_init(crawler):
+def test_init(crawler, company_config):
     """初期化のテスト"""
     assert crawler.company_code == "9843"
-    assert crawler.base_url == "https://www.nitorihd.co.jp"
+    assert crawler.config == company_config
+
+
+def test_init_invalid_company_code():
+    """無効な企業コードでの初期化テスト"""
+    with patch('app.crawlers.company.get_company_config') as mock_get_config:
+        mock_get_config.return_value = None
+        with pytest.raises(ValueError) as exc_info:
+            CompanyCrawler(company_code="0000")
+        assert "企業コード 0000 の設定が見つかりません" in str(exc_info.value)
 
 
 @patch('app.crawlers.base.BaseCrawler._make_request')
@@ -84,6 +106,9 @@ def test_crawl_success(mock_request, crawler):
     
     # 各APIが正しく呼び出されたことを確認
     assert mock_request.call_count == 3
+    mock_request.assert_any_call(f"{crawler.config.base_url}{crawler.config.company_info_path}")
+    mock_request.assert_any_call(f"{crawler.config.base_url}{crawler.config.financial_info_path}")
+    mock_request.assert_any_call(f"{crawler.config.base_url}{crawler.config.news_info_path}")
     session.add.assert_called()
     session.commit.assert_called()
 

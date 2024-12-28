@@ -4,12 +4,21 @@
 このモジュールは、企業の財務情報を管理するモデルを定義します。
 """
 
-from datetime import date, datetime
+from enum import Enum
+from typing import TYPE_CHECKING
 
-from sqlalchemy import BigInteger, Column, Date, DateTime, ForeignKey, String
+from sqlalchemy import BigInteger, Column, Date, ForeignKey, String
 from sqlalchemy.orm import Mapped, relationship
 
 from .base import Base
+
+if TYPE_CHECKING:
+    from .company import Company
+
+
+class PeriodType(str, Enum):
+    FULL_YEAR = "FULL_YEAR"
+    QUARTER = "QUARTER"
 
 
 class Financial(Base):
@@ -29,21 +38,12 @@ class Financial(Base):
         company (Company): 企業
     """
     
-    __tablename__ = 'financials'
-    
-    company_id = Column(BigInteger, ForeignKey('companies.id'), nullable=False)
+    company_id = Column(BigInteger, ForeignKey('company.id'), nullable=False)
     fiscal_year = Column(String(10), nullable=False)
     period_type = Column(String(20), nullable=False)
     period_end_date = Column(Date, nullable=False)
     revenue = Column(BigInteger)
     operating_income = Column(BigInteger)
-    created_at = Column(DateTime, default=datetime.now, nullable=False)
-    updated_at = Column(
-        DateTime,
-        default=datetime.now,
-        onupdate=datetime.now,
-        nullable=False
-    )
     
     company: Mapped["Company"] = relationship(
         "Company",

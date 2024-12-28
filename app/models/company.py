@@ -4,13 +4,16 @@
 このモジュールは、企業の基本情報を管理するモデルを定義します。
 """
 
-from datetime import date, datetime
-from typing import List
+from typing import TYPE_CHECKING, List
 
-from sqlalchemy import Column, Date, DateTime, String, Text
+from sqlalchemy import Column, Date, String, Text
 from sqlalchemy.orm import Mapped, relationship
 
 from .base import Base
+
+if TYPE_CHECKING:
+    from .financial import Financial
+    from .news import News
 
 
 class Company(Base):
@@ -33,8 +36,6 @@ class Company(Base):
         news (List[News]): ニュースリスト
     """
     
-    __tablename__ = 'companies'
-    
     company_code = Column(String(4), nullable=False, unique=True)
     name = Column(String(255), nullable=False)
     name_en = Column(String(255))
@@ -43,13 +44,6 @@ class Company(Base):
     website_url = Column(String(255))
     stock_exchange = Column(String(50))
     industry = Column(String(50))
-    created_at = Column(DateTime, default=datetime.now, nullable=False)
-    updated_at = Column(
-        DateTime,
-        default=datetime.now,
-        onupdate=datetime.now,
-        nullable=False
-    )
     
     financials: Mapped[List["Financial"]] = relationship(
         "Financial",

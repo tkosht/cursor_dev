@@ -1,0 +1,12 @@
+# LLMの設定
+llm:
+  default_model: "gemini-2.0-flash-exp"
+  temperature: 0.1
+  max_retries: 3
+
+# クローラーの設定
+crawler:
+  max_concurrent: 5
+  update_interval: 3600  # 1時間
+  timeout: 30
+  retry_interval: 60 
