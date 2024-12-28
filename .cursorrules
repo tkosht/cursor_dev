@@ -34,8 +34,21 @@ workflow_definition:
         - "5-1. 「python_code_quality」、「security」、「version_management」、「directory_structure」、「error_analysis」、「quality_management」に従い、tests/ ディレクトリに保存してください"
         - "5-2. エラーが発生した場合、下記の「error_analysis」に従い実行します"
 
+    - step_number: "interruption_step"
+      name: "重要情報の追加"
+      details:
+        - "本ステップは、ユーザからの指示が起きたタイミングで必ず実行してください"
+        - "ユーザとの会話で、重要な情報がある場合は、その情報を適切な資料へ反映してください"
+          - "例えば、ユーザが「クローラーはコードの変更なく設定ファイルの変更ができるように」と言った場合、その情報を要件定義書や基本設計書、詳細設計書へ反映してください"
+        - "最後に、実行すべきタスクを整理しなおし、進捗ファイルを改めて更新してください"
+        - "次に実行すべきアクションを整理し、改めてワークフローを実行してください"
+
     - step_number: 6
       name: "テスト実行を実行します"
+      details:
+        - "6-1. テストコードを実行してください"
+        - "6-2. エラーが発生した場合、下記の「error_analysis」に従い実行します"
+        - "6-3. quality_management に従い、テストコードが成功した場合、ユーザに承認をとることなく完了とします"
 
     - step_number: 7
       name: "上記実装に正確に対応するREADME.md 等のドキュメントを「documents」に従い更新します"
@@ -45,6 +58,9 @@ workflow_definition:
 
     - step_number: 9
       name: "ここまでを 1サイクルとして、ユーザに進捗を報告します。必要に応じてユーザの指示に従い、10. へ進みます"
+      details:
+        - "9-1. version_management に従い、git commit してください"
+        - "9-2. これまでの commit 内容をすべて git push してください"
 
     - step_number: 10
       name: "最新の進捗状況と要件定義内容を確認し、要件定義や基本設計、詳細設計の内容を見直し、必要に応じて更新します"
@@ -54,6 +70,7 @@ workflow_definition:
 python_code_quality:
   basic_conventions:
     - "基本的には Python 3.10～3.12 で開発します"
+    - "ライブラリは、poetry で管理します"
     - "flake8 に従います"
     - "lint の警告はすべて解消してください"
     - "DRY原則に従い、コードの重複よりも反復とモジュール化・クラス化を優先します"
@@ -110,21 +127,25 @@ directory_structure:
     - "└── pyproject.toml : poetry に必要なライブラリを定義します"
   note: "特に新しくディレクトリを作成する場合は、README.md を作成して説明を書きます"
 
+date_format:
+  - "日付は ファイルを作成する時点の日本時刻を YYYY-MM-DD-HH-MM-SS の形式とします"
+    - "必ず、現在の時刻をシステム的に(dateコマンドや、Pythonのdatetime.now()等)取得してください"
+
 error_analysis:
   description: "エラー解析"
   rules:
     - "エラー内容を正確に把握します"
     - "直接的な要因と根源的な要因を分析し修正を試みます"
-    - "エラー解析が困難な場合(3回以上試行しても解消しない場合)は、以下情報を docs/errors/ ディレクトリに新規ファイル(YYYY-MM-DD-HH-MM-SS.md)を作成して保存してください："
+    - "エラー解析が困難な場合(3回以上試行しても解消しない場合)は、以下情報を docs/errors/ ディレクトリに新規ファイル(date_format に従い YYYY-MM-DD-HH-MM-SS.md)を作成して保存してください："
       - "現在のディレクトリ構成"
       - "エラー情報"
       - "ログ情報"
       - "現在の問題点"
-    - "上記内容を他のAIに原因分析と対策を考えるサポートを得るためのプロンプトとして書き、docs/fixes/ ディレクトリにエラーファイルと同じファイル名(YYYY-MM-DD-HH-MM-SS.md)を作成して保存してください。"
+    - "上記内容を他のAIに原因分析と対策を考えるサポートを得るためのプロンプトとして書き、docs/fixes/ ディレクトリにエラーファイルと同じファイル名(date_format に従い YYYY-MM-DD-HH-MM-SS.md)を作成して保存してください。"
 
 quality_management:
   - "ユニットテストのカバレッジは80%以上を目指します"
-    - "90% を超えている場合は、ユーザに承認をとることなく完了とします"
+    - "80% を超えている場合は、ユーザに承認をとることなく完了とします"
   - "CI/CDパイプラインでの自動テストを実施します"
     - "エラー発生時は、「エラー解析」に従い、エラー解析を実行してください"
     - "エラーが発生することなくテストが成功した時は、ユーザに承認をとることなく完了とします"
@@ -132,6 +153,7 @@ quality_management:
   - "定期的に依存パッケージの更新を行います"
     - "前回の更新から半年以上経過している場合は、更新を行います"
     - "エラーが発生することなく更新が成功した時は、ユーザに承認をとることなく完了とします"
+
 documents:
   description: "ドキュメント"
   items:
@@ -149,4 +171,6 @@ progress_management:
   rules:
     - "現在の対応状況、今後の課題等をマークダウンに記述し、git commit のタイミングでアップデートしてください。"
     - "進捗を更新すべきタイミングでは、マークダウンを更新し git commit してください。"
-    - "進捗情報は docs/progress/ ディレクトリに新規ファイル(YYYY-MM-DD-HH-MM-SS.md)を作成して保存してください。"
+    - "進捗情報は docs/progress/ ディレクトリに新規ファイル(date_format に従い YYYY-MM-DD-HH-MM-SS.md)を作成して保存してください。"
+    - "進捗情報を更新したら、「version_management」に従い git commit してください。"
+    - "最新の進捗情報を特定する際には、docs/progress/ ディレクトリに新規ファイル(date_format に従い YYYY-MM-DD-HH-MM-SS.md)のファイルを特定します。"

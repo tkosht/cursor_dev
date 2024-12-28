@@ -7,27 +7,24 @@
 from datetime import datetime
 from typing import Any, Dict
 
-from sqlalchemy import BigInteger, Column, DateTime, Integer
+from sqlalchemy import DateTime, Integer
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import DeclarativeBase
-
-from . import Base
+from sqlalchemy.orm import DeclarativeBase, MappedColumn, mapped_column
 
 
-class BaseModel(Base):
+class Base(DeclarativeBase):
     """
-    すべてのモデルの基底クラス
-
+    モデルの基底クラス
+    
     Attributes:
-        id (int): プライマリーキー
+        id (int): 主キー
         created_at (datetime): 作成日時
         updated_at (datetime): 更新日時
     """
-    __abstract__ = True
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(
+    
+    id: MappedColumn[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    created_at: MappedColumn[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at: MappedColumn[datetime] = mapped_column(
         DateTime,
         nullable=False,
         default=datetime.utcnow,
@@ -58,7 +55,7 @@ class BaseModel(Base):
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "BaseModel":
+    def from_dict(cls, data: Dict[str, Any]) -> "Base":
         """
         辞書からモデルを作成します。
 
@@ -66,7 +63,7 @@ class BaseModel(Base):
             data (Dict[str, Any]): モデルデータの辞書
 
         Returns:
-            BaseModel: 作成されたモデルインスタンス
+            Base: 作成されたモデルインスタンス
         """
         return cls(**{
             k: v for k, v in data.items()
@@ -83,14 +80,3 @@ class BaseModel(Base):
         for k, v in data.items():
             if hasattr(self, k):
                 setattr(self, k, v) 
-
-
-class Base(DeclarativeBase):
-    """
-    モデルの基底クラス
-    
-    Attributes:
-        id (int): 主キー
-    """
-    
-    id = Column(BigInteger, primary_key=True, autoincrement=True) 

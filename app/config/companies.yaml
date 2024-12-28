@@ -1,0 +1,56 @@
+companies:
+  '9843':  # ニトリホールディングス
+    base_url: 'https://www.nitorihd.co.jp'
+    name: 'ニトリホールディングス'
+    stock_exchange: '東証プライム'
+    industry: '小売業'
+    paths:
+      company_info: '/ir/library/annual/'
+      financial_info: '/ir/library/result/'
+      news: '/ir/news/'
+    selectors:
+      company_info:
+        description: 'div.about-company'
+      financial_info:
+        table: 'table.financial-table'
+        rows: 'tr'
+        columns:
+          fiscal_year: 0
+          revenue: 1
+          operating_income: 2
+          net_income: 3
+      news:
+        list: 'dl.news-list'
+        date: 'dt'
+        title: 'dd'
+        link: 'a'
+    date_formats:
+      news: '%Y.%m.%d'
+
+  '7203':  # トヨタ自動車
+    base_url: 'https://global.toyota'
+    name: 'トヨタ自動車'
+    stock_exchange: '東証プライム'
+    industry: '輸送用機器'
+    paths:
+      company_info: '/jp/ir/library/annual/'
+      financial_info: '/jp/ir/library/results/'
+      news: '/jp/ir/news/'
+    selectors:
+      company_info:
+        description: 'div.company-profile'
+      financial_info:
+        table: 'table.financial-data'
+        rows: 'tr'
+        columns:
+          fiscal_year: 0
+          revenue: 1
+          operating_income: 2
+          net_income: 3
+      news:
+        list: 'ul.news-list'
+        date: 'span.date'
+        title: 'span.title'
+        link: 'a'
+    date_formats:
+      news: '%Y年%m月%d日' 
