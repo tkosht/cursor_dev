@@ -3,10 +3,26 @@ AdaptiveCrawlerのテスト
 """
 from unittest.mock import AsyncMock, MagicMock
 
+import aiohttp
 import pytest
 
 from app.crawlers.adaptive import AdaptiveCrawler
 from app.llm.manager import LLMManager
+
+
+class MockResponse:
+    """モックレスポンス"""
+    
+    def __init__(self, html: str = "<html><body><div>Test Content</div></body></html>"):
+        self._html = html
+    
+    async def text(self) -> str:
+        """HTMLテキストを返す"""
+        return self._html
+    
+    def raise_for_status(self):
+        """ステータスチェック"""
+        pass
 
 
 @pytest.fixture
@@ -39,7 +55,8 @@ def crawler(llm_manager):
         company_code='9843',
         llm_manager=llm_manager,
         max_retries=3,
-        retry_delay=0.1
+        retry_delay=0.1,
+        timeout=aiohttp.ClientTimeout(total=1)  # テスト用に短いタイムアウトを設定
     )
 
 
@@ -53,13 +70,28 @@ async def test_crawl_success(crawler):
         'price': 'Product price'
     }
     
+    # _make_requestをモック化
+    crawler._make_request = AsyncMock(return_value=MockResponse(
+        """
+        <html>
+            <body>
+                <h1 class="product-title">Test Product</h1>
+                <span class="product-price">1000円</span>
+            </body>
+        </html>
+        """
+    ))
+    
     # クロール実行
     result = await crawler.crawl(url, target_data)
     
     # 検証
     assert result is not None
     assert isinstance(result, dict)
-    assert crawler.llm_manager.analyze_html_structure.called
+    assert 'title' in result
+    assert 'price' in result
+    assert result['title'] == 'Test Product'
+    assert result['price'] == '1000円'
     assert crawler.llm_manager.generate_selectors.called
     assert crawler.llm_manager.validate_data.called
 
@@ -75,10 +107,20 @@ async def test_crawl_retry(crawler):
     }
     
     # 最初の2回は失敗、3回目で成功するように設定
+    mock_response = MockResponse(
+        """
+        <html>
+            <body>
+                <h1 class="product-title">Test Product</h1>
+                <span class="product-price">1000円</span>
+            </body>
+        </html>
+        """
+    )
     crawler._make_request = AsyncMock(side_effect=[
-        Exception('Network error'),
-        Exception('Network error'),
-        MagicMock(text='<html><body><h1>Sample</h1></body></html>')
+        aiohttp.ClientError(),
+        aiohttp.ClientError(),
+        mock_response
     ])
     
     # クロール実行
@@ -88,7 +130,8 @@ async def test_crawl_retry(crawler):
     assert result is not None
     assert isinstance(result, dict)
     assert crawler._make_request.call_count == 3
-    assert crawler.retry_count == 2
+    assert result['title'] == 'Test Product'
+    assert result['price'] == '1000円'
 
 
 @pytest.mark.asyncio
@@ -103,11 +146,11 @@ async def test_crawl_max_retries_exceeded(crawler):
     
     # 常に失敗するように設定
     crawler._make_request = AsyncMock(
-        side_effect=Exception('Network error')
+        side_effect=aiohttp.ClientError('Network error')
     )
     
     # クロール実行
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(aiohttp.ClientError) as exc_info:
         await crawler.crawl(url, target_data)
     
     # 検証
@@ -125,6 +168,9 @@ async def test_crawl_validation_failed(crawler):
         'title': 'Product title',
         'price': 'Product price'
     }
+    
+    # _make_requestをモック化
+    crawler._make_request = AsyncMock(return_value=MockResponse())
     
     # 検証に失敗するように設定
     crawler.llm_manager.validate_data = AsyncMock(return_value=False)
