@@ -5,7 +5,7 @@ import asyncio
 import logging
 import xml.etree.ElementTree as ET
 from typing import Any, Dict, List, Optional
-from urllib.parse import urljoin, urlparse
+from urllib.parse import parse_qs, urljoin, urlparse
 
 import aiohttp
 from bs4 import BeautifulSoup
@@ -349,6 +349,7 @@ class SiteAnalyzer:
                 {
                     'url': ページのURL,
                     'relevance_score': 関連性スコア,
+                    'evaluation_reason': 評価理由,
                     'page_type': ページタイプ
                 },
                 ...
@@ -357,51 +358,69 @@ class SiteAnalyzer:
         logger.debug(f"Starting to identify relevant pages for {base_url}")
         relevant_pages = []
 
-        # 評価対象URLの収集
+        # 評価対象URLの収集と重複除去
         target_urls = set()
         target_urls.update(sitemap_urls)
         for nav_urls in nav_structure.values():
             target_urls.update(nav_urls)
         logger.debug(f"Collected {len(target_urls)} total URLs to evaluate")
 
-        # URLのフィルタリング
+        # 外部ドメインの除外
         base_domain = urlparse(base_url).netloc
         filtered_urls = [
-            url
-            for url in target_urls
+            url for url in target_urls
             if urlparse(url).netloc == base_domain
-            and self._is_potentially_relevant_url(url)
         ]
-        logger.debug(f"Filtered down to {len(filtered_urls)} potentially relevant URLs")
+        logger.debug(f"Filtered down to {len(filtered_urls)} URLs after domain check")
 
-        # 各URLの評価
-        for url in filtered_urls:
-            try:
-                logger.debug(f"Evaluating URL: {url}")
-                async with self._session.get(url) as response:
-                    if response.status == 200:
-                        logger.debug(f"Successfully fetched {url}")
-                        content = await response.text()
-                        relevance_score = await self.evaluate_page(url, content)
-                        logger.debug(f"Relevance score for {url}: {relevance_score}")
+        # 同時実行数の制限
+        semaphore = asyncio.Semaphore(5)  # 最大5件の同時実行
 
-                        if relevance_score > 0.5:  # 関連性の閾値
-                            page_info = {
-                                "url": url,
-                                "relevance_score": relevance_score,
-                                "page_type": self._determine_page_type(url),
-                            }
-                            relevant_pages.append(page_info)
-                            logger.debug(f"Added relevant page: {page_info}")
-                    else:
-                        logger.debug(f"Failed to fetch {url}: {response.status}")
+        async def evaluate_url(url: str) -> Optional[Dict[str, Any]]:
+            """
+            URLの評価を実行
+            """
+            async with semaphore:
+                try:
+                    # URLの構造解析
+                    parsed_url = urlparse(url)
+                    path_components = parsed_url.path.strip("/").split("/")
+                    
+                    # LLMによるURL評価
+                    url_eval_result = await self.llm_manager.evaluate_url_relevance(
+                        url=url,
+                        path_components=path_components,
+                        query_params=parse_qs(parsed_url.query)
+                    )
+                    
+                    if not url_eval_result:
+                        return None
+                    
+                    relevance_score = url_eval_result.get("relevance_score", 0.0)
+                    if relevance_score > 0.4:  # 間接的関連以上を収集
+                        return {
+                            "url": url,
+                            "relevance_score": relevance_score,
+                            "evaluation_reason": url_eval_result.get("reason", ""),
+                            "page_type": url_eval_result.get("category", "other")
+                        }
+                    
+                except Exception as e:
+                    logger.error(f"Error evaluating URL {url}: {str(e)}", exc_info=True)
+                
+                return None
 
-            except Exception as e:
-                logger.error(f"Error evaluating page {url}: {str(e)}", exc_info=True)
-
+        # 並列評価の実行
+        tasks = [evaluate_url(url) for url in filtered_urls]
+        results = await asyncio.gather(*tasks)
+        
+        # 有効な結果のみを抽出
+        relevant_pages = [page for page in results if page]
+        
         # スコアの降順でソート
         relevant_pages.sort(key=lambda x: x["relevance_score"], reverse=True)
         logger.debug(f"Final count of relevant pages: {len(relevant_pages)}")
+        
         return relevant_pages
 
     def _is_potentially_relevant_url(self, url: str) -> bool:
@@ -506,40 +525,88 @@ class SiteAnalyzer:
             logger.error(f"Error evaluating page {url}: {str(e)}")
             return 0.0
 
+    async def _handle_response(
+        self,
+        response: aiohttp.ClientResponse,
+        url: str,
+        retry_count: int
+    ) -> tuple[Optional[aiohttp.ClientResponse], bool, float]:
+        """
+        レスポンスを処理し、リトライが必要かどうかを判断
+
+        Args:
+            response: HTTPレスポンス
+            url: リクエスト先URL
+            retry_count: 現在のリトライ回数
+
+        Returns:
+            (レスポンス, リトライ必要か, 待機時間)のタプル
+        """
+        if response.status == 429:  # レート制限
+            retry_after = response.headers.get("Retry-After", REQUEST_INTERVAL)
+            wait_time = float(retry_after) if retry_after.isdigit() else REQUEST_INTERVAL
+            logger.warning(f"Rate limited. Waiting {wait_time} seconds")
+            return None, True, wait_time
+        
+        elif response.status >= 500:  # サーバーエラー
+            logger.warning(f"Server error {response.status} for {url}")
+            return None, True, REQUEST_INTERVAL * (2 ** retry_count)
+        
+        elif response.status == 404:  # Not Found
+            logger.info(f"Resource not found: {url}")
+            return None, False, 0
+        
+        elif response.status >= 400:  # その他のクライアントエラー
+            logger.warning(f"Client error {response.status} for {url}")
+            return None, False, 0
+        
+        return response, False, 0
+
     async def _make_request(self, url: str, method: str = "GET") -> Optional[aiohttp.ClientResponse]:
         """
-        リトライ機能付きのHTTPリクエスト
+        HTTPリクエストを実行（リトライロジック付き）
 
         Args:
             url: リクエスト先URL
-            method: HTTPメソッド
+            method: HTTPメソッド（デフォルトはGET）
 
         Returns:
             レスポンス（失敗時はNone）
         """
-        for attempt in range(MAX_RETRIES):
-            try:
-                if attempt > 0:
-                    logger.debug(f"Retrying request to {url} (attempt {attempt + 1}/{MAX_RETRIES})")
-                    await asyncio.sleep(REQUEST_INTERVAL * (2 ** attempt))  # 指数バックオフ
-                else:
-                    logger.debug(f"Making initial request to {url}")
-                
-                response = await self._session.request(method, url)
-                logger.debug(f"Response status for {url}: {response.status}")
-                
-                if response.status == 429:  # レート制限
-                    logger.warning(f"Rate limit hit for {url}, waiting before retry")
-                    continue
-                
-                return response
+        if not self._session:
+            logger.error("Session not initialized")
+            return None
 
-            except asyncio.TimeoutError:
-                logger.warning(f"Timeout accessing {url} (attempt {attempt + 1}/{MAX_RETRIES})")
-            except aiohttp.ClientError as e:
-                logger.warning(f"Error accessing {url}: {str(e)} (attempt {attempt + 1}/{MAX_RETRIES})")
-            
-            await asyncio.sleep(REQUEST_INTERVAL)  # 次のリトライまで待機
-        
-        logger.error(f"Failed to access {url} after {MAX_RETRIES} attempts")
+        retry_count = 0
+        while retry_count < MAX_RETRIES:
+            try:
+                # 指数バックオフによる待機（初回は待機なし）
+                if retry_count > 0:
+                    wait_time = REQUEST_INTERVAL * (2 ** (retry_count - 1))
+                    logger.debug(f"Waiting {wait_time} seconds before retry {retry_count + 1}")
+                    await asyncio.sleep(wait_time)
+
+                logger.debug(f"Making {method} request to {url} (attempt {retry_count + 1}/{MAX_RETRIES})")
+                response = await self._session.request(method, url)
+                
+                # レスポンスの処理
+                result, should_retry, wait_time = await self._handle_response(response, url, retry_count)
+                if should_retry:
+                    await asyncio.sleep(wait_time)
+                    retry_count += 1
+                    continue
+                return result
+
+            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+                logger.warning(f"Request failed: {str(e)}")
+                retry_count += 1
+                if retry_count >= MAX_RETRIES:
+                    logger.error(f"Max retries ({MAX_RETRIES}) exceeded for {url}")
+                    return None
+                continue
+
+            except Exception as e:
+                logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+                return None
+
         return None
