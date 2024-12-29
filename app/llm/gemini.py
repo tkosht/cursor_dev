@@ -2,6 +2,8 @@
 Geminiモデルの実装
 """
 import json
+import logging
+import time
 from typing import Any, Dict
 
 import google.generativeai as genai
@@ -10,7 +12,18 @@ from app.llm.base import BaseLLM
 
 
 class GeminiLLM(BaseLLM):
-    """Geminiモデルの実装"""
+    """Gemini LLM"""
+
+    def __init__(self, api_key: str, model: str = 'gemini-pro', temperature: float = 0.1):
+        """初期化
+        
+        Args:
+            api_key: Google API Key
+            model: モデル名
+            temperature: 生成時の温度パラメータ
+        """
+        super().__init__(api_key=api_key, model=model, temperature=temperature)
+        self._init_client()
     
     def _init_client(self) -> None:
         """クライアントの初期化"""
@@ -34,7 +47,7 @@ class GeminiLLM(BaseLLM):
         text = response.text
         
         # メトリクスの更新
-        # Note: Gemini APIは現在トークン数を提供していないため、文字数で代用
+        # Note: Gemini APIは現在トクン数を提供していないため、文字数で代用
         prompt_tokens = len(prompt)
         completion_tokens = len(text)
         # コストは現在無料のため0とする
@@ -47,24 +60,34 @@ class GeminiLLM(BaseLLM):
         コンテンツを分析
 
         Args:
-            content (str): 分析対象��コンテンツ
+            content (str): 分析対象のコンテンツ
             task (str): 分析タスクの種類
 
         Returns:
             Dict[str, Any]: 分析結果
         """
+        logging.debug(f'GeminiLLM: {task}タスクの分析開始')
+        start_time = time.time()
+
         # タスクに応じたプロンプトを生成
         prompt = self._create_analysis_prompt(task, content)
+        logging.debug(f'GeminiLLM: プロンプト生成完了 ({len(prompt)}文字)')
         
         # 分析を実行
+        logging.debug('GeminiLLM: API呼び出し開始')
         response = await self.client.generate_content_async(prompt)
+        logging.debug('GeminiLLM: API呼び出し完了')
+        
         result = self._extract_content(response.text)
+        logging.debug('GeminiLLM: レスポンス解析完了')
         
         # メトリクスの更新
         prompt_tokens = len(prompt)
         completion_tokens = len(response.text)
         self.update_metrics(prompt_tokens, completion_tokens, 0.0)
         
+        end_time = time.time()
+        logging.debug(f'GeminiLLM: 分析完了: 処理時間 {end_time - start_time:.2f}秒')
         return result
     
     def _create_analysis_prompt(self, task: str, content: str) -> str:
