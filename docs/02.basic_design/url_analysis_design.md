@@ -15,10 +15,20 @@ SiteAnalyzer
 │   ├── LanguageDetector: 言語情報の検出
 │   └── DomainFilter: 外部ドメインのフィルタリング
 │
-└── LLMEvaluator（LLMによる評価）
-    ├── PromptGenerator: 評価用プロンプトの生成
-    ├── SemanticAnalyzer: 意味解析の実行
-    └── ResultsAggregator: 評価結果の集約
+├── LLMEvaluator（LLMによる評価）
+│   ├── PromptGenerator: 評価用プロンプトの生成
+│   ├── SemanticAnalyzer: 意味解析の実行
+│   └── ResultsAggregator: 評価結果の集約
+│
+├── ErrorHandler（エラー処理）
+│   ├── RetryManager: リトライ制御
+│   ├── FallbackStrategy: 代替処理
+│   └── ErrorLogger: エラー記録
+│
+└── MetricsCollector（メトリクス収集）
+    ├── PerformanceMonitor: 性能監視
+    ├── QualityAnalyzer: 品質分析
+    └── MetricsReporter: レポート生成
 ```
 
 ### 1.2 データフロー
@@ -131,75 +141,232 @@ SiteAnalyzer
   - 結果の検証（異常値検出）
   - 信頼度に基づくフィルタリング
 
-## 3. 並列処理設計
+### 2.4 エラー処理機能
+- RetryManager
+  ```python
+  class RetryStrategy:
+      """リトライ戦略の実装"""
+      def __init__(
+          self,
+          max_retries: int = 3,
+          initial_delay: float = 1.0,
+          max_delay: float = 30.0,
+          jitter: float = 0.1
+      ):
+          self.max_retries = max_retries
+          self.backoff = ExponentialBackoff(
+              initial=initial_delay,
+              maximum=max_delay,
+              jitter=jitter
+          )
 
-### 3.1 同時実行制御
-```python
-class ConcurrencyManager:
-    def __init__(self, max_concurrent: int = 5):
-        self.semaphore = asyncio.Semaphore(max_concurrent)
-        self.rate_limiter = RateLimiter(
-            calls_per_second=1.0,
-            burst_size=3
-        )
+      async def execute(
+          self,
+          operation: Callable,
+          error_handler: ErrorHandler
+      ) -> Any:
+          """リトライ付きで処理を実行"""
+          for attempt in range(self.max_retries):
+              try:
+                  return await operation()
+              except Exception as e:
+                  if not await error_handler.should_retry(e):
+                      raise
+                  delay = self.backoff.get_delay(attempt)
+                  await asyncio.sleep(delay)
+          raise MaxRetriesExceededError()
+  ```
 
-    async def execute(self, task: Callable):
-        async with self.semaphore:
-            async with self.rate_limiter:
-                return await task()
-```
+- FallbackStrategy
+  ```python
+  class FallbackStrategy:
+      """代替処理戦略の実装"""
+      async def execute_with_fallback(
+          self,
+          primary_operation: Callable,
+          fallback_operations: List[Callable]
+      ) -> Any:
+          """代替処理を含めて実行"""
+          try:
+              return await primary_operation()
+          except Exception as primary_error:
+              for fallback_op in fallback_operations:
+                  try:
+                      return await fallback_op()
+                  except Exception:
+                      continue
+              raise primary_error
+  ```
 
-### 3.2 エラー処理
-```python
-class ErrorHandler:
-    def __init__(self, max_retries: int = 3):
-        self.max_retries = max_retries
-        self.backoff = ExponentialBackoff(
-            initial=1.0,
-            maximum=30.0
-        )
+- ErrorLogger
+  ```python
+  class ErrorLogger:
+      """エラーログ管理"""
+      def __init__(self):
+          self.error_counts = Counter()
+          self.error_details = defaultdict(list)
 
-    async def handle_error(self, error: Exception) -> bool:
-        """エラーの種類に応じた処理の決定"""
-        if isinstance(error, RateLimitError):
-            return await self.handle_rate_limit()
-        elif isinstance(error, NetworkError):
-            return await self.handle_network_error()
-        return False
-```
+      def log_error(
+          self,
+          error: Exception,
+          context: Dict[str, Any]
+      ):
+          """エラー情報の記録"""
+          error_type = type(error).__name__
+          self.error_counts[error_type] += 1
+          self.error_details[error_type].append({
+              "timestamp": time.time(),
+              "error": str(error),
+              "context": context
+          })
 
-## 4. 監視・計測設計
+      def get_error_summary(self) -> Dict[str, Any]:
+          """エラーサマリーの取得"""
+          return {
+              "counts": dict(self.error_counts),
+              "rates": {
+                  error_type: count / sum(self.error_counts.values())
+                  for error_type, count in self.error_counts.items()
+              }
+          }
+  ```
 
-### 4.1 性能指標
-- URL評価の実行時間
-- LLMリクエストのレイテンシ
-- 同時実行数の推移
-- エラーレート
+### 2.5 メトリクス収集機能
+- PerformanceMonitor
+  ```python
+  class PerformanceMetrics:
+      """性能指標の収集"""
+      def __init__(self):
+          self.processing_times = []
+          self.llm_latencies = []
+          self.concurrent_requests = 0
 
-### 4.2 精度指標
-- 適合率（Precision）の計測
-- 再現率（Recall）の計測
-- 信頼度スコアの分布
-- 誤判定の分析
+      def record_processing_time(
+          self,
+          operation: str,
+          duration: float
+      ):
+          """処理時間の記録"""
+          self.processing_times.append({
+              "operation": operation,
+              "duration": duration,
+              "timestamp": time.time()
+          })
 
-### 4.3 ログ設計
-```python
-class AnalysisLogger:
-    def log_url_evaluation(
-        self,
-        url: str,
-        result: Dict[str, Any],
-        execution_time: float
-    ):
-        """評価結果とパフォーマンス指標のログ記録"""
-        pass
+      def get_performance_summary(self) -> Dict[str, Any]:
+          """性能サマリーの取得"""
+          return {
+              "processing_time": {
+                  "p50": np.percentile([p["duration"] for p in self.processing_times], 50),
+                  "p95": np.percentile([p["duration"] for p in self.processing_times], 95),
+                  "p99": np.percentile([p["duration"] for p in self.processing_times], 99)
+              },
+              "concurrent_requests": self.concurrent_requests
+          }
+  ```
 
-    def log_error(
-        self,
-        url: str,
-        error: Exception,
-        context: Dict[str, Any]
-    ):
-        """エラー情報の詳細なログ記録"""
-        pass
-``` 
+- QualityAnalyzer
+  ```python
+  class QualityMetrics:
+      """品質指標の収集"""
+      def __init__(self):
+          self.relevance_scores = []
+          self.confidence_scores = []
+          self.category_counts = Counter()
+
+      def record_evaluation_result(
+          self,
+          result: Dict[str, Any]
+      ):
+          """評価結果の記録"""
+          self.relevance_scores.append(result["relevance_score"])
+          self.confidence_scores.append(result["confidence"])
+          self.category_counts[result["category"]] += 1
+
+      def get_quality_summary(self) -> Dict[str, Any]:
+          """品質サマリーの取得"""
+          return {
+              "relevance_score": {
+                  "mean": np.mean(self.relevance_scores),
+                  "std": np.std(self.relevance_scores)
+              },
+              "confidence_score": {
+                  "mean": np.mean(self.confidence_scores),
+                  "std": np.std(self.confidence_scores)
+              },
+              "category_distribution": dict(self.category_counts)
+          }
+  ```
+
+- MetricsReporter
+  ```python
+  class MetricsReporter:
+      """メトリクスレポートの生成"""
+      def __init__(
+          self,
+          performance_monitor: PerformanceMonitor,
+          quality_analyzer: QualityAnalyzer,
+          error_logger: ErrorLogger
+      ):
+          self.performance_monitor = performance_monitor
+          self.quality_analyzer = quality_analyzer
+          self.error_logger = error_logger
+
+      def generate_report(self) -> Dict[str, Any]:
+          """総合レポートの生成"""
+          return {
+              "performance": self.performance_monitor.get_performance_summary(),
+              "quality": self.quality_analyzer.get_quality_summary(),
+              "errors": self.error_logger.get_error_summary(),
+              "timestamp": time.time()
+          }
+  ```
+
+## 3. 性能最適化設計
+
+### 3.1 URL構造解析の最適化
+- 正規表現のコンパイル済みパターン使用
+- URLパース結果のメモリ内キャッシュ
+- バッチ処理による効率化
+
+### 3.2 LLMリクエストの最適化
+- プロンプトテンプレートの事前コンパイル
+- バッチリクエストの活用
+- コンテキスト長の最適化
+
+### 3.3 並列処理の最適化
+- 動的な同時実行数調整
+- I/O待ちの最小化
+- メモリ使用量の制御
+
+## 4. 監視・アラート設計
+
+### 4.1 監視項目
+- システムメトリクス
+  - CPU使用率
+  - メモリ使用量
+  - ディスクI/O
+  - ネットワークI/O
+
+- アプリケーションメトリクス
+  - 処理時間
+  - エラー率
+  - 成功率
+  - スループット
+
+- 品質メトリクス
+  - 関連性スコア分布
+  - 信頼度スコア分布
+  - カテゴリ分布
+
+### 4.2 アラート条件
+- エラー率 > 5%
+- P95処理時間 > 5秒
+- 信頼度スコア < 0.8
+- 同時実行数 > 5
+
+### 4.3 レポート生成
+- リアルタイムダッシュボード
+- 日次サマリーレポート
+- 週次品質レポート
+- 月次総合レポート 

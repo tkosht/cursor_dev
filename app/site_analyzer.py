@@ -73,6 +73,7 @@ class SiteAnalyzer:
         """
         self.llm_manager = llm_manager
         self._session: Optional[aiohttp.ClientSession] = None
+        self._llm_latency = 0.0  # LLMの応答時間を記録
         logger.debug("SiteAnalyzer initialized with LLMManager")
 
     async def __aenter__(self):
@@ -477,50 +478,21 @@ class SiteAnalyzer:
         ページの関連性を評価
 
         Args:
-            url: ページのURL
+            url: 評価対象のURL
             content: ページのコンテンツ
 
         Returns:
-            関連性スコア（0.0-1.0）
+            float: 関連性スコア（0.0～1.0）
         """
         try:
-            # HTMLの解析
-            soup = BeautifulSoup(content, "html.parser")
-
-            # メタデータの抽出
-            title = soup.title.string if soup.title else ""
-            meta_description = ""
-            meta_keywords = ""
-
-            meta_desc_tag = soup.find("meta", attrs={"name": "description"})
-            if meta_desc_tag:
-                meta_description = meta_desc_tag.get("content", "")
-
-            meta_keywords_tag = soup.find("meta", attrs={"name": "keywords"})
-            if meta_keywords_tag:
-                meta_keywords = meta_keywords_tag.get("content", "")
-
-            # メインコンテンツの抽出
-            main_content = ""
-            main_tags = soup.find_all(
-                ["main", "article", "div"], class_=_is_main_content_element
-            )
-            if main_tags:
-                main_content = " ".join([tag.get_text() for tag in main_tags])
-            else:
-                main_content = soup.get_text()
-
-            # LLMによる評価
-            evaluation_result = await self.llm_manager.evaluate_page_relevance(
-                url=url,
-                title=title,
-                meta_description=meta_description,
-                meta_keywords=meta_keywords,
-                main_content=main_content[:1000],  # コンテンツは最初の1000文字のみ使用
-            )
-
-            return float(evaluation_result)
-
+            start_time = asyncio.get_event_loop().time()
+            result = await self.llm_manager.evaluate_url_content(url, content)
+            end_time = asyncio.get_event_loop().time()
+            
+            # LLMの応答時間を更新
+            self._llm_latency += end_time - start_time
+            
+            return result
         except Exception as e:
             logger.error(f"Error evaluating page {url}: {str(e)}")
             return 0.0
@@ -609,4 +581,31 @@ class SiteAnalyzer:
                 logger.error(f"Unexpected error: {str(e)}", exc_info=True)
                 return None
 
+        return None
+
+    def get_llm_latency(self) -> float:
+        """
+        LLMの応答時間を取得
+
+        Returns:
+            float: 累積応答時間（秒）
+        """
+        return self._llm_latency
+
+    async def _fetch_robots_txt(self, robots_txt_url: str) -> Optional[str]:
+        """
+        robots.txtを取得
+
+        Args:
+            robots_txt_url: robots.txtのURL
+
+        Returns:
+            str: robots.txtの内容、取得失敗時はNone
+        """
+        try:
+            response = await self._make_request(robots_txt_url)
+            if response and response.status == 200:
+                return await response.text()
+        except Exception as e:
+            logger.error(f"Error fetching robots.txt: {str(e)}")
         return None

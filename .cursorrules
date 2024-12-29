@@ -40,11 +40,14 @@ workflow_definition:
       details:
         - "app/ ディレクトリに保存（python_code_quality、security、version_management、directory_structure、error_analysis、quality_management を遵守）。"
         - "エラー発生時は error_analysis に従う。"
+        - "コード実装後、black でコードをフォーマットし、flake8 でLintエラーを確認し正確に修正。"
+        - "コードの実装は必ずワークフロー定義に記載されたステップを順番通りに実行し、ステップを飛ばしたり省略しない。"
 
     - step_number: 5
       name: "テストコード実装"
       details:
         - "tests/ ディレクトリに保存（python_code_quality、security、version_management、directory_structure、error_analysis、quality_management を遵守）。"
+        - "コード実装後、black でコードをフォーマットし、flake8 でLintエラーを確認し正確に修正。"
         - "エラー発生時は error_analysis に従う。"
 
     - step_number: "interruption_step"
@@ -56,9 +59,12 @@ workflow_definition:
     - step_number: 6
       name: "テスト実行"
       details:
-        - "pytest などでテストを実行。"
+        - "pytest で デバッグログが精緻に出力されるようにコマンドを調整してテストを実行。"
+          - "開発対象や修正対象のテストだけでなくすべてのテストをまとめて実行する。"
         - "エラー発生時は error_analysis に従う。"
         - "テスト成功で完了（quality_management の基準を満たす）。"
+        - "テストがすべてしたら、改めて要件定義書や各種設計書との整合性をチェックし、必要に応じてユーザに確認します"
+          - "つまり、テストが本当に正しかったのかをチェックし担保します"
 
     - step_number: 7
       name: "README等ドキュメント更新"

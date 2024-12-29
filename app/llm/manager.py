@@ -1,6 +1,7 @@
 """
 LLMを使用した評価を管理するモジュール
 """
+import asyncio
 import json
 import logging
 import time
@@ -15,9 +16,9 @@ logger.setLevel(logging.DEBUG)
 @dataclass
 class LLMConfig:
     """LLMの設定"""
-    model_name: str = "gpt-4"
-    temperature: float = 0.3
-    max_tokens: int = 500
+    model_name: str = "gemini-2.0-flash-exp"
+    temperature: float = 0.1
+    max_tokens: int = 1000
     timeout: float = 30.0
 
 
@@ -142,6 +143,13 @@ class ResultValidator:
                 logger.error(f"Invalid category: {category}")
                 return None
 
+            # カテゴリのマッピング
+            category_mapping = {
+                "about_us": "company_profile",
+                "corporate_info": "company_profile"
+            }
+            category = category_mapping.get(category, category)
+
             return EvaluationResult(
                 relevance_score=score,
                 category=category,
@@ -162,10 +170,41 @@ class LLMManager:
         self.config = config or LLMConfig()
         self.prompt_generator = PromptGenerator()
         self.result_validator = ResultValidator()
+        self.llm = None
         logger.debug(
             f"Initialized LLMManager with model={self.config.model_name}, "
             f"temperature={self.config.temperature}"
         )
+
+    async def __aenter__(self):
+        """非同期コンテキストマネージャのエントリーポイント"""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """非同期コンテキストマネージャのクリーンアップ"""
+        if self.llm:
+            await asyncio.sleep(1)  # レート制限を避けるために待機
+
+    async def load_model(self, model_name: str, api_key: str) -> "LLMManager":
+        """
+        LLMモデルを読み込む
+
+        Args:
+            model_name (str): モデル名
+            api_key (str): APIキー
+
+        Returns:
+            LLMManager: 自身のインスタンス
+        """
+        logging.debug(f"Initialized LLMManager with model={model_name}, temperature={self.config.temperature}")
+        
+        if model_name.startswith("gemini"):
+            from app.llm.gemini import GeminiLLM
+            self.llm = GeminiLLM(api_key=api_key, model=model_name, temperature=self.config.temperature)
+        else:
+            raise ValueError(f"Unsupported model: {model_name}")
+        
+        return self
 
     async def evaluate_url_relevance(
         self,
@@ -191,6 +230,9 @@ class LLMManager:
             }
         """
         try:
+            if not self.llm:
+                raise ValueError("LLMモデルがロードされていません")
+
             start_time = time.monotonic()
 
             # URL構成要素の作成
@@ -199,7 +241,7 @@ class LLMManager:
                 query_params=query_params
             )
 
-            # 言語情報の検出（現在は簡易実装）
+            # 言語情報の検出
             language_info = self._detect_language(path_components)
 
             # プロンプト生成
@@ -209,9 +251,7 @@ class LLMManager:
             )
 
             # LLM評価実行
-            # TODO: 実際のLLM呼び出しを実装
-            # 現在はモック実装
-            raw_result = self._mock_llm_evaluation(url)
+            raw_result = await self.llm.analyze_content(prompt, "url_analysis")
 
             # 結果の検証
             result = self.result_validator.validate(raw_result)
