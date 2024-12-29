@@ -1,7 +1,12 @@
 """
 LLMマネージャー
 """
+import logging
+import os
+import time
 from typing import Any, Dict, Optional, Type
+
+from dotenv import load_dotenv
 
 from app.llm.base import BaseLLM
 from app.llm.gemini import GeminiLLM
@@ -13,11 +18,23 @@ class LLMManager:
     
     def __init__(self):
         """初期化"""
+        load_dotenv()  # .envファイルを読み込む
+        self.google_api_key = os.getenv('GOOGLE_API_KEY_GEMINI')
+        if not self.google_api_key:
+            raise ValueError('GOOGLE_API_KEY_GEMINIが設定されていません')
+
+        logging.debug('LLMManager: 初期化開始')
         self.models: Dict[str, Type[BaseLLM]] = {
             "gemini-2.0-flash-exp": GeminiLLM,
             "gpt-4o": GPT4LLM
         }
         self.instances: Dict[str, BaseLLM] = {}
+        logging.debug(f'LLMManager: 利用可能なモデル: {list(self.models.keys())}')
+
+        # デフォルトモデルをロード
+        self.default_model = "gemini-2.0-flash-exp"
+        logging.debug(f'LLMManager: デフォルトモデル {self.default_model} をロード')
+        self.load_model(self.default_model, self.google_api_key)
     
     def load_model(
         self,
@@ -181,13 +198,18 @@ class LLMManager:
         セレクタを生成
 
         Args:
-            html (str): HTML文字列
-            target_data (Dict[str, str]): 取得対象データの辞書
+            html: HTML文字列
+            target_data: 取得対象データの辞書
 
         Returns:
             Dict[str, str]: セレクタの辞書
         """
+        logging.debug('LLMManager: セレクタ生成開始')
+        start_time = time.time()
+        
         model = self._get_default_model()
+        logging.debug(f'LLMManager: 使用モデル: {type(model).__name__}')
+        
         result = await model.analyze_content(
             {
                 "html": html,
@@ -195,6 +217,9 @@ class LLMManager:
             },
             "selector"
         )
+        
+        end_time = time.time()
+        logging.debug(f'LLMManager: セレクタ生成完了: 処理時間 {end_time - start_time:.2f}秒')
         return result
     
     async def validate_data(
@@ -203,7 +228,7 @@ class LLMManager:
         rules: Dict[str, Any]
     ) -> bool:
         """
-        データを検証
+        デ��タを検証
 
         Args:
             data (Dict[str, Any]): 検証対象データの辞書
@@ -237,3 +262,21 @@ class LLMManager:
             return model
         
         raise ValueError("No model loaded") 
+    
+    def _get_model(self, model_name: str) -> BaseLLM:
+        """指定されたモデルのインスタンスを取得
+
+        Args:
+            model_name: モデル名
+
+        Returns:
+            LLMインスタンス
+        """
+        model_class = self.models.get(model_name)
+        if not model_class:
+            raise ValueError(f'未知のモデル: {model_name}')
+        
+        if model_class == GeminiLLM:
+            return model_class(api_key=self.google_api_key)
+        
+        return model_class() 

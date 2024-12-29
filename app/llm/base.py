@@ -2,7 +2,7 @@
 LLMの基底クラス
 """
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
 
@@ -18,14 +18,14 @@ class LLMMetrics(BaseModel):
 class BaseLLM(ABC):
     """LLMの基底クラス"""
     
-    def __init__(self, api_key: str, model: str, temperature: float = 0.1):
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None, temperature: float = 0.1):
         """
         初期化
 
         Args:
-            api_key (str): APIキー
-            model (str): モデル名
-            temperature (float, optional): 生成時の温度パラメータ. Defaults to 0.1.
+            api_key (Optional[str]): APIキー
+            model (Optional[str]): モデル名
+            temperature (float): 生成時の温度パラメータ
         """
         self.api_key = api_key
         self.model = model
@@ -44,7 +44,7 @@ class BaseLLM(ABC):
         テキストを生成
 
         Args:
-            prompt (str): ��ロンプト
+            prompt (str): プロンプト
 
         Returns:
             str: 生成されたテキスト

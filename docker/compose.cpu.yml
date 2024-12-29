@@ -11,6 +11,7 @@ services:
     tty: true
     volumes:
       - .:/home/$user_name/workspace
+      - .ssh/:/home/$user_name/.ssh/
     working_dir: /home/$user_name/workspace
     # sysctls:
     #   - net.core.somaxconn=$somaxconn

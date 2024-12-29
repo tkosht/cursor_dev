@@ -9,7 +9,7 @@ from datetime import date
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from app.models.financial import Financial
+from app.models.financial import Financial, PeriodType
 
 
 def test_create_financial(session, sample_financial):
