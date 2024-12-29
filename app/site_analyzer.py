@@ -1,6 +1,7 @@
 """
 サイト構造を解析し、企業情報ページを特定するためのモジュール
 """
+import asyncio
 import logging
 import xml.etree.ElementTree as ET
 from typing import Any, Dict, List, Optional
@@ -9,9 +10,23 @@ from urllib.parse import urljoin, urlparse
 import aiohttp
 from bs4 import BeautifulSoup
 
-from .llm_manager import LLMManager
+from app.llm.manager import LLMManager
 
+# ログレベルを DEBUG に設定
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+# コンソールハンドラを追加
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
+# 定数
+DEFAULT_TIMEOUT = 30  # 秒
+REQUEST_INTERVAL = 1.0  # 秒
+MAX_RETRIES = 3
 
 
 def _is_navigation_element(class_name: Optional[str]) -> bool:
@@ -63,7 +78,8 @@ class SiteAnalyzer:
         """
         非同期コンテキストマネージャーのエントリーポイント
         """
-        self._session = aiohttp.ClientSession()
+        timeout = aiohttp.ClientTimeout(total=DEFAULT_TIMEOUT)
+        self._session = aiohttp.ClientSession(timeout=timeout)
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -77,17 +93,6 @@ class SiteAnalyzer:
     async def analyze_site_structure(self, base_url: str) -> Dict[str, Any]:
         """
         サイト構造を解析
-
-        Args:
-            base_url: サイトのベースURL
-
-        Returns:
-            解析結果の辞書
-            {
-                'sitemap': サイトマップ情報,
-                'navigation': ナビゲーション構造,
-                'relevant_pages': 関連ページリスト
-            }
         """
         if not self._session:
             raise RuntimeError(
@@ -95,16 +100,24 @@ class SiteAnalyzer:
             )
 
         try:
+            logger.info(f"Starting analysis of {base_url}")
+            
             # サイトマップの取得
+            logger.debug("Fetching sitemap URLs")
             sitemap_urls = await self._get_sitemap_urls(base_url)
+            logger.debug(f"Found {len(sitemap_urls)} URLs in sitemap")
 
             # ナビゲーション構造の解析
+            logger.debug("Analyzing navigation structure")
             nav_structure = await self._analyze_navigation(base_url)
+            logger.debug(f"Navigation structure analysis complete")
 
             # 企業情報関連ページの特定
+            logger.debug("Identifying relevant pages")
             relevant_pages = await self._identify_relevant_pages(
                 base_url, sitemap_urls, nav_structure
             )
+            logger.debug(f"Found {len(relevant_pages)} relevant pages")
 
             return {
                 "sitemap": sitemap_urls,
@@ -119,23 +132,23 @@ class SiteAnalyzer:
     async def _get_sitemap_urls(self, base_url: str) -> List[str]:
         """
         サイトマップからURLリストを取得
-
-        Args:
-            base_url: サイトのベースURL
-
-        Returns:
-            URLリスト
         """
         sitemap_urls = []
         try:
+            logger.debug(f"Attempting to get sitemap URLs from {base_url}")
+            
             # robots.txtからサイトマップの場所を取得
+            logger.debug("Checking robots.txt for sitemap")
             sitemap_urls.extend(await self._get_sitemap_from_robots(base_url))
+            logger.debug(f"Found {len(sitemap_urls)} URLs from robots.txt")
 
             # 一般的なサイトマップの場所もチェック
             if not sitemap_urls:
+                logger.debug("No sitemap in robots.txt, checking common locations")
                 sitemap_urls.extend(
                     await self._get_sitemap_from_common_locations(base_url)
                 )
+                logger.debug(f"Found {len(sitemap_urls)} URLs from common locations")
 
         except Exception as e:
             logger.error(f"Error getting sitemap for {base_url}: {str(e)}")
@@ -145,35 +158,26 @@ class SiteAnalyzer:
     async def _get_sitemap_from_robots(self, base_url: str) -> List[str]:
         """
         robots.txtからサイトマップを取得
-
-        Args:
-            base_url: サイトのベースURL
-
-        Returns:
-            URLリスト
         """
         urls = []
         robots_url = urljoin(base_url, "/robots.txt")
-        try:
-            async with self._session.get(robots_url) as response:
-                if response.status == 200:
-                    robots_text = await response.text()
-                    sitemap_location = self._extract_sitemap_location(robots_text)
-                    if sitemap_location:
-                        urls.extend(await self._parse_sitemap(sitemap_location))
-        except aiohttp.ClientError:
-            pass
+        logger.debug(f"Fetching robots.txt from {robots_url}")
+        
+        response = await self._make_request(robots_url)
+        if response and response.status == 200:
+            robots_text = await response.text()
+            sitemap_location = self._extract_sitemap_location(robots_text)
+            if sitemap_location:
+                logger.debug(f"Found sitemap location: {sitemap_location}")
+                urls.extend(await self._parse_sitemap(sitemap_location))
+        else:
+            logger.debug("Failed to fetch robots.txt")
+        
         return urls
 
     async def _get_sitemap_from_common_locations(self, base_url: str) -> List[str]:
         """
         一般的な場所からサイトマップを取得
-
-        Args:
-            base_url: サイトのベースURL
-
-        Returns:
-            URLリスト
         """
         common_locations = [
             "/sitemap.xml",
@@ -182,12 +186,15 @@ class SiteAnalyzer:
         ]
         for location in common_locations:
             url = urljoin(base_url, location)
-            try:
-                async with self._session.get(url) as response:
-                    if response.status == 200:
-                        return await self._parse_sitemap(url)
-            except aiohttp.ClientError:
-                continue
+            logger.debug(f"Checking sitemap at {url}")
+            
+            response = await self._make_request(url)
+            if response and response.status == 200:
+                logger.debug(f"Found sitemap at {url}")
+                return await self._parse_sitemap(url)
+            else:
+                logger.debug(f"No sitemap at {url}")
+        
         return []
 
     def _extract_sitemap_location(self, robots_text: str) -> Optional[str]:
@@ -208,90 +215,84 @@ class SiteAnalyzer:
     async def _parse_sitemap(self, sitemap_url: str) -> List[str]:
         """
         サイトマップをパースしてURLリストを取得
-
-        Args:
-            sitemap_url: サイトマップのURL
-
-        Returns:
-            URLリスト
         """
         urls = []
-        try:
-            async with self._session.get(sitemap_url) as response:
-                if response.status == 200:
-                    content = await response.text()
-                    root = ET.fromstring(content)
-
-                    # 名前空間の取得
-                    ns = {"sm": root.tag.split("}")[0][1:]} if "}" in root.tag else ""
-
-                    # URLの抽出
-                    if ns:
-                        locations = root.findall(".//sm:loc", ns)
-                    else:
-                        locations = root.findall(".//loc")
-
-                    urls.extend([loc.text for loc in locations if loc.text])
-
-        except Exception as e:
-            logger.error(f"Error parsing sitemap {sitemap_url}: {str(e)}")
-
+        logger.debug(f"Parsing sitemap at {sitemap_url}")
+        
+        response = await self._make_request(sitemap_url)
+        if response and response.status == 200:
+            try:
+                content = await response.text()
+                root = ET.fromstring(content)
+                
+                # 名前空間の取得
+                ns = {"sm": root.tag.split("}")[0][1:]} if "}" in root.tag else ""
+                
+                # URLの抽出
+                if ns:
+                    locations = root.findall(".//sm:loc", ns)
+                else:
+                    locations = root.findall(".//loc")
+                
+                urls.extend([loc.text for loc in locations if loc.text])
+                logger.debug(f"Found {len(urls)} URLs in sitemap")
+                
+            except ET.ParseError as e:
+                logger.error(f"Error parsing sitemap XML: {str(e)}")
+            except Exception as e:
+                logger.error(f"Error processing sitemap: {str(e)}")
+        else:
+            logger.debug("Failed to fetch sitemap")
+        
         return urls
 
     async def _analyze_navigation(self, base_url: str) -> Dict[str, List[str]]:
         """
         サイトのナビゲーション構造を解析
-
-        Args:
-            base_url: サイトのベースURL
-
-        Returns:
-            ナビゲーション構造の辞書
-            {
-                'main_nav': メインナビゲーションのリンク,
-                'footer_nav': フッターナビゲーションのリンク,
-                'other_nav': その他のナビゲーションリンク
-            }
         """
         nav_structure = {"main_nav": [], "footer_nav": [], "other_nav": []}
-
-        try:
-            async with self._session.get(base_url) as response:
-                if response.status == 200:
-                    content = await response.text()
-                    soup = BeautifulSoup(content, "html.parser")
-
-                    # メインナビゲーションの解析
-                    main_nav = soup.find("nav")
-                    if main_nav:
-                        nav_structure["main_nav"] = [
-                            urljoin(base_url, a["href"])
-                            for a in main_nav.find_all("a", href=True)
-                        ]
-
-                    # フッターナビゲーションの解析
-                    footer = soup.find("footer")
-                    if footer:
-                        nav_structure["footer_nav"] = [
-                            urljoin(base_url, a["href"])
-                            for a in footer.find_all("a", href=True)
-                        ]
-
-                    # その他のナビゲーション要素の解析
-                    other_navs = soup.find_all(
-                        ["nav", "ul", "div"], class_=_is_navigation_element
-                    )
-                    for nav in other_navs:
-                        nav_structure["other_nav"].extend(
-                            [
-                                urljoin(base_url, a["href"])
-                                for a in nav.find_all("a", href=True)
-                            ]
-                        )
-
-        except Exception as e:
-            logger.error(f"Error analyzing navigation for {base_url}: {str(e)}")
-
+        logger.debug(f"Analyzing navigation at {base_url}")
+        
+        response = await self._make_request(base_url)
+        if response and response.status == 200:
+            try:
+                content = await response.text()
+                soup = BeautifulSoup(content, "html.parser")
+                
+                # メインナビゲーションの解析
+                main_nav = soup.find("nav")
+                if main_nav:
+                    nav_structure["main_nav"] = [
+                        urljoin(base_url, a["href"])
+                        for a in main_nav.find_all("a", href=True)
+                    ]
+                    logger.debug(f"Found {len(nav_structure['main_nav'])} main navigation links")
+                
+                # フッターナビゲーションの解析
+                footer = soup.find("footer")
+                if footer:
+                    nav_structure["footer_nav"] = [
+                        urljoin(base_url, a["href"])
+                        for a in footer.find_all("a", href=True)
+                    ]
+                    logger.debug(f"Found {len(nav_structure['footer_nav'])} footer navigation links")
+                
+                # その他のナビゲーション要素の解析
+                other_navs = soup.find_all(
+                    ["nav", "ul", "div"], class_=_is_navigation_element
+                )
+                for nav in other_navs:
+                    nav_structure["other_nav"].extend([
+                        urljoin(base_url, a["href"])
+                        for a in nav.find_all("a", href=True)
+                    ])
+                logger.debug(f"Found {len(nav_structure['other_nav'])} other navigation links")
+                
+            except Exception as e:
+                logger.error(f"Error analyzing navigation: {str(e)}")
+        else:
+            logger.debug("Failed to fetch page for navigation analysis")
+        
         return nav_structure
 
     async def _identify_relevant_pages(
@@ -461,3 +462,38 @@ class SiteAnalyzer:
         except Exception as e:
             logger.error(f"Error evaluating page {url}: {str(e)}")
             return 0.0
+
+    async def _make_request(self, url: str, method: str = "GET") -> Optional[aiohttp.ClientResponse]:
+        """
+        リトライ機能付きのHTTPリクエスト
+
+        Args:
+            url: リクエスト先URL
+            method: HTTPメソッド
+
+        Returns:
+            レスポンス（失敗時はNone）
+        """
+        for attempt in range(MAX_RETRIES):
+            try:
+                if attempt > 0:
+                    await asyncio.sleep(REQUEST_INTERVAL * (2 ** attempt))  # 指数バックオフ
+                
+                logger.debug(f"Making {method} request to {url} (attempt {attempt + 1}/{MAX_RETRIES})")
+                response = await self._session.request(method, url)
+                
+                if response.status == 429:  # レート制限
+                    logger.warning(f"Rate limit hit for {url}, waiting before retry")
+                    continue
+                
+                return response
+
+            except asyncio.TimeoutError:
+                logger.warning(f"Timeout accessing {url} (attempt {attempt + 1}/{MAX_RETRIES})")
+            except aiohttp.ClientError as e:
+                logger.warning(f"Error accessing {url}: {str(e)} (attempt {attempt + 1}/{MAX_RETRIES})")
+            
+            await asyncio.sleep(REQUEST_INTERVAL)  # 次のリトライまで待機
+        
+        logger.error(f"Failed to access {url} after {MAX_RETRIES} attempts")
+        return None
