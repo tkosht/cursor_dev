@@ -23,10 +23,16 @@ class GeminiLLM(BaseLLM):
             temperature: 生成時の温度パラメータ
         """
         super().__init__(api_key=api_key, model=model, temperature=temperature)
-        self._init_client()
     
     def _init_client(self) -> None:
-        """クライアントの初期化"""
+        """クライアントの初期化
+
+        Raises:
+            ValueError: APIキーが設定されていない場合
+        """
+        if not self.api_key:
+            raise ValueError("APIキーが設定されていません")
+        
         genai.configure(api_key=self.api_key)
         self.client = genai.GenerativeModel(
             model_name=self.model,
