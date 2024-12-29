@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class News(Base):
     """
     ニュースモデル
-    
+
     Attributes:
         id (int): 主キー
         company_id (int): 企業ID（外部キー）
@@ -32,19 +32,16 @@ class News(Base):
         updated_at (datetime): 更新日時
         company (Company): 企業
     """
-    
-    company_id = Column(BigInteger, ForeignKey('company.id'), nullable=False)
+
+    company_id = Column(BigInteger, ForeignKey("company.id"), nullable=False)
     title = Column(String(255), nullable=False)
     content = Column(Text)
     url = Column(String(255))
     published_at = Column(DateTime, nullable=False)
     source = Column(String(50))
     category = Column(String(50))
-    
-    company: Mapped["Company"] = relationship(
-        "Company",
-        back_populates="news"
-    )
-    
+
+    company: Mapped["Company"] = relationship("Company", back_populates="news")
+
     def __repr__(self) -> str:
-        return f"<News(company_id={self.company_id}, title={self.title})>" 
+        return f"<News(company_id={self.company_id}, title={self.title})>"

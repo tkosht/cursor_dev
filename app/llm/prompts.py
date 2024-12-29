@@ -7,7 +7,9 @@ from typing import Dict, Optional
 class PromptTemplate:
     """プロンプトテンプレートクラス"""
 
-    def __init__(self, template: str, variables: Optional[Dict[str, str]] = None) -> None:
+    def __init__(
+        self, template: str, variables: Optional[Dict[str, str]] = None
+    ) -> None:
         """
         初期化
 
@@ -85,7 +87,7 @@ class PromptManager:
             "詳細な分析\n\n"
             "内容:\n"
             "{content}"
-        )
+        ),
     }
 
     @classmethod
@@ -115,4 +117,4 @@ class PromptManager:
             str: フォーマットされたプロンプト
         """
         template = cls.get_template(task)
-        return template.format(content=content, **kwargs) 
+        return template.format(content=content, **kwargs)

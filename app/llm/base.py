@@ -10,21 +10,25 @@ from pydantic import BaseModel, Field
 
 class LLMError(Exception):
     """LLMの基底エラー"""
+
     pass
 
 
 class LLMConnectionError(LLMError):
     """LLM接続エラー"""
+
     pass
 
 
 class LLMResponseError(LLMError):
     """LLMレスポンスエラー"""
+
     pass
 
 
 class LLMMetrics(BaseModel):
     """LLMの実行メトリクス"""
+
     total_tokens: int = Field(default=0, description="合計トークン数")
     prompt_tokens: int = Field(default=0, description="プロンプトのトークン数")
     completion_tokens: int = Field(default=0, description="生成結果のトークン数")
@@ -34,8 +38,13 @@ class LLMMetrics(BaseModel):
 
 class BaseLLM(ABC):
     """LLMの基底クラス"""
-    
-    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None, temperature: float = 0.1):
+
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
+        temperature: float = 0.1,
+    ):
         """
         初期化
 
@@ -49,12 +58,12 @@ class BaseLLM(ABC):
         self.temperature = temperature
         self.metrics = LLMMetrics()
         self._init_client()
-    
+
     @abstractmethod
     def _init_client(self) -> None:
         """クライアントの初期化"""
         pass
-    
+
     @abstractmethod
     async def generate_text(self, prompt: str) -> str:
         """
@@ -67,7 +76,7 @@ class BaseLLM(ABC):
             str: 生成されたテキスト
         """
         pass
-    
+
     @abstractmethod
     async def analyze_content(self, content: str, task: str) -> Dict[str, Any]:
         """
@@ -87,7 +96,7 @@ class BaseLLM(ABC):
         finally:
             end_time = time.monotonic()
             self.metrics.last_latency = end_time - start_time
-    
+
     @abstractmethod
     async def _analyze_content_impl(self, content: str, task: str) -> Dict[str, Any]:
         """
@@ -101,8 +110,10 @@ class BaseLLM(ABC):
             Dict[str, Any]: 分析結果
         """
         pass
-    
-    def update_metrics(self, prompt_tokens: int, completion_tokens: int, cost: float) -> None:
+
+    def update_metrics(
+        self, prompt_tokens: int, completion_tokens: int, cost: float
+    ) -> None:
         """
         メトリクスを更新
 
@@ -113,9 +124,11 @@ class BaseLLM(ABC):
         """
         self.metrics.prompt_tokens += prompt_tokens
         self.metrics.completion_tokens += completion_tokens
-        self.metrics.total_tokens = self.metrics.prompt_tokens + self.metrics.completion_tokens
+        self.metrics.total_tokens = (
+            self.metrics.prompt_tokens + self.metrics.completion_tokens
+        )
         self.metrics.total_cost += cost
-    
+
     def get_metrics(self) -> LLMMetrics:
         """
         メトリクスを取得
@@ -124,11 +137,11 @@ class BaseLLM(ABC):
             LLMMetrics: メトリクス
         """
         return self.metrics
-    
+
     def reset_metrics(self) -> None:
         """メトリクスをリセット"""
         self.metrics = LLMMetrics()
-    
+
     def get_llm_latency(self) -> float:
         """
         最後のLLM実行のレイテンシを取得
@@ -136,4 +149,4 @@ class BaseLLM(ABC):
         Returns:
             float: レイテンシ（秒）
         """
-        return self.metrics.last_latency 
+        return self.metrics.last_latency

@@ -36,7 +36,7 @@ def test_financial_from_dict(session, sample_company):
         "period_type": PeriodType.QUARTER,
         "period_end_date": date(2023, 11, 20),
         "revenue": 500000000,
-        "operating_income": 50000000
+        "operating_income": 50000000,
     }
     financial = Financial.from_dict(data)
     session.add(financial)
@@ -49,10 +49,7 @@ def test_financial_from_dict(session, sample_company):
 
 def test_financial_update(sample_financial):
     """財務情報の更新をテストします。"""
-    data = {
-        "revenue": 1100000000,
-        "operating_income": 110000000
-    }
+    data = {"revenue": 1100000000, "operating_income": 110000000}
     sample_financial.update(data)
 
     assert sample_financial.revenue == 1100000000
@@ -76,15 +73,15 @@ def test_invalid_period_type(session, sample_company):
         company_id=sample_company.id,
         fiscal_year="2023年度",
         period_type=None,  # None値は許可されない
-        period_end_date=date(2024, 2, 20)
+        period_end_date=date(2024, 2, 20),
     )
     session.add(financial)
-    
+
     # コミット時にエラーが発生することを確認
     with pytest.raises(IntegrityError):
         session.commit()
     session.rollback()
-    
+
     # 無効な値の指定
     with pytest.raises(ValueError):
-        PeriodType("invalid_type") 
+        PeriodType("invalid_type")

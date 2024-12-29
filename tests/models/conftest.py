@@ -8,7 +8,7 @@ from datetime import date, datetime, timezone
 
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, sessionmaker  # noqa: F401 - used for type hints
 
 from app.models import Base, set_session
 from app.models.company import Company
@@ -41,7 +41,7 @@ def session(engine):
 @pytest.fixture
 def sample_company(session):
     """
-    テスト���のサンプル企業データを作成します。
+    テストのサンプル企業データを作成します。
     """
     company = Company(
         company_code="9843",
@@ -55,7 +55,7 @@ def sample_company(session):
         website_url="https://www.nitorihd.co.jp/",
         stock_exchange="東証プライム",
         industry="小売業",
-        employees_count="約45,000名（連結）"
+        employees_count="約45,000名（連結）",
     )
     session.add(company)
     session.commit()
@@ -80,7 +80,7 @@ def sample_financial(session, sample_company):
         net_assets=1500000000,
         earnings_per_share=100.50,
         book_value_per_share=1500.75,
-        dividend_per_share=50.00
+        dividend_per_share=50.00,
     )
     session.add(financial)
     session.commit()
@@ -99,8 +99,8 @@ def sample_news(session, sample_company):
         url="https://www.nitorihd.co.jp/ir/news/2024/20240104.pdf",
         published_at=datetime(2024, 1, 4, 15, 0, tzinfo=timezone.utc),
         source="適時開示",
-        category="決算情報"
+        category="決算情報",
     )
     session.add(news)
     session.commit()
-    return news 
+    return news

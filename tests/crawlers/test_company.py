@@ -10,16 +10,13 @@ from app.crawlers.company import CompanyCrawler
 @pytest.fixture
 def company_config():
     """企業設定のフィクスチャ"""
-    return CompanyConfig(
-        company_code="9843",
-        base_url="https://www.nitorihd.co.jp"
-    )
+    return CompanyConfig(company_code="9843", base_url="https://www.nitorihd.co.jp")
 
 
 @pytest.fixture
 def crawler(company_config):
     """クローラーのフィクスチャ"""
-    with patch('app.crawlers.company.get_company_config') as mock_get_config:
+    with patch("app.crawlers.company.get_company_config") as mock_get_config:
         mock_get_config.return_value = company_config
         crawler = CompanyCrawler(company_code="9843")
         yield crawler
@@ -33,14 +30,14 @@ def test_init(crawler, company_config):
 
 def test_init_invalid_company_code():
     """無効な企業コードでの初期化テスト"""
-    with patch('app.crawlers.company.get_company_config') as mock_get_config:
+    with patch("app.crawlers.company.get_company_config") as mock_get_config:
         mock_get_config.return_value = None
         with pytest.raises(ValueError) as exc_info:
             CompanyCrawler(company_code="0000")
         assert "企業コード 0000 の設定が見つかりません" in str(exc_info.value)
 
 
-@patch('app.crawlers.base.BaseCrawler._make_request')
+@patch("app.crawlers.base.BaseCrawler._make_request")
 def test_crawl_success(mock_request, crawler):
     """クロール成功時のテスト"""
     # モックレスポンスの準備
@@ -60,7 +57,7 @@ def test_crawl_success(mock_request, crawler):
         </table>
     </div>
     """
-    
+
     mock_financial_response = Mock()
     mock_financial_response.text = """
     <table class="financial-table">
@@ -76,7 +73,7 @@ def test_crawl_success(mock_request, crawler):
         </tr>
     </table>
     """
-    
+
     mock_news_response = Mock()
     mock_news_response.text = """
     <ul class="news-list">
@@ -87,28 +84,34 @@ def test_crawl_success(mock_request, crawler):
         </li>
     </ul>
     """
-    
+
     mock_request.side_effect = [
         mock_company_response,
         mock_financial_response,
-        mock_news_response
+        mock_news_response,
     ]
-    
+
     # セッションのモック
     session = Mock()
     company = Mock()
     company.id = 1
     session.add.return_value = None
     crawler.session = session
-    
+
     # クロール実行
     crawler.crawl()
-    
+
     # 各APIが正しく呼び出されたことを確認
     assert mock_request.call_count == 3
-    mock_request.assert_any_call(f"{crawler.config.base_url}{crawler.config.company_info_path}")
-    mock_request.assert_any_call(f"{crawler.config.base_url}{crawler.config.financial_info_path}")
-    mock_request.assert_any_call(f"{crawler.config.base_url}{crawler.config.news_info_path}")
+    mock_request.assert_any_call(
+        f"{crawler.config.base_url}{crawler.config.company_info_path}"
+    )
+    mock_request.assert_any_call(
+        f"{crawler.config.base_url}{crawler.config.financial_info_path}"
+    )
+    mock_request.assert_any_call(
+        f"{crawler.config.base_url}{crawler.config.news_info_path}"
+    )
     session.add.assert_called()
     session.commit.assert_called()
 
@@ -132,13 +135,13 @@ def test_parse_company(crawler):
     """
     response = Mock()
     response.text = html
-    
+
     result = crawler.parse_company(response)
-    
-    assert result['company_code'] == "9843"
-    assert result['name'] == "ニトリホールディングス"
-    assert result['established_date'].strftime('%Y-%m-%d') == "1972-03-01"
-    assert "家具・インテリア用品の販売" in result['description']
+
+    assert result["company_code"] == "9843"
+    assert result["name"] == "ニトリホールディングス"
+    assert result["established_date"].strftime("%Y-%m-%d") == "1972-03-01"
+    assert "家具・インテリア用品の販売" in result["description"]
 
 
 def test_parse_financial(crawler):
@@ -159,13 +162,13 @@ def test_parse_financial(crawler):
     """
     response = Mock()
     response.text = html
-    
+
     results = crawler.parse_financial(response)
-    
+
     assert len(results) == 1
-    assert results[0]['fiscal_year'] == "2023"
-    assert results[0]['revenue'] == 100_000_000_000
-    assert results[0]['operating_income'] == 10_000_000_000
+    assert results[0]["fiscal_year"] == "2023"
+    assert results[0]["revenue"] == 100_000_000_000
+    assert results[0]["operating_income"] == 10_000_000_000
 
 
 def test_parse_news(crawler):
@@ -181,10 +184,10 @@ def test_parse_news(crawler):
     """
     response = Mock()
     response.text = html
-    
+
     results = crawler.parse_news(response)
-    
+
     assert len(results) == 1
-    assert results[0]['title'] == "決算発表"
-    assert results[0]['published_at'].strftime('%Y-%m-%d') == "2023-12-25"
-    assert results[0]['url'] == "https://www.nitorihd.co.jp/ir/news/2023/1225.html" 
+    assert results[0]["title"] == "決算発表"
+    assert results[0]["published_at"].strftime("%Y-%m-%d") == "2023-12-25"
+    assert results[0]["url"] == "https://www.nitorihd.co.jp/ir/news/2023/1225.html"

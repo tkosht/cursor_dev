@@ -16,6 +16,7 @@ logger.setLevel(logging.DEBUG)
 @dataclass
 class LLMConfig:
     """LLMの設定"""
+
     model_name: str = "gemini-2.0-flash-exp"
     temperature: float = 0.1
     max_tokens: int = 1000
@@ -25,6 +26,7 @@ class LLMConfig:
 @dataclass
 class URLComponents:
     """URL構成要素"""
+
     path_segments: List[str]
     query_params: Dict[str, List[str]]
     fragment: Optional[str] = None
@@ -34,6 +36,7 @@ class URLComponents:
 @dataclass
 class LanguageInfo:
     """言語情報"""
+
     primary_language: str
     other_languages: List[str]
     confidence: float
@@ -42,6 +45,7 @@ class LanguageInfo:
 @dataclass
 class EvaluationResult:
     """評価結果"""
+
     relevance_score: float
     category: str
     reason: str
@@ -59,8 +63,8 @@ class PromptGenerator:
                 "relevance_score": 0.95,
                 "category": "company_profile",
                 "reason": "標準的な企業情報パス構造",
-                "confidence": 0.9
-            }
+                "confidence": 0.9,
+            },
         },
         {
             "url": "/ir/financial/",
@@ -68,15 +72,13 @@ class PromptGenerator:
                 "relevance_score": 0.8,
                 "category": "ir_info",
                 "reason": "投資家向け情報を示すパス",
-                "confidence": 0.85
-            }
-        }
+                "confidence": 0.85,
+            },
+        },
     ]
 
     def generate(
-        self,
-        url_components: URLComponents,
-        language_info: LanguageInfo
+        self, url_components: URLComponents, language_info: LanguageInfo
     ) -> str:
         """プロンプトを生成"""
         return (
@@ -113,12 +115,7 @@ class ResultValidator:
         """
         try:
             # 必須フィールドの存在確認
-            required_fields = [
-                "relevance_score",
-                "category",
-                "reason",
-                "confidence"
-            ]
+            required_fields = ["relevance_score", "category", "reason", "confidence"]
             if not all(field in raw_result for field in required_fields):
                 logger.error(f"Missing required fields in result: {raw_result}")
                 return None
@@ -127,7 +124,9 @@ class ResultValidator:
             score = float(raw_result["relevance_score"])
             confidence = float(raw_result["confidence"])
             if not (0 <= score <= 1 and 0 <= confidence <= 1):
-                logger.error(f"Invalid score range: score={score}, confidence={confidence}")
+                logger.error(
+                    f"Invalid score range: score={score}, confidence={confidence}"
+                )
                 return None
 
             # カテゴリの検証
@@ -136,7 +135,7 @@ class ResultValidator:
                 "corporate_info",
                 "about_us",
                 "ir_info",
-                "other"
+                "other",
             }
             category = raw_result["category"]
             if category not in valid_categories:
@@ -146,7 +145,7 @@ class ResultValidator:
             # カテゴリのマッピング
             category_mapping = {
                 "about_us": "company_profile",
-                "corporate_info": "company_profile"
+                "corporate_info": "company_profile",
             }
             category = category_mapping.get(category, category)
 
@@ -154,7 +153,7 @@ class ResultValidator:
                 relevance_score=score,
                 category=category,
                 reason=str(raw_result["reason"]),
-                confidence=confidence
+                confidence=confidence,
             )
 
         except (KeyError, ValueError, TypeError) as e:
@@ -196,21 +195,23 @@ class LLMManager:
         Returns:
             LLMManager: 自身のインスタンス
         """
-        logging.debug(f"Initialized LLMManager with model={model_name}, temperature={self.config.temperature}")
-        
+        logging.debug(
+            f"Initialized LLMManager with model={model_name}, temperature={self.config.temperature}"
+        )
+
         if model_name.startswith("gemini"):
             from app.llm.gemini import GeminiLLM
-            self.llm = GeminiLLM(api_key=api_key, model=model_name, temperature=self.config.temperature)
+
+            self.llm = GeminiLLM(
+                api_key=api_key, model=model_name, temperature=self.config.temperature
+            )
         else:
             raise ValueError(f"Unsupported model: {model_name}")
-        
+
         return self
 
     async def evaluate_url_relevance(
-        self,
-        url: str,
-        path_components: List[str],
-        query_params: Dict[str, List[str]]
+        self, url: str, path_components: List[str], query_params: Dict[str, List[str]]
     ) -> Optional[Dict[str, Any]]:
         """
         URLの企業情報関連性を評価
@@ -237,18 +238,14 @@ class LLMManager:
 
             # URL構成要素の作成
             url_components = URLComponents(
-                path_segments=path_components,
-                query_params=query_params
+                path_segments=path_components, query_params=query_params
             )
 
             # 言語情報の検出
             language_info = self._detect_language(path_components)
 
             # プロンプト生成
-            prompt = self.prompt_generator.generate(
-                url_components,
-                language_info
-            )
+            prompt = self.prompt_generator.generate(url_components, language_info)
 
             # LLM評価実行
             raw_result = await self.llm.analyze_content(prompt, "url_analysis")
@@ -270,7 +267,7 @@ class LLMManager:
                 "relevance_score": result.relevance_score,
                 "category": result.category,
                 "reason": result.reason,
-                "confidence": result.confidence
+                "confidence": result.confidence,
             }
 
         except Exception as e:
@@ -293,9 +290,7 @@ class LLMManager:
                 break
 
         return LanguageInfo(
-            primary_language=detected_lang,
-            other_languages=[],
-            confidence=confidence
+            primary_language=detected_lang, other_languages=[], confidence=confidence
         )
 
     def _mock_llm_evaluation(self, url: str) -> Dict[str, Any]:
@@ -307,19 +302,19 @@ class LLMManager:
                 "relevance_score": 0.9,
                 "category": "company_profile",
                 "reason": "企業情報ページへの直接リンク",
-                "confidence": 0.9
+                "confidence": 0.9,
             }
         elif "corporate" in url:
             return {
                 "relevance_score": 0.8,
                 "category": "corporate_info",
                 "reason": "企業情報関連ページ",
-                "confidence": 0.85
+                "confidence": 0.85,
             }
         else:
             return {
                 "relevance_score": 0.3,
                 "category": "other",
                 "reason": "一般ページ",
-                "confidence": 0.7
-            } 
+                "confidence": 0.7,
+            }

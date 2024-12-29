@@ -34,7 +34,7 @@ def test_company_from_dict(session):
         "name": "トヨタ自動車",
         "name_en": "TOYOTA MOTOR CORPORATION",
         "established_date": date(1937, 8, 28),
-        "industry": "輸送用機器"
+        "industry": "輸送用機器",
     }
     company = Company.from_dict(data)
     session.add(company)
@@ -49,7 +49,7 @@ def test_company_update(sample_company):
     """企業情報の更新をテストします。"""
     data = {
         "name_en": "Nitori Holdings Corporation",
-        "representative_position": "代表取締役社長"
+        "representative_position": "代表取締役社長",
     }
     sample_company.update(data)
 
@@ -76,19 +76,13 @@ def test_company_relationships(session, sample_company, sample_financial, sample
 
 def test_company_unique_code(session):
     """企業コードの一意性制約をテストします。"""
-    company1 = Company(
-        company_code="1111",
-        name="テスト企業1"
-    )
+    company1 = Company(company_code="1111", name="テスト企業1")
     session.add(company1)
     session.commit()
 
     # 同じ企業コードで別の企業を作成
-    company2 = Company(
-        company_code="1111",
-        name="テスト企業2"
-    )
+    company2 = Company(company_code="1111", name="テスト企業2")
     session.add(company2)
-    
+
     with pytest.raises(Exception):  # SQLAlchemyの具体的な例外クラスは環境依存
-        session.commit() 
+        session.commit()

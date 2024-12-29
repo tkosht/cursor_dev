@@ -14,6 +14,7 @@ logger.setLevel(logging.DEBUG)
 @dataclass
 class URLAnalysisMetrics:
     """分析メトリクス"""
+
     total_urls: int = 0
     processed_urls: int = 0
     error_count: int = 0
@@ -28,7 +29,7 @@ class URLAnalysisMetrics:
         url: str,
         result: Optional[Dict[str, Any]],
         processing_time: float,
-        llm_latency: float
+        llm_latency: float,
     ):
         """URL処理結果の記録"""
         self.processed_urls += 1
@@ -66,7 +67,7 @@ class AnalysisReporter:
             "summary": self._generate_summary(metrics),
             "performance": self._generate_performance_metrics(metrics),
             "quality": self._generate_quality_metrics(metrics),
-            "categories": self._generate_category_metrics(metrics)
+            "categories": self._generate_category_metrics(metrics),
         }
 
     def _generate_summary(self, metrics: URLAnalysisMetrics) -> Dict[str, Any]:
@@ -76,48 +77,41 @@ class AnalysisReporter:
             "processed_urls": metrics.processed_urls,
             "success_rate": self._calc_success_rate(metrics),
             "avg_processing_time": self._calc_avg(metrics.processing_times),
-            "avg_confidence": self._calc_avg(metrics.confidence_scores)
+            "avg_confidence": self._calc_avg(metrics.confidence_scores),
         }
 
     def _generate_performance_metrics(
-        self,
-        metrics: URLAnalysisMetrics
+        self, metrics: URLAnalysisMetrics
     ) -> Dict[str, Any]:
         """パフォーマンス指標の生成"""
         return {
             "processing_time": {
                 "p50": self._calc_percentile(metrics.processing_times, 50),
                 "p95": self._calc_percentile(metrics.processing_times, 95),
-                "p99": self._calc_percentile(metrics.processing_times, 99)
+                "p99": self._calc_percentile(metrics.processing_times, 99),
             },
             "llm_latency": {
                 "p50": self._calc_percentile(metrics.llm_latencies, 50),
                 "p95": self._calc_percentile(metrics.llm_latencies, 95),
-                "p99": self._calc_percentile(metrics.llm_latencies, 99)
-            }
+                "p99": self._calc_percentile(metrics.llm_latencies, 99),
+            },
         }
 
-    def _generate_quality_metrics(
-        self,
-        metrics: URLAnalysisMetrics
-    ) -> Dict[str, Any]:
+    def _generate_quality_metrics(self, metrics: URLAnalysisMetrics) -> Dict[str, Any]:
         """品質指標の生成"""
         return {
             "confidence": {
                 "avg": self._calc_avg(metrics.confidence_scores),
-                "distribution": self._calc_distribution(metrics.confidence_scores)
+                "distribution": self._calc_distribution(metrics.confidence_scores),
             },
             "relevance": {
                 "avg": self._calc_avg(metrics.relevance_scores),
-                "distribution": self._calc_distribution(metrics.relevance_scores)
+                "distribution": self._calc_distribution(metrics.relevance_scores),
             },
-            "error_rate": metrics.error_count / max(metrics.total_urls, 1)
+            "error_rate": metrics.error_count / max(metrics.total_urls, 1),
         }
 
-    def _generate_category_metrics(
-        self,
-        metrics: URLAnalysisMetrics
-    ) -> Dict[str, Any]:
+    def _generate_category_metrics(self, metrics: URLAnalysisMetrics) -> Dict[str, Any]:
         """カテゴリ別指標の生成"""
         total = sum(metrics.category_counts.values())
         return {
@@ -125,7 +119,9 @@ class AnalysisReporter:
             "distribution": {
                 category: count / total
                 for category, count in metrics.category_counts.items()
-            } if total > 0 else {}
+            }
+            if total > 0
+            else {},
         }
 
     def _calc_success_rate(self, metrics: URLAnalysisMetrics) -> float:
@@ -155,13 +151,7 @@ class AnalysisReporter:
         if not values:
             return {}
 
-        bins = {
-            "0.0-0.2": 0,
-            "0.2-0.4": 0,
-            "0.4-0.6": 0,
-            "0.6-0.8": 0,
-            "0.8-1.0": 0
-        }
+        bins = {"0.0-0.2": 0, "0.2-0.4": 0, "0.4-0.6": 0, "0.6-0.8": 0, "0.8-1.0": 0}
 
         for value in values:
             if value < 0.2:
@@ -175,4 +165,4 @@ class AnalysisReporter:
             else:
                 bins["0.8-1.0"] += 1
 
-        return bins 
+        return bins
