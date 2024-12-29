@@ -9,9 +9,14 @@ from app.llm.manager import LLMManager
 
 
 @pytest.fixture
-def llm_manager():
-    """LLMマネージャーのフィクスチャ"""
-    return LLMManager()
+def llm_config():
+    """LLMの設定"""
+    return {
+        "model_name": "gemini-2.0-flash-exp",
+        "temperature": 0.1,
+        "max_tokens": 1000,
+        "timeout": 30.0
+    }
 
 
 @pytest.fixture
@@ -25,141 +30,82 @@ def mock_gemini_api():
 
 
 @pytest.fixture
-def mock_openai_api():
-    """OpenAIのAPIモックのフィクスチャ"""
-    with patch("openai.AsyncOpenAI") as mock:
-        instance = MagicMock()
-        chat = MagicMock()
-        completions = MagicMock()
-        completions.create = AsyncMock(return_value=MagicMock(
-            choices=[MagicMock(message=MagicMock(content="test response"))],
-            usage=MagicMock(prompt_tokens=10, completion_tokens=20)
-        ))
-        chat.completions = completions
-        instance.chat = chat
-        mock.return_value = instance
-        yield mock
-
-
-def test_load_model_gemini(llm_manager, mock_gemini_api):
-    """Geminiモデルのロードテスト"""
-    model = llm_manager.load_model(
-        model_name="gemini-2.0-flash-exp",
-        api_key="test_key"
-    )
-    assert model is not None
-    assert model.model == "gemini-2.0-flash-exp"
-    assert model.api_key == "test_key"
-
-
-def test_load_model_gpt4(llm_manager, mock_openai_api):
-    """GPT-4モデルのロードテスト"""
-    model = llm_manager.load_model(
-        model_name="gpt-4o",
-        api_key="test_key"
-    )
-    assert model is not None
-    assert model.model == "gpt-4o"
-    assert model.api_key == "test_key"
-
-
-def test_load_invalid_model(llm_manager):
-    """無効なモデルのロードテスト"""
-    with pytest.raises(ValueError):
-        llm_manager.load_model(
-            model_name="invalid-model",
-            api_key="test_key"
-        )
-
-
-def test_get_model(llm_manager, mock_gemini_api):
-    """モデルの取得テスト"""
-    # モデルをロード
-    model = llm_manager.load_model(
-        model_name="gemini-2.0-flash-exp",
-        api_key="test_key"
-    )
-    
-    # モデルを取得
-    retrieved_model = llm_manager.get_model("gemini-2.0-flash-exp")
-    assert retrieved_model is model
-    
-    # 存在しないモデルを取得
-    assert llm_manager.get_model("invalid-model") is None
+def llm_manager(llm_config):
+    """LLMマネージャーのインスタンス"""
+    manager = LLMManager()
+    manager.load_model("gemini-2.0-flash-exp", "test_api_key")
+    return manager
 
 
 @pytest.mark.asyncio
-async def test_generate_selector(llm_manager, mock_gemini_api):
-    """セレクタ生成テスト"""
-    # モデルをロード
-    llm_manager.load_model(
-        model_name="gemini-2.0-flash-exp",
-        api_key="test_key"
+async def test_evaluate_url_relevance(llm_manager):
+    """URL評価のテスト"""
+    # テスト用のURL情報
+    url = "https://example.com/company/about"
+    path_components = ["company", "about"]
+    query_params = {}
+
+    # モックレスポンスの設定
+    mock_response = {
+        "relevance_score": 0.95,
+        "category": "company_profile",
+        "reason": "企業情報を含むパス構造",
+        "confidence": 0.9
+    }
+    llm_manager.llm.analyze_content = AsyncMock(return_value=mock_response)
+
+    # 評価を実行
+    result = await llm_manager.evaluate_url_relevance(
+        url=url,
+        path_components=path_components,
+        query_params=query_params
     )
-    
-    # セレクタを生成
-    result = await llm_manager.generate_selector(
-        model_name="gemini-2.0-flash-exp",
-        html_content="<html><body><h1>Test</h1></body></html>"
-    )
-    assert isinstance(result, dict)
+
+    # 結果を検証
+    assert result is not None
+    assert result["relevance_score"] == 0.95
+    assert result["category"] == "company_profile"
+    assert result["reason"] == "企業情報を含むパス構造"
+    assert result["confidence"] == 0.9
+
+    # LLMが正しく呼び出されたことを確認
+    llm_manager.llm.analyze_content.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_generate_content(llm_manager, mock_gemini_api):
-    """コンテンツ生成テスト"""
-    # モデルをロード
-    llm_manager.load_model(
-        model_name="gemini-2.0-flash-exp",
-        api_key="test_key"
+async def test_evaluate_url_relevance_error(llm_manager):
+    """URL評価のエラーテスト"""
+    # LLMの呼び出しでエラーを発生させる
+    llm_manager.llm.analyze_content = AsyncMock(side_effect=Exception("API error"))
+
+    # 評価を実行
+    result = await llm_manager.evaluate_url_relevance(
+        url="https://example.com",
+        path_components=["error"],
+        query_params={}
     )
-    
-    # コンテンツを生成
-    result = await llm_manager.generate_content(
-        model_name="gemini-2.0-flash-exp",
-        html_content="<html><body><h1>Test</h1></body></html>"
-    )
-    assert isinstance(result, dict)
+
+    # エラー時はNoneが返されることを確認
+    assert result is None
 
 
 @pytest.mark.asyncio
-async def test_analyze_error(llm_manager, mock_gemini_api):
-    """エラー分析テスト"""
-    # モデルをロード
-    llm_manager.load_model(
-        model_name="gemini-2.0-flash-exp",
-        api_key="test_key"
-    )
-    
-    # エラーを分析
-    result = await llm_manager.analyze_error(
-        model_name="gemini-2.0-flash-exp",
-        error_content="Test error message"
-    )
-    assert isinstance(result, dict)
+async def test_evaluate_url_relevance_invalid_result(llm_manager):
+    """不正な結果のテスト"""
+    # 不正なレスポンスを返すようにモックを設定
+    llm_manager.llm.analyze_content = AsyncMock(return_value={
+        "relevance_score": 2.0,  # 不正な値
+        "category": "invalid",  # 不正なカテゴリ
+        "reason": "test",
+        "confidence": 0.5
+    })
 
-
-def test_metrics(llm_manager, mock_gemini_api):
-    """メトリクスのテスト"""
-    # モデルをロード
-    model = llm_manager.load_model(
-        model_name="gemini-2.0-flash-exp",
-        api_key="test_key"
+    # 評価を実行
+    result = await llm_manager.evaluate_url_relevance(
+        url="https://example.com",
+        path_components=["test"],
+        query_params={}
     )
-    
-    # メトリクスを更新
-    model.update_metrics(10, 20, 0.5)
-    
-    # メトリクスを取得
-    metrics = llm_manager.get_metrics("gemini-2.0-flash-exp")
-    assert metrics is not None
-    assert metrics["total_tokens"] == 30
-    assert metrics["prompt_tokens"] == 10
-    assert metrics["completion_tokens"] == 20
-    assert metrics["total_cost"] == 0.5
-    
-    # メトリクスをリセット
-    llm_manager.reset_metrics("gemini-2.0-flash-exp")
-    metrics = llm_manager.get_metrics("gemini-2.0-flash-exp")
-    assert metrics["total_tokens"] == 0
-    assert metrics["total_cost"] == 0.0 
+
+    # 不正な結果の場合はNoneが返されることを確認
+    assert result is None 

@@ -1,10 +1,26 @@
 """
 LLMの基底クラス
 """
+import time
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
+
+
+class LLMError(Exception):
+    """LLMの基底エラー"""
+    pass
+
+
+class LLMConnectionError(LLMError):
+    """LLM接続エラー"""
+    pass
+
+
+class LLMResponseError(LLMError):
+    """LLMレスポンスエラー"""
+    pass
 
 
 class LLMMetrics(BaseModel):
@@ -13,6 +29,7 @@ class LLMMetrics(BaseModel):
     prompt_tokens: int = Field(default=0, description="プロンプトのトークン数")
     completion_tokens: int = Field(default=0, description="生成結果のトークン数")
     total_cost: float = Field(default=0.0, description="合計コスト")
+    last_latency: float = Field(default=0.0, description="最後の実行のレイテンシ")
 
 
 class BaseLLM(ABC):
@@ -63,6 +80,26 @@ class BaseLLM(ABC):
         Returns:
             Dict[str, Any]: 分析結果
         """
+        start_time = time.monotonic()
+        try:
+            result = await self._analyze_content_impl(content, task)
+            return result
+        finally:
+            end_time = time.monotonic()
+            self.metrics.last_latency = end_time - start_time
+    
+    @abstractmethod
+    async def _analyze_content_impl(self, content: str, task: str) -> Dict[str, Any]:
+        """
+        コンテンツ分析の実装
+
+        Args:
+            content (str): 分析対象のコンテンツ
+            task (str): 分析タスクの種類
+
+        Returns:
+            Dict[str, Any]: 分析結果
+        """
         pass
     
     def update_metrics(self, prompt_tokens: int, completion_tokens: int, cost: float) -> None:
@@ -90,4 +127,13 @@ class BaseLLM(ABC):
     
     def reset_metrics(self) -> None:
         """メトリクスをリセット"""
-        self.metrics = LLMMetrics() 
+        self.metrics = LLMMetrics()
+    
+    def get_llm_latency(self) -> float:
+        """
+        最後のLLM実行のレイテンシを取得
+
+        Returns:
+            float: レイテンシ（秒）
+        """
+        return self.metrics.last_latency 

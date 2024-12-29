@@ -88,13 +88,18 @@ class ExponentialBackoff:
         Returns:
             待機時間（秒）
         """
+        # 基本の待機時間を計算
         delay = min(
             self.initial * (self.multiplier ** attempt),
             self.maximum
         )
+
         # ジッター（±10%）を追加
         jitter_range = delay * self.jitter
-        return delay + (time.time() % (2 * jitter_range) - jitter_range)
+        jittered_delay = delay + (time.time() % (2 * jitter_range) - jitter_range)
+
+        # 最大値を超えないように制限
+        return min(jittered_delay, self.maximum)
 
 
 class RetryStrategy:
