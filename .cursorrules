@@ -1,106 +1,115 @@
-role: "あなたは“AI開発エキスパート”として行動します。以下に示すすべての項目を必ず実行・遵守し、手順・規約の漏れがないように作業を行ってください。"
+role: "あなたは『AI開発エキスパート』として行動し、以下の指示と手順を漏れなく遵守してください。"
 
 # --- AIとのやりとりルール ---
 ai_communication_rules:
-  - "内部処理は英語で構いませんが、最終的な回答やユーザへのコミュニケーションは必ず日本語で行います。"
-  - "会話の内容や提案は、常にユーザの立場を考慮し、敬意をもって丁寧に行ってください。"
+  - "ユーザへの最終回答はすべて日本語で行う。"
+  - "ユーザに敬意を払い、丁寧に対応する。"
+  - "必ずワークフロー定義に記載されたステップを順番通りに実行し、ステップを飛ばしたり省略しない。"
+  - "interruption_step が発生した後は、必ずワークフローの step_number: 0 に戻り、改めて次のステップを確認する。"
+  - "作業完了時には『完了したステップ番号』と『次に行うステップ番号』を必ず明記する。"
 
-# --- ワークフロー定義（workflow_definition） ---
+# --- ワークフロー定義 ---
 workflow_definition:
-  description: "以下のステップ群は、必ず定義された順番で実行します。ステップをスキップせず、完了時には次ステップへ明示的に移行してください。"
+  description: "以下のステップ1～10を順番通りに実施し、途中で重要な新指示があれば interruption_step を必ず挟む。"
   steps:
+    - step_number: 0
+      name: "最新の進捗状況を確認"
+      details:
+        - "「date_format」に従い、docs/progress/ 内の最新ファイルを正確に特定し、そこに記載の進捗を確認。"
+        - "進捗ファイルには『前回完了ステップ』『次に行うステップ』を記載しておく。"
+        - "もし進捗ファイルが見つからない場合は新規ファイル ([date_format].md) を作成し、前回完了ステップ=未定・次に行うステップ=1 として記録する。"
+        - "進捗ファイルの内容に応じて、次のステップが何番かを確認し実行する。"
+
     - step_number: 1
       name: "要求・要件定義"
       details:
-        - "1-1. 必要に応じて、参考資料を `urls.txt` のURLから読み込みます。"
+        - "参考資料が必要なら urls.txt を参照。"
 
     - step_number: 2
-      name: "基本設計・外部設計の文書群を保存・配置します"
+      name: "基本設計・外部設計の文書を配置"
       details:
-        - "2-1. 「directory_structure」に従い、docs/01.requirements/ ディレクトリに保存してください。"
+        - "docs/01.requirements/ に保存。"
 
     - step_number: 3
-      name: "詳細設計・内部設計の文書群を保存・配置します"
+      name: "詳細設計・内部設計の文書を配置"
       details:
-        - "3-1. 「directory_structure」に従い、docs/02.basic_design/ ディレクトリに保存してください。"
+        - "docs/02.basic_design/ に保存。"
 
     - step_number: 4
-      name: "コード実装を実行します"
+      name: "コード実装"
       details:
-        - "4-1. 「python_code_quality」、「security」、「version_management」、「directory_structure」、「error_analysis」、「quality_management」に従い、app/ ディレクトリに保存してください。"
-        - "4-2. エラーが発生した場合、下記の「error_analysis」に従い実行します。"
+        - "app/ ディレクトリに保存（python_code_quality、security、version_management、directory_structure、error_analysis、quality_management を遵守）。"
+        - "エラー発生時は error_analysis に従う。"
 
     - step_number: 5
-      name: "テストコード実装を実行します"
+      name: "テストコード実装"
       details:
-        - "5-1. 「python_code_quality」、「security」、「version_management」、「directory_structure」、「error_analysis」、「quality_management」に従い、tests/ ディレクトリに保存してください。"
-        - "5-2. エラーが発生した場合、下記の「error_analysis」に従い実行します。"
+        - "tests/ ディレクトリに保存（python_code_quality、security、version_management、directory_structure、error_analysis、quality_management を遵守）。"
+        - "エラー発生時は error_analysis に従う。"
 
     - step_number: "interruption_step"
       name: "重要情報の追加"
       details:
-        - "このステップは、ユーザからの新しい重要指示があった際に必ず実行し、既存のドキュメント類に反映します。"
-        - "例：『クローラーはコードの変更なく設定ファイルの変更ができるようにしたい』という新要求があった場合は要件定義書や基本/詳細設計書に必ず反映する。"
-        - "更新後は実行すべきタスク一覧を再整理し、進捗ファイル（docs/progress/ 以下）も更新。ワークフローを再度見直し次ステップへ移行する。"
+        - "新たな重要指示をドキュメントに反映し、進捗ファイル（docs/progress/）を更新。"
+        - "必要に応じて要件・設計を再整理し、再度 step_number: 0 に戻って全体フローを再評価する。"
 
     - step_number: 6
-      name: "テスト実行を実行します"
+      name: "テスト実行"
       details:
-        - "6-1. テストコードを実行してください。"
-        - "6-2. エラーが発生した場合、下記の「error_analysis」に従い実行します。"
-        - "6-3. quality_management に従い、テストに成功した場合はユーザ承認なく完了とします。"
+        - "pytest などでテストを実行。"
+        - "エラー発生時は error_analysis に従う。"
+        - "テスト成功で完了（quality_management の基準を満たす）。"
 
     - step_number: 7
-      name: "上記実装に正確に対応するREADME.md 等のドキュメントを「documents」に従い更新します"
+      name: "README等ドキュメント更新"
+      details:
+        - "documents の規約に基づき最新版に整備。"
 
     - step_number: 8
-      name: "進捗状況を「progress_management」に従い更新します"
+      name: "進捗状況の更新"
+      details:
+        - "progress_management に従い docs/progress/ を更新し、前回完了ステップ・次に行うステップを正しく記載。"
 
     - step_number: 9
-      name: "1サイクル終了。ユーザに進捗を報告し、必要に応じて 10. へ進む"
+      name: "1サイクル終了と進捗報告"
       details:
-        - "9-1. version_management に従い、git commit してください。"
-        - "9-2. 全コミット内容を git push してください。"
+        - "version_management に従い git commit & push。"
 
     - step_number: 10
-      name: "最新の進捗状況と要件・設計内容の見直し"
+      name: "継続的な見直し"
       details:
-        - "10-1. 1～10 を繰り返し行い、要件や設計に変更があれば随時ドキュメント更新を行います。"
+        - "1～10を繰り返し、必要に応じて要件・設計を更新。"
 
 # --- Pythonコード品質（python_code_quality） ---
 python_code_quality:
   basic_conventions:
-    - "Python 3.10～3.12 を想定。"
-    - "ライブラリは poetry で管理。"
-    - "flake8 でのLintエラーは全て解消。"
-    - "DRY原則を重視し、不要な重複を避けるコード構造を保つ。"
-    - "必要に応じてリファクタリングを実施。"
-    - "テストコードは tests/ ディレクトリに配置し、pytest を使用する。"
+    - "Python 3.10～3.12 を使用。"
+    - "ライブラリは poetry 管理。"
+    - "flake8 のLintエラーを全消去。"
+    - "DRY原則を守る。"
+    - "テストコードは tests/ に置き、pytest 使用。"
   coding_conventions:
-    - "変数名・関数名は snake_case。"
-    - "クラス名は PascalCase。"
-    - "定数は UPPER_SNAKE_CASE。"
-    - "プライベート変数・メソッドは先頭にアンダースコアを付与。"
-    - "docstring は Google スタイルを使用。"
-    - "積極的に型ヒントを活用。"
-    - "行あたり79文字以内、インデントは4スペース。"
+    - "snake_case（変数・関数）、PascalCase（クラス）、UPPER_SNAKE_CASE（定数）。"
+    - "プライベートには先頭アンダースコアを付加。"
+    - "docstring は Google スタイル、型ヒントを積極利用。"
+    - "1行79文字以内、インデント4スペース。"
 
 # --- セキュリティ（security） ---
 security:
-  - "環境変数（.envファイル）で機密情報を管理。"
-  - "パスワードなどはハッシュ化して保存。"
+  - "機密情報は .env で管理。"
+  - "パスワードは必ずハッシュ化。"
   - "SQLインジェクション対策としてパラメータ化クエリを使用。"
-  - "ユーザー入力のバリデーションを適切に行う。"
+  - "ユーザー入力を適切にバリデーション。"
 
 # --- バージョン管理（version_management） ---
 version_management:
-  - "Gitを使用する。"
-  - "コミットメッセージの形式は以下を踏襲する： feat/fix/docs/style/refactor/test/chore"
-  - "プルリクエストには必ずレビューを経てからマージする。"
+  - "現在の状況をコミットする場合は、git add . を実行"
+  - "Git利用。コミットメッセージは feat/fix/docs/style/refactor/test/chore の形式。"
+  - "プルリク→レビュー→マージの手順。"
 
 # --- ディレクトリ構成（directory_structure） ---
 directory_structure:
-  description: "下記ツリー構造を厳守。新規ディレクトリ追加時はREADME.mdも作成し説明を付与。"
+  description: "下記構成を厳守。新ディレクトリ追加時はREADME.mdを作成・説明を追記。"
   tree:
     - "./"
     - "├── LICENSE"
@@ -118,40 +127,38 @@ directory_structure:
     - "│   └── progress/"
     - "├── tests/"
     - "└── pyproject.toml"
-  note: "README.mdなどの説明ファイルは適宜更新・追加。"
 
 # --- 日付形式（date_format） ---
 date_format:
-  - "ファイル作成時点の日本時刻を YYYY-MM-DD-HH-MM-SS 形式で取得し、ファイル名やディレクトリ名などに使用する。"
+  - "日本時刻で YYYY-MM-DD-HH-MM-SS を取得し、ファイル名やディレクトリ名に付与。"
 
 # --- エラー解析（error_analysis） ---
 error_analysis:
-  description: "障害が起きた際は以下に従い徹底解析する。"
+  description: "障害時は対象部分と周辺を調査し、アブダクションで原因を特定・解消。"
   rules:
-    - "エラー対象部分と周辺関数・モジュールの実装状態を正確に把握する。"
-    - "アブダクション推論で要因候補を洗い出し、事実やデータをもとに原因を絞り込む。"
-    - "直接・根源的な要因を分析し、依存箇所含め修正。"
-    - "3回以上解決できない場合は docs/errors/ 下に [date_format].md を作成して情報を記録。さらに docs/fixes/ 下にも同名のファイルを作成し、他のAIと協力して解決を図るためのプロンプトとして保存する。"
+    - "直接・根本的要因を追究し、関連箇所も修正。"
+    - "3回以上解決できない場合は docs/errors/ と docs/fixes/ に [date_format].md を作成し記録。"
 
 # --- 品質管理（quality_management） ---
 quality_management:
-  - "ユニットテストのカバレッジは80%以上。80%超であれば自動完了。"
-  - "CI/CDパイプラインで自動テストを実施し、エラー時は「error_analysis」に従い解析。"
-  - "コードレビューを必ず実施。"
-  - "依存パッケージは半年ごとを目安にアップデートし、問題なければ自動完了。"
+  - "コード自動フォーマッターは、必ず black を使用。"
+  - "ユニットテストカバレッジ80%以上で自動完了。"
+  - "CI/CDで自動テストし、エラー時は error_analysis を適用。"
+  - "コードレビュー必須。"
+  - "依存パッケージは半年ごとにアップデート検討。"
 
 # --- ドキュメント類（documents） ---
 documents:
-  description: "最低限、以下を満たすようにドキュメントを整備。"
+  description: "以下を必須内容とする。"
   items:
-    - "READMEには：プロジェクト概要／セットアップ手順／使用方法／開発環境構築方法／ライセンス情報を含める。"
-    - "API仕様書は OpenAPI(Swagger)形式で記述。"
+    - "README：プロジェクト概要、セットアップ、使用方法、開発環境、ライセンスを明記。"
+    - "API仕様は OpenAPI(Swagger)で作成。"
     - "変更履歴は CHANGELOG.md で管理。"
 
 # --- 進捗管理（progress_management） ---
 progress_management:
-  description: "進捗内容をテキスト（Markdown形式）で更新し、都度 git commit。"
+  description: "作業のたび docs/progress/ に [date_format].md を作成・git管理。"
   rules:
-    - "進捗ファイルは docs/progress/ に、[date_format].md という形式で作成。"
-    - "更新時は必ずバージョン管理ルールに従いコミットと push を行う。"
-    - "最新ファイルを参照し、常に最新の進捗を把握できるようにする。"
+    - "コミット・プッシュは version_management に従う。"
+    - "最新ファイルを参照し、常に最新の進捗を把握。"
+    - "進捗ファイルには『前回完了ステップ』『次に行うステップ』を必ず記載。"
