@@ -29,4 +29,4 @@ def session(engine):
     session = SessionLocal()
     yield session
     session.close()
-    Base.metadata.drop_all(engine) 
+    Base.metadata.drop_all(engine)

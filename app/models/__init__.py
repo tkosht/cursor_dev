@@ -7,11 +7,10 @@
 from typing import Optional
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import (Session, declarative_base, scoped_session,
-                            sessionmaker)
+from sqlalchemy.orm import Session, declarative_base, scoped_session, sessionmaker
 
 # データベースエンジンの作成
-engine = create_engine('sqlite:///:memory:', echo=True)
+engine = create_engine("sqlite:///:memory:", echo=True)
 
 # セッションの作成
 session_factory = sessionmaker(bind=engine)
@@ -31,7 +30,7 @@ def get_session() -> Session:
 
     Returns:
         Session: 現在のデータベースセッション
-    
+
     Raises:
         RuntimeError: セッションが初期化されていない場合
     """
@@ -48,4 +47,4 @@ def set_session(session: Session) -> None:
         session (Session): 設定するデータベースセッション
     """
     global _session
-    _session = session 
+    _session = session

@@ -11,11 +11,11 @@ from app.llm.base import BaseLLM
 
 class GPT4LLM(BaseLLM):
     """GPT-4モデルの実装"""
-    
+
     def _init_client(self) -> None:
         """クライアントの初期化"""
         self.client = AsyncOpenAI(api_key=self.api_key)
-    
+
     async def generate_text(self, prompt: str) -> str:
         """
         テキストを生成
@@ -29,19 +29,19 @@ class GPT4LLM(BaseLLM):
         response = await self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
-            temperature=self.temperature
+            temperature=self.temperature,
         )
         text = response.choices[0].message.content
-        
+
         # メトリクスの更新
         prompt_tokens = response.usage.prompt_tokens
         completion_tokens = response.usage.completion_tokens
         # コストの計算（GPT-4の場合）
         cost = (prompt_tokens * 0.03 + completion_tokens * 0.06) / 1000.0
         self.update_metrics(prompt_tokens, completion_tokens, cost)
-        
+
         return text
-    
+
     async def analyze_content(self, content: str, task: str) -> Dict[str, Any]:
         """
         コンテンツを分析
@@ -55,23 +55,23 @@ class GPT4LLM(BaseLLM):
         """
         # タスクに応じたプロンプトを生成
         prompt = self._create_analysis_prompt(task, content)
-        
+
         # 分析を実行
         response = await self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
-            temperature=self.temperature
+            temperature=self.temperature,
         )
         result = self._extract_content(response.choices[0].message.content)
-        
+
         # メトリクスの更新
         prompt_tokens = response.usage.prompt_tokens
         completion_tokens = response.usage.completion_tokens
         cost = (prompt_tokens * 0.03 + completion_tokens * 0.06) / 1000.0
         self.update_metrics(prompt_tokens, completion_tokens, cost)
-        
+
         return result
-    
+
     def _create_analysis_prompt(self, task: str, content: str) -> str:
         """
         分析用のプロンプトを生成
@@ -116,11 +116,11 @@ class GPT4LLM(BaseLLM):
                 '  "solution": "提案される対策",\n'
                 '  "retry": true/false\n'
                 "}"
-            )
+            ),
         }
-        
+
         return prompts.get(task, f"以下の内容を分析してください:\n{content}")
-    
+
     def _extract_content(self, text: str) -> Dict[str, Any]:
         """
         レスポンステキストからJSONコンテンツを抽出
@@ -141,6 +141,6 @@ class GPT4LLM(BaseLLM):
                 return json.loads(json_str)
         except (json.JSONDecodeError, ValueError):
             pass
-        
+
         # JSON抽出に失敗した場合は、テキスト全体を返す
-        return {"text": text.strip()} 
+        return {"text": text.strip()}

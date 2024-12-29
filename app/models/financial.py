@@ -24,7 +24,7 @@ class PeriodType(str, Enum):
 class Financial(Base):
     """
     財務情報モデル
-    
+
     Attributes:
         id (int): 主キー
         company_id (int): 企業ID（外部キー）
@@ -37,18 +37,17 @@ class Financial(Base):
         updated_at (datetime): 更新日時
         company (Company): 企業
     """
-    
-    company_id = Column(BigInteger, ForeignKey('company.id'), nullable=False)
+
+    company_id = Column(BigInteger, ForeignKey("company.id"), nullable=False)
     fiscal_year = Column(String(10), nullable=False)
     period_type = Column(String(20), nullable=False)
     period_end_date = Column(Date, nullable=False)
     revenue = Column(BigInteger)
     operating_income = Column(BigInteger)
-    
-    company: Mapped["Company"] = relationship(
-        "Company",
-        back_populates="financials"
-    )
-    
+
+    company: Mapped["Company"] = relationship("Company", back_populates="financials")
+
     def __repr__(self) -> str:
-        return f"<Financial(company_id={self.company_id}, fiscal_year={self.fiscal_year})>" 
+        return (
+            f"<Financial(company_id={self.company_id}, fiscal_year={self.fiscal_year})>"
+        )

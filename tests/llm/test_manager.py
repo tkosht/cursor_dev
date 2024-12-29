@@ -15,7 +15,7 @@ def llm_config():
         "model_name": "gemini-2.0-flash-exp",
         "temperature": 0.1,
         "max_tokens": 1000,
-        "timeout": 30.0
+        "timeout": 30.0,
     }
 
 
@@ -24,7 +24,9 @@ def mock_gemini_api():
     """GeminiのAPIモックのフィクスチャ"""
     with patch("google.generativeai.GenerativeModel") as mock:
         instance = MagicMock()
-        instance.generate_content_async = AsyncMock(return_value=MagicMock(text="test response"))
+        instance.generate_content_async = AsyncMock(
+            return_value=MagicMock(text="test response")
+        )
         mock.return_value = instance
         yield mock
 
@@ -50,15 +52,13 @@ async def test_evaluate_url_relevance(llm_manager):
         "relevance_score": 0.95,
         "category": "company_profile",
         "reason": "企業情報を含むパス構造",
-        "confidence": 0.9
+        "confidence": 0.9,
     }
     llm_manager.llm.analyze_content = AsyncMock(return_value=mock_response)
 
     # 評価を実行
     result = await llm_manager.evaluate_url_relevance(
-        url=url,
-        path_components=path_components,
-        query_params=query_params
+        url=url, path_components=path_components, query_params=query_params
     )
 
     # 結果を検証
@@ -80,9 +80,7 @@ async def test_evaluate_url_relevance_error(llm_manager):
 
     # 評価を実行
     result = await llm_manager.evaluate_url_relevance(
-        url="https://example.com",
-        path_components=["error"],
-        query_params={}
+        url="https://example.com", path_components=["error"], query_params={}
     )
 
     # エラー時はNoneが返されることを確認
@@ -93,19 +91,19 @@ async def test_evaluate_url_relevance_error(llm_manager):
 async def test_evaluate_url_relevance_invalid_result(llm_manager):
     """不正な結果のテスト"""
     # 不正なレスポンスを返すようにモックを設定
-    llm_manager.llm.analyze_content = AsyncMock(return_value={
-        "relevance_score": 2.0,  # 不正な値
-        "category": "invalid",  # 不正なカテゴリ
-        "reason": "test",
-        "confidence": 0.5
-    })
+    llm_manager.llm.analyze_content = AsyncMock(
+        return_value={
+            "relevance_score": 2.0,  # 不正な値
+            "category": "invalid",  # 不正なカテゴリ
+            "reason": "test",
+            "confidence": 0.5,
+        }
+    )
 
     # 評価を実行
     result = await llm_manager.evaluate_url_relevance(
-        url="https://example.com",
-        path_components=["test"],
-        query_params={}
+        url="https://example.com", path_components=["test"], query_params={}
     )
 
     # 不正な結果の場合はNoneが返されることを確認
-    assert result is None 
+    assert result is None

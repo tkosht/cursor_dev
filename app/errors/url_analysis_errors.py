@@ -13,11 +13,13 @@ logger.setLevel(logging.DEBUG)
 
 class URLAnalysisError(Exception):
     """URL分析の基底エラークラス"""
+
     pass
 
 
 class NetworkError(URLAnalysisError):
     """ネットワーク関連エラー"""
+
     def __init__(self, url: str, status_code: int):
         self.url = url
         self.status_code = status_code
@@ -26,6 +28,7 @@ class NetworkError(URLAnalysisError):
 
 class LLMError(URLAnalysisError):
     """LLM評価関連エラー"""
+
     def __init__(self, message: str, raw_response: Any):
         self.message = message
         self.raw_response = raw_response
@@ -34,6 +37,7 @@ class LLMError(URLAnalysisError):
 
 class ValidationError(URLAnalysisError):
     """結果検証エラー"""
+
     def __init__(self, result: Any, reason: str):
         self.result = result
         self.reason = reason
@@ -42,6 +46,7 @@ class ValidationError(URLAnalysisError):
 
 class RateLimitError(URLAnalysisError):
     """レート制限エラー"""
+
     def __init__(self, url: str, retry_after: Optional[float] = None):
         self.url = url
         self.retry_after = retry_after
@@ -51,7 +56,7 @@ class RateLimitError(URLAnalysisError):
         )
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class ExponentialBackoff:
@@ -62,7 +67,7 @@ class ExponentialBackoff:
         initial: float = 1.0,
         maximum: float = 30.0,
         multiplier: float = 2.0,
-        jitter: float = 0.1
+        jitter: float = 0.1,
     ):
         """
         初期化
@@ -89,10 +94,7 @@ class ExponentialBackoff:
             待機時間（秒）
         """
         # 基本の待機時間を計算
-        delay = min(
-            self.initial * (self.multiplier ** attempt),
-            self.maximum
-        )
+        delay = min(self.initial * (self.multiplier**attempt), self.maximum)
 
         # ジッター（±10%）を追加
         jitter_range = delay * self.jitter
@@ -106,9 +108,7 @@ class RetryStrategy:
     """リトライ戦略の実装"""
 
     def __init__(
-        self,
-        max_retries: int = 3,
-        backoff: Optional[ExponentialBackoff] = None
+        self, max_retries: int = 3, backoff: Optional[ExponentialBackoff] = None
     ):
         """
         初期化
@@ -142,10 +142,7 @@ class RetryStrategy:
         return False
 
     async def execute_with_retry(
-        self,
-        operation: Callable[..., T],
-        *args,
-        **kwargs
+        self, operation: Callable[..., T], *args, **kwargs
     ) -> T:
         """
         リトライ付きで処理を実行
@@ -195,10 +192,7 @@ class ErrorHandler:
         self.retry_strategy = retry_strategy or RetryStrategy()
 
     async def handle_network_error(
-        self,
-        url: str,
-        status_code: int,
-        retry_after: Optional[float] = None
+        self, url: str, status_code: int, retry_after: Optional[float] = None
     ) -> None:
         """
         ネットワークエラーの処理
@@ -215,11 +209,7 @@ class ErrorHandler:
         else:  # その他のエラー
             logger.error(f"Network error: {status_code} for {url}")
 
-    async def handle_llm_error(
-        self,
-        message: str,
-        raw_response: Any
-    ) -> None:
+    async def handle_llm_error(self, message: str, raw_response: Any) -> None:
         """
         LLMエラーの処理
 
@@ -231,11 +221,7 @@ class ErrorHandler:
         logger.debug(f"Raw response: {raw_response}")
         raise LLMError(message, raw_response)
 
-    async def handle_validation_error(
-        self,
-        result: Any,
-        reason: str
-    ) -> None:
+    async def handle_validation_error(self, result: Any, reason: str) -> None:
         """
         バリデーションエラーの処理
 
@@ -245,4 +231,4 @@ class ErrorHandler:
         """
         logger.error(f"Validation error: {reason}")
         logger.debug(f"Invalid result: {result}")
-        raise ValidationError(result, reason) 
+        raise ValidationError(result, reason)

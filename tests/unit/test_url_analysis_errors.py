@@ -96,10 +96,7 @@ class TestErrorHandling:
     def test_exponential_backoff(self):
         """指数バックオフのテスト"""
         backoff = ExponentialBackoff(
-            initial=1.0,
-            maximum=30.0,
-            multiplier=2.0,
-            jitter=0.1
+            initial=1.0, maximum=30.0, multiplier=2.0, jitter=0.1
         )
 
         # 初回の待機時間
@@ -112,4 +109,4 @@ class TestErrorHandling:
 
         # 最大値を超えないことを確認
         delay = backoff.get_delay(10)
-        assert delay <= 30.0 
+        assert delay <= 30.0

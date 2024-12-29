@@ -1,10 +1,6 @@
 """
 実際のURLに対するクロール機能のインテグレーションテスト
 """
-import asyncio
-from typing import List
-from urllib.parse import urljoin
-
 import pytest
 
 from app.analyzer.url_analyzer import URLAnalyzer
@@ -19,10 +15,7 @@ class TestURLCrawler:
     @pytest.fixture
     async def url_collector(self) -> URLCollector:
         """URLコレクターのフィクスチャ"""
-        collector = URLCollector(
-            max_concurrent_requests=3,
-            request_timeout=30.0
-        )
+        collector = URLCollector(max_concurrent_requests=3, request_timeout=30.0)
         return collector
 
     @pytest.fixture
@@ -41,12 +34,12 @@ class TestURLCrawler:
         self,
         url_collector: URLCollector,
         url_analyzer: URLAnalyzer,
-        metrics: URLAnalysisMetrics
+        metrics: URLAnalysisMetrics,
     ):
         """企業Webサイトのクロールテスト"""
         # テスト対象のURL
         base_url = "https://www.accenture.com/jp-ja/"
-        
+
         try:
             # サイトマップからURLを収集
             urls = await url_collector.collect_from_sitemap(base_url)
@@ -59,7 +52,7 @@ class TestURLCrawler:
                     url=url,
                     result=result,
                     processing_time=result.get("processing_time", 0.0),
-                    llm_latency=result.get("llm_latency", 0.0)
+                    llm_latency=result.get("llm_latency", 0.0),
                 )
 
             # メトリクスの確認
@@ -76,12 +69,12 @@ class TestURLCrawler:
         self,
         url_collector: URLCollector,
         url_analyzer: URLAnalyzer,
-        metrics: URLAnalysisMetrics
+        metrics: URLAnalysisMetrics,
     ):
         """ナビゲーションリンクのクロールテスト"""
         # テスト対象のURL
         base_url = "https://www.accenture.com/jp-ja/about/company-index"
-        
+
         try:
             # ナビゲーションからURLを収集
             urls = await url_collector.collect_from_navigation(base_url)
@@ -94,7 +87,7 @@ class TestURLCrawler:
                     url=url,
                     result=result,
                     processing_time=result.get("processing_time", 0.0),
-                    llm_latency=result.get("llm_latency", 0.0)
+                    llm_latency=result.get("llm_latency", 0.0),
                 )
 
             # メトリクスの確認
@@ -111,12 +104,12 @@ class TestURLCrawler:
         self,
         url_collector: URLCollector,
         url_analyzer: URLAnalyzer,
-        metrics: URLAnalysisMetrics
+        metrics: URLAnalysisMetrics,
     ):
         """無効なURLのエラーハンドリングテスト"""
         # 無効なURL
         invalid_url = "https://www.accenture.com/jp-ja/invalid-page-that-does-not-exist"
-        
+
         try:
             # URLの分析
             result = await url_analyzer.analyze(invalid_url)
@@ -124,7 +117,7 @@ class TestURLCrawler:
                 url=invalid_url,
                 result=result,
                 processing_time=result.get("processing_time", 0.0),
-                llm_latency=result.get("llm_latency", 0.0)
+                llm_latency=result.get("llm_latency", 0.0),
             )
         except NetworkError as e:
             assert e.status_code == 404, "404エラーが発生すべきです"
@@ -134,14 +127,11 @@ class TestURLCrawler:
         assert metrics.error_count > 0, "エラーが記録されていません"
 
     @pytest.mark.asyncio
-    async def test_robots_txt_handling(
-        self,
-        url_collector: URLCollector
-    ):
+    async def test_robots_txt_handling(self, url_collector: URLCollector):
         """robots.txtの処理テスト"""
         # テスト対象のURL
         base_url = "https://www.accenture.com/jp-ja/"
-        
+
         try:
             # robots.txtの取得と解析
             sitemap_urls = await url_collector.get_sitemaps_from_robots(base_url)
@@ -152,4 +142,4 @@ class TestURLCrawler:
                 assert sitemap_url.startswith("http"), "無効なサイトマップURLです"
 
         except NetworkError as e:
-            pytest.skip(f"robots.txtの取得に失敗しました: {str(e)}") 
+            pytest.skip(f"robots.txtの取得に失敗しました: {str(e)}")

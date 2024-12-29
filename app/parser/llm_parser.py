@@ -20,10 +20,7 @@ class LLMParser:
         self.client = OpenAI(api_key=api_key)
 
     def _create_prompt(
-        self,
-        html_content: str,
-        page_type: str,
-        expected_fields: Dict[str, str]
+        self, html_content: str, page_type: str, expected_fields: Dict[str, str]
     ) -> str:
         """Create prompt for LLM.
 
@@ -35,10 +32,8 @@ class LLMParser:
         Returns:
             Formatted prompt string
         """
-        fields_str = "\n".join(
-            [f"- {k}: {v}" for k, v in expected_fields.items()]
-        )
-        
+        fields_str = "\n".join([f"- {k}: {v}" for k, v in expected_fields.items()])
+
         return f"""
 以下のHTML内容から情報を抽出してください。
 ���ージタイプ: {page_type}
@@ -61,10 +56,7 @@ HTML内容:
 """
 
     def parse(
-        self,
-        html_content: str,
-        page_type: str,
-        expected_fields: Dict[str, str]
+        self, html_content: str, page_type: str, expected_fields: Dict[str, str]
     ) -> Optional[Dict[str, Any]]:
         """Parse HTML content using LLM.
 
@@ -77,9 +69,7 @@ HTML内容:
             Parsed data or None if parsing failed
         """
         try:
-            prompt = self._create_prompt(
-                html_content, page_type, expected_fields
-            )
+            prompt = self._create_prompt(html_content, page_type, expected_fields)
 
             response = self.client.chat.completions.create(
                 model="gpt-4",
@@ -88,12 +78,12 @@ HTML内容:
                         "role": "system",
                         "content": "あなたはHTMLパーサーです。指定されたHTML"
                         "から必要な情報を抽出し、構造化されたデータとして"
-                        "返してください。"
+                        "返してください。",
                     },
-                    {"role": "user", "content": prompt}
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=0.1,
-                max_tokens=1000
+                max_tokens=1000,
             )
 
             result = response.choices[0].message.content
@@ -111,9 +101,7 @@ HTML内容:
             return None
 
     def _validate_parsed_data(
-        self,
-        parsed_data: Dict[str, Any],
-        expected_fields: Dict[str, str]
+        self, parsed_data: Dict[str, Any], expected_fields: Dict[str, str]
     ) -> bool:
         """Validate parsed data.
 
@@ -147,4 +135,4 @@ HTML内容:
 
         except Exception as e:
             logger.error(f"Validation failed: {str(e)}")
-            return False 
+            return False

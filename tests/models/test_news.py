@@ -36,7 +36,7 @@ def test_news_from_dict(session, sample_company):
         "url": "https://example.com/news/001",
         "published_at": datetime(2024, 1, 5, 10, 0, tzinfo=timezone.utc),
         "source": "プレスリリース",
-        "category": "製品情報"
+        "category": "製品情報",
     }
     news = News.from_dict(data)
     session.add(news)
@@ -49,10 +49,7 @@ def test_news_from_dict(session, sample_company):
 
 def test_news_update(sample_news):
     """ニュース情報の更新をテストします。"""
-    data = {
-        "title": "【更新】2024年2月期 第3四半期決算短信〔IFRS〕（連結）",
-        "content": "内容を更新しました。"
-    }
+    data = {"title": "【更新】2024年2月期 第3四半期決算短信〔IFRS〕（連結）", "content": "内容を更新しました。"}
     sample_news.update(data)
 
     assert sample_news.title == "【更新】2024年2月期 第3四半期決算短信〔IFRS〕（連結）"
@@ -75,9 +72,9 @@ def test_news_url_required(session, sample_company):
         company_id=sample_company.id,
         title="テストニュース",
         published_at=datetime.now(timezone.utc),
-        source="テスト"
+        source="テスト",
     )
     session.add(news)
-    
+
     with pytest.raises(Exception):  # SQLAlchemyの具体的な例外クラスは環境依存
-        session.commit() 
+        session.commit()
