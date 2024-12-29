@@ -71,7 +71,7 @@ workflow_definition:
         - "progress_management に従い docs/progress/ を更新し、前回完了ステップ・次に行うステップを正しく記載。"
 
     - step_number: 9
-      name: "1サイクル終了と進捗報告"
+      name: "1サイクル終了としてこれまでの作業状態(リポジトリ)をコミット"
       details:
         - "version_management に従い git commit & push。"
 
