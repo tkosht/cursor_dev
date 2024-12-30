@@ -877,3 +877,29 @@ class LLMManager:
             return False
 
         return True
+
+    async def extract_data(self, prompt: str) -> Dict[str, str]:
+        """データを抽出する
+
+        Args:
+            prompt: 抽出用のプロンプト
+
+        Returns:
+            Dict[str, str]: 抽出したデータの辞書
+        """
+        try:
+            # LLMを使用してデータを抽出
+            response = await self.llm.generate(prompt)
+            
+            # レスポンスをパース
+            data = {}
+            for line in response.split("\n"):
+                if ":" in line:
+                    key, value = line.split(":", 1)
+                    data[key.strip()] = value.strip()
+            
+            return data
+            
+        except Exception as e:
+            logger.error(f"データ抽出エラー: {str(e)}")
+            raise

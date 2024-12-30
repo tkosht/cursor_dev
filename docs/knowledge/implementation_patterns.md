@@ -25,9 +25,14 @@
       "User-Agent": "Mozilla/5.0 ... Chrome/120.0.0.0 Safari/537.36",
       "Accept": "text/html,application/xhtml+xml,...",
       "Accept-Language": "ja,en-US;q=0.7,en;q=0.3",
-      "Accept-Encoding": "gzip, deflate, br",
+      "Accept-Encoding": "gzip, deflate",  # brを除外
       "Connection": "keep-alive",
-      "Upgrade-Insecure-Requests": "1"
+      "Upgrade-Insecure-Requests": "1",
+      "Cache-Control": "no-cache",
+      "DNT": "1",
+      "Sec-GPC": "1",
+      "Pragma": "no-cache",
+      "Referer": "https://www.google.com/"
   }
   ```
 
@@ -111,9 +116,17 @@
   class IRSiteIntegrationTest:
       @pytest.mark.asyncio
       async def test_ir_page_access(self):
-          crawler = AdaptiveCrawler()
-          result = await crawler.crawl("https://example.com")
-          assert result.status == 200
+          crawler = AdaptiveCrawler(
+              retry_delay=5.0,  # 5秒待機
+              max_concurrent=1,  # 同時接続数制限
+              timeout_total=90,
+              timeout_connect=30,
+              timeout_read=45
+          )
+          async with crawler as client:
+              result = await client.crawl("https://example.com")
+              assert result is not None
+              await asyncio.sleep(5)  # レート制限対策
   ```
 
 ### エラーケーステスト パターン
@@ -125,6 +138,12 @@
       async def test_http_error_handling(self):
           with pytest.raises(HTTPError):
               await crawler.crawl("https://non-existent.example.com")
+              
+      @pytest.mark.asyncio
+      async def test_rate_limit_handling(self):
+          for _ in range(3):
+              await crawler.crawl(url)
+              await asyncio.sleep(5)  # レート制限対策
   ```
 
 ### URL探索戦略 パターン
@@ -142,12 +161,14 @@
 - **実装ポイント**:
   ```python
   class ConcurrencyController:
-      def __init__(self, max_concurrent: int = 3):
+      def __init__(self, max_concurrent: int = 1):
           self._semaphore = asyncio.Semaphore(max_concurrent)
           
       async def execute(self, coro):
           async with self._semaphore:
-              return await coro
+              result = await coro
+              await asyncio.sleep(5)  # レート制限対策
+              return result
   ```
 
 ### LLMOptimization パターン
@@ -158,4 +179,21 @@
       async def optimize_selector(self, html: str, target: str) -> str:
           context = self._analyze_html_structure(html)
           return await self._generate_optimal_selector(context, target)
+          
+      async def _generate_optimal_selector(
+          self,
+          context: str,
+          target: str,
+          timeout: int = 30
+      ) -> str:
+          """タイムアウト付きでLLMを使用"""
+          try:
+              async with asyncio.timeout(timeout):
+                  return await self.llm.generate(
+                      f"コンテキスト: {context}\n"
+                      f"ターゲット: {target}"
+                  )
+          except asyncio.TimeoutError:
+              logger.error("LLM通信タイムアウト")
+              raise
   ``` 
