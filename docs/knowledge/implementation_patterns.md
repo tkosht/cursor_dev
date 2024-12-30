@@ -197,3 +197,47 @@
               logger.error("LLM通信タイムアウト")
               raise
   ``` 
+
+# キャッシュ制御パターン
+
+## HTTPキャッシュ制御
+プロジェクト全体で統一されたキャッシュ制御設定を使用します：
+
+```python
+CACHE_CONTROL_HEADERS = {
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache"
+}
+```
+
+### 設定の理由
+1. `no-cache`: 
+   - 毎回サーバーに再検証を要求
+   - キャッシュは許可するが、使用前に必ず新鮮度の確認が必要
+   - 条件付きリクエストによる帯域幅の節約が可能
+
+2. `Pragma: no-cache`:
+   - HTTP/1.0との後方互換性のため
+   - 古いプロキシサーバーでも確実にキャッシュを防止
+
+### 使用方法
+1. クローラーやサイトアナライザーでのHTTPリクエスト時に設定
+2. 常に最新のコンテンツを取得する必要がある場合に使用
+3. ヘッダーは基本設定として組み込み、必要に応じてオーバーライド可能
+
+### 注意点
+- `max-age=0`ではなく`no-cache`を使用
+- キャッシュの完全な無効化が必要な場合は`no-store`を検討
+- プロキシサーバー経由のアクセスも考慮した設定
+
+### 実装例
+```python
+def create_headers():
+    return {
+        "User-Agent": "Mozilla/5.0...",
+        "Accept": "text/html,application/xhtml+xml...",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+        # その他のヘッダー
+    }
+``` 
