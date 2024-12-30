@@ -1,309 +1,215 @@
 # 実装パターン集
 
-## 非同期テストの実装パターン
+## 非同期処理パターン
 
-### 基本的なテストケース
+### RequestControllerパターン
+非同期リクエストの制御と最適化のためのパターン
+
 ```python
-import pytest
-from aiohttp import web
-
-@pytest.mark.asyncio
-async def test_basic_async():
-    # テスト用のアプリケーション作成
-    app = web.Application()
-    app.router.add_get('/', lambda r: web.Response(text='test'))
-    
-    # テストクライアントの取得
-    async with aiohttp_client(app) as client:
-        # テストの実行
-        response = await client.get('/')
-        assert response.status == 200
-        text = await response.text()
-        assert text == 'test'
-```
-
-### エラーハンドリングのテスト
-```python
-@pytest.mark.asyncio
-async def test_error_handling():
-    # エラーレスポンスを返すハンドラー
-    async def error_handler(request):
-        return web.Response(status=503)
-    
-    # テストアプリケーションの設定
-    app = web.Application()
-    app.router.add_get('/error', error_handler)
-    
-    # テストの実行
-    async with aiohttp_client(app) as client:
-        with pytest.raises(NetworkError):
-            await client.get('/error')
-```
-
-### 同時実行制限のテスト
-```python
-@pytest.mark.asyncio
-async def test_concurrent_limit():
-    # 遅延レスポンスを返すハンドラー
-    async def delay_handler(request):
-        await asyncio.sleep(0.1)
-        return web.Response(text='ok')
-    
-    # テストアプリケーションの設定
-    app = web.Application()
-    app.router.add_get('/delay', delay_handler)
-    
-    # テストの実行
-    async with aiohttp_client(app) as client:
-        start_time = asyncio.get_event_loop().time()
-        tasks = [client.get('/delay') for _ in range(5)]
-        await asyncio.gather(*tasks)
-        end_time = asyncio.get_event_loop().time()
-        
-        # 2つずつ処理されるため、少なくとも0.3秒かかるはず
-        assert end_time - start_time >= 0.3
-```
-
-## テストサーバーの実装パターン
-
-### 基本的なサーバー設定
-```python
-@pytest.fixture
-async def test_app():
-    """テスト用のアプリケーション"""
-    async def handle_request(request):
-        return web.Response(text='test')
-    
-    app = web.Application()
-    app.router.add_get('/', handle_request)
-    return app
-
-@pytest.fixture
-async def test_client(test_app, aiohttp_client):
-    """テスト用のクライアント"""
-    return await aiohttp_client(test_app)
-```
-
-### 複数エンドポイントの設定
-```python
-@pytest.fixture
-async def test_app():
-    """複数のエンドポイントを持つテストアプリケーション"""
-    app = web.Application()
-    
-    # 通常のレスポンス
-    app.router.add_get('/', lambda r: web.Response(text='ok'))
-    
-    # エラーレスポンス
-    app.router.add_get('/error', lambda r: web.Response(status=503))
-    
-    # 遅延レスポンス
-    app.router.add_get('/delay', 
-        lambda r: asyncio.sleep(0.1).then(
-            lambda _: web.Response(text='delayed')
-        )
-    )
-    
-    return app
-```
-
-### レスポンスの動的生成
-```python
-@pytest.fixture
-async def test_app():
-    """動的なレスポンスを返すテストアプリケーション"""
-    async def dynamic_handler(request):
-        query = request.query.get('type', 'default')
-        if query == 'error':
-            return web.Response(status=503)
-        elif query == 'delay':
-            await asyncio.sleep(0.1)
-            return web.Response(text='delayed')
-        else:
-            return web.Response(text='default')
-    
-    app = web.Application()
-    app.router.add_get('/', dynamic_handler)
-    return app
-```
-
-## XMLの名前空間対応パターン
-```python
-def extract_with_namespace(element: ET.Element, xpath: str) -> List[str]:
-    """名前空間を考慮したXML要素の抽出
-
-    Args:
-        element: XML要素
-        xpath: 検索パス
-
-    Returns:
-        抽出された要素のリスト
-    """
-    # 複数の名前空間パターンを定義
-    namespaces = {
-        "default": "http://www.example.org/schema",
-        "alt": "http://www.example.org/schema/alt"
-    }
-    
-    results = []
-    # 各名前空間でトライ
-    for namespace in namespaces.values():
-        # 名前空間を使用した検索
-        found = element.findall(".//{%s}target" % namespace)
-        if found:
-            results.extend([item.text for item in found if item.text])
-            break
-    
-    # 名前空間なしでもトライ（フォールバック）
-    if not results:
-        found = element.findall(".//target")
-        results.extend([item.text for item in found if item.text])
-    
-    return results
-```
-
-## URL正規化パターン
-```python
-from urllib.parse import urljoin, urlparse
-
-def normalize_url(url: str, base_url: str) -> str:
-    """URLの正規化
-
-    Args:
-        url: 対象URL（相対パスの可能性あり）
-        base_url: 基準URL
-
-    Returns:
-        正規化されたURL
-    """
-    # javascript:やdata:などのスキームは除外
-    if url.startswith(("javascript:", "data:", "mailto:", "#")):
-        return ""
-    
-    # 相対パスの場合は絶対URLに変換
-    if not url.startswith(("http://", "https://")):
-        url = urljoin(base_url, url.lstrip("/"))
-    
-    # URLの正規化
-    parsed = urlparse(url)
-    normalized = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
-    if parsed.query:
-        normalized += f"?{parsed.query}"
-    
-    return normalized
-```
-
-## 非同期リクエスト制御パターン
-```python
-import asyncio
-from typing import Optional
-
-import aiohttp
-
 class RequestController:
-    """非同期リクエストの制御を行うクラス"""
+    def __init__(self, max_concurrent_requests: int = 4):
+        self._semaphore = asyncio.Semaphore(max_concurrent_requests)
+        self._request_interval = 1.0 / (max_concurrent_requests * 0.5)
+        self._last_request_time = 0.0
 
-    def __init__(
-        self,
-        max_concurrent: int = 3,
-        timeout: float = 30.0,
-        headers: Optional[dict] = None
-    ):
-        """
-        Args:
-            max_concurrent: 同時リクエスト数の上限
-            timeout: タイムアウト時間（秒）
-            headers: HTTPヘッダー
-        """
-        self.max_concurrent = max_concurrent
-        self.timeout = timeout
-        self.headers = headers or {}
-        self._semaphore = asyncio.Semaphore(max_concurrent)
-    
-    async def request(
-        self,
-        session: Optional[aiohttp.ClientSession],
-        url: str
-    ) -> str:
-        """制御された非同期リクエストの実行
-
-        Args:
-            session: セッション（Noneの場合は新規作成）
-            url: リクエスト先URL
-
-        Returns:
-            レスポンス本文
-
-        Raises:
-            NetworkError: ネットワークエラー発生時
-            RateLimitError: レート制限到達時
-        """
-        if session is None:
-            session = aiohttp.ClientSession(
-                headers=self.headers,
-                timeout=aiohttp.ClientTimeout(total=self.timeout)
-            )
-            should_close = True
-        else:
-            should_close = False
-
-        try:
-            async with self._semaphore:
-                try:
-                    async with session.get(url) as response:
-                        if response.status == 429:
-                            raise RateLimitError()
-                        if response.status >= 400:
-                            raise NetworkError()
-                        return await response.text()
-                except asyncio.TimeoutError:
-                    raise NetworkError()
-                except aiohttp.ClientError as e:
-                    raise NetworkError()
-        finally:
-            if should_close:
-                await session.close()
+    async def execute_request(self, url: str) -> str:
+        async with self._semaphore:
+            # リクエスト間隔の制御
+            current_time = time.time()
+            elapsed = current_time - self._last_request_time
+            if elapsed < self._request_interval:
+                await asyncio.sleep(self._request_interval - elapsed + 0.3)
+            
+            # リクエストの実行
+            async with self._session.get(url) as response:
+                self._last_request_time = time.time()
+                return await response.text()
 ```
 
-## 非同期テストサーバーパターン
+### SessionManagerパターン
+HTTPセッションのライフサイクル管理パターン
+
 ```python
-import asyncio
-from aiohttp import web
-
-class TestServer:
-    """非同期テスト用のサーバー"""
-
+class SessionManager:
     def __init__(self):
-        self.app = web.Application()
-        self._setup_routes()
-    
-    def _setup_routes(self):
-        """ルーティングの設定"""
-        self.app.router.add_get("/", self.handle_root)
-        self.app.router.add_get("/error", self.handle_error)
-        self.app.router.add_get("/timeout", self.handle_timeout)
-        self.app.router.add_get("/rate-limit", self.handle_rate_limit)
-    
-    async def handle_root(self, request):
-        """ルートパスのハンドラ"""
-        return web.Response(text="OK")
-    
-    async def handle_error(self, request):
-        """エラーパスのハンドラ"""
-        return web.Response(status=503)
-    
-    async def handle_timeout(self, request):
-        """タイムアウトパスのハンドラ"""
-        await asyncio.sleep(1)
-        return web.Response(text="timeout")
-    
-    async def handle_rate_limit(self, request):
-        """レート制限パスのハンドラ"""
-        return web.Response(status=429)
+        self._timeout = aiohttp.ClientTimeout(total=30, connect=10)
+        self._connector = aiohttp.TCPConnector(limit=100)
+        self._session = None
 
-@pytest.fixture
-async def test_client(aiohttp_client):
-    """テストクライアントのフィクスチャ"""
-    server = TestServer()
-    return await aiohttp_client(server.app)
+    async def __aenter__(self):
+        self._session = aiohttp.ClientSession(
+            timeout=self._timeout,
+            connector=self._connector,
+            headers=self.headers
+        )
+        return self._session
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if self._session:
+            await self._session.close()
+```
+
+### ErrorHandlerパターン
+非同期処理における例外処理パターン
+
+```python
+class ErrorHandler:
+    async def handle_request(self, url: str) -> str:
+        try:
+            async with self._session.get(url, timeout=self.timeout) as response:
+                if response.status == 429:
+                    raise RateLimitError("レート制限に達しました")
+                elif response.status >= 400:
+                    raise NetworkError(f"HTTP {response.status}", status_code=response.status)
+                return await response.text()
+        except asyncio.TimeoutError:
+            raise NetworkError("タイムアウト", status_code=408)
+        except aiohttp.ClientError as e:
+            raise NetworkError(f"接続エラー: {str(e)}")
+```
+
+## ドメイン管理パターン
+
+### DomainFilterパターン
+URLのドメインフィルタリングパターン
+
+```python
+class DomainFilter:
+    def __init__(self, allowed_domains: Optional[List[str]] = None):
+        self.allowed_domains = allowed_domains or []
+
+    def is_allowed_domain(self, url: str, base_url: str) -> bool:
+        if not url or not base_url:
+            return False
+        
+        domain = urlparse(url).netloc
+        base_domain = urlparse(base_url).netloc
+        
+        # 同一ドメインは常に許可
+        if domain == base_domain:
+            return True
+            
+        # 許可ドメインリストがない場合は同一ドメインのみ
+        if not self.allowed_domains:
+            return False
+            
+        # 許可ドメインとそのサブドメインをチェック
+        return any(
+            domain == allowed or domain.endswith(f".{allowed}")
+            for allowed in self.allowed_domains
+        )
+```
+
+## テストパターン
+
+### AsyncTestServerパターン
+非同期テスト用のモックサーバーパターン
+
+```python
+class AsyncTestServer:
+    def __init__(self, host: str = "localhost", port: int = 8080):
+        self.app = web.Application()
+        self.host = host
+        self.port = port
+        self._setup_routes()
+
+    def _setup_routes(self):
+        self.app.router.add_get("/", self.handle_root)
+        self.app.router.add_get("/timeout", self.handle_timeout)
+        self.app.router.add_get("/error", self.handle_error)
+
+    async def handle_root(self, request):
+        return web.Response(text="test response")
+
+    async def handle_timeout(self, request):
+        await asyncio.sleep(2)
+        return web.Response(text="timeout")
+
+    async def handle_error(self, request):
+        raise web.HTTPInternalServerError()
+
+    async def __aenter__(self):
+        self.runner = web.AppRunner(self.app)
+        await self.runner.setup()
+        site = web.TCPSite(self.runner, self.host, self.port)
+        await site.start()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.runner.cleanup()
+```
+
+### AsyncTestCaseパターン
+非同期テストケースの基本パターン
+
+```python
+class AsyncTestCase:
+    @pytest.fixture
+    async def collector(self):
+        async with URLCollector(max_concurrent_requests=4) as collector:
+            yield collector
+
+    @pytest.mark.asyncio
+    async def test_normal_case(self, collector):
+        urls = await collector.collect_urls("http://test.local/")
+        assert len(urls) > 0
+        assert all(url.startswith("http") for url in urls)
+
+    @pytest.mark.asyncio
+    async def test_error_cases(self, collector):
+        with pytest.raises(NetworkError):
+            await collector.collect_urls("http://test.local/error")
+
+    @pytest.mark.asyncio
+    async def test_performance(self, collector):
+        start_time = time.time()
+        tasks = [
+            collector.collect_urls(f"http://test.local/page{i}")
+            for i in range(10)
+        ]
+        results = await asyncio.gather(*tasks)
+        end_time = time.time()
+        
+        # スループットの検証
+        operations_per_second = len(results) / (end_time - start_time)
+        assert operations_per_second <= collector.max_concurrent_requests
+```
+
+## 設定管理パターン
+
+### ConfigurationManagerパターン
+環境に応じた設定管理パターン
+
+```python
+class ConfigurationManager:
+    def __init__(self, env: str = "development"):
+        self.env = env
+        self._load_config()
+
+    def _load_config(self):
+        self.config = {
+            "development": {
+                "max_concurrent": 4,
+                "timeout": 30,
+                "allowed_domains": ["test.local", "localhost"],
+                "retry_count": 3
+            },
+            "production": {
+                "max_concurrent": 10,
+                "timeout": 60,
+                "allowed_domains": ["example.com", "api.example.com"],
+                "retry_count": 5
+            }
+        }[self.env]
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return self.config.get(key, default)
+
+    @property
+    def max_concurrent(self) -> int:
+        return self.get("max_concurrent", 4)
+
+    @property
+    def timeout(self) -> int:
+        return self.get("timeout", 30)
 ``` 
