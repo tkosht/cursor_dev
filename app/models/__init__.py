@@ -8,7 +8,9 @@ import os
 from typing import Optional
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, declarative_base, scoped_session, sessionmaker
+from sqlalchemy.orm import Session, scoped_session, sessionmaker
+
+from .base import Base
 
 # データベースファイルのパスを設定
 DB_FILE = "app.db"
@@ -24,8 +26,7 @@ engine = create_engine(f"sqlite:///{DB_PATH}", echo=True)
 session_factory = sessionmaker(bind=engine)
 SessionLocal = scoped_session(session_factory)
 
-# ベースモデルの作成
-Base = declarative_base()
+# ベースモデルの設定
 Base.query = SessionLocal.query_property()
 
 # グローバルなデータベースセッション
@@ -62,5 +63,9 @@ def init_db():
     """
     データベースを初期化し、全てのテーブルを作成します。
     """
-    from . import company, financial, news  # 循環インポートを避けるためにここでインポート
+    # 循環インポートを避けるためにここでインポート
+    # noqa: F401 は未使用のインポートを許可するために使用
+    from . import company  # noqa: F401
+    from . import financial  # noqa: F401
+    from . import news  # noqa: F401
     Base.metadata.create_all(bind=engine)

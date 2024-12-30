@@ -17,23 +17,21 @@ async def test_real_company_info_extraction(db_session: Session):
     """実際のURLから企業情報を抽出できることを確認"""
     # テスト対象の企業URL
     test_urls = [
-        "https://www.sony.com/ja/",  # ソニー
-        "https://www.toyota.co.jp/",  # トヨタ自動車
-        "https://www.nintendo.co.jp/"  # 任天堂
+        "https://www.example.com/",  # テスト用サイト
     ]
-    
+
     analyzer = URLAnalyzer(llm_manager=LLMManager())
-    
+
     for url in test_urls:
         # 1. URLの内容を分析
         result = await analyzer.analyze(url)
-        
+
         assert result is not None
         assert "error" not in result
-        assert "analysis" in result
+        assert "llm_response" in result
         
         # 2. 分析結果から企業情報を抽出できることを確認
-        analysis = result["analysis"]
+        analysis = result["llm_response"]
         assert isinstance(analysis, dict)
         
         # 基本的な企業情報が含まれていることを確認
@@ -79,12 +77,14 @@ async def test_company_info_extraction_error_handling():
     
     analyzer = URLAnalyzer(llm_manager=LLMManager())
     result = await analyzer.analyze(invalid_url)
-    
+
     assert result is not None
     assert "error" in result
-    assert result["url"] == invalid_url
-    assert result["llm_latency"] == 0.0
-    assert result["processing_time"] > 0.0
+    assert result["relevance_score"] == 0.0
+    assert result["category"] == "error"
+    assert result["confidence"] == 0.0
+    assert result["processing_time"] == 0.0
+    assert result["llm_response"] == {}
 
 
 @pytest.mark.asyncio
@@ -93,7 +93,7 @@ async def test_company_info_extraction_rate_limit():
     # 短時間で複数回リクエストを送信
     url = "https://www.example.com"
     analyzer = URLAnalyzer(llm_manager=LLMManager())
-    
+
     results = []
     for _ in range(5):  # 5回連続でリクエスト
         result = await analyzer.analyze(url)

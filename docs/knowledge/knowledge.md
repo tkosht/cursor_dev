@@ -215,3 +215,85 @@
 - 新規Webスクレイピング機能の実装時
 - 統合テストの設計時
 - エラーハンドリングの実装時 
+
+## LLMManager実装の重要ポイント
+### 対象スコープ
+- app/llm/manager.py の LLMManager クラス
+- 企業情報抽出機能全般
+
+### 知識内容
+1. 初期化とAPIキー管理
+   - APIキーは環境変数 `GOOGLE_API_KEY_GEMINI` から取得
+   - 初期化時に自動的にモデルをロード
+   - APIキーが見つからない場合はログ出力して初期化を中断
+
+2. エラーハンドリング戦略
+   - LLMモデル未初期化時はモックデータを返却
+   - 空のコンテンツ入力時はモックデータを返却
+   - JSONパース失敗時はモックデータを返却
+   - すべての例外をキャッチしてログ出力
+
+3. コンテンツ処理の最適化
+   - 入力テキストは3000文字までに制限
+   - タスク別にプロンプトを最適化（company_info / url_analysis）
+   - 結果の検証を厳密に実施
+
+4. 非同期処理の考慮点
+   - モデルの初期化は非同期で実行
+   - レート制限を考慮した待機処理の実装
+   - コンテキストマネージャによるリソース管理
+
+### 再利用場面
+- 新しいLLMクライアントの実装時
+- エラーハンドリングの設計時
+- APIキー管理の実装時
+- 非同期処理の実装時 
+
+# SQLAlchemyのモデル定義とテスト
+
+## SQLAlchemyのベースモデル定義
+- `DeclarativeBase`を継承した基底クラスを作成する場合、プロジェクト全体で同じインスタンスを使用する
+- `declarative_base()`で作成したベースクラスと`DeclarativeBase`を継承したクラスは混在させない
+- モジュール間の循環インポートを避けるため、モデルのインポートは`init_db()`内で行う
+
+## テストフィクスチャの設定
+- テストデータベースには一時ファイルを使用し、テスト終了後に自動的に削除する
+- テストセッション作成時は`autocommit=False, autoflush=False`を明示的に設定
+- テーブル作成前に`drop_all`を実行し、既存のテーブルを確実に削除する
+- `create_all`でテーブルを作成する際は、すべてのモデルが正しく登録されていることを確認
+
+## データベース初期化のベストプラクティス
+1. エンジンの作成
+   ```python
+   engine = create_engine(db_url, echo=True)  # echo=True でSQLログを出力
+   ```
+
+2. セッションの設定
+   ```python
+   TestingSessionLocal = sessionmaker(
+       bind=engine,
+       autocommit=False,
+       autoflush=False
+   )
+   ```
+
+3. テーブルの作成
+   ```python
+   Base.metadata.drop_all(bind=engine)  # 既存のテーブルを削除
+   Base.metadata.create_all(bind=engine)  # 新しいテーブルを作成
+   ```
+
+4. セッションの管理
+   ```python
+   try:
+       session = TestingSessionLocal()
+       yield session
+   finally:
+       session.close()
+   ```
+
+## テストカバレッジの管理
+- 目標カバレッジは80%以上
+- カバレッジレポートで未テストのコードを特定
+- 重要なビジネスロジックを優先的にテスト
+- 統合テストでは実際のユースケースをカバー 
