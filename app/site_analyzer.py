@@ -60,7 +60,7 @@ class URLAnalyzer:
             "DNT": "1",
             "Sec-CH-UA": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
             "Sec-CH-UA-Mobile": "?0",
-            "Sec-CH-UA-Platform": '"Windows"'
+            "Sec-CH-UA-Platform": '"Windows"',
         }
         self._request_count = 0
         self._last_request_time = 0
@@ -96,9 +96,7 @@ class URLAnalyzer:
             headers["Host"] = url.split("/")[2]
 
             conn = aiohttp.TCPConnector(
-                ssl=ssl_context,
-                force_close=True,
-                enable_cleanup_closed=True
+                ssl=ssl_context, force_close=True, enable_cleanup_closed=True
             )
 
             session_kwargs = {
@@ -106,7 +104,7 @@ class URLAnalyzer:
                 "connector": conn,
                 "headers": headers,
                 "timeout": aiohttp.ClientTimeout(total=self.timeout),
-                "trust_env": True
+                "trust_env": True,
             }
 
             async with aiohttp.ClientSession(**session_kwargs) as session:
@@ -118,10 +116,12 @@ class URLAnalyzer:
                         logger.error(f"Access denied for URL: {url}")
                         raise NetworkError("Access denied", status_code=response.status)
                     elif response.status != 200:
-                        logger.error(f"Network error for URL: {url}, status: {response.status}")
+                        logger.error(
+                            f"Network error for URL: {url}, status: {response.status}"
+                        )
                         raise NetworkError(
                             f"Network error for ステータスコード {response.status}",
-                            status_code=response.status
+                            status_code=response.status,
                         )
 
                     content = await response.text()
@@ -151,11 +151,11 @@ class URLAnalyzer:
             content = await self._fetch_content(url)
             soup = BeautifulSoup(content, "html.parser")
             text = soup.get_text()
-            llm_response = await self.llm_manager.analyze_content(text[:3000], task="company_info")
+            llm_response = await self.llm_manager.analyze_content(
+                text[:3000], task="company_info"
+            )
             logger.debug(f"Analysis completed for URL: {url}")
-            return {
-                "llm_response": llm_response
-            }
+            return {"llm_response": llm_response}
         except (NetworkError, RateLimitError) as e:
             logger.error(f"Error analyzing URL {url}: {str(e)}")
             return {
@@ -165,5 +165,5 @@ class URLAnalyzer:
                 "reason": str(e),
                 "confidence": 0.0,
                 "processing_time": 0.0,
-                "llm_response": {}
+                "llm_response": {},
             }

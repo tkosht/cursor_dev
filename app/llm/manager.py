@@ -8,12 +8,8 @@ import os
 import time
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
-from urllib.parse import parse_qs, urlparse
 
-import google.generativeai as genai
-from tenacity import retry, stop_after_attempt, wait_exponential
-
-from app.errors.llm_errors import LLMError, ModelNotFoundError
+from app.llm.base import BaseLLM
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -175,23 +171,24 @@ class LLMManager:
         self.config = config or LLMConfig()
         self.prompt_generator = PromptGenerator()
         self.result_validator = ResultValidator()
-        self.llm = None
-        
+        self.llm: Optional[BaseLLM] = None
+
         # APIキーを環境変数から取得
         api_key = os.getenv("GOOGLE_API_KEY_GEMINI")
         if not api_key:
             logger.warning("GOOGLE_API_KEY_GEMINI not found in environment variables")
             return
-            
+
         # モデルを初期化（同期的に）
         if self.config.model_name.startswith("gemini"):
             from app.llm.gemini import GeminiLLM
+
             self.llm = GeminiLLM(
                 api_key=api_key,
                 model=self.config.model_name,
-                temperature=self.config.temperature
+                temperature=self.config.temperature,
             )
-        
+
         logger.debug(
             f"Initialized LLMManager with model={self.config.model_name}, "
             f"temperature={self.config.temperature}"
@@ -270,7 +267,7 @@ class LLMManager:
                     "reason": "コンテンツ分析に失敗しました",
                     "confidence": 0.0,
                     "processing_time": 0.0,
-                    "llm_response": {}
+                    "llm_response": {},
                 }
 
             # 処理時間の計算
@@ -280,10 +277,12 @@ class LLMManager:
             return {
                 "relevance_score": 0.9 if "company_name" in result else 0.2,
                 "category": "company_profile" if "company_name" in result else "other",
-                "reason": "企業情報が検出されました" if "company_name" in result else "企業情報が見つかりません",
+                "reason": "企業情報が検出されました"
+                if "company_name" in result
+                else "企業情報が見つかりません",
                 "confidence": 0.9 if "company_name" in result else 0.7,
                 "processing_time": processing_time,
-                "llm_response": result
+                "llm_response": result,
             }
 
         except Exception as e:
@@ -294,7 +293,7 @@ class LLMManager:
                 "reason": str(e),
                 "confidence": 0.0,
                 "processing_time": 0.0,
-                "llm_response": {}
+                "llm_response": {},
             }
 
     def _detect_language(self, path_components: List[str]) -> LanguageInfo:
@@ -309,29 +308,28 @@ class LLMManager:
         """
         # 日本語文字を含むか確認
         has_japanese = any(
-            ord(c) > 0x3040 and ord(c) < 0x30FF  # ひらがな・カタカナ
-            or ord(c) > 0x4E00 and ord(c) < 0x9FFF  # 漢字
+            ord(c) > 0x3040
+            and ord(c) < 0x30FF  # ひらがな・カタカナ
+            or ord(c) > 0x4E00
+            and ord(c) < 0x9FFF  # 漢字
             for component in path_components
             for c in component
         )
 
         # 言語パラメータを確認
         lang_components = [
-            comp for comp in path_components
-            if comp in ["ja", "jp", "en", "us", "uk"]
+            comp for comp in path_components if comp in ["ja", "jp", "en", "us", "uk"]
         ]
 
         if has_japanese or any(comp in ["ja", "jp"] for comp in lang_components):
             return LanguageInfo(
                 primary_language="ja",
                 other_languages=["en"],
-                confidence=0.9 if has_japanese else 0.7
+                confidence=0.9 if has_japanese else 0.7,
             )
         else:
             return LanguageInfo(
-                primary_language="en",
-                other_languages=["ja"],
-                confidence=0.8
+                primary_language="en", other_languages=["ja"], confidence=0.8
             )
 
     def _mock_llm_evaluation(self, url: str) -> Dict[str, Any]:
@@ -360,16 +358,30 @@ class LLMManager:
                 "confidence": 0.7,
             }
 
-    async def analyze_content(self, content: str, task: str = "url_analysis") -> Dict[str, Any]:
-        """
-        コンテンツを分析
+    async def analyze_content(
+        self, content: str, task: str = "url_analysis"
+    ) -> Dict[str, Any]:
+        """コンテンツを分析する
+
+        Note:
+            このメソッドは現在複雑度が高く（McCabe complexity = 13）、
+            将来的にリファクタリングが必要です。以下の改善が計画されています：
+            - タスク別の分析ロジックを別クラスに分離
+            - エラーハンドリングの共通化
+            - 結果の検証ロジックの分離
+            
+            TODO: このメソッドを以下のように分割する：
+            1. ContentAnalyzerクラスを作成し、タスク別の分析ロジックを移動
+            2. ErrorHandlerクラスでエラー処理を一元化
+            3. ResultValidatorクラスで結果の検証を強化
+            4. PromptGeneratorクラスでプロンプト生成を改善
 
         Args:
             content: 分析対象のコンテンツ
-            task: 分析タスク（"url_analysis" or "company_info"）
+            task: 分析タスクの種類（デフォルト: "url_analysis"）
 
         Returns:
-            分析結果
+            Dict[str, Any]: 分析結果
         """
         try:
             if not self.llm:
@@ -400,10 +412,7 @@ class LLMManager:
                     "}"
                 )
             else:
-                prompt = (
-                    "以下のWebサイトコンテンツを分析し、重要な情報を抽出してください。\n\n"
-                    f"コンテンツ:\n{content}"
-                )
+                prompt = "以下のWebサイトコンテンツを分析し、重要な情報を抽出してください。\n\n" f"コンテンツ:\n{content}"
 
             logger.debug(f"Generated prompt: {prompt}")
 
@@ -411,7 +420,7 @@ class LLMManager:
             try:
                 result = await self.llm.generate(prompt)
                 logger.debug(f"Raw LLM response: {result}")
-                
+
                 if not result:
                     logger.error("Empty response from LLM")
                     return self._mock_company_info() if task == "company_info" else {}
@@ -467,7 +476,7 @@ class LLMManager:
         return {
             "company_name": "サンプル株式会社",
             "business_description": "ITソリューションの提供",
-            "industry": "情報技術"
+            "industry": "情報技術",
         }
 
     def _parse_json_response(self, response: str) -> Dict[str, Any]:
@@ -491,10 +500,10 @@ class LLMManager:
                 json_str = json_str.rsplit("\n", 1)[0]  # 最後の行を除去
             if json_str.startswith("json"):
                 json_str = json_str.split("\n", 1)[1]  # "json"の行を除去
-            
+
             # 空白行を除去
             json_str = "\n".join(line for line in json_str.split("\n") if line.strip())
-            
+
             return json.loads(json_str)
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse LLM response as JSON: {response}")
