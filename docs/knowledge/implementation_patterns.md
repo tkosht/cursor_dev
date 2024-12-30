@@ -53,15 +53,55 @@
 - **実装ポイント**:
   ```python
   class AdaptiveCrawler:
-      def __init__(self):
-          self.locator = IRSiteLocator()
-          self.retry_strategy = ExponentialBackoff()
+      async def analyze_site_structure(self, url: str) -> Dict[str, Any]:
+          """サイト構造を動的に解析"""
+          content = await self._fetch_page(url)
+          return await self._analyze_content(content)
           
-      async def crawl(self, url: str):
-          try:
-              return await self._do_crawl(url)
-          except Exception as e:
-              return await self.retry_strategy.retry(self._do_crawl, url)
+      async def find_target_page(self, base_url: str, target_type: str) -> str:
+          """目的のページを動的に探索"""
+          structure = await self.analyze_site_structure(base_url)
+          return await self._identify_page(structure, target_type)
+          
+      async def extract_data(self, page_url: str, target_data: Dict[str, str]) -> Dict[str, str]:
+          """データを抽出"""
+          content = await self._fetch_page(page_url)
+          return await self._extract_target_data(content, target_data)
+  ```
+
+### 適応的クローリングのテストパターン
+- **目的**: 動的な探索・抽出機能の検証
+- **実装ポイント**:
+  ```python
+  class AdaptiveCrawlerTest:
+      @pytest.mark.asyncio
+      async def test_site_structure_analysis(self):
+          """サイト構造の解析機能をテスト"""
+          crawler = AdaptiveCrawler()
+          structure = await crawler.analyze_site_structure("https://example.com")
+          assert "navigation" in structure
+          assert "main_content" in structure
+          
+      @pytest.mark.asyncio
+      async def test_target_page_discovery(self):
+          """目的のページの動的探索をテスト"""
+          crawler = AdaptiveCrawler()
+          ir_page = await crawler.find_target_page(
+              "https://example.com",
+              target_type="ir_info"
+          )
+          assert ir_page.endswith("/ir") or "investor" in ir_page
+          
+      @pytest.mark.asyncio
+      async def test_data_extraction(self):
+          """データ抽出機能をテスト"""
+          crawler = AdaptiveCrawler()
+          data = await crawler.extract_data(
+              "https://example.com/ir",
+              {"revenue": "売上高"}
+          )
+          assert "revenue" in data
+          assert "円" in data["revenue"]
   ```
 
 ### 統合テストパターン
