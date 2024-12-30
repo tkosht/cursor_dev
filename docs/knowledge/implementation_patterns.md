@@ -629,3 +629,85 @@ async def test_real_ir_site():
    - 形式の妥当性
    - 必須項目の存在確認
 """ 
+
+# IR情報クローリングの実装パターン
+
+## LLMを使用したURL解析パターン
+```python
+class LLMManager:
+    async def find_ir_pages(self, base_url: str) -> List[str]:
+        """メインサイトからIRページを探索"""
+        # 1. ベースURLからリンクを収集
+        # 2. 各リンクの関連性をLLMで評価
+        # 3. スコアに基づいてフィルタリング
+        pass
+
+    async def analyze_ir_content(self, url: str, content: str) -> Dict[str, float]:
+        """IR情報の品質を評価"""
+        # 1. コンテンツの関連性を評価
+        # 2. データの完全性をチェック
+        # 3. 信頼度スコアを計算
+        pass
+
+    async def select_optimal_ir_page(
+        self, candidates: List[str]
+    ) -> Tuple[str, float]:
+        """最適なIRページを選択"""
+        # 1. 各候補ページを評価
+        # 2. スコアを比較
+        # 3. 最適なページを返却
+        pass
+```
+
+## アダプティブクローラーパターン
+```python
+class AdaptiveCrawler:
+    async def discover_ir_urls(self, base_url: str) -> List[str]:
+        """IRページのURLを自動発見"""
+        # 1. サイトマップを取得
+        # 2. LLMでURLを評価
+        # 3. 候補URLをフィルタリング
+        pass
+
+    async def validate_ir_page(self, url: str) -> bool:
+        """IRページの妥当性を検証"""
+        # 1. ページを取得
+        # 2. コンテンツを解析
+        # 3. LLMで評価
+        pass
+```
+
+## エラーハンドリングパターン
+```python
+async def resilient_crawl(self, url: str) -> Dict[str, Any]:
+    """耐障害性のあるクロール処理"""
+    retry_count = 0
+    while retry_count <= self.max_retries:
+        try:
+            # 1. ページ取得を試行
+            # 2. 成功したら処理を実行
+            # 3. 結果を返却
+            pass
+        except Exception as e:
+            # 1. エラーをログに記録
+            # 2. リトライ回数をインクリメント
+            # 3. 待機時間を計算して待機
+            pass
+```
+
+## 並行処理制御パターン
+```python
+class ConcurrencyManager:
+    def __init__(self, max_concurrent: int = 5):
+        """並行処理の制御を初期化"""
+        self.semaphore = asyncio.Semaphore(max_concurrent)
+
+    async def __aenter__(self):
+        """コンテキスト開始"""
+        await self.semaphore.acquire()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """コンテキスト終了"""
+        self.semaphore.release()
+``` 
