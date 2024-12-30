@@ -192,3 +192,139 @@ async def test_error_handling(llm_manager: LLMManager):
     except Exception as e:
         logger.error(f"Error in error handling test: {str(e)}")
         raise
+
+
+@pytest.mark.asyncio
+async def test_redirect_handling(llm_manager: LLMManager):
+    """リダイレクトを含むURLの処理テスト"""
+    logger.debug("Starting test_redirect_handling")
+
+    # フィクスチャをawait
+    manager = await llm_manager
+
+    # HTTPからHTTPSへのリダイレクトテスト
+    test_urls = [
+        {
+            "url": "http://www.softbank.jp/corp/about/",
+            "expected_category": "company_profile",
+        },
+        {
+            "url": "http://www.toyota.co.jp/jpn/company/",
+            "expected_category": "company_profile",
+        },
+    ]
+
+    for test_case in test_urls:
+        logger.info(f"Testing redirect URL: {test_case['url']}")
+        
+        try:
+            result = await asyncio.wait_for(
+                manager.evaluate_url_relevance(
+                    url=test_case["url"],
+                    path_components=test_case["url"].split("/")[3:],
+                    query_params={},
+                ),
+                timeout=TIMEOUT_SECONDS,
+            )
+            
+            assert result is not None
+            assert result["category"] == test_case["expected_category"]
+            assert result["confidence"] > 0.5
+            
+            await asyncio.sleep(1)  # レート制限を避けるために待機
+            
+        except Exception as e:
+            logger.error(f"Error testing redirect URL {test_case['url']}: {str(e)}")
+            raise
+
+
+@pytest.mark.asyncio
+async def test_ir_info_pages(llm_manager: LLMManager):
+    """IR情報ページの分析テスト"""
+    logger.debug("Starting test_ir_info_pages")
+
+    # フィクスチャをawait
+    manager = await llm_manager
+
+    ir_test_urls = [
+        {
+            "url": "https://www.softbank.jp/corp/ir/",
+            "path": ["corp", "ir"],
+            "expected_category": "ir_info",
+        },
+        {
+            "url": "https://global.toyota/jp/ir/",
+            "path": ["jp", "ir"],
+            "expected_category": "ir_info",
+        },
+    ]
+
+    for test_case in ir_test_urls:
+        logger.info(f"Testing IR URL: {test_case['url']}")
+        
+        try:
+            result = await asyncio.wait_for(
+                manager.evaluate_url_relevance(
+                    url=test_case["url"],
+                    path_components=test_case["path"],
+                    query_params={},
+                ),
+                timeout=TIMEOUT_SECONDS,
+            )
+            
+            assert result is not None
+            assert result["category"] == test_case["expected_category"]
+            assert result["confidence"] > 0.5
+            assert "IR" in result["reason"] or "投資家" in result["reason"]
+            
+            # メトリクスの確認
+            latency = manager.llm.get_llm_latency()
+            assert latency > 0
+            logger.info(f"IR page analysis completed in {latency:.2f}s")
+            
+            await asyncio.sleep(1)  # レート制限を避けるために待機
+            
+        except Exception as e:
+            logger.error(f"Error testing IR URL {test_case['url']}: {str(e)}")
+            raise
+
+
+@pytest.mark.asyncio
+async def test_performance_metrics(llm_manager: LLMManager):
+    """パフォーマンスメトリクスのテスト"""
+    logger.debug("Starting test_performance_metrics")
+
+    # フィクスチャをawait
+    manager = await llm_manager
+
+    test_url = "https://www.softbank.jp/corp/about/"
+    
+    try:
+        # メトリクスの初期状態を記録
+        initial_prompt_tokens = manager.llm.metrics.prompt_tokens
+        initial_completion_tokens = manager.llm.metrics.completion_tokens
+        initial_error_count = manager.llm.metrics.error_count
+        
+        # URL分析を実行
+        await asyncio.wait_for(
+            manager.evaluate_url_relevance(
+                url=test_url,
+                path_components=["corp", "about"],
+                query_params={},
+            ),
+            timeout=TIMEOUT_SECONDS,
+        )
+        
+        # メトリクスの更新を確認
+        assert manager.llm.metrics.prompt_tokens > initial_prompt_tokens
+        assert manager.llm.metrics.completion_tokens > initial_completion_tokens
+        assert manager.llm.metrics.error_count == initial_error_count
+        
+        # レイテンシの確認
+        latency = manager.llm.get_llm_latency()
+        assert latency > 0
+        logger.info(f"Performance test completed in {latency:.2f}s")
+        
+    except Exception as e:
+        logger.error(f"Error in performance metrics test: {str(e)}")
+        raise

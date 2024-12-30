@@ -16,10 +16,11 @@ workflow_definition:
       name: "最新の進捗状況を確認"
       details:
         - "「date_format」に従い、docs/progress/ 内の最新ファイルを正確に特定し、そこに記載の進捗を確認。"
-        - "進捗ファイルには『前回完了ステップ』『次に行うステップ』を記載しておく。"
+        - "進捗ファイルには『前回完了ステップ』『次に行うステップ』『成功・失敗テストケース』『エラー事象』『エラー解析状況』『得られた知識』が含まれているはず。"
         - "もし進捗ファイルが見つからない場合は新規ファイル ([date_format].md) を作成し、前回完了ステップ=未定・次に行うステップ=1 として記録する。"
         - "進捗ファイルの内容に応じて、次のステップが何番かを確認し実行する。"
-
+        - "docs/knowledge/knowledge.md を確認し、今回の作業に関係する知識があれば参照する。"
+    
     - step_number: 1
       name: "要求・要件定義"
       details:
@@ -39,21 +40,22 @@ workflow_definition:
       name: "コード実装"
       details:
         - "app/ ディレクトリに保存（python_code_quality、security、version_management、directory_structure、error_analysis、quality_management を遵守）。"
+        - "コード実装後、black でコードをフォーマットし、flake8 で Lintエラーを確認し正確に修正。"
         - "エラー発生時は error_analysis に従う。"
-        - "コード実装後、black でコードをフォーマットし、flake8 でLintエラーを確認し正確に修正。"
-        - "コードの実装は必ずワークフロー定義に記載されたステップを順番通りに実行し、ステップを飛ばしたり省略しない。"
+        - "コードの実装は必ずワークフロー定義に記載されたステップを順番通りに実行し、省略しない。"
 
     - step_number: 5
       name: "テストコード実装"
       details:
         - "tests/ ディレクトリに保存（python_code_quality、security、version_management、directory_structure、error_analysis、quality_management を遵守）。"
-        - "コード実装後、black でコードをフォーマットし、flake8 でLintエラーを確認し正確に修正。"
+        - "テストコード実装後、black でコードをフォーマットし、flake8 でLintエラーを確認し正確に修正。"
         - "エラー発生時は error_analysis に従う。"
 
     - step_number: "interruption_step"
       name: "重要情報の追加"
       details:
         - "新たな重要指示をドキュメントに反映し、進捗ファイル（docs/progress/）を更新。"
+        - "knowledge_management のルールに従い、新たに得られた知識があれば docs/knowledge/knowledge.md にも必ず反映。"
         - "必要に応じて要件・設計を再整理し、再度 step_number: 0 に戻って全体フローを再評価する。"
 
     - step_number: 6
@@ -63,23 +65,23 @@ workflow_definition:
           - "開発対象や修正対象のテストだけでなくすべてのテストをまとめて実行する。"
         - "エラー発生時は error_analysis に従う。"
         - "テスト成功で完了（quality_management の基準を満たす）。"
-        - "テストがすべてしたら、改めて要件定義書や各種設計書との整合性をチェックし、必要に応じてユーザに確認します"
-          - "つまり、テストが本当に正しかったのかをチェックし担保します"
+        - "テストが完了したら、改めて要件定義書や各種設計書との整合性をチェックし、必要に応じてユーザと確認。"
 
     - step_number: 7
       name: "README等ドキュメント更新"
       details:
-        - "documents の規約に基づき最新版に整備。"
+        - "documents の規約に基づき最新版に整備する。"
 
     - step_number: 8
       name: "進捗状況の更新"
       details:
-        - "progress_management に従い docs/progress/ を更新し、前回完了ステップ・次に行うステップを正しく記載。"
+        - "progress_management に従い docs/progress/ に新たな [date_format].md を作成または追記し、前回完了ステップ・次に行うステップ、成功/失敗テストケース、エラー事象とその解析状況、得られた知識を正しく記載。"
+        - "knowledge_management に基づき得られた知識も docs/knowledge/knowledge.md に追記する。"
 
     - step_number: 9
       name: "1サイクル終了としてこれまでの作業状態(リポジトリ)をコミット"
       details:
-        - "version_management に従い git commit & push。"
+        - "version_management に従い、必要なファイルを git add → git commit → git push。"
 
     - step_number: 10
       name: "継続的な見直し"
@@ -109,7 +111,7 @@ security:
 
 # --- バージョン管理（version_management） ---
 version_management:
-  - "現在の状況をコミットする場合は、git add . を実行"
+  - "現在の状況をコミットする場合は、git add . を実行。"
   - "Git利用。コミットメッセージは feat/fix/docs/style/refactor/test/chore の形式。"
   - "プルリク→レビュー→マージの手順。"
 
@@ -168,3 +170,17 @@ progress_management:
     - "コミット・プッシュは version_management に従う。"
     - "最新ファイルを参照し、常に最新の進捗を把握。"
     - "進捗ファイルには『前回完了ステップ』『次に行うステップ』を必ず記載。"
+    - "進捗ファイルには『成功したテストケース』『失敗したテストケース』のすべてを必ず記載。"
+    - "進捗ファイルには『エラー事象』『エラー解析状況』のすべてを必ず記載。"
+    - "進捗ファイルには、knowledge_management に従い必ず知識を記載。"
+
+# --- 知識管理（knowledge_management） ---
+knowledge_management:
+  description: "作業のたび docs/knowledge/ に 知識ファイル knowledge.md を作成・git管理。"
+  rules:
+    - "知識ファイルには今回の開発で得た知識を必ず記載。"
+    - "知識ファイルには、成功したエラー解消方法など今後の開発に有益な知識を必ず記載。"
+    - "知識ファイルには、ユーザとの会話で新たに得た知識を必ず記載。"
+    - "過去の知識とのマージを試み、矛盾があればユーザに必ず確認。"
+
+# TODO: 工数管理を追加する / 進捗ファイルをうまく使えないか
