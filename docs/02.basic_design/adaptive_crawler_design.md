@@ -1,140 +1,116 @@
-# アダプティブクローラーの基本設計
+# AdaptiveCrawler基本設計
 
 ## 1. システム構成
 
 ### 1.1 主要コンポーネント
-- SiteAnalyzer: サイト構造の解析
-- LLMManager: LLMとの連携
-- CrawlerMonitor: クロール状態の監視
+- AdaptiveCrawler: クローラーのメインクラス
+- LLMManager: LLMとの連携を管理
+- AccessController: アクセス制御を管理
+- ErrorHandler: エラー処理を管理
 
-### 1.2 クラス構成
+### 1.2 外部依存
+- aiohttp: HTTP通信
+- beautifulsoup4: HTML解析
+- OpenAI API: LLMサービス
+
+## 2. クラス設計
+
+### 2.1 AdaptiveCrawler
 ```python
-class SiteAnalyzer:
-    def __init__(self, llm_manager: LLMManager)
-    async def analyze_site_structure(self, base_url: str) -> Dict[str, Any]
-    async def _get_sitemap_urls(self, base_url: str) -> List[str]
-    async def _get_sitemap_from_robots(self, base_url: str) -> List[str]
-    async def _analyze_navigation(self, base_url: str) -> Dict[str, List[str]]
-    async def _identify_relevant_pages(self, base_url: str, urls: List[str]) -> List[Dict[str, Any]]
+class AdaptiveCrawler:
+    def __init__(self, company_code: str, llm_manager: LLMManager):
+        self.company_code = company_code
+        self.llm_manager = llm_manager
+        self.access_controller = AccessController()
+        self.error_handler = ErrorHandler()
+        
+    async def crawl(self, url: str, data_type: Union[Financial, News]) -> Dict:
+        # アクセス制御チェック
+        await self.access_controller.check_access(url)
+        
+        # クロール実行
+        try:
+            async with self._create_session() as session:
+                return await self._execute_crawl(session, url, data_type)
+        except Exception as e:
+            return await self.error_handler.handle(e)
 ```
 
-## 2. 処理フロー
-
-### 2.1 サイト解析フロー
-1. サイトマップの取得
-   - robots.txtの確認
-   - サイトマップの解析
-   - エラー時は代替手段を試行
-
-2. ナビゲーション構造の解析
-   - メインナビゲーション
-   - フッターナビゲーション
-   - その他のナビゲーション要素
-
-3. 関連ページの特定
-   - URLのフィルタリング
-   - コンテンツの評価
-   - スコアリング
-
-### 2.2 エラーハンドリングフロー
-1. robots.txt取得エラー
-   - エラーをログ出力
-   - 処理をスキップ
-   - 代替手段を試行
-   - 結果を空リストで返却
-
-2. サイトマップ取得エラー
-   - エラーをログ出力
-   - 一般的な場所を確認
-   - 代替手段を試行
-
-3. ページアクセスエラー
-   - リトライ処理
-   - タイムアウト設定
-   - エラー情報の記録
-
-## 3. データ構造
-
-### 3.1 サイト解析結果
+### 2.2 AccessController
 ```python
-{
-    "sitemap": List[str],  # サイトマップから取得したURL
-    "navigation": {
-        "main_nav": List[str],
-        "footer_nav": List[str],
-        "other_nav": List[str]
-    },
-    "relevant_pages": List[Dict[str, Any]]  # 関連ページ情報
-}
+class AccessController:
+    def __init__(self):
+        self.last_access_times: Dict[str, datetime] = {}
+        self.semaphore = asyncio.Semaphore(5)
+        
+    async def check_access(self, url: str):
+        # 同一URLへのアクセス間隔チェック
+        last_time = self.last_access_times.get(url)
+        if last_time and (datetime.now() - last_time).seconds < 3600:
+            raise TooFrequentAccessError(url)
+            
+        # 同時接続数制御
+        await self.semaphore.acquire()
 ```
 
-### 3.2 ページ情報
+### 2.3 ErrorHandler
 ```python
-{
-    "url": str,
-    "relevance_score": float,
-    "page_type": str,
-    "content": Optional[Dict[str, Any]]
-}
+class ErrorHandler:
+    def __init__(self):
+        self.max_retries = 3
+        
+    async def handle(self, error: Exception) -> Dict:
+        if isinstance(error, aiohttp.ClientError):
+            return await self._handle_network_error(error)
+        elif isinstance(error, TooFrequentAccessError):
+            return await self._handle_access_error(error)
+        else:
+            return await self._handle_unknown_error(error)
 ```
 
-## 4. エラー処理
+## 3. 処理フロー
 
-### 4.1 エラー種別
-- HTTPエラー
-  - 404: Not Found
-  - 403: Forbidden
-  - 429: Too Many Requests
-  - 500: Internal Server Error
-- ネットワークエラー
-  - タイムアウト
-  - 接続エラー
-  - DNS解決エラー
-- パースエラー
-  - HTML解析エラー
-  - XML解析エラー
-  - JSON解析エラー
+### 3.1 クロール処理
+1. アクセス制御チェック
+2. HTTPセッション作成
+3. ページ取得
+4. コンテンツ解析
+5. データ構造化
+6. 結果返却
 
-### 4.2 リトライ戦略
-- 最大リトライ回数: 3回
-- バックオフ時間: 2^n秒
-- リトライ対象エラー:
-  - 429: Too Many Requests
-  - 500: Internal Server Error
-  - タイムアウト
-  - 一時的な接続エラー
+### 3.2 エラー処理フロー
+1. エラー種別の判定
+2. リトライ判定
+3. バックオフ時間の計算
+4. リトライ実行
+5. 最終エラー処理
 
-## 5. テスト設計
+## 4. エラー定義
 
-### 5.1 テストケース
-1. アクセンチュア（日本）サイト
-   - robots.txt取得
-   - サイトマップ解析
-   - ナビゲーション構造解析
-   - 企業情報ページ特定
+### 4.1 カスタムエラー
+```python
+class TooFrequentAccessError(Exception):
+    """アクセス頻度制限違反エラー"""
+    
+class ContentParseError(Exception):
+    """コンテンツ解析エラー"""
+    
+class RateLimitError(Exception):
+    """レート制限エラー"""
+```
 
-2. エラーケース
-   - robots.txt取得失敗
-   - サイトマップ取得失敗
-   - ページアクセス失敗
-   - パース失敗
+## 5. 監視・ログ設計
 
-### 5.2 テスト環境
-- Python 3.10以上
-- aiohttp
-- pytest
-- pytest-asyncio
-
-## 6. 監視設計
-
-### 6.1 ログ出力
-- ログレベル
-  - ERROR: エラー発生時
-  - INFO: 重要な処理の開始・完了
-  - DEBUG: 詳細な処理状況
-
-### 6.2 メトリクス
+### 5.1 ログ項目
+- アクセス日時
+- URL
 - 処理時間
+- エラー情報
+- リトライ回数
+- ステータスコード
+
+### 5.2 メトリクス
 - 成功率
+- 平均処理時間
 - エラー発生率
-- リソース使用量 
+- リトライ率 
