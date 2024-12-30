@@ -241,3 +241,94 @@ def create_headers():
         # その他のヘッダー
     }
 ``` 
+
+# テストパターン集
+
+## 非同期テストパターン
+- **目的**: 非同期処理を含むテストの安定性確保
+- **実装ポイント**:
+  ```python
+  @pytest.mark.asyncio
+  async def test_async_operation():
+      # タイムアウト設定
+      async with asyncio.timeout(30):
+          # テスト実行
+          result = await async_operation()
+          assert result is not None
+
+  @pytest.mark.asyncio
+  async def test_with_retry():
+      # リトライ付きテスト
+      for attempt in range(3):
+          try:
+              result = await async_operation()
+              assert result is not None
+              break
+          except Exception as e:
+              if attempt == 2:
+                  raise
+              await asyncio.sleep(1)
+  ```
+
+## カバレッジ最適化パターン
+- **目的**: テストカバレッジの効率的な向上
+- **実装ポイント**:
+  ```python
+  class TestWithCoverage:
+      @pytest.mark.parametrize("input,expected", [
+          ("normal", True),
+          ("edge_case", False),
+          ("error_case", None)
+      ])
+      def test_multiple_cases(self, input, expected):
+          """パラメータ化テストでカバレッジ向上"""
+          result = target_function(input)
+          assert result == expected
+
+      def test_error_handling(self):
+          """エラーケースのカバレッジ"""
+          with pytest.raises(ValueError):
+              target_function("invalid")
+  ```
+
+## モデル依存関係テストパターン
+- **目的**: SQLAlchemyモデル間の依存関係の検証
+- **実装ポイント**:
+  ```python
+  class TestModelRelations:
+      def test_model_initialization(self):
+          """モデルの初期化順序テスト"""
+          parent = ParentModel()
+          child = ChildModel(parent=parent)
+          assert child.parent_id == parent.id
+
+      def test_cascade_operations(self):
+          """カスケード操作のテスト"""
+          parent = ParentModel()
+          child = ChildModel(parent=parent)
+          session.add(parent)
+          session.commit()
+          session.delete(parent)
+          session.commit()
+          assert session.query(ChildModel).count() == 0
+  ```
+
+## キャッシュ制御テストパターン
+- **目的**: HTTPキャッシュ制御の検証
+- **実装ポイント**:
+  ```python
+  class TestCacheControl:
+      async def test_cache_headers(self):
+          """キャッシュヘッダーの検証"""
+          client = HTTPClient()
+          headers = client.headers
+          assert headers["Cache-Control"] == "no-cache"
+          assert headers["Pragma"] == "no-cache"
+
+      async def test_cache_behavior(self):
+          """キャッシュ動作の検証"""
+          client = HTTPClient()
+          response1 = await client.get(url)
+          response2 = await client.get(url)
+          assert response1.headers != response2.headers
+  ``` 
