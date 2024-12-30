@@ -99,4 +99,62 @@
    - 設定の外部化
    - 環境に応じた動的な調整
    - モニタリングと自動調整の仕組み
-   - 実装例: implementation_patterns.md の ConfigurationManagerパターン を参照 
+   - 実装例: implementation_patterns.md の ConfigurationManagerパターン を参照
+
+## AdaptiveCrawler
+
+### 目的
+- 企業の財務情報・ニュースを収集するためのクローラー
+- 特に企業のIRサイトから決算情報、プレスリリース、適時開示情報を取得することが主目的
+- LLMを活用して動的にセレクタを生成し、サイト構造の変更に適応する
+
+### 重要な設計ポイント
+1. 対象となるデータ
+   - 財務情報（売上高、営業利益、純利益など）
+   - 決算発表日
+   - プレスリリースの日付とタイトル
+   - 適時開示情報の日付とタイトル
+   - 実装例: implementation_patterns.md の FinancialDataExtractorパターン を参照
+
+2. クロール対象
+   - 企業の公式IRサイト
+   - 東京証券取引所のウェブサイト
+   - その他、企業が公式に情報を公開しているサイト
+   - 実装例: implementation_patterns.md の NewsExtractorパターン を参照
+
+3. エラー処理の重要性
+   - 財務データの取得は正確性が重要
+   - エラー時は必ずログを残し、後から原因を追跡できるようにする
+   - リトライは慎重に行い、データの重複や欠落を防ぐ
+   - 実装例: implementation_patterns.md の ErrorHandlerパターン を参照
+
+### テスト戦略
+1. 実在する企業サイトでのテスト
+   - モックは使用せず、実際のIRサイトでテスト
+   - ただし、過度な負荷をかけないよう注意
+   - 実装例: implementation_patterns.md の AsyncTestCaseパターン を参照
+
+2. テストケース設計
+   - 財務情報の正確な取得
+   - ニュース・プレスリリースの取得
+   - エラー発生時の適切な処理
+   - 同時実行制御の確認
+   - 実装例: implementation_patterns.md の AsyncTestServerパターン を参照
+
+### 実装パターン
+1. セレクタ生成
+   - LLMにはHTML構造と目的のデータを明確に伝える
+   - 複数のセレクタ候補を生成し、優先順位をつける
+   - 実装例: implementation_patterns.md の SelectorGeneratorパターン を参照
+
+2. データ抽出
+   - 数値データは必ず型チェックを行う
+   - 日付形式は統一する
+   - 特殊文字の処理に注意
+   - 実装例: implementation_patterns.md の DateParserパターン, NumberParserパターン を参照
+
+3. エラー処理
+   - ネットワークエラーは必ずリトライ
+   - HTMLパースエラーは構造変更の可能性を考慮
+   - データ不整合は警告としてログに残す
+   - 実装例: implementation_patterns.md の ErrorHandlerパターン を参照

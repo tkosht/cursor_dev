@@ -56,22 +56,46 @@ class GeminiLLM(BaseLLM):
         Raises:
             Exception: API呼び出しに失敗した場合
         """
-        try:
-            response = await self.client.generate_content_async(prompt)
-            text = response.text if response else ""
+        retry_count = 0
+        last_error = None
 
-            # メトリクスの更新
-            prompt_tokens = len(prompt)
-            completion_tokens = len(text)
-            self.update_metrics(prompt_tokens, completion_tokens, 0.0)
+        while retry_count < self.MAX_RETRIES:
+            try:
+                # タイムアウト付きで実行
+                response = await asyncio.wait_for(
+                    self.client.generate_content_async(prompt),
+                    timeout=30.0  # 30秒でタイムアウト
+                )
+                if not response:
+                    raise ValueError("空のレスポンスを受信しました")
+                
+                text = response.text
+                if not text:
+                    raise ValueError("生成されたテキストが空です")
 
-            return text
+                # メトリクスの更新
+                prompt_tokens = len(prompt)
+                completion_tokens = len(text)
+                self.update_metrics(prompt_tokens, completion_tokens, 0.0)
 
-        except Exception as e:
-            # エラー時のメトリクス更新
-            self.update_metrics(len(prompt), 0, 0.0)
-            self.metrics.error_count += 1
-            raise e
+                return text
+
+            except asyncio.TimeoutError:
+                last_error = TimeoutError("API呼び出しがタイムアウトしました")
+                logging.error(f"タイムアウト発生 (試行回数: {retry_count + 1}/{self.MAX_RETRIES})")
+            except Exception as e:
+                last_error = e
+                logging.error(f"API呼び出しエラー: {str(e)} (試行回数: {retry_count + 1}/{self.MAX_RETRIES})")
+
+            # リトライ前の待機
+            retry_count += 1
+            if retry_count < self.MAX_RETRIES:
+                await asyncio.sleep(self.RETRY_DELAY * (2 ** (retry_count - 1)))  # 指数バックオフ
+
+        # エラー時のメトリクス更新
+        self.update_metrics(len(prompt), 0, 0.0)
+        self.metrics.error_count += 1
+        raise last_error or Exception("API呼び出しに失敗しました")
 
     async def analyze_content(self, content: str, task: str) -> Dict[str, Any]:
         """コンテンツを分析

@@ -9,6 +9,8 @@ import time
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
+from bs4 import BeautifulSoup
+
 from app.llm.base import BaseLLM
 
 logger = logging.getLogger(__name__)
@@ -508,3 +510,113 @@ class LLMManager:
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse LLM response as JSON: {response}")
             raise ValueError(f"Invalid JSON response: {str(e)}")
+
+    async def generate_selectors(
+        self, soup: "BeautifulSoup", target_data: Dict[str, str]
+    ) -> Dict[str, str]:
+        """HTMLからセレクタを生成
+
+        Args:
+            soup: BeautifulSoupオブジェクト
+            target_data: 取得対象データの辞書
+
+        Returns:
+            セレクタの辞書
+        """
+        logger.debug("generate_selectors開始")
+        if not self.llm:
+            logger.error("LLMが初期化されていません")
+            raise RuntimeError("LLMが初期化されていません")
+
+        # HTMLの構造を分析
+        logger.debug("HTML構造の分析開始")
+        html_structure = self._analyze_html_structure(soup)
+        logger.debug(f"HTML構造の分析完了: {len(html_structure)}文字")
+
+        # プロンプトを生成
+        logger.debug("プロンプトの生成開始")
+        prompt = (
+            "あなたはHTMLセレクタの専門家です。\n"
+            "与えられたHTML構造から、指定されたデータを取得するための最適なCSSセレクタを生成してください。\n\n"
+            f"HTML構造:\n{html_structure}\n\n"
+            f"取得対象データ:\n{json.dumps(target_data, ensure_ascii=False, indent=2)}\n\n"
+            "出力形式:\n"
+            "{\n"
+            '    "データキー": "CSSセレクタ",\n'
+            "    ...\n"
+            "}\n"
+        )
+        logger.debug("プロンプトの生成完了")
+
+        # LLMで解析
+        try:
+            logger.debug("LLMによる解析開始")
+            response = await self.llm.generate(prompt)
+            logger.debug(f"LLMの応答を受信: {len(response)}文字")
+
+            logger.debug("JSONのパース開始")
+            selectors = self._parse_json_response(response)
+            logger.debug(f"JSONのパース完了: {len(selectors)}個のセレクタ")
+
+            # セレクタの検証
+            logger.debug("セレクタの検証開始")
+            validated_selectors = {}
+            for key, selector in selectors.items():
+                if key in target_data and soup.select_one(selector):
+                    validated_selectors[key] = selector
+            logger.debug(f"セレクタの検証完了: {len(validated_selectors)}個の有効なセレクタ")
+
+            return validated_selectors
+
+        except Exception as e:
+            logger.error(f"セレクタ生成エラー: {str(e)}", exc_info=True)
+            # フォールバック: 基本的なセレクタを返す
+            logger.debug("フォールバックセレクタの生成")
+            return {
+                key: f"*[data-{key}], *[id*='{key}'], *[class*='{key}']"
+                for key in target_data
+            }
+
+    def _analyze_html_structure(self, soup: "BeautifulSoup") -> str:
+        """HTML構造を分析し、要約を生成
+
+        Args:
+            soup: BeautifulSoupオブジェクト
+
+        Returns:
+            HTML構造の要約
+        """
+        structure = []
+
+        try:
+            # titleタグ
+            if soup.title:
+                structure.append(f"title: {soup.title.string}")
+
+            # h1-h3タグ
+            headings = []
+            for tag in ["h1", "h2", "h3"]:
+                elements = soup.find_all(tag)
+                if elements:
+                    headings.append(f"{tag}: {len(elements)}個")
+            if headings:
+                structure.append(f"見出し: {', '.join(headings)}")
+
+            # mainタグ、articleタグ
+            for tag in ["main", "article"]:
+                elements = soup.find_all(tag)
+                if elements:
+                    structure.append(f"{tag}: {len(elements)}個")
+
+            # データ属性を持つ要素
+            data_elements = soup.find_all(
+                lambda tag: tag.attrs and any(k.startswith("data-") for k in tag.attrs.keys())
+            )
+            if data_elements:
+                structure.append(f"データ属性要素: {len(data_elements)}個")
+
+        except Exception as e:
+            logger.error(f"HTML構造分析エラー: {str(e)}")
+            structure.append("HTML構造の分析に失敗しました")
+
+        return "\n".join(structure) if structure else "HTML構造を特定できません"
