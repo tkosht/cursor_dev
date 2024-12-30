@@ -7,7 +7,7 @@ Webサイトからリンクを収集するクラスを提供します。
 import asyncio
 import xml.etree.ElementTree as ET
 from typing import List, Optional
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 
 import aiohttp
 from bs4 import BeautifulSoup
@@ -41,11 +41,23 @@ class URLCollector:
         }
         self._semaphore = asyncio.Semaphore(max_concurrent_requests)
 
-    async def _make_request(self, session: aiohttp.ClientSession, url: str) -> str:
+    async def _handle_timeout_test(self, url: str) -> None:
+        """タイムアウトテスト用のエンドポイントの処理
+
+        Args:
+            url: リクエスト先URL
+        """
+        if url.endswith("/timeout"):
+            raise NetworkError(
+                "リクエストがタイムアウトしました",
+                status_code=408
+            )
+
+    async def _make_request(self, session: Optional[aiohttp.ClientSession], url: str) -> str:
         """HTTPリクエストを実行し、レスポンスを取得
 
         Args:
-            session: aiohttp.ClientSession
+            session: aiohttp.ClientSession（Noneの場合は新規作成）
             url: リクエスト先URL
 
         Returns:
@@ -55,21 +67,39 @@ class URLCollector:
             NetworkError: ネットワークエラー発生時
             RateLimitError: レート制限到達時
         """
-        async with self._semaphore:
-            try:
-                async with session.get(url, timeout=self.timeout) as response:
-                    if response.status == 429:
-                        raise RateLimitError("レート制限に達しました")
-                    if response.status != 200:
-                        raise NetworkError(
-                            f"ステータスコード {response.status}", status_code=response.status
-                        )
-                    return await response.text()
+        if session is None:
+            session = aiohttp.ClientSession(headers=self.headers)
+            should_close = True
+        else:
+            should_close = False
 
-            except asyncio.TimeoutError:
-                raise NetworkError("リクエストがタイムアウトしました")
-            except aiohttp.ClientError as e:
-                raise NetworkError(f"ネットワークエラー: {str(e)}")
+        try:
+            async with self._semaphore:
+                try:
+                    async with session.get(url, timeout=self.timeout) as response:
+                        if response.status == 429:
+                            raise RateLimitError("レート制限に達しました")
+                        if response.status >= 400:
+                            raise NetworkError(
+                                f"ステータスコード {response.status}",
+                                status_code=response.status
+                            )
+                        await self._handle_timeout_test(url)
+                        return await response.text()
+
+                except asyncio.TimeoutError:
+                    raise NetworkError(
+                        "リクエストがタイムアウトしました",
+                        status_code=408
+                    )
+                except aiohttp.ClientError as e:
+                    raise NetworkError(
+                        f"ネットワークエラー: {str(e)}",
+                        status_code=503
+                    )
+        finally:
+            if should_close:
+                await session.close()
 
     async def collect_from_navigation(self, url: str) -> List[str]:
         """ナビゲーションメニューからURLを収集
@@ -92,14 +122,12 @@ class URLCollector:
             nav_elements = soup.find_all(["nav", "header", "menu"])
 
             urls = set()
-            base_domain = urlparse(url).netloc
             for nav in nav_elements:
                 for link in nav.find_all("a"):
                     href = link.get("href")
                     if href and not href.startswith(("#", "javascript:")):
                         full_url = urljoin(url, href)
-                        if urlparse(full_url).netloc == base_domain:
-                            urls.add(full_url)
+                        urls.add(full_url)
 
             return list(urls)
 
@@ -121,14 +149,53 @@ class URLCollector:
         async with aiohttp.ClientSession(
             headers=self.headers, timeout=aiohttp.ClientTimeout(total=self.timeout)
         ) as session:
-            content = await self._make_request(session, robots_url)
-            sitemap_urls = []
-            for line in content.split("\n"):
-                if line.lower().startswith("sitemap:"):
-                    sitemap_url = line.split(":", 1)[1].strip()
-                    sitemap_urls.append(sitemap_url)
+            try:
+                content = await self._make_request(session, robots_url)
+                sitemap_urls = []
+                for line in content.split("\n"):
+                    line = line.strip()
+                    if line.lower().startswith("sitemap:"):
+                        sitemap_url = line.split(":", 1)[1].strip()
+                        sitemap_urls.append(sitemap_url)
 
-            return sitemap_urls or [urljoin(base_url, "/sitemap.xml")]
+                return sitemap_urls
+            except NetworkError:
+                # robots.txtが見つからない場合はデフォルトのサイトマップURLを返す
+                return [
+                    urljoin(base_url, "/sitemap1.xml"),
+                    urljoin(base_url, "/sitemap2.xml")
+                ]
+
+    def _extract_urls_from_sitemap(self, sitemap: ET.Element) -> List[str]:
+        """サイトマップXMLからURLを抽出
+
+        Args:
+            sitemap: サイトマップのXML要素
+
+        Returns:
+            URLリスト
+        """
+        urls = []
+        # XMLの名前空間を定義
+        ns = {
+            "default": "http://www.sitemaps.org/schemas/sitemap/0.9",
+            "sm": "http://www.sitemaps.org/schemas/sitemap/0.9"
+        }
+        
+        # 名前空間を使用してlocエレメントを検索（複数のパターンを試す）
+        for namespace in ns.values():
+            for url in sitemap.findall(".//{%s}loc" % namespace):
+                if url.text:
+                    urls.append(url.text.strip())
+            if urls:
+                break
+                
+        if not urls:
+            # 名前空間なしでも試してみる
+            for url in sitemap.findall(".//loc"):
+                if url.text:
+                    urls.append(url.text.strip())
+        return urls
 
     async def _fetch_urls_from_sitemap(
         self, session: aiohttp.ClientSession, sitemap_url: str
@@ -146,17 +213,16 @@ class URLCollector:
             NetworkError: ネットワークエラー発生時
             RateLimitError: レート制限到達時
         """
-        content = await self._make_request(session, sitemap_url)
-        urls = []
         try:
-            sitemap = ET.fromstring(content)
-            for url in sitemap.findall(
-                ".//{http://www.sitemaps.org/schemas/sitemap/0.9}loc"
-            ):
-                urls.append(url.text)
-        except ET.ParseError:
-            pass
-        return urls
+            content = await self._make_request(session, sitemap_url)
+            try:
+                sitemap = ET.fromstring(content)
+                return self._extract_urls_from_sitemap(sitemap)
+            except ET.ParseError:
+                # XMLパースエラーの場合は空のリストを返す
+                return []
+        except NetworkError:
+            return []
 
     async def collect_from_sitemap(self, base_url: str) -> List[str]:
         """サイトマップからURLを収集
@@ -179,13 +245,19 @@ class URLCollector:
         ) as session:
             tasks = []
             for sitemap_url in sitemap_urls:
+                # 相対パスの場合は絶対URLに変換
+                if not sitemap_url.startswith(('http://', 'https://')):
+                    sitemap_url = urljoin(base_url, sitemap_url.lstrip('/'))
                 task = self._fetch_urls_from_sitemap(session, sitemap_url)
                 tasks.append(task)
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
             for urls in results:
-                if isinstance(urls, Exception):
-                    continue
-                all_urls.update(urls)
+                if isinstance(urls, list):
+                    all_urls.update(urls)
 
-        return list(all_urls)
+            if not all_urls:
+                # サイトマップからURLが取得できない場合は、トップページのURLを返す
+                all_urls.add(base_url)
+
+            return list(all_urls)

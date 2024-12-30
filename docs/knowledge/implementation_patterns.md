@@ -1,230 +1,309 @@
-# 実装パターンと具体的な知見
+# 実装パターン集
 
-このドキュメントには、プロジェクト全体で活用できる具体的な実装パターンと知見をまとめています。
-これらのパターンは、多くのプロジェクトで再利用可能で、コードの品質と保守性を高めることができます。
+## 非同期テストの実装パターン
 
-## 1. プロジェクト設計・実装パターン
-
-### 1.1 設定管理のベストプラクティス
-
+### 基本的なテストケース
 ```python
-# 悪い例：ハードコードされた設定
-class Crawler:
-    BASE_URL = "https://example.com"
-    TIMEOUT = 30
+import pytest
+from aiohttp import web
 
-# 良い例：外部化された設定
-from pydantic import BaseSettings
-
-class CrawlerSettings(BaseSettings):
-    base_url: str
-    timeout: int = 30
+@pytest.mark.asyncio
+async def test_basic_async():
+    # テスト用のアプリケーション作成
+    app = web.Application()
+    app.router.add_get('/', lambda r: web.Response(text='test'))
     
-    class Config:
-        env_prefix = "CRAWLER_"
-        env_file = ".env"
+    # テストクライアントの取得
+    async with aiohttp_client(app) as client:
+        # テストの実行
+        response = await client.get('/')
+        assert response.status == 200
+        text = await response.text()
+        assert text == 'test'
 ```
 
-**利点**:
-- 環境ごとの設定変更が容易
-- 設定値の型チェックが可能
-- 環境変数との連携が簡単
-- テスト時の設定変更が容易
-
-### 1.2 エラーハンドリングの具体的パターン
-
-```python
-async def fetch_with_retry(self, url: str, max_retries: int = 3) -> str:
-    for attempt in range(max_retries):
-        try:
-            async with self.session.get(url) as response:
-                response.raise_for_status()
-                return await response.text()
-        except aiohttp.ClientError as e:
-            if attempt == max_retries - 1:
-                raise
-            await asyncio.sleep(2 ** attempt)  # 指数バックオフ
-```
-
-**利点**:
-- 一時的な障害に対する耐性
-- 指数バックオフによるサーバー負荷の軽減
-- 明確なエラー伝播
-
-### 1.3 非同期処理のパターン
-
-```python
-async def process_urls(self, urls: List[str]) -> List[Dict]:
-    tasks = []
-    async with aiohttp.ClientSession() as session:
-        for url in urls:
-            task = asyncio.create_task(self.fetch_url(session, url))
-            tasks.append(task)
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-    return [r for r in results if not isinstance(r, Exception)]
-```
-
-**利点**:
-- リソースの効率的な利用
-- セッションの適切な管理
-- エラーの適切な処理
-
-## 2. テスト設計パターン
-
-### 2.1 テストケースの構造化
-
+### エラーハンドリングのテスト
 ```python
 @pytest.mark.asyncio
-class TestCrawler:
-    @pytest.fixture
-    async def crawler(self):
-        async with Crawler() as crawler:
-            yield crawler
-
-    @pytest.mark.parametrize("url,expected", [
-        ("https://valid.com", True),
-        ("https://invalid.com", False),
-    ])
-    async def test_url_validation(self, crawler, url, expected):
-        assert await crawler.is_valid_url(url) == expected
-```
-
-**利点**:
-- テストの再利用性が高い
-- パラメータ化によるテストケースの網羅
-- フィクスチャによるセットアップの一元管理
-
-### 2.2 モック使用の具体例
-
-```python
-def test_api_call(mocker):
-    mock_response = mocker.Mock()
-    mock_response.json.return_value = {"status": "success"}
-    mock_response.status_code = 200
+async def test_error_handling():
+    # エラーレスポンスを返すハンドラー
+    async def error_handler(request):
+        return web.Response(status=503)
     
-    mocker.patch('requests.get', return_value=mock_response)
-    result = api_client.get_data()
-    assert result["status"] == "success"
-```
-
-**利点**:
-- 外部依存のない安定したテスト
-- テスト実行の高速化
-- エッジケースのテストが容易
-
-## 3. データベース操作パターン
-
-### 3.1 SQLAlchemyモデル定義
-
-```python
-from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.sql import func
-
-class BaseModel(Base):
-    __abstract__ = True
+    # テストアプリケーションの設定
+    app = web.Application()
+    app.router.add_get('/error', error_handler)
     
-    id = Column(Integer, primary_key=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
+    # テストの実行
+    async with aiohttp_client(app) as client:
+        with pytest.raises(NetworkError):
+            await client.get('/error')
+```
 
-class Company(BaseModel):
-    __tablename__ = "companies"
+### 同時実行制限のテスト
+```python
+@pytest.mark.asyncio
+async def test_concurrent_limit():
+    # 遅延レスポンスを返すハンドラー
+    async def delay_handler(request):
+        await asyncio.sleep(0.1)
+        return web.Response(text='ok')
     
-    name = Column(String(100), nullable=False, index=True)
-    url = Column(String(200), unique=True)
+    # テストアプリケーションの設定
+    app = web.Application()
+    app.router.add_get('/delay', delay_handler)
+    
+    # テストの実行
+    async with aiohttp_client(app) as client:
+        start_time = asyncio.get_event_loop().time()
+        tasks = [client.get('/delay') for _ in range(5)]
+        await asyncio.gather(*tasks)
+        end_time = asyncio.get_event_loop().time()
+        
+        # 2つずつ処理されるため、少なくとも0.3秒かかるはず
+        assert end_time - start_time >= 0.3
 ```
 
-**利点**:
-- 共通フィールドの一元管理
-- 監査フィールドの自動更新
-- インデックスの適切な設定
+## テストサーバーの実装パターン
 
-## 4. ログ管理パターン
-
-### 4.1 構造化ログの実装
-
+### 基本的なサーバー設定
 ```python
-import structlog
+@pytest.fixture
+async def test_app():
+    """テスト用のアプリケーション"""
+    async def handle_request(request):
+        return web.Response(text='test')
+    
+    app = web.Application()
+    app.router.add_get('/', handle_request)
+    return app
 
-logger = structlog.get_logger()
-
-async def process_data(data: Dict):
-    logger.info("processing_started", 
-                data_size=len(data),
-                timestamp=datetime.now().isoformat())
-    try:
-        result = await process(data)
-        logger.info("processing_completed",
-                   result_size=len(result),
-                   duration=time.time() - start_time)
-        return result
-    except Exception as e:
-        logger.error("processing_failed",
-                    error_type=type(e).__name__,
-                    error_message=str(e))
-        raise
+@pytest.fixture
+async def test_client(test_app, aiohttp_client):
+    """テスト用のクライアント"""
+    return await aiohttp_client(test_app)
 ```
 
-**利点**:
-- ログの検索性向上
-- メトリクスの収集が容易
-- エラー分析の効率化
-
-## 5. パフォーマンス最適化パターン
-
-### 5.1 キャッシュ実装
-
+### 複数エンドポイントの設定
 ```python
-from functools import lru_cache
-from datetime import datetime, timedelta
+@pytest.fixture
+async def test_app():
+    """複数のエンドポイントを持つテストアプリケーション"""
+    app = web.Application()
+    
+    # 通常のレスポンス
+    app.router.add_get('/', lambda r: web.Response(text='ok'))
+    
+    # エラーレスポンス
+    app.router.add_get('/error', lambda r: web.Response(status=503))
+    
+    # 遅延レスポンス
+    app.router.add_get('/delay', 
+        lambda r: asyncio.sleep(0.1).then(
+            lambda _: web.Response(text='delayed')
+        )
+    )
+    
+    return app
+```
 
-class CacheManager:
+### レスポンスの動的生成
+```python
+@pytest.fixture
+async def test_app():
+    """動的なレスポンスを返すテストアプリケーション"""
+    async def dynamic_handler(request):
+        query = request.query.get('type', 'default')
+        if query == 'error':
+            return web.Response(status=503)
+        elif query == 'delay':
+            await asyncio.sleep(0.1)
+            return web.Response(text='delayed')
+        else:
+            return web.Response(text='default')
+    
+    app = web.Application()
+    app.router.add_get('/', dynamic_handler)
+    return app
+```
+
+## XMLの名前空間対応パターン
+```python
+def extract_with_namespace(element: ET.Element, xpath: str) -> List[str]:
+    """名前空間を考慮したXML要素の抽出
+
+    Args:
+        element: XML要素
+        xpath: 検索パス
+
+    Returns:
+        抽出された要素のリスト
+    """
+    # 複数の名前空間パターンを定義
+    namespaces = {
+        "default": "http://www.example.org/schema",
+        "alt": "http://www.example.org/schema/alt"
+    }
+    
+    results = []
+    # 各名前空間でトライ
+    for namespace in namespaces.values():
+        # 名前空間を使用した検索
+        found = element.findall(".//{%s}target" % namespace)
+        if found:
+            results.extend([item.text for item in found if item.text])
+            break
+    
+    # 名前空間なしでもトライ（フォールバック）
+    if not results:
+        found = element.findall(".//target")
+        results.extend([item.text for item in found if item.text])
+    
+    return results
+```
+
+## URL正規化パターン
+```python
+from urllib.parse import urljoin, urlparse
+
+def normalize_url(url: str, base_url: str) -> str:
+    """URLの正規化
+
+    Args:
+        url: 対象URL（相対パスの可能性あり）
+        base_url: 基準URL
+
+    Returns:
+        正規化されたURL
+    """
+    # javascript:やdata:などのスキームは除外
+    if url.startswith(("javascript:", "data:", "mailto:", "#")):
+        return ""
+    
+    # 相対パスの場合は絶対URLに変換
+    if not url.startswith(("http://", "https://")):
+        url = urljoin(base_url, url.lstrip("/"))
+    
+    # URLの正規化
+    parsed = urlparse(url)
+    normalized = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+    if parsed.query:
+        normalized += f"?{parsed.query}"
+    
+    return normalized
+```
+
+## 非同期リクエスト制御パターン
+```python
+import asyncio
+from typing import Optional
+
+import aiohttp
+
+class RequestController:
+    """非同期リクエストの制御を行うクラス"""
+
+    def __init__(
+        self,
+        max_concurrent: int = 3,
+        timeout: float = 30.0,
+        headers: Optional[dict] = None
+    ):
+        """
+        Args:
+            max_concurrent: 同時リクエスト数の上限
+            timeout: タイムアウト時間（秒）
+            headers: HTTPヘッダー
+        """
+        self.max_concurrent = max_concurrent
+        self.timeout = timeout
+        self.headers = headers or {}
+        self._semaphore = asyncio.Semaphore(max_concurrent)
+    
+    async def request(
+        self,
+        session: Optional[aiohttp.ClientSession],
+        url: str
+    ) -> str:
+        """制御された非同期リクエストの実行
+
+        Args:
+            session: セッション（Noneの場合は新規作成）
+            url: リクエスト先URL
+
+        Returns:
+            レスポンス本文
+
+        Raises:
+            NetworkError: ネットワークエラー発生時
+            RateLimitError: レート制限到達時
+        """
+        if session is None:
+            session = aiohttp.ClientSession(
+                headers=self.headers,
+                timeout=aiohttp.ClientTimeout(total=self.timeout)
+            )
+            should_close = True
+        else:
+            should_close = False
+
+        try:
+            async with self._semaphore:
+                try:
+                    async with session.get(url) as response:
+                        if response.status == 429:
+                            raise RateLimitError()
+                        if response.status >= 400:
+                            raise NetworkError()
+                        return await response.text()
+                except asyncio.TimeoutError:
+                    raise NetworkError()
+                except aiohttp.ClientError as e:
+                    raise NetworkError()
+        finally:
+            if should_close:
+                await session.close()
+```
+
+## 非同期テストサーバーパターン
+```python
+import asyncio
+from aiohttp import web
+
+class TestServer:
+    """非同期テスト用のサーバー"""
+
     def __init__(self):
-        self.cache = {}
-        self.timestamps = {}
+        self.app = web.Application()
+        self._setup_routes()
     
-    def get(self, key: str, ttl: int = 300):
-        if key in self.cache:
-            if datetime.now() - self.timestamps[key] < timedelta(seconds=ttl):
-                return self.cache[key]
-        return None
-
-    def set(self, key: str, value: Any):
-        self.cache[key] = value
-        self.timestamps[key] = datetime.now()
-```
-
-**利点**:
-- パフォーマンスの向上
-- サーバー負荷の軽減
-- TTLによるメモリ管理
-
-## 6. セキュリティ対策パターン
-
-### 6.1 APIキー管理
-
-```python
-from pydantic import BaseSettings, SecretStr
-
-class APISettings(BaseSettings):
-    api_key: SecretStr
-    api_secret: SecretStr
+    def _setup_routes(self):
+        """ルーティングの設定"""
+        self.app.router.add_get("/", self.handle_root)
+        self.app.router.add_get("/error", self.handle_error)
+        self.app.router.add_get("/timeout", self.handle_timeout)
+        self.app.router.add_get("/rate-limit", self.handle_rate_limit)
     
-    class Config:
-        env_file = '.env'
-        env_file_encoding = 'utf-8'
+    async def handle_root(self, request):
+        """ルートパスのハンドラ"""
+        return web.Response(text="OK")
+    
+    async def handle_error(self, request):
+        """エラーパスのハンドラ"""
+        return web.Response(status=503)
+    
+    async def handle_timeout(self, request):
+        """タイムアウトパスのハンドラ"""
+        await asyncio.sleep(1)
+        return web.Response(text="timeout")
+    
+    async def handle_rate_limit(self, request):
+        """レート制限パスのハンドラ"""
+        return web.Response(status=429)
 
-settings = APISettings()
-headers = {"Authorization": f"Bearer {settings.api_key.get_secret_value()}"}
-```
-
-**利点**:
-- 機密情報の安全な管理
-- 設定の一元化
-- 環境変数との連携
-
-## 注意事項
-
-1. これらのパターンは、プロジェクトの要件や制約に応じて適切にカスタマイズする必要があります。
-2. パターンを適用する際は、チームメンバーと十分な議論を行い、合意を得ることが重要です。
-3. 定期的にパターンの有効性を評価し、必要に応じて改善を行ってください。 
+@pytest.fixture
+async def test_client(aiohttp_client):
+    """テストクライアントのフィクスチャ"""
+    server = TestServer()
+    return await aiohttp_client(server.app)
+``` 
