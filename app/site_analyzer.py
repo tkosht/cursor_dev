@@ -40,11 +40,12 @@ class URLAnalyzer:
             )
         }
 
-    async def analyze(self, url: str) -> Dict:
+    async def analyze(self, url: str, task: str = "company_info") -> Dict:
         """URLの内容を分析
 
         Args:
             url: 分析対象のURL
+            task: 分析タスクの種類（"url_analysis" or "company_info"）
 
         Returns:
             分析結果
@@ -61,7 +62,7 @@ class URLAnalyzer:
 
             llm_start_time = time.time()
             analysis_result = await self.llm_manager.analyze_content(
-                text_content, task="url_analysis"
+                text_content, task=task
             )
             llm_latency = time.time() - llm_start_time
 

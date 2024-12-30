@@ -338,3 +338,80 @@ class LLMManager:
                 "reason": "一般ページ",
                 "confidence": 0.7,
             }
+
+    async def analyze_content(self, content: str, task: str = "url_analysis") -> Dict[str, Any]:
+        """コンテンツを分析
+
+        Args:
+            content: 分析対象のテキストコンテンツ
+            task: 分析タスクの種類（"url_analysis" or "company_info"）
+
+        Returns:
+            分析結果
+        """
+        if task == "company_info":
+            prompt = (
+                "あなたは企業情報抽出の専門家です。\n"
+                "与えられたWebページのコンテンツから、企業の基本情報を抽出してください。\n\n"
+                "抽出する情報:\n"
+                "1. 企業名\n"
+                "2. 事業内容\n"
+                "3. 業界\n\n"
+                "出力形式:\n"
+                "{\n"
+                '    "company_name": str,      # 企業名\n'
+                '    "business_description": str,  # 事業内容の説明\n'
+                '    "industry": str           # 業界\n'
+                "}\n\n"
+                f"コンテンツ:\n{content[:3000]}"  # コンテンツは3000文字までに制限
+            )
+        else:
+            # 既存のURL分析用プロンプト生成ロジック
+            return await self.evaluate_url_relevance(content, [], {})
+
+        try:
+            if not self.llm:
+                # モックデータを返す（開発用）
+                return self._mock_company_info()
+
+            response = await self.llm.generate(prompt)
+            try:
+                result = json.loads(response)
+                return self._validate_company_info(result)
+            except json.JSONDecodeError:
+                logger.error(f"Invalid JSON response: {response}")
+                return self._mock_company_info()
+
+        except Exception as e:
+            logger.error(f"Error in analyze_content: {str(e)}")
+            return self._mock_company_info()
+
+    def _validate_company_info(self, result: Dict[str, Any]) -> Dict[str, Any]:
+        """企業情報の検証
+
+        Args:
+            result: 抽出された企業情報
+
+        Returns:
+            検証済みの企業情報
+        """
+        required_fields = ["company_name", "business_description", "industry"]
+        if not all(field in result for field in required_fields):
+            logger.error(f"Missing required fields in result: {result}")
+            return self._mock_company_info()
+
+        # 各フィールドが文字列であることを確認
+        for field in required_fields:
+            if not isinstance(result[field], str):
+                logger.error(f"Invalid type for {field}: {type(result[field])}")
+                return self._mock_company_info()
+
+        return result
+
+    def _mock_company_info(self) -> Dict[str, Any]:
+        """モックの企業情報を生成（開発用）"""
+        return {
+            "company_name": "サンプル株式会社",
+            "business_description": "ITソリューションの提供",
+            "industry": "情報技術"
+        }
