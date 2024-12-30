@@ -75,8 +75,18 @@ class AdaptiveCrawler(BaseCrawler):
             "User-Agent": (
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/91.0.4472.124 Safari/537.36"
-            )
+                "Chrome/120.0.0.0 Safari/537.36"
+            ),
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "Accept-Language": "ja,en-US;q=0.7,en;q=0.3",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1",
+            "Cache-Control": "max-age=0"
         }
         
         # ロガーの設定
@@ -166,6 +176,26 @@ class AdaptiveCrawler(BaseCrawler):
 
         return extracted_data
 
+    async def _handle_error(
+        self,
+        error: Exception,
+        retry_count: int,
+        error_type: str
+    ) -> None:
+        """エラーを処理する
+
+        Args:
+            error: 発生したエラー
+            retry_count: 現在のリトライ回数
+            error_type: エラーの種類を示す文字列
+        """
+        self._log_warning(
+            f"{error_type}（リトライ {retry_count}/{self.max_retries}）: {str(error)}"
+        )
+        if retry_count > self.max_retries:
+            self._log_error(f"{error_type}（最大リトライ回数超過）: {str(error)}")
+            raise error
+
     async def crawl(self, url: str, target_data: Dict[str, str]) -> Dict[str, Any]:
         """クロール処理を実行
 
@@ -175,23 +205,72 @@ class AdaptiveCrawler(BaseCrawler):
 
         Returns:
             抽出したデータの辞書
+
+        Raises:
+            ValueError: データの検証に失敗した場合
+            aiohttp.ClientError: HTTP通信に失敗した場合
+            Exception: その他のエラーが発生した場合
         """
-        # 並行処理の制御
         async with self.semaphore:
             retry_count = 0
+            last_error = None
+            
             while retry_count <= self.max_retries:
                 try:
-                    html = await self._fetch_page(url)
-                    data = await self._process_page(html, target_data)
+                    # ページ取得と処理
+                    data = await self._fetch_and_process(url, target_data)
                     return data
-                except (aiohttp.ClientError, ValueError) as e:
+
+                except aiohttp.ClientError as e:
                     retry_count += 1
-                    if retry_count > self.max_retries:
-                        raise
-                    self._log_warning(
-                        f"リトライ {retry_count}/{self.max_retries}: {str(e)}"
-                    )
-                    await asyncio.sleep(self.retry_delay * (2 ** (retry_count - 1)))
+                    last_error = e
+                    await self._handle_error(e, retry_count, "HTTP通信エラー")
+
+                except ValueError as e:
+                    retry_count += 1
+                    last_error = e
+                    await self._handle_error(e, retry_count, "データ検証エラー")
+
+                except Exception as e:
+                    retry_count += 1
+                    last_error = e
+                    await self._handle_error(e, retry_count, "予期せぬエラー")
+
+                # 指数バックオフでリトライ
+                await asyncio.sleep(self.retry_delay * (2 ** (retry_count - 1)))
+
+            if last_error:
+                raise last_error
+
+    async def _fetch_and_process(
+        self,
+        url: str,
+        target_data: Dict[str, str]
+    ) -> Dict[str, Any]:
+        """ページを取得して処理する
+
+        Args:
+            url: 取得対象のURL
+            target_data: 取得対象データの辞書
+
+        Returns:
+            抽出したデータの辞書
+        """
+        # ページ取得
+        self._log_info(f"ページ取得開始: {url}")
+        html = await self._fetch_page(url)
+        self._log_info(f"ページ取得完了: {len(html)}バイト")
+
+        # データ抽出
+        self._log_info("データ抽出開始")
+        data = await self._process_page(html, target_data)
+        self._log_info(f"データ抽出完了: {data}")
+
+        # データ検証
+        if not await self.llm_manager.validate_data(data, target_data):
+            raise ValueError("データの検証に失敗しました")
+
+        return data
 
     def _log_debug(self, message: str) -> None:
         """デバッグログを出力
