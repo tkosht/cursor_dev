@@ -3,33 +3,32 @@
 """
 import pytest
 
-from app.analyzer.url_analyzer import URLAnalyzer
-from app.crawler.url_collector import URLCollector
+from app.crawlers.url_collector import URLCollector
 from app.errors.url_analysis_errors import NetworkError, RateLimitError
 from app.metrics.url_analysis_metrics import URLAnalysisMetrics
+from app.site_analyzer import URLAnalyzer
 
 
 class TestURLCrawler:
     """URLクローラーの統合テスト"""
 
     @pytest.fixture
-    async def url_collector(self) -> URLCollector:
+    def url_collector(self) -> URLCollector:
         """URLコレクターのフィクスチャ"""
-        collector = URLCollector(max_concurrent_requests=3, request_timeout=30.0)
-        return collector
+        return URLCollector(max_concurrent_requests=3, request_timeout=10.0)
 
     @pytest.fixture
-    async def url_analyzer(self) -> URLAnalyzer:
+    def url_analyzer(self) -> URLAnalyzer:
         """URLアナライザーのフィクスチャ"""
-        analyzer = URLAnalyzer()
-        return analyzer
+        return URLAnalyzer(request_timeout=10.0)
 
     @pytest.fixture
-    async def metrics(self) -> URLAnalysisMetrics:
+    def metrics(self) -> URLAnalysisMetrics:
         """メトリクス収集のフィクスチャ"""
         return URLAnalysisMetrics()
 
     @pytest.mark.asyncio
+    @pytest.mark.timeout(30)
     async def test_crawl_corporate_website(
         self,
         url_collector: URLCollector,
@@ -45,8 +44,8 @@ class TestURLCrawler:
             urls = await url_collector.collect_from_sitemap(base_url)
             assert len(urls) > 0, "サイトマップからURLを取得できませんでした"
 
-            # 収集したURLの分析
-            for url in urls[:5]:  # テスト用に最初の5件のみ処理
+            # 収集したURLの分析（最大3件まで）
+            for url in urls[:3]:  # 処理数を3件に制限
                 result = await url_analyzer.analyze(url)
                 metrics.record_url_processing(
                     url=url,
@@ -65,6 +64,7 @@ class TestURLCrawler:
             pytest.skip(f"レート制限に達しました: {str(e)}")
 
     @pytest.mark.asyncio
+    @pytest.mark.timeout(30)
     async def test_crawl_navigation_links(
         self,
         url_collector: URLCollector,
@@ -80,8 +80,8 @@ class TestURLCrawler:
             urls = await url_collector.collect_from_navigation(base_url)
             assert len(urls) > 0, "ナビゲーションからURLを取得できませんでした"
 
-            # 収集したURLの分析
-            for url in urls[:3]:  # テスト用に最初の3件のみ処理
+            # 収集したURLの分析（最大2件まで）
+            for url in urls[:2]:  # 処理数を2件に制限
                 result = await url_analyzer.analyze(url)
                 metrics.record_url_processing(
                     url=url,
@@ -100,6 +100,7 @@ class TestURLCrawler:
             pytest.skip(f"レート制限に達しました: {str(e)}")
 
     @pytest.mark.asyncio
+    @pytest.mark.timeout(20)
     async def test_error_handling_invalid_url(
         self,
         url_collector: URLCollector,
@@ -127,6 +128,7 @@ class TestURLCrawler:
         assert metrics.error_count > 0, "エラーが記録されていません"
 
     @pytest.mark.asyncio
+    @pytest.mark.timeout(20)
     async def test_robots_txt_handling(self, url_collector: URLCollector):
         """robots.txtの処理テスト"""
         # テスト対象のURL

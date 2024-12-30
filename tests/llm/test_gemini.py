@@ -379,8 +379,13 @@ async def test_metrics_accumulation(gemini_llm):
         await gemini_llm.generate_text("テストプロンプト")
 
     # メトリクスが累積されていることを確認
-    assert gemini_llm.metrics.prompt_tokens == initial_prompt_tokens + len("テストプロンプト") * 3
-    assert gemini_llm.metrics.completion_tokens == initial_completion_tokens + len("テストレスポンス") * 3
+    assert (
+        gemini_llm.metrics.prompt_tokens == initial_prompt_tokens + len("テストプロンプト") * 3
+    )
+    assert (
+        gemini_llm.metrics.completion_tokens
+        == initial_completion_tokens + len("テストレスポンス") * 3
+    )
 
 
 def test_metrics_reset(gemini_llm):
@@ -495,7 +500,7 @@ async def test_analyze_content_with_retry_success(gemini_llm):
     ]
 
     result = await gemini_llm.analyze_content("テストコンテンツ", "test_task")
-    
+
     assert result == {"key": "success"}
     assert gemini_llm.client.generate_content_async.call_count == 2
     assert gemini_llm.metrics.error_count == 1
