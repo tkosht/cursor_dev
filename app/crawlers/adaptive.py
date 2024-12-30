@@ -79,14 +79,18 @@ class AdaptiveCrawler(BaseCrawler):
             ),
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
             "Accept-Language": "ja,en-US;q=0.7,en;q=0.3",
-            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Encoding": "gzip, deflate",
             "Connection": "keep-alive",
             "Upgrade-Insecure-Requests": "1",
             "Sec-Fetch-Dest": "document",
             "Sec-Fetch-Mode": "navigate",
             "Sec-Fetch-Site": "none",
             "Sec-Fetch-User": "?1",
-            "Cache-Control": "max-age=0"
+            "Cache-Control": "no-cache",
+            "DNT": "1",
+            "Sec-GPC": "1",
+            "Pragma": "no-cache",
+            "Referer": "https://www.google.com/"
         }
         
         # ロガーの設定
@@ -310,3 +314,102 @@ class AdaptiveCrawler(BaseCrawler):
             await self._session.close()
             self._session = None
         await super().close()
+
+    async def analyze_site_structure(self, url: str) -> Dict[str, Any]:
+        """サイト構造を解析する
+
+        Args:
+            url: 解析対象のURL
+
+        Returns:
+            Dict[str, Any]: 解析結果
+            {
+                "navigation": ナビゲーション要素の内容,
+                "main_content": メインコンテンツの内容,
+                "links": リンク一覧,
+                "headings": 見出し一覧
+            }
+        """
+        self._log_debug(f"サイト構造解析開始: {url}")
+        
+        try:
+            # ページを取得
+            html = await self._fetch_page(url)
+            soup = BeautifulSoup(html, "html.parser")
+            
+            # ナビゲーション要素を抽出
+            nav_elements = soup.find_all(["nav", "header", "menu"])
+            navigation = " ".join([nav.get_text(strip=True) for nav in nav_elements])
+            
+            # メインコンテンツを抽出
+            main_elements = soup.find_all(["main", "article", "div", "section"])
+            main_content = " ".join([main.get_text(strip=True) for main in main_elements])
+            
+            # リンクを抽出
+            links = [
+                {
+                    "text": a.get_text(strip=True),
+                    "href": a.get("href", "")
+                }
+                for a in soup.find_all("a", href=True)
+            ]
+            
+            # 見出しを抽出
+            headings = [
+                h.get_text(strip=True)
+                for h in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])
+            ]
+            
+            structure = {
+                "navigation": navigation,
+                "main_content": main_content,
+                "links": links,
+                "headings": headings
+            }
+            
+            self._log_debug(f"サイト構造解析完了: {len(structure)} 要素")
+            return structure
+            
+        except Exception as e:
+            self._log_error(f"サイト構造解析エラー: {str(e)}")
+            raise
+    
+    async def extract_data(self, url: str, target_data: Dict[str, str]) -> Dict[str, str]:
+        """データを抽出する
+
+        Args:
+            url: 抽出対象のURL
+            target_data: 抽出対象データの辞書
+                {"revenue": "売上高", "profit": "営業利益"}のような形式
+
+        Returns:
+            Dict[str, str]: 抽出したデータの辞書
+                {"revenue": "1,234,567円", "profit": "123,456円"}のような形式
+        """
+        self._log_debug(f"データ抽出開始: {url}")
+        
+        try:
+            # サイト構造を解析
+            structure = await self.analyze_site_structure(url)
+            
+            # LLMを使用してデータを抽出
+            prompt = (
+                "以下のサイト構造から、指定されたデータを抽出してください。\n"
+                "抽出対象データ:\n"
+            )
+            for key, value in target_data.items():
+                prompt += f"- {key}: {value}\n"
+            prompt += f"\nサイト構造:\n{structure}\n"
+            
+            extracted_data = await self.llm_manager.llm.extract_data(prompt)
+            
+            # データを検証
+            if not all(key in extracted_data for key in target_data.keys()):
+                raise ValueError("必要なデータが抽出できませんでした")
+            
+            self._log_debug(f"データ抽出完了: {extracted_data}")
+            return extracted_data
+            
+        except Exception as e:
+            self._log_error(f"データ抽出エラー: {str(e)}")
+            raise

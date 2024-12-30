@@ -139,7 +139,12 @@ security:
 
 # --- バージョン管理（version_management） ---
 version_management:
-  - "現在の状況をコミットする場合は、git add . を実行。"
+  - "現在の更新状態を正確に把握。"
+    - "git status で現在の更新状態を確認。"
+    - "git diff で変更内容を確認。"
+    - "git add . で変更をステージング。"
+    - "git commit -m 'コミットメッセージ' でコミット。"
+    - "git push でリモートリポジトリにプッシュ。"
   - "Git利用。コミットメッセージは feat/fix/docs/style/refactor/test/chore の形式。"
   - "プルリク→レビュー→マージの手順。"
 
