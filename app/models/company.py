@@ -30,20 +30,30 @@ class Company(Base):
         website_url (str): Webサイト
         stock_exchange (str): 上場市場
         industry (str): 業種
+        headquarters_address (str): 本社所在地
+        representative_name (str): 代表者名
+        representative_position (str): 代表者役職
+        employees_count (str): 従業員数
         created_at (datetime): 作成日時
         updated_at (datetime): 更新日時
         financials (List[Financial]): 財務情報リスト
         news (List[News]): ニュースリスト
     """
 
+    __tablename__ = "company"
+
     company_code = Column(String(4), nullable=False, unique=True)
     name = Column(String(255), nullable=False)
     name_en = Column(String(255))
     description = Column(Text)
-    established_date = Column(Date, nullable=False)
+    established_date = Column(Date)
     website_url = Column(String(255))
     stock_exchange = Column(String(50))
     industry = Column(String(50))
+    headquarters_address = Column(String(255))
+    representative_name = Column(String(100))
+    representative_position = Column(String(100))
+    employees_count = Column(String(100))
 
     financials: Mapped[List["Financial"]] = relationship(
         "Financial", back_populates="company", cascade="all, delete-orphan"

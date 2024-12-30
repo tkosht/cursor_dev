@@ -227,7 +227,8 @@ class LLMManager:
                 'relevance_score': 関連性スコア（0-1）,
                 'reason': 評価理由,
                 'category': カテゴリ,
-                'confidence': 判定信頼度（0-1）
+                'confidence': 判定信頼度（0-1）,
+                'processing_time': 処理時間（秒）
             }
         """
         try:
@@ -248,50 +249,69 @@ class LLMManager:
             prompt = self.prompt_generator.generate(url_components, language_info)
 
             # LLM評価実行
-            raw_result = await self.llm.analyze_content(prompt, "url_analysis")
+            raw_result = await self.llm.analyze_content(prompt, task="url_analysis")
+            if not raw_result:
+                logger.error("LLM評価結果が空です")
+                return None
 
             # 結果の検証
             result = self.result_validator.validate(raw_result)
             if not result:
+                logger.error("評価結果の検証に失敗しました")
                 return None
 
-            # 処理時間の記録
+            # 処理時間の計算
             processing_time = time.monotonic() - start_time
-            logger.debug(
-                f"URL evaluation completed in {processing_time:.2f}s: "
-                f"score={result.relevance_score:.2f}, "
-                f"confidence={result.confidence:.2f}"
-            )
 
+            # 結果の整形
             return {
                 "relevance_score": result.relevance_score,
                 "category": result.category,
                 "reason": result.reason,
                 "confidence": result.confidence,
+                "processing_time": processing_time
             }
 
         except Exception as e:
-            logger.error(f"Error evaluating URL relevance: {str(e)}", exc_info=True)
+            logger.error(f"URL評価エラー: {str(e)}")
             return None
 
     def _detect_language(self, path_components: List[str]) -> LanguageInfo:
         """
-        言語情報を検出（簡易実装）
+        パスコンポーネントから言語を検出
+
+        Args:
+            path_components: URLパスのコンポーネント
+
+        Returns:
+            LanguageInfo: 検出された言語情報
         """
-        # パスから言語コードを検出
-        lang_codes = {"ja", "en", "zh", "ko"}
-        detected_lang = "ja"  # デフォルト
-        confidence = 0.8
-
-        for segment in path_components:
-            if segment in lang_codes:
-                detected_lang = segment
-                confidence = 0.9
-                break
-
-        return LanguageInfo(
-            primary_language=detected_lang, other_languages=[], confidence=confidence
+        # 日本語文字を含むか確認
+        has_japanese = any(
+            ord(c) > 0x3040 and ord(c) < 0x30FF  # ひらがな・カタカナ
+            or ord(c) > 0x4E00 and ord(c) < 0x9FFF  # 漢字
+            for component in path_components
+            for c in component
         )
+
+        # 言語パラメータを確認
+        lang_components = [
+            comp for comp in path_components
+            if comp in ["ja", "jp", "en", "us", "uk"]
+        ]
+
+        if has_japanese or any(comp in ["ja", "jp"] for comp in lang_components):
+            return LanguageInfo(
+                primary_language="ja",
+                other_languages=["en"],
+                confidence=0.9 if has_japanese else 0.7
+            )
+        else:
+            return LanguageInfo(
+                primary_language="en",
+                other_languages=["ja"],
+                confidence=0.8
+            )
 
     def _mock_llm_evaluation(self, url: str) -> Dict[str, Any]:
         """
