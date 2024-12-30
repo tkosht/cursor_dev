@@ -361,22 +361,11 @@ class LLMManager:
             }
 
     async def analyze_content(
-        self, content: str, task: str = "url_analysis"
+        self,
+        content: str,
+        task: str = "url_analysis"
     ) -> Dict[str, Any]:
         """コンテンツを分析する
-
-        Note:
-            このメソッドは現在複雑度が高く（McCabe complexity = 13）、
-            将来的にリファクタリングが必要です。以下の改善が計画されています：
-            - タスク別の分析ロジックを別クラスに分離
-            - エラーハンドリングの共通化
-            - 結果の検証ロジックの分離
-            
-            TODO: このメソッドを以下のように分割する：
-            1. ContentAnalyzerクラスを作成し、タスク別の分析ロジックを移動
-            2. ErrorHandlerクラスでエラー処理を一元化
-            3. ResultValidatorクラスで結果の検証を強化
-            4. PromptGeneratorクラスでプロンプト生成を改善
 
         Args:
             content: 分析対象のコンテンツ
@@ -386,70 +375,127 @@ class LLMManager:
             Dict[str, Any]: 分析結果
         """
         try:
-            if not self.llm:
-                logger.error("LLM model is not initialized")
-                return self._mock_company_info() if task == "company_info" else {}
-
-            if not content:
-                logger.warning("Empty content provided")
-                return self._mock_company_info() if task == "company_info" else {}
+            if not self._validate_input(content):
+                return self._get_default_response(task)
 
             # コンテンツを3000文字に制限
             content = content[:3000]
-
-            # タスクに応じたプロンプトを生成
+            
+            # タスクに応じた処理を実行
             if task == "company_info":
-                prompt = (
-                    "以下のWebサイトコンテンツから企業情報を抽出してください。\n"
-                    "必要な情報：\n"
-                    "- 企業名\n"
-                    "- 事業内容\n"
-                    "- 業界\n\n"
-                    f"コンテンツ:\n{content}\n\n"
-                    "JSON形式で出力してください:\n"
-                    "{\n"
-                    '    "company_name": "企業名",\n'
-                    '    "business_description": "事業内容の説明",\n'
-                    '    "industry": "業界分類"\n'
-                    "}"
-                )
-            else:
-                prompt = "以下のWebサイトコンテンツを分析し、重要な情報を抽出してください。\n\n" f"コンテンツ:\n{content}"
-
-            logger.debug(f"Generated prompt: {prompt}")
-
-            # LLMで分析
-            try:
-                result = await self.llm.generate(prompt)
-                logger.debug(f"Raw LLM response: {result}")
-
-                if not result:
-                    logger.error("Empty response from LLM")
-                    return self._mock_company_info() if task == "company_info" else {}
-
-                # 結果をJSONとしてパース
-                try:
-                    if isinstance(result, str):
-                        logger.debug("Parsing string response as JSON")
-                        result = self._parse_json_response(result)
-                        logger.debug(f"Parsed JSON result: {result}")
-                except (json.JSONDecodeError, ValueError) as e:
-                    logger.error(f"Failed to parse LLM response: {str(e)}")
-                    return self._mock_company_info() if task == "company_info" else {}
-
-                # タスクに応じた検証
-                if task == "company_info":
-                    logger.debug("Validating company info")
-                    return self._validate_company_info(result)
-                return result
-
-            except Exception as e:
-                logger.error(f"Error during LLM generation: {str(e)}")
-                return self._mock_company_info() if task == "company_info" else {}
+                return await self._analyze_company_info(content)
+            return await self._analyze_general_content(content)
 
         except Exception as e:
             logger.error(f"Unexpected error in analyze_content: {str(e)}")
-            return self._mock_company_info() if task == "company_info" else {}
+            return self._get_default_response(task)
+
+    def _validate_input(self, content: str) -> bool:
+        """入力の妥当性を検証
+
+        Args:
+            content: 検証対象のコンテンツ
+
+        Returns:
+            bool: 入力が有効な場合はTrue
+        """
+        if not self.llm:
+            logger.error("LLM model is not initialized")
+            return False
+
+        if not content:
+            logger.warning("Empty content provided")
+            return False
+
+        return True
+
+    def _get_default_response(self, task: str) -> Dict[str, Any]:
+        """デフォルトのレスポンスを取得
+
+        Args:
+            task: タスクの種類
+
+        Returns:
+            Dict[str, Any]: デフォルトのレスポンス
+        """
+        if task == "company_info":
+            return self._mock_company_info()
+        return {}
+
+    async def _analyze_company_info(self, content: str) -> Dict[str, Any]:
+        """企業情報を分析
+
+        Args:
+            content: 分析対象のコンテンツ
+
+        Returns:
+            Dict[str, Any]: 分析結果
+        """
+        prompt = (
+            "以下のWebサイトコンテンツから企業情報を抽出してください。\n"
+            "必要な情報：\n"
+            "- 企業名\n"
+            "- 事業内容\n"
+            "- 業界\n\n"
+            f"コンテンツ:\n{content}\n\n"
+            "JSON形式で出力してください:\n"
+            "{\n"
+            '    "company_name": "企業名",\n'
+            '    "business_description": "事業内容の説明",\n'
+            '    "industry": "業界分類"\n'
+            "}"
+        )
+
+        result = await self._execute_llm_analysis(prompt)
+        if not result:
+            return self._mock_company_info()
+
+        return self._validate_company_info(result)
+
+    async def _analyze_general_content(self, content: str) -> Dict[str, Any]:
+        """一般的なコンテンツを分析
+
+        Args:
+            content: 分析対象のコンテンツ
+
+        Returns:
+            Dict[str, Any]: 分析結果
+        """
+        prompt = (
+            "以下のWebサイトコンテンツを分析し、重要な情報を抽出してください。\n\n"
+            f"コンテンツ:\n{content}"
+        )
+
+        return await self._execute_llm_analysis(prompt)
+
+    async def _execute_llm_analysis(self, prompt: str) -> Optional[Dict[str, Any]]:
+        """LLMによる分析を実行
+
+        Args:
+            prompt: 分析用プロンプト
+
+        Returns:
+            Optional[Dict[str, Any]]: 分析結果
+        """
+        try:
+            logger.debug(f"Generated prompt: {prompt}")
+            result = await self.llm.generate(prompt)
+            logger.debug(f"Raw LLM response: {result}")
+
+            if not result:
+                logger.error("Empty response from LLM")
+                return None
+
+            if isinstance(result, str):
+                logger.debug("Parsing string response as JSON")
+                result = self._parse_json_response(result)
+                logger.debug(f"Parsed JSON result: {result}")
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Error during LLM analysis: {str(e)}")
+            return None
 
     def _validate_company_info(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """企業情報の検証
@@ -512,70 +558,155 @@ class LLMManager:
             raise ValueError(f"Invalid JSON response: {str(e)}")
 
     async def generate_selectors(
-        self, soup: "BeautifulSoup", target_data: Dict[str, str]
+        self,
+        soup: "BeautifulSoup",
+        target_data: Dict[str, str]
     ) -> Dict[str, str]:
-        """HTMLからセレクタを生成
+        """HTMLからデータ抽出用のセレクタを生成
 
         Args:
             soup: BeautifulSoupオブジェクト
             target_data: 取得対象データの辞書
 
         Returns:
-            セレクタの辞書
+            キーとセレクタのマッピング辞書
         """
-        logger.debug("generate_selectors開始")
         if not self.llm:
-            logger.error("LLMが初期化されていません")
-            raise RuntimeError("LLMが初期化されていません")
-
-        # HTMLの構造を分析
-        logger.debug("HTML構造の分析開始")
-        html_structure = self._analyze_html_structure(soup)
-        logger.debug(f"HTML構造の分析完了: {len(html_structure)}文字")
+            raise ValueError("LLMが初期化されていません")
 
         # プロンプトを生成
-        logger.debug("プロンプトの生成開始")
+        prompt = self._generate_selector_prompt(soup, target_data)
+
+        try:
+            # LLMで解析
+            response = await self.llm.generate(prompt)
+            selectors = self._parse_json_response(response)
+
+            # セレクタを検証
+            return await self._validate_selectors(soup, selectors, target_data)
+
+        except Exception as e:
+            logger.error(f"セレクタ生成エラー: {str(e)}")
+            raise
+
+    def _generate_selector_prompt(
+        self,
+        soup: "BeautifulSoup",
+        target_data: Dict[str, str]
+    ) -> str:
+        """セレクタ生成用のプロンプトを生成
+
+        Args:
+            soup: BeautifulSoupオブジェクト
+            target_data: 取得対象データの辞書
+
+        Returns:
+            str: 生成されたプロンプト
+        """
+        # HTML構造を分析
+        html_structure = self._analyze_html_structure(soup)
+
+        # プロンプトを生成
         prompt = (
-            "あなたはHTMLセレクタの専門家です。\n"
-            "与えられたHTML構造から、指定されたデータを取得するための最適なCSSセレクタを生成してください。\n\n"
+            "あなたはHTML解析の専門家です。以下のHTML構造から、指定された財務データを抽出するための"
+            "最適なCSSセレクタを生成してください。\n\n"
             f"HTML構造:\n{html_structure}\n\n"
-            f"取得対象データ:\n{json.dumps(target_data, ensure_ascii=False, indent=2)}\n\n"
-            "出力形式:\n"
+            "抽出対象データ:\n"
+        )
+        for key, label in target_data.items():
+            prompt += f"- {key}: {label}\n"
+
+        prompt += (
+            "\n出力形式:\n"
             "{\n"
             '    "データキー": "CSSセレクタ",\n'
             "    ...\n"
-            "}\n"
+            "}\n\n"
+            "注意事項:\n"
+            "1. セレクタは可能な限り具体的に指定してください\n"
+            "2. class名やid属性を優先的に使用してください\n"
+            "3. 数値を含むテキストを優先的に抽出できるようにしてください\n"
+            "4. 複数の候補がある場合は、最も信頼性の高いものを選択してください"
         )
-        logger.debug("プロンプトの生成完了")
 
-        # LLMで解析
-        try:
-            logger.debug("LLMによる解析開始")
-            response = await self.llm.generate(prompt)
-            logger.debug(f"LLMの応答を受信: {len(response)}文字")
+        return prompt
 
-            logger.debug("JSONのパース開始")
-            selectors = self._parse_json_response(response)
-            logger.debug(f"JSONのパース完了: {len(selectors)}個のセレクタ")
+    async def _validate_selectors(
+        self,
+        soup: "BeautifulSoup",
+        selectors: Dict[str, str],
+        target_data: Dict[str, str]
+    ) -> Dict[str, str]:
+        """セレクタの有効性を検証
 
-            # セレクタの検証
-            logger.debug("セレクタの検証開始")
-            validated_selectors = {}
-            for key, selector in selectors.items():
-                if key in target_data and soup.select_one(selector):
-                    validated_selectors[key] = selector
-            logger.debug(f"セレクタの検証完了: {len(validated_selectors)}個の有効なセレクタ")
+        Args:
+            soup: BeautifulSoupオブジェクト
+            selectors: 検証対象のセレクタ辞書
+            target_data: 取得対象データの辞書
 
-            return validated_selectors
+        Returns:
+            Dict[str, str]: 検証済みのセレクタ辞書
+        """
+        validated_selectors = {}
 
-        except Exception as e:
-            logger.error(f"セレクタ生成エラー: {str(e)}", exc_info=True)
-            # フォールバック: 基本的なセレクタを返す
-            logger.debug("フォールバックセレクタの生成")
-            return {
-                key: f"*[data-{key}], *[id*='{key}'], *[class*='{key}']"
-                for key in target_data
-            }
+        for key, selector in selectors.items():
+            if key not in target_data:
+                continue
+
+            # セレクタの有効性を確認
+            elements = soup.select(selector)
+            if not elements:
+                logger.warning(f"セレクタ {selector} で要素が見つかりません")
+                continue
+
+            # 抽出されたテキストが目的のデータらしいかチェック
+            text = elements[0].get_text(strip=True)
+            if not self._validate_extracted_text(text, target_data[key]):
+                logger.warning(f"抽出されたテキスト '{text}' が期待と異なります")
+                continue
+
+            validated_selectors[key] = selector
+
+        if not validated_selectors:
+            raise ValueError("有効なセレクタが生成できませんでした")
+
+        return validated_selectors
+
+    def _validate_extracted_text(self, text: str, expected_label: str) -> bool:
+        """抽出されたテキストの妥当性を検証
+
+        Args:
+            text: 抽出されたテキスト
+            expected_label: 期待されるラベル
+
+        Returns:
+            bool: テキストが妥当な場合はTrue
+        """
+        # 数値を含むかチェック
+        has_number = any(char.isdigit() for char in text)
+        
+        # 円マークを含むかチェック
+        has_yen = "円" in text
+        
+        # ラベルとの関連性をチェック
+        label_similarity = self._calculate_text_similarity(text, expected_label)
+        
+        return has_number and has_yen and label_similarity > 0.5
+
+    def _calculate_text_similarity(self, text1: str, text2: str) -> float:
+        """2つのテキストの類似度を計算
+
+        Args:
+            text1: 1つ目のテキスト
+            text2: 2つ目のテキスト
+
+        Returns:
+            float: 類似度（0-1）
+        """
+        # 簡易的な類似度計算（実際の実装ではより高度なアルゴリズムを使用）
+        common_chars = set(text1) & set(text2)
+        total_chars = set(text1) | set(text2)
+        return len(common_chars) / len(total_chars) if total_chars else 0.0
 
     def _analyze_html_structure(self, soup: "BeautifulSoup") -> str:
         """HTML構造を分析し、要約を生成
@@ -586,37 +717,163 @@ class LLMManager:
         Returns:
             HTML構造の要約
         """
-        structure = []
-
         try:
-            # titleタグ
-            if soup.title:
-                structure.append(f"title: {soup.title.string}")
+            structure_parts = []
 
-            # h1-h3タグ
-            headings = []
-            for tag in ["h1", "h2", "h3"]:
-                elements = soup.find_all(tag)
-                if elements:
-                    headings.append(f"{tag}: {len(elements)}個")
-            if headings:
-                structure.append(f"見出し: {', '.join(headings)}")
+            # タイトルの分析
+            title_info = self._analyze_title(soup)
+            if title_info:
+                structure_parts.append(title_info)
 
-            # mainタグ、articleタグ
-            for tag in ["main", "article"]:
-                elements = soup.find_all(tag)
-                if elements:
-                    structure.append(f"{tag}: {len(elements)}個")
+            # 見出しの分析
+            heading_info = self._analyze_headings(soup)
+            if heading_info:
+                structure_parts.append(heading_info)
 
-            # データ属性を持つ要素
-            data_elements = soup.find_all(
-                lambda tag: tag.attrs and any(k.startswith("data-") for k in tag.attrs.keys())
-            )
-            if data_elements:
-                structure.append(f"データ属性要素: {len(data_elements)}個")
+            # メインコンテンツの分析
+            content_info = self._analyze_main_content(soup)
+            if content_info:
+                structure_parts.extend(content_info)
+
+            # データ属性の分析
+            data_info = self._analyze_data_attributes(soup)
+            if data_info:
+                structure_parts.append(data_info)
+
+            return "\n".join(structure_parts) if structure_parts else "HTML構造を特定できません"
 
         except Exception as e:
             logger.error(f"HTML構造分析エラー: {str(e)}")
-            structure.append("HTML構造の分析に失敗しました")
+            return "HTML構造の分析に失敗しました"
 
-        return "\n".join(structure) if structure else "HTML構造を特定できません"
+    def _analyze_title(self, soup: "BeautifulSoup") -> Optional[str]:
+        """タイトル要素を分析
+
+        Args:
+            soup: BeautifulSoupオブジェクト
+
+        Returns:
+            Optional[str]: タイトル情報
+        """
+        if soup.title:
+            return f"title: {soup.title.string}"
+        return None
+
+    def _analyze_headings(self, soup: "BeautifulSoup") -> Optional[str]:
+        """見出し要素を分析
+
+        Args:
+            soup: BeautifulSoupオブジェクト
+
+        Returns:
+            Optional[str]: 見出し情報
+        """
+        headings = []
+        for tag in ["h1", "h2", "h3"]:
+            elements = soup.find_all(tag)
+            if elements:
+                headings.append(f"{tag}: {len(elements)}個")
+        
+        if headings:
+            return f"見出し: {', '.join(headings)}"
+        return None
+
+    def _analyze_main_content(self, soup: "BeautifulSoup") -> List[str]:
+        """メインコンテンツを分析
+
+        Args:
+            soup: BeautifulSoupオブジェクト
+
+        Returns:
+            List[str]: メインコンテンツ情報のリスト
+        """
+        content_info = []
+        for tag in ["main", "article"]:
+            elements = soup.find_all(tag)
+            if elements:
+                content_info.append(f"{tag}: {len(elements)}個")
+        return content_info
+
+    def _analyze_data_attributes(self, soup: "BeautifulSoup") -> Optional[str]:
+        """データ属性を分析
+
+        Args:
+            soup: BeautifulSoupオブジェクト
+
+        Returns:
+            Optional[str]: データ属性情報
+        """
+        data_elements = soup.find_all(
+            lambda tag: tag.attrs and any(k.startswith("data-") for k in tag.attrs.keys())
+        )
+        if data_elements:
+            return f"データ属性要素: {len(data_elements)}個"
+        return None
+
+    async def validate_data(
+        self,
+        extracted_data: Dict[str, str],
+        target_data: Dict[str, str]
+    ) -> bool:
+        """抽出したデータを検証
+
+        Args:
+            extracted_data: 抽出したデータの辞書
+            target_data: 取得対象データの辞書
+
+        Returns:
+            bool: データが有効な場合はTrue
+        """
+        if not self.llm:
+            raise ValueError("LLMが初期化されていません")
+
+        # 必要なキーが全て存在するか確認
+        if not all(key in extracted_data for key in target_data):
+            logger.warning("必要なデータが不足しています")
+            return False
+
+        # 各データの妥当性を検証
+        for key, value in extracted_data.items():
+            if not self._validate_financial_data(value, target_data.get(key, "")):
+                logger.warning(f"データの検証に失敗: {key}={value}")
+                return False
+
+        return True
+
+    def _validate_financial_data(self, value: str, expected_label: str) -> bool:
+        """財務データの妥当性を検証
+
+        Args:
+            value: 検証対象の値
+            expected_label: 期待されるラベル
+
+        Returns:
+            bool: データが有効な場合はTrue
+        """
+        # 空文字列や None をチェック
+        if not value or not expected_label:
+            return False
+
+        # 数値を含むかチェック
+        has_number = any(char.isdigit() for char in value)
+        if not has_number:
+            return False
+
+        # 単位（円）を含むかチェック
+        has_unit = "円" in value
+        if not has_unit:
+            return False
+
+        # 数値のフォーマットをチェック
+        number_part = "".join(char for char in value if char.isdigit() or char in ".,")
+        try:
+            float(number_part.replace(",", ""))
+        except ValueError:
+            return False
+
+        # ラベルとの関連性をチェック
+        label_similarity = self._calculate_text_similarity(value, expected_label)
+        if label_similarity < 0.3:  # 閾値は調整可能
+            return False
+
+        return True
