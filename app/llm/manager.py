@@ -5,6 +5,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 import time
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
@@ -540,20 +541,18 @@ class LLMManager:
             ValueError: JSONのパースに失敗した場合
         """
         try:
-            # コードブロックを除去
-            json_str = response.strip()
-            if json_str.startswith("```"):
-                json_str = json_str.split("\n", 1)[1]  # 最初の行を除去
-            if json_str.endswith("```"):
-                json_str = json_str.rsplit("\n", 1)[0]  # 最後の行を除去
-            if json_str.startswith("json"):
-                json_str = json_str.split("\n", 1)[1]  # "json"の行を除去
-
+            # JSONブロックを抽出
+            json_block_match = re.search(r'```json\s*\n(.*?)\n\s*```', response, re.DOTALL)
+            if not json_block_match:
+                raise ValueError("No JSON block found in response")
+            
+            json_str = json_block_match.group(1).strip()
+            
             # 空白行を除去
             json_str = "\n".join(line for line in json_str.split("\n") if line.strip())
-
+            
             return json.loads(json_str)
-        except json.JSONDecodeError as e:
+        except (json.JSONDecodeError, ValueError) as e:
             logger.error(f"Failed to parse LLM response as JSON: {response}")
             raise ValueError(f"Invalid JSON response: {str(e)}")
 
@@ -617,16 +616,17 @@ class LLMManager:
             prompt += f"- {key}: {label}\n"
 
         prompt += (
-            "\n出力形式:\n"
+            "\n以下の形式で、JSONのみを出力してください。説明は不要です：\n"
+            "```json\n"
             "{\n"
-            '    "データキー": "CSSセレクタ",\n'
-            "    ...\n"
-            "}\n\n"
-            "注意事項:\n"
-            "1. セレクタは可能な限り具体的に指定してください\n"
-            "2. class名やid属性を優先的に使用してください\n"
-            "3. 数値を含むテキストを優先的に抽出できるようにしてください\n"
-            "4. 複数の候補がある場合は、最も信頼性の高いものを選択してください"
+            '    "データキー": "CSSセレクタ"\n'
+            "}\n"
+            "```\n\n"
+            "セレクタ生成の注意事項:\n"
+            "1. セレクタは可能な限り具体的に指定\n"
+            "2. class名やid属性を優先的に使用\n"
+            "3. 数値を含むテキストを優先的に抽出\n"
+            "4. 複数の候補がある場合は最も信頼性の高いものを選択"
         )
 
         return prompt
