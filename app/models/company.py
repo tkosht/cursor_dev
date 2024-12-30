@@ -5,6 +5,7 @@
 """
 
 from sqlalchemy import Column, Date, String, Text
+from sqlalchemy.orm import relationship
 
 from .base import Base
 
@@ -29,6 +30,8 @@ class Company(Base):
         employees_count (str): 従業員数
         created_at (datetime): 作成日時
         updated_at (datetime): 更新日時
+        financials (List[Financial]): 財務情報のリスト
+        news (List[News]): ニュースのリスト
     """
 
     __tablename__ = "company"
@@ -45,6 +48,10 @@ class Company(Base):
     representative_name = Column(String(100))
     representative_position = Column(String(100))
     employees_count = Column(String(100))
+
+    # リレーションシップ
+    financials = relationship("Financial", back_populates="company", cascade="all, delete-orphan")
+    news = relationship("News", back_populates="company", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<Company(name={self.name})>"

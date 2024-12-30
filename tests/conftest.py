@@ -3,13 +3,19 @@
 """
 import os
 import tempfile
-from typing import Generator
+from typing import AsyncGenerator, Generator
 
 import pytest
+from aiohttp import web
+from aiohttp.test_utils import TestClient
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.models import Base
+
+# .envファイルを読み込む
+load_dotenv()
 
 
 @pytest.fixture(scope="function")
@@ -34,3 +40,16 @@ def db_session() -> Generator[Session, None, None]:
         session.close()
         os.close(db_fd)
         os.unlink(db_path)
+
+
+@pytest.fixture
+async def test_app() -> web.Application:
+    """テスト用のaiohttp.web.Applicationを提供するフィクスチャ"""
+    app = web.Application()
+    return app
+
+
+@pytest.fixture
+async def test_client(aiohttp_client, test_app) -> AsyncGenerator[TestClient, None]:
+    """テスト用のaiohttpクライアントを提供するフィクスチャ"""
+    return await aiohttp_client(await test_app)

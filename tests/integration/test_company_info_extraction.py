@@ -20,6 +20,7 @@ async def test_real_company_info_extraction(db_session: Session):
         "https://www.example.com/",  # テスト用サイト
     ]
 
+    # 実際のLLMManagerを使用
     analyzer = URLAnalyzer(llm_manager=LLMManager())
 
     for url in test_urls:
@@ -51,18 +52,17 @@ async def test_real_company_info_extraction(db_session: Session):
 
         # DBに保存できることを確認
         db_session.add(company)
-        db_session.commit()
+        db_session.flush()  # IDを生成するためにflush
 
         # 保存した情報が取得できることを確認
-        saved_company = (
-            db_session.query(Company).filter_by(name=analysis["company_name"]).first()
-        )
+        db_session.refresh(company)  # 最新の状態を取得
+        assert company.id is not None
+        assert company.name == analysis["company_name"]
+        assert company.description == analysis["business_description"]
+        assert company.industry == analysis["industry"]
+        assert company.website_url == url
 
-        assert saved_company is not None
-        assert saved_company.name == analysis["company_name"]
-        assert saved_company.description == analysis["business_description"]
-        assert saved_company.industry == analysis["industry"]
-        assert saved_company.website_url == url
+        db_session.commit()
 
 
 @pytest.mark.asyncio
