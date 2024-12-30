@@ -24,6 +24,17 @@ class URLAnalysisMetrics:
     relevance_scores: List[float] = field(default_factory=list)
     category_counts: Dict[str, int] = field(default_factory=dict)
 
+    def reset(self):
+        """メトリクスをリセット"""
+        self.total_urls = 0
+        self.processed_urls = 0
+        self.error_count = 0
+        self.processing_times.clear()
+        self.llm_latencies.clear()
+        self.confidence_scores.clear()
+        self.relevance_scores.clear()
+        self.category_counts.clear()
+
     def record_url_processing(
         self,
         url: str,

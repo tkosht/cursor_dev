@@ -1,16 +1,24 @@
 """
-デデルパッケージ
+データモデルパッケージ
 
 このパッケージは、アプリケーションのデータモデルを定義します。
 """
 
+import os
 from typing import Optional
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, declarative_base, scoped_session, sessionmaker
 
+# データベースファイルのパスを設定
+DB_FILE = "app.db"
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", DB_FILE)
+
+# データディレクトリが存在しない場合は作成
+os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+
 # データベースエンジンの作成
-engine = create_engine("sqlite:///:memory:", echo=True)
+engine = create_engine(f"sqlite:///{DB_PATH}", echo=True)
 
 # セッションの作成
 session_factory = sessionmaker(bind=engine)
@@ -48,3 +56,11 @@ def set_session(session: Session) -> None:
     """
     global _session
     _session = session
+
+
+def init_db():
+    """
+    データベースを初期化し、全てのテーブルを作成します。
+    """
+    from . import company, financial, news  # 循環インポートを避けるためにここでインポート
+    Base.metadata.create_all(bind=engine)

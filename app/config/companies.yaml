@@ -1,18 +1,21 @@
 companies:
-  '9843':  # ニトリホールディングス
-    base_url: 'https://www.nitorihd.co.jp'
-    name: 'ニトリホールディングス'
+  '9984':  # ソフトバンクグループ
+    base_url: 'https://group.softbank'
+    name: 'ソフトバンクグループ'
     stock_exchange: '東証プライム'
-    industry: '小売業'
+    industry: '情報・通信業'
     paths:
-      company_info: '/ir/library/annual/'
-      financial_info: '/ir/library/result/'
+      company_info: '/about/'
+      financial_info: '/ir/financials/financial_reports/'
       news: '/ir/news/'
     selectors:
-      company_info:
-        description: 'div.about-company'
+      company:
+        name: 'h1.company-name'
+        description: 'div.company-profile'
+        established_date: 'div.company-info time'
+        headquarters: 'div.company-info address'
       financial_info:
-        table: 'table.financial-table'
+        table: 'table.financial-data'
         rows: 'tr'
         columns:
           fiscal_year: 0
@@ -20,12 +23,12 @@ companies:
           operating_income: 2
           net_income: 3
       news:
-        list: 'dl.news-list'
-        date: 'dt'
-        title: 'dd'
+        list: 'ul.news-list'
+        date: 'span.date'
+        title: 'span.title'
         link: 'a'
     date_formats:
-      news: '%Y.%m.%d'
+      news: '%Y年%m月%d日'
 
   '7203':  # トヨタ自動車
     base_url: 'https://global.toyota'
@@ -37,8 +40,11 @@ companies:
       financial_info: '/jp/ir/library/results/'
       news: '/jp/ir/news/'
     selectors:
-      company_info:
+      company:
+        name: 'h1.company-name'
         description: 'div.company-profile'
+        established_date: 'div.company-info time'
+        headquarters: 'div.company-info address'
       financial_info:
         table: 'table.financial-data'
         rows: 'tr'

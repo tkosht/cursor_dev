@@ -33,6 +33,7 @@ class Financial(Base):
         period_end_date (date): 期末日
         revenue (int): 売上高
         operating_income (int): 営業利益
+        net_income (int): 当期純利益
         created_at (datetime): 作成日時
         updated_at (datetime): 更新日時
         company (Company): 企業
@@ -44,6 +45,7 @@ class Financial(Base):
     period_end_date = Column(Date, nullable=False)
     revenue = Column(BigInteger)
     operating_income = Column(BigInteger)
+    net_income = Column(BigInteger)
 
     company: Mapped["Company"] = relationship("Company", back_populates="financials")
 

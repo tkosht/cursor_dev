@@ -4,6 +4,7 @@
 全てのクローラーの基底となるクラスを定義します。
 """
 
+import logging
 from abc import ABC
 from typing import Any, Dict, Optional
 
@@ -28,8 +29,8 @@ class BaseCrawler(ABC):
 
     def __init__(
         self,
-        company_code: str,
-        session: Session,
+        company_code: Optional[str] = None,
+        session: Optional[Session] = None,
         monitor: Optional[CrawlerMonitor] = None,
         headers: Optional[Dict[str, str]] = None,
         timeout: int = 30,
@@ -56,16 +57,22 @@ class BaseCrawler(ABC):
         }
         self.timeout = timeout
         self.max_retries = max_retries
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     def crawl(self) -> None:
         """クロール処理を実行"""
         try:
-            self.monitor.start_crawler(self.company_code)
+            if self.company_code:
+                self.monitor.start_crawler(self.company_code)
             self._crawl()
-            self.monitor.stop_crawler(self.company_code)
+            if self.company_code:
+                self.monitor.stop_crawler(self.company_code)
         except Exception as e:
-            self.monitor.log_error(self.company_code, e)
-            self.monitor.stop_crawler(self.company_code, status="error")
+            if self.company_code:
+                self.monitor.log_error(self.company_code, e)
+                self.monitor.stop_crawler(self.company_code, status="error")
+            else:
+                self.logger.error(f"クロール処理でエラーが発生: {str(e)}")
             raise
 
     def _crawl(self) -> None:
@@ -82,7 +89,10 @@ class BaseCrawler(ABC):
             crawled_pages: クロール済みページ数
             total_items: 取得済みアイテム数
         """
-        self.monitor.update_progress(self.company_code, crawled_pages, total_items)
+        if self.company_code:
+            self.monitor.update_progress(self.company_code, crawled_pages, total_items)
+        else:
+            self.logger.info(f"進捗更新: {crawled_pages}/{total_items}")
 
     def _log_warning(self, message: str) -> None:
         """警告を記録
@@ -90,7 +100,10 @@ class BaseCrawler(ABC):
         Args:
             message: 警告メッセージ
         """
-        self.monitor.log_warning(self.company_code, message)
+        if self.company_code:
+            self.monitor.log_warning(self.company_code, message)
+        else:
+            self.logger.warning(message)
 
     def _make_request(
         self, url: str, method: str = "GET", **kwargs
