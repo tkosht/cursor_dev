@@ -54,17 +54,24 @@ class GeminiLLM(BaseLLM):
         Returns:
             str: 生成されたテキスト
         """
-        response = await self.client.generate_content_async(prompt)
-        text = response.text
+        try:
+            response = await self.client.generate_content_async(prompt)
+            text = response.text if response else ""
 
-        # メトリクスの更新
-        # Note: Gemini APIは現在トクン数を提供していないため、文字数で代用
-        prompt_tokens = len(prompt)
-        completion_tokens = len(text)
-        # コストは現在無料のため0とする
-        self.update_metrics(prompt_tokens, completion_tokens, 0.0)
+            # メトリクスの更新
+            # Note: Gemini APIは現在トクン数を提供していないため、文字数で代用
+            prompt_tokens = len(prompt)
+            completion_tokens = len(text)
+            # コストは現在無料のため0とする
+            self.update_metrics(prompt_tokens, completion_tokens, 0.0)
 
-        return text
+            return text
+        except Exception as e:
+            # エラー時のメトリクス更新
+            prompt_tokens = len(prompt)
+            self.update_metrics(prompt_tokens, 0, 0.0)
+            self.metrics.error_count += 1
+            raise e
 
     async def analyze_content(self, content: str, task: str) -> Dict[str, Any]:
         """
@@ -77,6 +84,13 @@ class GeminiLLM(BaseLLM):
         Returns:
             Dict[str, Any]: 分析結果
         """
+        if not content:
+            return {
+                "relevance_score": 0.1,
+                "category": "other",
+                "reason": "空のコンテンツが入力されました",
+                "confidence": 0.1,
+            }
         return await super().analyze_content(content, task)
 
     async def _analyze_content_impl(self, content: str, task: str) -> Dict[str, Any]:
@@ -105,6 +119,7 @@ class GeminiLLM(BaseLLM):
 
                 if not response or not response.text:
                     logging.error("GeminiLLM: 空のレスポンス")
+                    self.metrics.error_count += 1
                     if attempt < self.MAX_RETRIES - 1:
                         await asyncio.sleep(self.RETRY_DELAY * (attempt + 1))
                         continue
@@ -127,6 +142,7 @@ class GeminiLLM(BaseLLM):
 
             except Exception as e:
                 logging.error(f"GeminiLLM: 分析エラー - {str(e)}")
+                self.metrics.error_count += 1
                 if attempt < self.MAX_RETRIES - 1:
                     await asyncio.sleep(self.RETRY_DELAY * (attempt + 1))
                     continue

@@ -34,6 +34,16 @@ class LLMMetrics(BaseModel):
     completion_tokens: int = Field(default=0, description="生成結果のトークン数")
     total_cost: float = Field(default=0.0, description="合計コスト")
     last_latency: float = Field(default=0.0, description="最後の実行のレイテンシ")
+    error_count: int = Field(default=0, description="エラー発生回数")
+
+    def reset(self) -> None:
+        """メトリクスをリセット"""
+        self.total_tokens = 0
+        self.prompt_tokens = 0
+        self.completion_tokens = 0
+        self.total_cost = 0.0
+        self.last_latency = 0.0
+        self.error_count = 0
 
 
 class BaseLLM(ABC):
@@ -140,7 +150,7 @@ class BaseLLM(ABC):
 
     def reset_metrics(self) -> None:
         """メトリクスをリセット"""
-        self.metrics = LLMMetrics()
+        self.metrics.reset()
 
     def get_llm_latency(self) -> float:
         """
