@@ -456,4 +456,176 @@ class NumberParser:
             if unit in text:
                 return unit
         return None
-``` 
+```
+
+### LLMOptimizationパターン
+```python
+class LLMOptimizer:
+    """LLMの応答品質を最適化するパターン"""
+    def __init__(self, llm_manager: LLMManager):
+        self.llm_manager = llm_manager
+        
+    async def optimize_selector_generation(
+        self,
+        html: str,
+        target_data: Dict[str, str]
+    ) -> Dict[str, str]:
+        """セレクタ生成の最適化"""
+        # HTMLの構造を解析
+        soup = BeautifulSoup(html, "html.parser")
+        
+        # LLMにコンテキストを提供
+        context = {
+            "page_title": soup.title.string if soup.title else "",
+            "headings": [h.text for h in soup.find_all(["h1", "h2", "h3"])],
+            "tables": len(soup.find_all("table")),
+            "target_fields": list(target_data.keys())
+        }
+        
+        # セレクタを生成
+        selectors = await self.llm_manager.generate_selectors(
+            soup,
+            target_data,
+            context=context
+        )
+        
+        # 生成されたセレクタを検証
+        validated_selectors = {}
+        for key, selector in selectors.items():
+            elements = soup.select(selector)
+            if elements and self._validate_element_content(
+                elements[0],
+                target_data[key]
+            ):
+                validated_selectors[key] = selector
+        
+        return validated_selectors
+        
+    def _validate_element_content(
+        self,
+        element: Tag,
+        expected_type: str
+    ) -> bool:
+        """要素の内容を検証"""
+        text = element.get_text(strip=True)
+        if "金額" in expected_type or "円" in expected_type:
+            return bool(re.search(r'\d+', text))
+        elif "日付" in expected_type:
+            return bool(re.search(r'\d{4}[-/年]\d{1,2}[-/月]\d{1,2}', text))
+        return True
+
+### ConcurrencyControlパターン
+```python
+class ConcurrencyController:
+    """並行処理を制御するパターン"""
+    def __init__(
+        self,
+        max_concurrent: int = 5,
+        retry_delay: float = 1.0,
+        max_retries: int = 3
+    ):
+        self.semaphore = asyncio.Semaphore(max_concurrent)
+        self.retry_delay = retry_delay
+        self.max_retries = max_retries
+        
+    async def execute_with_control(
+        self,
+        func: Callable,
+        *args,
+        **kwargs
+    ) -> Any:
+        """制御付きで関数を実行"""
+        async with self.semaphore:
+            retry_count = 0
+            while retry_count <= self.max_retries:
+                try:
+                    return await func(*args, **kwargs)
+                except Exception as e:
+                    retry_count += 1
+                    if retry_count > self.max_retries:
+                        raise
+                    delay = self.retry_delay * (2 ** (retry_count - 1))
+                    await asyncio.sleep(delay)
+        
+    async def execute_batch(
+        self,
+        tasks: List[Tuple[Callable, tuple, dict]]
+    ) -> List[Any]:
+        """バッチ処理を実行"""
+        async def wrapped_task(func, args, kwargs):
+            return await self.execute_with_control(func, *args, **kwargs)
+            
+        return await asyncio.gather(*[
+            wrapped_task(f, args, kwargs)
+            for f, args, kwargs in tasks
+        ])
+```
+
+"""
+# IRサイトクローリングパターン
+
+## 実サイトテストパターン
+
+### 概要
+実在するIRサイトを使用したテストパターン。モックやスタブを使用せず、実際の外部接続を行う。
+
+### 実装例
+```python
+@pytest.mark.asyncio
+async def test_real_ir_site():
+    # 1. クローラーの初期化
+    crawler = AdaptiveCrawler(
+        company_code="7203",  # 実在する企業コード
+        retry_delay=1.0,
+        max_concurrent=2,
+        timeout_total=30,
+        timeout_connect=10,
+        timeout_read=20,
+        max_retries=3
+    )
+
+    # 2. 対象データの定義
+    target_data = {
+        "revenue": "売上高",
+        "operating_profit": "営業利益",
+        "net_income": "当期純利益"
+    }
+
+    try:
+        # 3. クローラーの実行
+        async with crawler:
+            data = await crawler.crawl(
+                "https://real-ir-site.co.jp/financial",
+                target_data
+            )
+
+        # 4. データの検証
+        assert "revenue" in data
+        assert isinstance(data["revenue"], str)
+        assert "円" in data["revenue"]
+        
+    except Exception as e:
+        logger.error(f"クロール失敗: {str(e)}")
+        raise
+```
+
+### 利用シーン
+- 実際のIRサイトからのデータ抽出テスト
+- エラーハンドリングの検証
+- パフォーマンステスト
+
+### 注意点
+1. レート制限への配慮
+   - 適切な待機時間の設定
+   - 同時接続数の制限
+
+2. エラー処理
+   - ネットワークエラー
+   - タイムアウト
+   - HTMLパース失敗
+
+3. データ検証
+   - 実データとの整合性
+   - 形式の妥当性
+   - 必須項目の存在確認
+""" 
