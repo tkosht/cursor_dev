@@ -44,7 +44,7 @@ class GeminiLLM(BaseLLM):
             model_name=self.model, generation_config={"temperature": self.temperature}
         )
 
-    async def generate_text(self, prompt: str) -> str:
+    async def generate(self, prompt: str) -> str:
         """テキストを生成
 
         Args:
@@ -73,21 +73,6 @@ class GeminiLLM(BaseLLM):
             self.metrics.error_count += 1
             raise e
 
-    async def analyze(self, prompt: str) -> Dict[str, Any]:
-        """プロンプトを分析
-
-        Args:
-            prompt (str): 分析対象のプロンプト
-
-        Returns:
-            Dict[str, Any]: 分析結果
-        """
-        try:
-            return await self._execute_analysis(prompt)
-        except Exception as e:
-            logging.error(f"分析エラー: {str(e)}")
-            return self._create_error_response(f"分析エラー: {str(e)}")
-
     async def analyze_content(self, content: str, task: str) -> Dict[str, Any]:
         """コンテンツを分析
 
@@ -103,6 +88,41 @@ class GeminiLLM(BaseLLM):
 
         try:
             prompt = self._create_analysis_prompt(task, content)
+            return await self._execute_analysis(prompt)
+        except Exception as e:
+            logging.error(f"分析エラー: {str(e)}")
+            return self._create_error_response(f"分析エラー: {str(e)}")
+
+    async def _analyze_content_impl(self, content: str, task: str) -> Dict[str, Any]:
+        """コンテンツ分析の実装
+
+        Args:
+            content (str): 分析対象のコンテンツ
+            task (str): 分析タスクの種類
+
+        Returns:
+            Dict[str, Any]: 分析結果
+        """
+        if not content:
+            return self._create_error_response("空のコンテンツが入力されました")
+
+        try:
+            prompt = self._create_analysis_prompt(task, content)
+            return await self._execute_analysis(prompt)
+        except Exception as e:
+            logging.error(f"分析エラー: {str(e)}")
+            return self._create_error_response(f"分析エラー: {str(e)}")
+
+    async def analyze(self, prompt: str) -> Dict[str, Any]:
+        """プロンプトを分析
+
+        Args:
+            prompt (str): 分析対象のプロンプト
+
+        Returns:
+            Dict[str, Any]: 分析結果
+        """
+        try:
             return await self._execute_analysis(prompt)
         except Exception as e:
             logging.error(f"分析エラー: {str(e)}")

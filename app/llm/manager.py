@@ -4,11 +4,17 @@ LLMを使用した評価を管理するモジュール
 import asyncio
 import json
 import logging
+import os
 import time
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
+from urllib.parse import parse_qs, urlparse
 
-# ログ設定
+import google.generativeai as genai
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+from app.errors.llm_errors import LLMError, ModelNotFoundError
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -170,6 +176,22 @@ class LLMManager:
         self.prompt_generator = PromptGenerator()
         self.result_validator = ResultValidator()
         self.llm = None
+        
+        # APIキーを環境変数から取得
+        api_key = os.getenv("GOOGLE_API_KEY_GEMINI")
+        if not api_key:
+            logger.warning("GOOGLE_API_KEY_GEMINI not found in environment variables")
+            return
+            
+        # モデルを初期化（同期的に）
+        if self.config.model_name.startswith("gemini"):
+            from app.llm.gemini import GeminiLLM
+            self.llm = GeminiLLM(
+                api_key=api_key,
+                model=self.config.model_name,
+                temperature=self.config.temperature
+            )
+        
         logger.debug(
             f"Initialized LLMManager with model={self.config.model_name}, "
             f"temperature={self.config.temperature}"
@@ -210,16 +232,11 @@ class LLMManager:
 
         return self
 
-    async def evaluate_url_relevance(
-        self, url: str, path_components: List[str], query_params: Dict[str, List[str]]
-    ) -> Optional[Dict[str, Any]]:
-        """
-        URLの企業情報関連性を評価
+    async def evaluate_url_relevance(self, content: str) -> Dict[str, Any]:
+        """URLの内容から企業情報関連性を評価
 
         Args:
-            url: 評価対象のURL
-            path_components: URLパスのコンポーネント
-            query_params: クエリパラメータ
+            content: 評価対象のコンテンツ
 
         Returns:
             評価結果
@@ -228,53 +245,57 @@ class LLMManager:
                 'reason': 評価理由,
                 'category': カテゴリ,
                 'confidence': 判定信頼度（0-1）,
-                'processing_time': 処理時間（秒）
+                'processing_time': 処理時間（秒）,
+                'llm_response': {
+                    'company_name': 企業名,
+                    'business_description': 事業内容,
+                    'industry': 業界
+                }
             }
         """
         try:
             if not self.llm:
-                raise ValueError("LLMモデルがロードされていません")
+                logger.error("LLM model is not initialized")
+                return self._mock_company_info()
 
             start_time = time.monotonic()
 
-            # URL構成要素の作成
-            url_components = URLComponents(
-                path_segments=path_components, query_params=query_params
-            )
-
-            # 言語情報の検出
-            language_info = self._detect_language(path_components)
-
-            # プロンプト生成
-            prompt = self.prompt_generator.generate(url_components, language_info)
-
-            # LLM評価実行
-            raw_result = await self.llm.analyze_content(prompt, task="url_analysis")
-            if not raw_result:
-                logger.error("LLM評価結果が空です")
-                return None
-
-            # 結果の検証
-            result = self.result_validator.validate(raw_result)
+            # コンテンツを分析
+            result = await self.analyze_content(content, task="company_info")
             if not result:
-                logger.error("評価結果の検証に失敗しました")
-                return None
+                logger.error("コンテンツ分析に失敗しました")
+                return {
+                    "relevance_score": 0.0,
+                    "category": "error",
+                    "reason": "コンテンツ分析に失敗しました",
+                    "confidence": 0.0,
+                    "processing_time": 0.0,
+                    "llm_response": {}
+                }
 
             # 処理時間の計算
             processing_time = time.monotonic() - start_time
 
             # 結果の整形
             return {
-                "relevance_score": result.relevance_score,
-                "category": result.category,
-                "reason": result.reason,
-                "confidence": result.confidence,
-                "processing_time": processing_time
+                "relevance_score": 0.9 if "company_name" in result else 0.2,
+                "category": "company_profile" if "company_name" in result else "other",
+                "reason": "企業情報が検出されました" if "company_name" in result else "企業情報が見つかりません",
+                "confidence": 0.9 if "company_name" in result else 0.7,
+                "processing_time": processing_time,
+                "llm_response": result
             }
 
         except Exception as e:
             logger.error(f"URL評価エラー: {str(e)}")
-            return None
+            return {
+                "relevance_score": 0.0,
+                "category": "error",
+                "reason": str(e),
+                "confidence": 0.0,
+                "processing_time": 0.0,
+                "llm_response": {}
+            }
 
     def _detect_language(self, path_components: List[str]) -> LanguageInfo:
         """
@@ -340,51 +361,84 @@ class LLMManager:
             }
 
     async def analyze_content(self, content: str, task: str = "url_analysis") -> Dict[str, Any]:
-        """コンテンツを分析
+        """
+        コンテンツを分析
 
         Args:
-            content: 分析対象のテキストコンテンツ
-            task: 分析タスクの種類（"url_analysis" or "company_info"）
+            content: 分析対象のコンテンツ
+            task: 分析タスク（"url_analysis" or "company_info"）
 
         Returns:
             分析結果
         """
-        if task == "company_info":
-            prompt = (
-                "あなたは企業情報抽出の専門家です。\n"
-                "与えられたWebページのコンテンツから、企業の基本情報を抽出してください。\n\n"
-                "抽出する情報:\n"
-                "1. 企業名\n"
-                "2. 事業内容\n"
-                "3. 業界\n\n"
-                "出力形式:\n"
-                "{\n"
-                '    "company_name": str,      # 企業名\n'
-                '    "business_description": str,  # 事業内容の説明\n'
-                '    "industry": str           # 業界\n'
-                "}\n\n"
-                f"コンテンツ:\n{content[:3000]}"  # コンテンツは3000文字までに制限
-            )
-        else:
-            # 既存のURL分析用プロンプト生成ロジック
-            return await self.evaluate_url_relevance(content, [], {})
-
         try:
             if not self.llm:
-                # モックデータを返す（開発用）
-                return self._mock_company_info()
+                logger.error("LLM model is not initialized")
+                return self._mock_company_info() if task == "company_info" else {}
 
-            response = await self.llm.generate(prompt)
+            if not content:
+                logger.warning("Empty content provided")
+                return self._mock_company_info() if task == "company_info" else {}
+
+            # コンテンツを3000文字に制限
+            content = content[:3000]
+
+            # タスクに応じたプロンプトを生成
+            if task == "company_info":
+                prompt = (
+                    "以下のWebサイトコンテンツから企業情報を抽出してください。\n"
+                    "必要な情報：\n"
+                    "- 企業名\n"
+                    "- 事業内容\n"
+                    "- 業界\n\n"
+                    f"コンテンツ:\n{content}\n\n"
+                    "JSON形式で出力してください:\n"
+                    "{\n"
+                    '    "company_name": "企業名",\n'
+                    '    "business_description": "事業内容の説明",\n'
+                    '    "industry": "業界分類"\n'
+                    "}"
+                )
+            else:
+                prompt = (
+                    "以下のWebサイトコンテンツを分析し、重要な情報を抽出してください。\n\n"
+                    f"コンテンツ:\n{content}"
+                )
+
+            logger.debug(f"Generated prompt: {prompt}")
+
+            # LLMで分析
             try:
-                result = json.loads(response)
-                return self._validate_company_info(result)
-            except json.JSONDecodeError:
-                logger.error(f"Invalid JSON response: {response}")
-                return self._mock_company_info()
+                result = await self.llm.generate(prompt)
+                logger.debug(f"Raw LLM response: {result}")
+                
+                if not result:
+                    logger.error("Empty response from LLM")
+                    return self._mock_company_info() if task == "company_info" else {}
+
+                # 結果をJSONとしてパース
+                try:
+                    if isinstance(result, str):
+                        logger.debug("Parsing string response as JSON")
+                        result = self._parse_json_response(result)
+                        logger.debug(f"Parsed JSON result: {result}")
+                except (json.JSONDecodeError, ValueError) as e:
+                    logger.error(f"Failed to parse LLM response: {str(e)}")
+                    return self._mock_company_info() if task == "company_info" else {}
+
+                # タスクに応じた検証
+                if task == "company_info":
+                    logger.debug("Validating company info")
+                    return self._validate_company_info(result)
+                return result
+
+            except Exception as e:
+                logger.error(f"Error during LLM generation: {str(e)}")
+                return self._mock_company_info() if task == "company_info" else {}
 
         except Exception as e:
-            logger.error(f"Error in analyze_content: {str(e)}")
-            return self._mock_company_info()
+            logger.error(f"Unexpected error in analyze_content: {str(e)}")
+            return self._mock_company_info() if task == "company_info" else {}
 
     def _validate_company_info(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """企業情報の検証
@@ -415,3 +469,33 @@ class LLMManager:
             "business_description": "ITソリューションの提供",
             "industry": "情報技術"
         }
+
+    def _parse_json_response(self, response: str) -> Dict[str, Any]:
+        """JSONレスポンスをパース
+
+        Args:
+            response: JSONレスポンス
+
+        Returns:
+            Dict[str, Any]: パースされたJSON
+
+        Raises:
+            ValueError: JSONのパースに失敗した場合
+        """
+        try:
+            # コードブロックを除去
+            json_str = response.strip()
+            if json_str.startswith("```"):
+                json_str = json_str.split("\n", 1)[1]  # 最初の行を除去
+            if json_str.endswith("```"):
+                json_str = json_str.rsplit("\n", 1)[0]  # 最後の行を除去
+            if json_str.startswith("json"):
+                json_str = json_str.split("\n", 1)[1]  # "json"の行を除去
+            
+            # 空白行を除去
+            json_str = "\n".join(line for line in json_str.split("\n") if line.strip())
+            
+            return json.loads(json_str)
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse LLM response as JSON: {response}")
+            raise ValueError(f"Invalid JSON response: {str(e)}")
