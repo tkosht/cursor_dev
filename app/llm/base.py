@@ -21,9 +21,7 @@ class LLMMetrics:
 class BaseLLM(ABC):
     """LLMの基底クラス"""
 
-    def __init__(
-        self, api_key: str, model: str = "default", temperature: float = 0.1
-    ):
+    def __init__(self, api_key: str, model: str = "default", temperature: float = 0.1):
         """初期化
 
         Args:

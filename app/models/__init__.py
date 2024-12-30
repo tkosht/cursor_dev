@@ -68,4 +68,5 @@ def init_db():
     from . import company  # noqa: F401
     from . import financial  # noqa: F401
     from . import news  # noqa: F401
+
     Base.metadata.create_all(bind=engine)

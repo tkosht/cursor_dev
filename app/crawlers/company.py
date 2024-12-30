@@ -28,11 +28,7 @@ class CompanyCrawler(BaseCrawler):
     """企業情報クローラー"""
 
     def __init__(
-        self,
-        company_code: str,
-        session: Optional[Session] = None,
-        *args,
-        **kwargs
+        self, company_code: str, session: Optional[Session] = None, *args, **kwargs
     ):
         """初期化
 
@@ -197,9 +193,13 @@ class CompanyCrawler(BaseCrawler):
             for row in table.select(self.config.selectors["financial"]["rows"])[1:]:
                 cols = row.find_all("td")
                 if len(cols) >= 4:
-                    year_text = cols[
-                        self.config.selectors["financial"]["columns"]["fiscal_year"]
-                    ].text.strip().replace("年度", "")
+                    year_text = (
+                        cols[
+                            self.config.selectors["financial"]["columns"]["fiscal_year"]
+                        ]
+                        .text.strip()
+                        .replace("年度", "")
+                    )
                     financial = {
                         "fiscal_year": str(year_text),
                         "period_type": "FULL_YEAR",
@@ -218,7 +218,9 @@ class CompanyCrawler(BaseCrawler):
                         ),
                         "net_income": self._parse_amount(
                             cols[
-                                self.config.selectors["financial"]["columns"]["net_income"]
+                                self.config.selectors["financial"]["columns"][
+                                    "net_income"
+                                ]
                             ].text.strip()
                         ),
                     }
@@ -273,12 +275,18 @@ class CompanyCrawler(BaseCrawler):
                 self._log_warning(f"ニュース日付のパースに失敗: {str(e)}")
                 continue
 
-        return news_list if news_list else [{
-            "title": "決算発表",
-            "url": urljoin(self.config.base_url, "/news/sample"),
-            "published_at": datetime(2023, 12, 25),
-            "source": "IR情報",
-        }]
+        return (
+            news_list
+            if news_list
+            else [
+                {
+                    "title": "決算発表",
+                    "url": urljoin(self.config.base_url, "/news/sample"),
+                    "published_at": datetime(2023, 12, 25),
+                    "source": "IR情報",
+                }
+            ]
+        )
 
     def _parse_amount(self, text: str) -> float:
         """金額をパース
@@ -309,23 +317,27 @@ class CompanyCrawler(BaseCrawler):
 
     def _get_dummy_financial(self) -> List[Dict]:
         """ダミーの財務情報を取得"""
-        return [{
-            "fiscal_year": "2023",
-            "period_type": "FULL_YEAR",
-            "period_end_date": datetime(2023, 3, 31).date(),
-            "revenue": 1000000000,
-            "operating_income": 100000000,
-            "net_income": 50000000,
-        }]
+        return [
+            {
+                "fiscal_year": "2023",
+                "period_type": "FULL_YEAR",
+                "period_end_date": datetime(2023, 3, 31).date(),
+                "revenue": 1000000000,
+                "operating_income": 100000000,
+                "net_income": 50000000,
+            }
+        ]
 
     def _get_dummy_news(self) -> List[Dict]:
         """ダミーのニュース情報を取得"""
-        return [{
-            "title": "決算発表",
-            "url": urljoin(self.config.base_url, "/news/sample"),
-            "published_at": datetime.now(),
-            "source": "IR情報",
-        }]
+        return [
+            {
+                "title": "決算発表",
+                "url": urljoin(self.config.base_url, "/news/sample"),
+                "published_at": datetime.now(),
+                "source": "IR情報",
+            }
+        ]
 
     def _save_data(
         self, company_info: Dict, financials: List[Dict], news_list: List[Dict]

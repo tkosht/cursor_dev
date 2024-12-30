@@ -29,17 +29,13 @@ async def test_real_company_info_extraction(db_session: Session):
         assert result is not None
         assert "error" not in result
         assert "llm_response" in result
-        
+
         # 2. 分析結果から企業情報を抽出できることを確認
         analysis = result["llm_response"]
         assert isinstance(analysis, dict)
-        
+
         # 基本的な企業情報が含まれていることを確認
-        required_fields = [
-            "company_name",
-            "business_description",
-            "industry"
-        ]
+        required_fields = ["company_name", "business_description", "industry"]
         for field in required_fields:
             assert field in analysis
             assert analysis[field] is not None
@@ -50,18 +46,18 @@ async def test_real_company_info_extraction(db_session: Session):
             name=analysis["company_name"],
             description=analysis["business_description"],
             industry=analysis["industry"],
-            website_url=url
+            website_url=url,
         )
-        
+
         # DBに保存できることを確認
         db_session.add(company)
         db_session.commit()
-        
+
         # 保存した情報が取得できることを確認
-        saved_company = db_session.query(Company).filter_by(
-            name=analysis["company_name"]
-        ).first()
-        
+        saved_company = (
+            db_session.query(Company).filter_by(name=analysis["company_name"]).first()
+        )
+
         assert saved_company is not None
         assert saved_company.name == analysis["company_name"]
         assert saved_company.description == analysis["business_description"]
@@ -74,7 +70,7 @@ async def test_company_info_extraction_error_handling():
     """企業情報抽出時のエラーハンドリングを確認"""
     # 存在しないURLでテスト
     invalid_url = "https://this-url-does-not-exist.example.com"
-    
+
     analyzer = URLAnalyzer(llm_manager=LLMManager())
     result = await analyzer.analyze(invalid_url)
 
@@ -98,6 +94,6 @@ async def test_company_info_extraction_rate_limit():
     for _ in range(5):  # 5回連続でリクエスト
         result = await analyzer.analyze(url)
         results.append(result)
-    
+
     # 少なくとも1つのレスポンスにエラーが含まれていることを確認
-    assert any("error" in result for result in results) 
+    assert any("error" in result for result in results)

@@ -223,7 +223,7 @@ class GeminiLLM(BaseLLM):
                 return None
 
             # JSONを抽出して解析
-            json_str = text[start:end + 1]
+            json_str = text[start : end + 1]
             result = json.loads(json_str)
 
             # 必要なフィールドの存在を確認
@@ -301,7 +301,5 @@ class GeminiLLM(BaseLLM):
         }
 
         return prompts.get(
-            task,
-            f"以下のコンテンツを分析してください。\n{content}\n\n"
-            "結果はJSON形式で返してください。"
+            task, f"以下のコンテンツを分析してください。\n{content}\n\n" "結果はJSON形式で返してください。"
         )
