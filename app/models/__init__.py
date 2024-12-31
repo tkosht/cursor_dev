@@ -12,6 +12,15 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 from .base import Base
 
+# 以下のインポートは、SQLAlchemyのモデル間のリレーションシップを正しく機能させるために必要です。
+# コード上で直接参照されていなくても、SQLAlchemyのメタデータとマッピング機能のために
+# これらのモデルクラスが事前にロードされている必要があります。
+# 例：Companyモデルは、Financialモデルとの関連付けを持っており、
+# この関係を確立するには両方のクラスが利用可能である必要があります。
+from .company import Company  # noqa: F401
+from .financial import Financial  # noqa: F401
+from .news import News  # noqa: F401
+
 # データベースファイルのパスを設定
 DB_FILE = "app.db"
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", DB_FILE)

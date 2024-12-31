@@ -332,3 +332,295 @@ def create_headers():
           response2 = await client.get(url)
           assert response1.headers != response2.headers
   ``` 
+
+# 外部サービス連携テストのパターン
+
+## 実装パターン1: 実際のサービスを使用したテスト
+```python
+@pytest_asyncio.fixture
+async def llm_manager():
+    api_key = os.getenv("API_KEY")
+    if not api_key:
+        pytest.skip("API_KEY not set")
+    
+    manager = LLMManager()
+    await manager.load_model("model-name", api_key)
+    return manager
+
+@pytest.mark.asyncio
+async def test_service_integration(llm_manager):
+    """実際のサービスを使用した統合テスト"""
+    result = await llm_manager.process_data(test_data)
+    assert result is not None
+    assert "expected_field" in result
+```
+
+### 利点
+- 実際の動作を正確に検証可能
+- エラーケースや遅延を実環境で確認可能
+- 本番環境での問題を早期発見可能
+
+### 使用場面
+- 外部APIとの統合テスト
+- エンドツーエンドテスト
+- パフォーマンステスト
+
+## 実装パターン2: 必要最小限のモック（例外的なケース）
+```python
+@pytest.fixture
+def mock_service(monkeypatch):
+    """内部ロジックテスト用の最小限のモック"""
+    async def mock_api_call(*args, **kwargs):
+        return {"status": "success"}
+    
+    monkeypatch.setattr(
+        "package.service.api_call",
+        mock_api_call
+    )
+
+@pytest.mark.asyncio
+async def test_internal_logic(mock_service):
+    """内部ロジックの単体テスト"""
+    result = await process_internal_data()
+    assert result.status == "success"
+```
+
+### 使用条件
+- ユーザーからの明示的な許可がある
+- 内部ロジックの単体テストに限定
+- 外部サービスが完全に利用不可能
+
+### 注意点
+- モックは必要最小限に留める
+- 実際の動作を可能な限り正確に再現
+- テストの目的を明確に文書化
+
+## 1. 適応的検索パターン
+
+### 1.1 基本構造
+```python
+class AdaptiveCrawler:
+    def __init__(self, config: Dict[str, Any]):
+        self._llm_manager = LLMManager()
+        self._search_manager = SearchManager()
+        self._extraction_manager = ExtractionManager()
+        self._config = config
+        self._llm_initialized = False
+        self._retry_count = 0
+        self._last_error = None
+
+    async def crawl_ir_info(
+        self,
+        company_code: str,
+        required_fields: List[str]
+    ) -> Dict[str, Any]:
+        try:
+            if not self._llm_initialized:
+                await self.initialize_llm()
+
+            while self._retry_count < self._config["max_attempts"]:
+                try:
+                    keywords = await self._generate_search_keywords(
+                        company_code,
+                        required_fields
+                    )
+                    urls = await self._search_urls(keywords)
+                    data = await self._extract_data(urls, required_fields)
+                    if self._validate_data(data, required_fields):
+                        return data
+                except Exception as e:
+                    self._last_error = e
+                    await self._handle_error()
+                    self._retry_count += 1
+
+            raise MaxRetriesExceededError()
+
+        except Exception as e:
+            logger.error(f"Crawling failed: {str(e)}")
+            raise
+
+### 1.2 検索キーワード生成
+```python
+async def _generate_search_keywords(
+    self,
+    company_code: str,
+    required_fields: List[str]
+) -> List[str]:
+    context = {
+        "company_code": company_code,
+        "fields": required_fields,
+        "attempt": self._retry_count
+    }
+    return await self._llm_manager.generate_keywords(context)
+```
+
+### 1.3 URL検索
+```python
+async def _search_urls(self, keywords: List[str]) -> List[str]:
+    options = {
+        "num": 10,
+        "site_restrict": self._config.get("site_restrict"),
+        "date_restrict": self._config.get("date_restrict")
+    }
+    results = await self._search_manager.search(keywords, options)
+    return [r.url for r in results if r.score >= THRESHOLDS["relevance"]]
+```
+
+### 1.4 データ抽出
+```python
+async def _extract_data(
+    self,
+    urls: List[str],
+    required_fields: List[str]
+) -> Dict[str, Any]:
+    for url in urls:
+        try:
+            data = await self._extraction_manager.extract(url, required_fields)
+            if data.validation_score >= THRESHOLDS["validation"]:
+                return data.data
+        except ExtractionError as e:
+            logger.warning(f"Extraction failed for {url}: {str(e)}")
+            continue
+    raise NoValidDataError()
+```
+
+### 1.5 エラーハンドリング
+```python
+async def _handle_error(self) -> None:
+    delay = min(
+        self._config["base_delay"] * (2 ** self._retry_count),
+        self._config["max_delay"]
+    )
+    logger.warning(
+        f"Retry {self._retry_count + 1} after {delay}s due to {self._last_error}"
+    )
+    await asyncio.sleep(delay)
+```
+
+## 2. LLM管理パターン
+
+### 2.1 プロンプトテンプレート
+```python
+class LLMManager:
+    def _load_prompt_templates(self) -> Dict[str, str]:
+        return {
+            "keyword_generation": """
+                企業コード: {company_code}
+                必要な情報: {fields}
+                試行回数: {attempt}
+                
+                上記の情報を取得するための効果的な検索キーワードを
+                5つ生成してください。
+            """,
+            "data_validation": """
+                取得データ: {data}
+                期待データ: {expected}
+                
+                取得データが期待データの要件を満たしているか
+                検証してください。
+            """
+        }
+```
+
+### 2.2 キーワード生成
+```python
+async def generate_keywords(
+    self,
+    context: Dict[str, Any]
+) -> List[str]:
+    prompt = self._prompt_templates["keyword_generation"].format(**context)
+    response = await self._llm.generate(prompt)
+    return self._parse_keywords(response)
+```
+
+## 3. 検索管理パターン
+
+### 3.1 検索実行
+```python
+class SearchManager:
+    async def search(
+        self,
+        keywords: List[str],
+        options: Dict[str, Any]
+    ) -> List[SearchResult]:
+        query = " OR ".join(keywords)
+        try:
+            results = await self._execute_search(query, options)
+            return [
+                SearchResult(
+                    url=item["link"],
+                    title=item["title"],
+                    snippet=item["snippet"],
+                    score=self._calculate_relevance(item, keywords)
+                )
+                for item in results
+            ]
+        except Exception as e:
+            logger.error(f"Search failed: {str(e)}")
+            raise SearchError(str(e))
+```
+
+### 3.2 関連性計算
+```python
+def _calculate_relevance(
+    self,
+    item: Dict[str, Any],
+    keywords: List[str]
+) -> float:
+    text = f"{item['title']} {item['snippet']}"
+    return sum(
+        text.lower().count(k.lower()) for k in keywords
+    ) / len(keywords)
+```
+
+## 4. データ抽出パターン
+
+### 4.1 ページ取得
+```python
+class ExtractionManager:
+    async def _fetch_page(self, url: str) -> str:
+        async with self._session.get(url) as response:
+            if response.status != 200:
+                raise ExtractionError(f"HTTP {response.status}")
+            return await response.text()
+```
+
+### 4.2 検証スコア計算
+```python
+def _calculate_validation_score(
+    self,
+    data: Dict[str, Any],
+    target_data: List[str]
+) -> float:
+    return len([k for k in target_data if k in data]) / len(target_data)
+```
+
+## 5. 設定パターン
+
+### 5.1 タイムアウト設定
+```python
+TIMEOUTS = {
+    "llm": 30,        # 秒
+    "search": 10,     # 秒
+    "extraction": 45, # 秒
+    "total": 90       # 秒
+}
+```
+
+### 5.2 再試行設定
+```python
+RETRY_CONFIG = {
+    "max_attempts": 5,
+    "base_delay": 2,  # 秒
+    "max_delay": 32   # 秒
+}
+```
+
+### 5.3 検証閾値
+```python
+THRESHOLDS = {
+    "relevance": 0.7,
+    "validation": 0.8,
+    "confidence": 0.6
+}
+``` 

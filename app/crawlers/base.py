@@ -8,8 +8,7 @@ import logging
 from abc import ABC
 from typing import Any, Dict, Optional
 
-import requests
-from requests.exceptions import RequestException
+import aiohttp
 from sqlalchemy.orm import Session
 
 from app.monitoring.monitor import CrawlerMonitor
@@ -22,9 +21,10 @@ class BaseCrawler(ABC):
     Attributes:
         session (Session): データベースセッション
         headers (Dict[str, str]): HTTPリクエストヘッダー
-        timeout (int): リクエストタイムアウト（秒）
+        timeout (aiohttp.ClientTimeout): リクエストタイムアウト
         max_retries (int): リトライ回数
         logger (logging.Logger): ロガー
+        connector (aiohttp.TCPConnector): HTTP接続用コネクタ
     """
 
     def __init__(
@@ -33,7 +33,8 @@ class BaseCrawler(ABC):
         session: Optional[Session] = None,
         monitor: Optional[CrawlerMonitor] = None,
         headers: Optional[Dict[str, str]] = None,
-        timeout: int = 30,
+        timeout: Optional[aiohttp.ClientTimeout] = None,
+        connector: Optional[aiohttp.TCPConnector] = None,
         max_retries: int = 3,
     ):
         """
@@ -42,7 +43,8 @@ class BaseCrawler(ABC):
             session: DBセッション
             monitor: モニタリングインスタンス
             headers: HTTPリクエストヘッダー
-            timeout: リクエストタイムアウト（秒）
+            timeout: リクエストタイムアウト
+            connector: HTTP接続用コネクタ
             max_retries: リトライ回数
         """
         self.company_code = company_code
@@ -55,9 +57,32 @@ class BaseCrawler(ABC):
                 "Chrome/120.0.0.0 Safari/537.36"
             )
         }
-        self.timeout = timeout
+        self.timeout = timeout or aiohttp.ClientTimeout(total=30)
+        self.connector = connector or aiohttp.TCPConnector(
+            limit=10,
+            enable_cleanup_closed=True,
+            force_close=False,
+            keepalive_timeout=60
+        )
         self.max_retries = max_retries
         self.logger = logging.getLogger(self.__class__.__name__)
+        self._session: Optional[aiohttp.ClientSession] = None
+
+    async def __aenter__(self):
+        """非同期コンテキストマネージャのエントリーポイント"""
+        if not self._session:
+            self._session = aiohttp.ClientSession(
+                headers=self.headers,
+                timeout=self.timeout,
+                connector=self.connector
+            )
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """非同期コンテキストマネージャのクリーンアップ"""
+        if self._session:
+            await self._session.close()
+            self._session = None
 
     def crawl(self) -> None:
         """クロール処理を実行"""
@@ -105,39 +130,44 @@ class BaseCrawler(ABC):
         else:
             self.logger.warning(message)
 
-    def _make_request(
+    async def _make_request(
         self, url: str, method: str = "GET", **kwargs
-    ) -> requests.Response:
+    ) -> aiohttp.ClientResponse:
         """
-        HTTPリクエストの実行
+        非同期HTTPリクエストの実行
 
         Args:
             url: リクエスト先URL
             method: HTTPメソッド
-            **kwargs: requestsライブラリに渡す追加パラメータ
+            **kwargs: aiohttpライブラリに渡す追加パラメータ
 
         Returns:
-            Response: レスポンスオブジェクト
+            ClientResponse: レスポンスオブジェクト
 
         Raises:
-            RequestException: リクエスト失敗時
+            aiohttp.ClientError: リクエスト失敗時
         """
+        if not self._session:
+            self._session = aiohttp.ClientSession(
+                headers=self.headers,
+                timeout=self.timeout,
+                connector=self.connector
+            )
+
         for attempt in range(self.max_retries):
             try:
-                response = requests.request(
-                    method, url, headers=self.headers, timeout=self.timeout, **kwargs
-                )
+                response = await self._session.request(method, url, **kwargs)
                 response.raise_for_status()
                 return response
 
-            except RequestException as e:
+            except aiohttp.ClientError as e:
                 self._log_warning(
                     f"リクエスト失敗 (試行 {attempt + 1}/{self.max_retries}): {str(e)}"
                 )
                 if attempt == self.max_retries - 1:
                     raise
 
-        raise RequestException("最大リトライ回数を超過しました")
+        raise aiohttp.ClientError("最大リトライ回数を超過しました")
 
     def save(self, data: Any) -> None:
         """
@@ -159,3 +189,9 @@ class BaseCrawler(ABC):
             self.session.rollback()
             self.logger.error(f"Failed to save data: {str(e)}")
             raise
+
+    async def close(self) -> None:
+        """リソースのクリーンアップ"""
+        if self._session:
+            await self._session.close()
+            self._session = None
