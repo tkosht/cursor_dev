@@ -175,6 +175,7 @@ class LLMManager:
         self.prompt_generator = PromptGenerator()
         self.result_validator = ResultValidator()
         self.llm: Optional[BaseLLM] = None
+        self.model = self.config.model_name
 
         # APIキーを環境変数から取得
         api_key = os.getenv("GOOGLE_API_KEY_GEMINI")
@@ -217,6 +218,7 @@ class LLMManager:
         Returns:
             LLMManager: 自身のインスタンス
         """
+        self.model = model_name  # modelプロパティを設定
         logging.debug(
             f"Initialized LLMManager with model={model_name}, temperature={self.config.temperature}"
         )
@@ -556,259 +558,263 @@ class LLMManager:
             logger.error(f"Failed to parse LLM response as JSON: {response}")
             raise ValueError(f"Invalid JSON response: {str(e)}")
 
-    async def generate_selectors(
-        self,
-        soup: "BeautifulSoup",
-        target_data: Dict[str, str]
-    ) -> Dict[str, str]:
-        """HTMLからデータ抽出用のセレクタを生成
+    def _create_selector_prompt(self, html: str, target_data: Dict[str, str]) -> str:
+        """セレクタ生成用のプロンプトを作成
 
         Args:
-            soup: BeautifulSoupオブジェクト
-            target_data: 取得対象データの辞書
+            html (str): HTML文字列
+            target_data (Dict[str, str]): 抽出対象のデータ定義
 
         Returns:
-            キーとセレクタのマッピング辞書
+            str: 生成されたプロンプト
         """
-        if not self.llm:
-            raise ValueError("LLMが初期化されていません")
+        soup = BeautifulSoup(html, "html.parser")
+        structure = str(soup)
 
-        # プロンプトを生成
-        prompt = self._generate_selector_prompt(soup, target_data)
+        return (
+            "HTMLからデータを抽出するためのCSSセレクタを生成してください。\n\n"
+            f"HTML構造:\n{structure}\n\n"
+            "抽出対象データ:\n"
+            f"{json.dumps(target_data, ensure_ascii=False, indent=2)}\n\n"
+            "以下の形式でJSONを返してください:\n"
+            "{\n"
+            '    "データキー": "CSSセレクタ",\n'
+            '    ...\n'
+            "}\n"
+        )
 
-        try:
-            # LLMで解析
-            response = await self.llm.generate(prompt)
-            selectors = self._parse_json_response(response)
-
-            # セレクタを検証
-            return await self._validate_selectors(soup, selectors, target_data)
-
-        except Exception as e:
-            logger.error(f"セレクタ生成エラー: {str(e)}")
-            raise
-
-    def _generate_selector_prompt(
-        self,
-        soup: "BeautifulSoup",
-        target_data: Dict[str, str]
-    ) -> str:
-        """セレクタ生成用のプロンプトを生成
+    def _create_validation_prompt(self, extracted_data: Dict[str, str], target_data: Dict[str, str]) -> str:
+        """データ検証用のプロンプトを作成
 
         Args:
-            soup: BeautifulSoupオブジェクト
+            extracted_data: 抽出したデータの辞書
             target_data: 取得対象データの辞書
 
         Returns:
             str: 生成されたプロンプト
         """
-        # HTML構造を分析
-        html_structure = self._analyze_html_structure(soup)
-
-        # プロンプトを生成
         prompt = (
-            "あなたはHTML解析の専門家です。以下のHTML構造から、指定された財務データを抽出するための"
-            "最適なCSSセレクタを生成してください。\n\n"
-            f"HTML構造:\n{html_structure}\n\n"
-            "抽出対象データ:\n"
+            "あなたはデータ検証の専門家です。以下の抽出データが期待する内容と一致するか検証してください。\n\n"
+            "抽出データ:\n"
+        )
+        for key, value in extracted_data.items():
+            prompt += f"- {key}: {value}\n"
+
+        prompt += (
+            "\n期待データ:\n"
         )
         for key, label in target_data.items():
             prompt += f"- {key}: {label}\n"
 
         prompt += (
-            "\n以下の形式で、JSONのみを出力してください。説明は不要です：\n"
+            "\n以下の形式で、検証結果のみを出力してください。説明は不要です：\n"
             "```json\n"
             "{\n"
-            '    "データキー": "CSSセレクタ"\n'
+            '    "is_valid": true/false\n'
             "}\n"
             "```\n\n"
-            "セレクタ生成の注意事項:\n"
-            "1. セレクタは可能な限り具体的に指定\n"
-            "2. class名やid属性を優先的に使用\n"
-            "3. 数値を含むテキストを優先的に抽出\n"
-            "4. 複数の候補がある場合は最も信頼性の高いものを選択"
+            "検証の注意事項:\n"
+            "1. 数値データの場合、単位（円）が正しいか確認\n"
+            "2. 日付データの場合、フォーマットが正しいか確認\n"
+            "3. テキストデータの場合、内容が期待と一致するか確認\n"
+            "4. 不足しているデータがないか確認"
         )
 
         return prompt
 
-    async def _validate_selectors(
-        self,
-        soup: "BeautifulSoup",
-        selectors: Dict[str, str],
-        target_data: Dict[str, str]
-    ) -> Dict[str, str]:
-        """セレクタの有効性を検証
-
-        Args:
-            soup: BeautifulSoupオブジェクト
-            selectors: 検証対象のセレクタ辞書
-            target_data: 取得対象データの辞書
-
-        Returns:
-            Dict[str, str]: 検証済みのセレクタ辞書
-        """
-        validated_selectors = {}
-
-        for key, selector in selectors.items():
-            if key not in target_data:
-                continue
-
-            # セレクタの有効性を確認
-            elements = soup.select(selector)
-            if not elements:
-                logger.warning(f"セレクタ {selector} で要素が見つかりません")
-                continue
-
-            # 抽出されたテキストが目的のデータらしいかチェック
-            text = elements[0].get_text(strip=True)
-            if not self._validate_extracted_text(text, target_data[key]):
-                logger.warning(f"抽出されたテキスト '{text}' が期待と異なります")
-                continue
-
-            validated_selectors[key] = selector
-
-        if not validated_selectors:
-            raise ValueError("有効なセレクタが生成できませんでした")
-
-        return validated_selectors
-
-    def _validate_extracted_text(self, text: str, expected_label: str) -> bool:
-        """抽出されたテキストの妥当性を検証
-
-        Args:
-            text: 抽出されたテキスト
-            expected_label: 期待されるラベル
-
-        Returns:
-            bool: テキストが妥当な場合はTrue
-        """
-        # 数値を含むかチェック
-        has_number = any(char.isdigit() for char in text)
-        
-        # 円マークを含むかチェック
-        has_yen = "円" in text
-        
-        # ラベルとの関連性をチェック
-        label_similarity = self._calculate_text_similarity(text, expected_label)
-        
-        return has_number and has_yen and label_similarity > 0.5
-
-    def _calculate_text_similarity(self, text1: str, text2: str) -> float:
-        """2つのテキストの類似度を計算
-
-        Args:
-            text1: 1つ目のテキスト
-            text2: 2つ目のテキスト
-
-        Returns:
-            float: 類似度（0-1）
-        """
-        # 簡易的な類似度計算（実際の実装ではより高度なアルゴリズムを使用）
-        common_chars = set(text1) & set(text2)
-        total_chars = set(text1) | set(text2)
-        return len(common_chars) / len(total_chars) if total_chars else 0.0
-
-    def _analyze_html_structure(self, soup: "BeautifulSoup") -> str:
+    def _analyze_html_structure(self, soup: BeautifulSoup) -> str:
         """HTML構造を分析し、要約を生成
 
         Args:
             soup: BeautifulSoupオブジェクト
 
         Returns:
-            HTML構造の要約
+            str: HTML構造の要約
         """
-        try:
-            structure_parts = []
+        structure_parts = []
 
-            # タイトルの分析
-            title_info = self._analyze_title(soup)
-            if title_info:
-                structure_parts.append(title_info)
-
-            # 見出しの分析
-            heading_info = self._analyze_headings(soup)
-            if heading_info:
-                structure_parts.append(heading_info)
-
-            # メインコンテンツの分析
-            content_info = self._analyze_main_content(soup)
-            if content_info:
-                structure_parts.extend(content_info)
-
-            # データ属性の分析
-            data_info = self._analyze_data_attributes(soup)
-            if data_info:
-                structure_parts.append(data_info)
-
-            return "\n".join(structure_parts) if structure_parts else "HTML構造を特定できません"
-
-        except Exception as e:
-            logger.error(f"HTML構造分析エラー: {str(e)}")
-            return "HTML構造の分析に失敗しました"
-
-    def _analyze_title(self, soup: "BeautifulSoup") -> Optional[str]:
-        """タイトル要素を分析
-
-        Args:
-            soup: BeautifulSoupオブジェクト
-
-        Returns:
-            Optional[str]: タイトル情報
-        """
+        # タイトルの分析
         if soup.title:
-            return f"title: {soup.title.string}"
-        return None
+            structure_parts.append(f"title: {soup.title.string}")
 
-    def _analyze_headings(self, soup: "BeautifulSoup") -> Optional[str]:
-        """見出し要素を分析
-
-        Args:
-            soup: BeautifulSoupオブジェクト
-
-        Returns:
-            Optional[str]: 見出し情報
-        """
+        # 見出しの分析
         headings = []
         for tag in ["h1", "h2", "h3"]:
             elements = soup.find_all(tag)
             if elements:
                 headings.append(f"{tag}: {len(elements)}個")
-        
         if headings:
-            return f"見出し: {', '.join(headings)}"
-        return None
+            structure_parts.append(f"見出し: {', '.join(headings)}")
 
-    def _analyze_main_content(self, soup: "BeautifulSoup") -> List[str]:
-        """メインコンテンツを分析
-
-        Args:
-            soup: BeautifulSoupオブジェクト
-
-        Returns:
-            List[str]: メインコンテンツ情報のリスト
-        """
-        content_info = []
+        # メインコンテンツの分析
         for tag in ["main", "article"]:
             elements = soup.find_all(tag)
             if elements:
-                content_info.append(f"{tag}: {len(elements)}個")
-        return content_info
+                structure_parts.append(f"{tag}: {len(elements)}個")
 
-    def _analyze_data_attributes(self, soup: "BeautifulSoup") -> Optional[str]:
-        """データ属性を分析
-
-        Args:
-            soup: BeautifulSoupオブジェクト
-
-        Returns:
-            Optional[str]: データ属性情報
-        """
+        # データ属性の分析
         data_elements = soup.find_all(
             lambda tag: tag.attrs and any(k.startswith("data-") for k in tag.attrs.keys())
         )
         if data_elements:
-            return f"データ属性要素: {len(data_elements)}個"
-        return None
+            structure_parts.append(f"データ属性要素: {len(data_elements)}個")
+
+        return "\n".join(structure_parts) if structure_parts else "HTML構造を特定できません"
+
+    def _parse_selector_response(self, response_text: str) -> Dict[str, str]:
+        """セレクタ生成レスポンスを解析
+
+        Args:
+            response_text: LLMからのレスポンステキスト
+
+        Returns:
+            Dict[str, str]: キーとセレクタのマッピング
+        """
+        try:
+            # JSONブロックを抽出
+            json_text = response_text.split("```json")[1].split("```")[0].strip()
+            return json.loads(json_text)
+        except Exception as e:
+            logger.error(f"セレクタレスポンスの解析エラー: {str(e)}")
+            raise ValueError("セレクタレスポンスの解析に失敗しました")
+
+    def _parse_validation_response(self, response_text: str) -> bool:
+        """データ検証レスポンスを解析
+
+        Args:
+            response_text: LLMからのレスポンステキスト
+
+        Returns:
+            bool: 検証結果
+        """
+        try:
+            # JSONブロックを抽出
+            json_text = response_text.split("```json")[1].split("```")[0].strip()
+            result = json.loads(json_text)
+            return result.get("is_valid", False)
+        except Exception as e:
+            logger.error(f"検証レスポンスの解析エラー: {str(e)}")
+            raise ValueError("検証レスポンスの解析に失敗しました")
+
+    async def generate_selectors(self, html: str, target_data: Dict[str, Any]) -> Dict[str, str]:
+        """HTMLからデータ抽出用のセレクタを生成
+
+        Args:
+            html: HTMLコンテンツ
+            target_data: 抽出対象のデータ（キーと期待値の辞書）
+
+        Returns:
+            Dict[str, str]: キーとセレクタのマッピング
+        """
+        if not self.llm:
+            raise ValueError("LLM model is not initialized")
+
+        # HTMLを解析してテキストノードを抽出
+        soup = BeautifulSoup(html, "html.parser")
+        text_nodes = []
+        for node in soup.find_all(text=True):
+            text = node.get_text(strip=True)
+            if text and len(text) > 1:  # 空白や1文字のテキストは除外
+                # 親要素のパスも含めて保存
+                text_nodes.append({
+                    'text': text,
+                    'node': node.parent,
+                    'path': self._get_node_path(node.parent)
+                })
+
+        # 各データ項目に対してセレクタを生成
+        selectors = {}
+        for key, expected_value in target_data.items():
+            # 最も類似度の高いテキストノードを探す
+            best_match = None
+            best_score = 0
+            for node_info in text_nodes:
+                text = node_info['text']
+                # 完全一致を優先
+                if expected_value == text:
+                    best_match = node_info['node']
+                    break
+                # 部分一致の場合はスコアを計算
+                elif expected_value in text or text in expected_value:
+                    # 文字列の長さと位置を考慮してスコアを計算
+                    common_length = len(set(expected_value) & set(text))
+                    total_length = len(set(expected_value) | set(text))
+                    score = common_length / total_length
+                    # テーブルヘッダーやラベル要素の場合はスコアを上げる
+                    if node_info['node'].name in ['th', 'td', 'label', 'dt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+                        score *= 1.5
+                    if score > best_score:
+                        best_match = node_info['node']
+                        best_score = score
+
+            if best_match:
+                # ノードからCSSセレクタを生成
+                selector = self._generate_css_selector(best_match)
+                selectors[key] = selector
+
+        return selectors
+
+    def _get_node_path(self, element: Any) -> str:
+        """要素のDOMパスを取得
+
+        Args:
+            element: BeautifulSoupの要素
+
+        Returns:
+            str: DOMパス
+        """
+        path = []
+        current = element
+        while current and hasattr(current, 'name') and current.name:
+            # タグ名を取得
+            tag_name = current.name
+            # クラスがある場合は追加
+            if current.get('class'):
+                tag_name += '.' + '.'.join(current['class'])
+            # IDがある場合は追加
+            if current.get('id'):
+                tag_name += f'#{current["id"]}'
+            path.append(tag_name)
+            current = current.parent
+        return ' > '.join(reversed(path))
+
+    def _generate_css_selector(self, element: Any) -> str:
+        """要素に対するCSSセレクタを生成
+
+        Args:
+            element: BeautifulSoupの要素
+
+        Returns:
+            str: CSSセレクタ
+        """
+        # IDがある場合はそれを使用
+        if element.get("id"):
+            return f"#{element['id']}"
+
+        # クラスがある場合はそれを使用
+        if element.get("class"):
+            return f".{'.'.join(element['class'])}"
+
+        # 親要素のコンテキストを考慮したセレクタを生成
+        path = []
+        current = element
+        max_ancestors = 3  # 最大3階層まで遡る
+
+        while current and len(path) < max_ancestors:
+            # タグ名を取得
+            selector = current.name
+
+            # 同じ階層の同じタグの中での位置を特定
+            if current.parent:
+                siblings = current.parent.find_all(current.name, recursive=False)
+                if len(siblings) > 1:
+                    index = siblings.index(current) + 1
+                    selector += f":nth-of-type({index})"
+
+            path.append(selector)
+            current = current.parent
+
+        return ' > '.join(reversed(path))
 
     async def validate_data(
         self,
@@ -822,84 +828,16 @@ class LLMManager:
             target_data: 取得対象データの辞書
 
         Returns:
-            bool: データが有効な場合はTrue
+            bool: 検証結果
         """
         if not self.llm:
             raise ValueError("LLMが初期化されていません")
 
-        # 必要なキーが全て存在するか確認
-        if not all(key in extracted_data for key in target_data):
-            logger.warning("必要なデータが不足しています")
-            return False
-
-        # 各データの妥当性を検証
-        for key, value in extracted_data.items():
-            if not self._validate_financial_data(value, target_data.get(key, "")):
-                logger.warning(f"データの検証に失敗: {key}={value}")
-                return False
-
-        return True
-
-    def _validate_financial_data(self, value: str, expected_label: str) -> bool:
-        """財務データの妥当性を検証
-
-        Args:
-            value: 検証対象の値
-            expected_label: 期待されるラベル
-
-        Returns:
-            bool: データが有効な場合はTrue
-        """
-        # 空文字列や None をチェック
-        if not value or not expected_label:
-            return False
-
-        # 数値を含むかチェック
-        has_number = any(char.isdigit() for char in value)
-        if not has_number:
-            return False
-
-        # 単位（円）を含むかチェック
-        has_unit = "円" in value
-        if not has_unit:
-            return False
-
-        # 数値のフォーマットをチェック
-        number_part = "".join(char for char in value if char.isdigit() or char in ".,")
+        # LLMにデータを送信して検証
+        prompt = self._create_validation_prompt(extracted_data, target_data)
         try:
-            float(number_part.replace(",", ""))
-        except ValueError:
-            return False
-
-        # ラベルとの関連性をチェック
-        label_similarity = self._calculate_text_similarity(value, expected_label)
-        if label_similarity < 0.3:  # 閾値は調整可能
-            return False
-
-        return True
-
-    async def extract_data(self, prompt: str) -> Dict[str, str]:
-        """データを抽出する
-
-        Args:
-            prompt: 抽出用のプロンプト
-
-        Returns:
-            Dict[str, str]: 抽出したデータの辞書
-        """
-        try:
-            # LLMを使用してデータを抽出
             response = await self.llm.generate(prompt)
-            
-            # レスポンスをパース
-            data = {}
-            for line in response.split("\n"):
-                if ":" in line:
-                    key, value = line.split(":", 1)
-                    data[key.strip()] = value.strip()
-            
-            return data
-            
+            return self._parse_validation_response(response)
         except Exception as e:
-            logger.error(f"データ抽出エラー: {str(e)}")
+            logger.error(f"データ検証エラー: {str(e)}")
             raise

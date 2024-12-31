@@ -5,20 +5,20 @@
 """
 
 from enum import Enum
-from typing import TYPE_CHECKING
 
-from sqlalchemy import BigInteger, Column, Date, ForeignKey, String
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy import Column, Date, Float, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
 
 from .base import Base
 
-if TYPE_CHECKING:
-    from .company import Company
-
 
 class PeriodType(str, Enum):
-    FULL_YEAR = "FULL_YEAR"
-    QUARTER = "QUARTER"
+    """期間区分を表す列挙型"""
+    FULL_YEAR = "FULL_YEAR"  # 通期
+    Q1 = "Q1"  # 第1四半期
+    Q2 = "Q2"  # 第2四半期
+    Q3 = "Q3"  # 第3四半期
+    Q4 = "Q4"  # 第4四半期
 
 
 class Financial(Base):
@@ -29,27 +29,36 @@ class Financial(Base):
         id (int): 主キー
         company_id (int): 企業ID（外部キー）
         fiscal_year (str): 会計年度
-        period_type (str): 期間区分（通期/第1四半期/第2四半期/第3四半期）
+        period_type (PeriodType): 期間区分（通期/四半期）
         period_end_date (date): 期末日
-        revenue (int): 売上高
-        operating_income (int): 営業利益
-        net_income (int): 当期純利益
+        revenue (float): 売上高
+        operating_income (float): 営業利益
+        net_income (float): 当期純利益
+        total_assets (float): 総資産
+        net_assets (float): 純資産
+        cash_flow (float): キャッシュフロー
+        report_date (date): 報告日
         created_at (datetime): 作成日時
         updated_at (datetime): 更新日時
-        company (Company): 企業
+        company (Company): 企業情報
     """
 
-    company_id = Column(BigInteger, ForeignKey("company.id"), nullable=False)
+    __tablename__ = "financial"
+
+    company_id = Column(Integer, ForeignKey("company.id"), nullable=False)
     fiscal_year = Column(String(10), nullable=False)
     period_type = Column(String(20), nullable=False)
     period_end_date = Column(Date, nullable=False)
-    revenue = Column(BigInteger)
-    operating_income = Column(BigInteger)
-    net_income = Column(BigInteger)
+    revenue = Column(Float)
+    operating_income = Column(Float)
+    net_income = Column(Float)
+    total_assets = Column(Float)
+    net_assets = Column(Float)
+    cash_flow = Column(Float)
+    report_date = Column(Date)
 
-    company: Mapped["Company"] = relationship("Company", back_populates="financials")
+    # リレーションシップ
+    company = relationship("Company", back_populates="financials")
 
     def __repr__(self) -> str:
-        return (
-            f"<Financial(company_id={self.company_id}, fiscal_year={self.fiscal_year})>"
-        )
+        return f"<Financial(company_id={self.company_id}, fiscal_year={self.fiscal_year})>"
