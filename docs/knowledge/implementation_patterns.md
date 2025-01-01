@@ -595,6 +595,56 @@ def _calculate_validation_score(
     return len([k for k in target_data if k in data]) / len(target_data)
 ```
 
+### 4.3 セレクターベース抽出
+```python
+def extract_with_selector(html: str, selectors: Dict[str, str]) -> Dict[str, Any]:
+    """セレクターを使用したデータ抽出
+
+    Args:
+        html: HTML文字列
+        selectors: 抽出用セレクター定義
+
+    Returns:
+        抽出したデータ
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    result = {}
+
+    for key, selector in selectors.items():
+        if element := soup.select_one(selector):
+            result[key] = element.text.strip()
+
+    return result
+```
+
+### 4.4 金額パース
+```python
+def parse_amount(text: str) -> Optional[float]:
+    """金額文字列のパース
+
+    Args:
+        text: 金額を含む文字列
+
+    Returns:
+        パースした金額、失敗時はNone
+    """
+    try:
+        # カンマと単位を除去
+        amount = text.replace(",", "").replace("円", "")
+        
+        # 単位の変換
+        if "百万" in amount:
+            amount = float(amount.replace("百万", "")) * 1_000_000
+        elif "億" in amount:
+            amount = float(amount.replace("億", "")) * 100_000_000
+        else:
+            amount = float(amount)
+            
+        return amount
+    except ValueError:
+        return None
+```
+
 ## 5. 設定パターン
 
 ### 5.1 タイムアウト設定
@@ -623,4 +673,73 @@ THRESHOLDS = {
     "validation": 0.8,
     "confidence": 0.6
 }
+``` 
+
+## テストパターン
+
+### モックHTMLテスト
+```python
+@pytest.mark.asyncio
+async def test_with_mock_html():
+    """モックHTMLを使用したテスト"""
+    html_content = """
+    <html>
+        <h1 class="title">テストタイトル</h1>
+        <div class="content">テスト内容</div>
+    </html>
+    """
+    
+    selectors = {
+        "title": "h1.title",
+        "content": "div.content"
+    }
+    
+    result = extract_with_selector(html_content, selectors)
+    assert result["title"] == "テストタイトル"
+    assert result["content"] == "テスト内容"
+```
+
+### 非同期テスト
+```python
+@pytest.mark.asyncio
+async def test_concurrent_execution():
+    """並行実行のテスト"""
+    urls = ["url1", "url2", "url3"]
+    tasks = [process_url(url) for url in urls]
+    
+    # 同時実行
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    # 結果の検証
+    success = [r for r in results if not isinstance(r, Exception)]
+    assert len(success) > 0  # 少なくとも1つは成功
+```
+
+### データ検証スコアリング
+```python
+def calculate_validation_score(
+    data: Dict[str, Any],
+    schema: Dict[str, Type]
+) -> float:
+    """データ検証スコアの計算
+
+    Args:
+        data: 検証対象データ
+        schema: 期待する型定義
+
+    Returns:
+        検証スコア（0.0 - 1.0）
+    """
+    if not data or not schema:
+        return 0.0
+
+    total = len(schema)
+    valid = sum(
+        1.0 if isinstance(data.get(key), type_)
+        else 0.5 if type_ == float and data.get(key) is not None
+        else 0.0
+        for key, type_ in schema.items()
+    )
+
+    return valid / total
 ``` 

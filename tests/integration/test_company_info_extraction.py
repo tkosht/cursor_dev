@@ -7,9 +7,8 @@
 import pytest
 from sqlalchemy.orm import Session
 
-from app.llm.manager import LLMManager
+from app.extraction.manager import ExtractionManager
 from app.models.company import Company
-from app.site_analyzer import URLAnalyzer
 
 
 @pytest.mark.asyncio
@@ -20,33 +19,43 @@ async def test_real_company_info_extraction(db_session: Session):
         "https://www.example.com/",  # テスト用サイト
     ]
 
-    # 実際のLLMManagerを使用
-    analyzer = URLAnalyzer(llm_manager=LLMManager())
+    # セレクターの設定
+    selectors = {
+        "name": "h1.company-name",
+        "description": "div.company-description",
+        "established": "table tr:contains('設立')",
+    }
+
+    extractor = ExtractionManager()
 
     for url in test_urls:
-        # 1. URLの内容を分析
-        result = await analyzer.analyze(url)
+        # 1. 企業情報を抽出
+        company_info = await extractor.extract_company_info(url, selectors)
 
-        assert result is not None
-        assert "error" not in result
-        assert "llm_response" in result
+        assert company_info is not None
+        assert "name" in company_info
+        assert "description" in company_info
 
-        # 2. 分析結果から企業情報を抽出できることを確認
-        analysis = result["llm_response"]
-        assert isinstance(analysis, dict)
+        # 2. 財務情報を抽出
+        financial_selectors = {
+            "table": "table.financial-info",
+            "rows": "tr",
+        }
+        financials = await extractor.extract_financial_info(url, financial_selectors)
 
-        # 基本的な企業情報が含まれていることを確認
-        required_fields = ["company_name", "business_description", "industry"]
-        for field in required_fields:
-            assert field in analysis
-            assert analysis[field] is not None
-            assert len(analysis[field]) > 0
+        assert isinstance(financials, list)
+        if financials:  # 財務情報が存在する場合
+            for financial in financials:
+                assert "fiscal_year" in financial
+                assert "revenue" in financial
+                assert "operating_income" in financial
+                assert "net_income" in financial
 
         # 3. 抽出した情報でCompanyモデルが作成できることを確認
         company = Company(
-            name=analysis["company_name"],
-            description=analysis["business_description"],
-            industry=analysis["industry"],
+            name=company_info["name"],
+            description=company_info["description"],
+            established_date=company_info.get("established_date"),
             website_url=url,
         )
 
@@ -57,9 +66,8 @@ async def test_real_company_info_extraction(db_session: Session):
         # 保存した情報が取得できることを確認
         db_session.refresh(company)  # 最新の状態を取得
         assert company.id is not None
-        assert company.name == analysis["company_name"]
-        assert company.description == analysis["business_description"]
-        assert company.industry == analysis["industry"]
+        assert company.name == company_info["name"]
+        assert company.description == company_info["description"]
         assert company.website_url == url
 
         db_session.commit()
@@ -70,30 +78,64 @@ async def test_company_info_extraction_error_handling():
     """企業情報抽出時のエラーハンドリングを確認"""
     # 存在しないURLでテスト
     invalid_url = "https://this-url-does-not-exist.example.com"
+    selectors = {"name": "h1.company-name"}
 
-    analyzer = URLAnalyzer(llm_manager=LLMManager())
-    result = await analyzer.analyze(invalid_url)
+    extractor = ExtractionManager()
+    with pytest.raises(Exception) as exc_info:
+        await extractor.extract_company_info(invalid_url, selectors)
 
-    assert result is not None
-    assert "error" in result
-    assert result["relevance_score"] == 0.0
-    assert result["category"] == "error"
-    assert result["confidence"] == 0.0
-    assert result["processing_time"] == 0.0
-    assert result["llm_response"] == {}
+    assert "ExtractionError" in str(exc_info.type)
 
 
 @pytest.mark.asyncio
-async def test_company_info_extraction_rate_limit():
-    """レート制限時の挙動を確認"""
-    # 短時間で複数回リクエストを送信
-    url = "https://www.example.com"
-    analyzer = URLAnalyzer(llm_manager=LLMManager())
+async def test_company_info_validation():
+    """企業情報の検証スコア計算を確認"""
+    extractor = ExtractionManager()
 
-    results = []
-    for _ in range(5):  # 5回連続でリクエスト
-        result = await analyzer.analyze(url)
-        results.append(result)
+    # テストデータ
+    extracted_data = {
+        "name": "テスト株式会社",
+        "description": "テスト事業の説明",
+        "established_date": "2020-01-01",
+        "invalid_field": "不正なフィールド",
+    }
 
-    # 少なくとも1つのレスポンスにエラーが含まれていることを確認
-    assert any("error" in result for result in results)
+    expected_schema = {
+        "name": str,
+        "description": str,
+        "established_date": str,
+        "stock_exchange": str,  # 存在しないフィールド
+    }
+
+    # 検証スコアの計算
+    score = extractor.calculate_validation_score(extracted_data, expected_schema)
+
+    # 3/4のフィールドが正しい型なので、スコアは0.75になるはず
+    assert score == 0.75
+
+
+@pytest.mark.asyncio
+async def test_financial_info_validation():
+    """財務情報の検証を確認"""
+    extractor = ExtractionManager()
+
+    # テストデータ
+    extracted_data = {
+        "fiscal_year": "2023",
+        "revenue": 1000000000,
+        "operating_income": 100000000,
+        "net_income": "not_a_number",  # 不正な値
+    }
+
+    expected_schema = {
+        "fiscal_year": str,
+        "revenue": float,
+        "operating_income": float,
+        "net_income": float,
+    }
+
+    # 検証スコアの計算
+    score = extractor.calculate_validation_score(extracted_data, expected_schema)
+
+    # 3/4のフィールドが正しい型なので、スコアは0.75になるはず
+    assert score == 0.75

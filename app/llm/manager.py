@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional
 
 from bs4 import BeautifulSoup
 
+from app.exceptions import LLMError
 from app.llm.base import BaseLLM
 
 logger = logging.getLogger(__name__)
@@ -841,3 +842,68 @@ class LLMManager:
         except Exception as e:
             logger.error(f"データ検証エラー: {str(e)}")
             raise
+
+    async def initialize(self) -> None:
+        """LLMの初期化"""
+        self._llm = await self._setup_llm()
+
+    async def generate_keywords(
+        self,
+        context: Dict[str, Any]
+    ) -> List[str]:
+        """検索キーワードの生成"""
+        if not self._llm:
+            raise LLMError("LLM is not initialized")
+        prompt = self._prompt_templates["keyword_generation"].format(**context)
+        response = await self._llm.generate(prompt)
+        return self._parse_keywords(response)
+
+    async def validate_data(
+        self,
+        data: Dict[str, Any],
+        expected: Dict[str, Any]
+    ) -> bool:
+        """データの検証"""
+        if not self._llm:
+            raise LLMError("LLM is not initialized")
+        prompt = self._prompt_templates["data_validation"].format(
+            data=data,
+            expected=expected
+        )
+        response = await self._llm.generate(prompt)
+        return self._parse_validation_result(response)
+
+    def _load_prompt_templates(self) -> Dict[str, str]:
+        """プロンプトテンプレートの読み込み"""
+        return {
+            "keyword_generation": """
+                企業コード: {company_code}
+                必要な情報: {fields}
+                試行回数: {attempt}
+                
+                上記の情報を取得するための効果的な検索キーワードを
+                5つ生成してください。
+            """,
+            "data_validation": """
+                取得データ: {data}
+                期待データ: {expected}
+                
+                取得データが期待データの要件を満たしているか
+                検証してください。
+            """
+        }
+
+    async def _setup_llm(self) -> Any:
+        """LLMのセットアップ"""
+        # TODO: 実際のLLMクライアントの初期化を実装
+        raise NotImplementedError()
+
+    def _parse_keywords(self, response: str) -> List[str]:
+        """キーワードのパース"""
+        # TODO: LLMのレスポンスからキーワードを抽出する処理を実装
+        raise NotImplementedError()
+
+    def _parse_validation_result(self, response: str) -> bool:
+        """検証結果のパース"""
+        # TODO: LLMのレスポンスから検証結果を抽出する処理を実装
+        raise NotImplementedError()
