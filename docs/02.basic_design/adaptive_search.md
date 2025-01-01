@@ -10,13 +10,14 @@ graph TD
     A --> D[ExtractionManager]
     B --> E[LLM API]
     C --> F[Google Custom Search API]
-    D --> G[Web Access]
+    C --> G[URL Collection]
+    D --> H[Web Access]
 ```
 
 ### 1.2 主要クラス
 - AdaptiveCrawler: クローリング制御
 - LLMManager: LLM操作
-- SearchManager: 検索制御
+- SearchManager: 検索制御・URL収集
 - ExtractionManager: 情報抽出
 
 ## 2. 処理フロー
@@ -36,6 +37,10 @@ sequenceDiagram
         LLM-->>Crawler: keywords
         Crawler->>Search: search_urls()
         Search-->>Crawler: urls
+        alt URL収集必要
+            Crawler->>Search: collect_additional_urls()
+            Search-->>Crawler: additional_urls
+        end
         loop 各URL
             Crawler->>Web: extract_info()
             Web-->>Crawler: data
@@ -117,6 +122,12 @@ class SearchInterface:
         keywords: List[str],
         options: Dict[str, Any]
     ) -> List[SearchResult]
+
+    async def collect_additional_urls(
+        self,
+        base_url: str,
+        collection_type: str = "all"
+    ) -> List[str]
 ```
 
 ### 4.3 抽出インターフェース
@@ -156,6 +167,16 @@ THRESHOLDS = {
     "relevance": 0.7,
     "validation": 0.8,
     "confidence": 0.6
+}
+```
+
+### 5.4 URL収集設定
+```python
+URL_COLLECTION_CONFIG = {
+    "max_concurrent_requests": 3,
+    "request_timeout": 30.0,
+    "allowed_domains": [],
+    "collection_types": ["navigation", "footer", "sitemap"]
 }
 ```
 
