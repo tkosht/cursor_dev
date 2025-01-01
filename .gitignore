@@ -19,14 +19,15 @@ bkup/
 ?.sh
 .env
 
-# Allow cursorrules file
-!.cursorrules
-
 # Ignore other dot files/directories
 .*
 .*/
 
 *logs/
+
+# Allow cursor file
+!.cursorrules
+!.cursorban
 
 # LLM
 *.gguf
