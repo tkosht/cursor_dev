@@ -1,8 +1,4 @@
-"""
-LLMを使用した適応型クローラー
-
-HTMLの構造を分析し、動的にセレクタを生成するクローラーです。
-"""
+"""Adaptive crawler implementation."""
 
 import asyncio
 import logging
@@ -12,6 +8,7 @@ from ..exceptions import ExtractionError, MaxRetriesExceededError, NoValidDataEr
 from ..extraction.manager import ExtractionManager
 from ..llm.manager import LLMManager
 from ..search.manager import SearchManager
+from .base import BaseCrawler
 
 logger = logging.getLogger(__name__)
 
