@@ -7,8 +7,9 @@ AdaptiveCrawlerのテスト
 - 実際の外部接続を使用して、本番環境に近い状態でテスト
 """
 
-import asyncio
+import logging
 import os
+from typing import Any, Dict, Optional
 
 import pytest
 import pytest_asyncio
@@ -16,81 +17,88 @@ import pytest_asyncio
 from app.crawlers.adaptive import AdaptiveCrawler
 from app.llm.manager import LLMManager
 
+# ログ設定
+logger = logging.getLogger(__name__)
+
+# テスト用の企業コード
+TEST_COMPANY_CODE = "7203"  # トヨタ自動車
+
 
 @pytest_asyncio.fixture
 async def llm_manager():
-    api_key = os.getenv("GOOGLE_API_KEY_GEMINI")
+    """LLMManagerのフィクスチャ"""
+    api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        pytest.skip("GOOGLE_API_KEY_GEMINI not set")
+        pytest.skip("GEMINI_API_KEY not set")
     
-    manager = LLMManager()
-    await manager.load_model("gemini-2.0-flash-exp", api_key)
+    manager = LLMManager(
+        model_name="gemini-2.0-flash-exp",
+        temperature=0.1,
+        api_key=api_key
+    )
     return manager
 
 
 @pytest_asyncio.fixture
 async def crawler(llm_manager):
-    crawler = AdaptiveCrawler(
-        company_code="7203",  # トヨタ自動車のコード
-        llm_manager=llm_manager,
-        max_concurrent=2
-    )
-    async with crawler as c:
-        yield c
-    await crawler.close()
+    """AdaptiveCrawlerのフィクスチャ"""
+    return AdaptiveCrawler(llm_manager=llm_manager)
 
 
 @pytest.mark.asyncio
+@pytest.mark.timeout(30)
 async def test_crawl_success(crawler):
-    """実際のIRサイトからのデータ取得テスト"""
-    # IRサイトのURLを動的に取得
-    ir_urls = await crawler.get_ir_urls()
-    assert ir_urls, "IR URLsの取得に失敗しました"
-    assert "financial_results" in ir_urls, "決算情報のURLが見つかりません"
+    """実際のURLを使用したクロールテスト"""
+    target_fields = ["title", "date", "content"]
     
-    url = ir_urls["financial_results"]
-    target_data = {
-        "revenue": "売上収益",
-        "operating_income": "営業利益"
-    }
+    result = await crawler.crawl_ir_info(
+        company_code=TEST_COMPANY_CODE,
+        target_fields=target_fields
+    )
     
-    result = await crawler.crawl(url, target_data)
-    assert result is not None
+    # 基本的な検証
     assert isinstance(result, dict)
-    assert "revenue" in result
-    assert "operating_income" in result
+    assert all(field in result for field in target_fields)
+    
+    # データの形式と内容を検証
+    # タイトルの検証
+    assert len(result["title"]) >= 3
+    assert len(result["title"]) <= 200
+    assert any(keyword in result["title"].lower() for keyword in ["決算", "ir", "投資家", "financial"])
+    
+    # 日付の検証
+    assert len(result["date"]) == 10  # YYYY-MM-DD
+    
+    # コンテンツの検証
+    assert len(result["content"]) >= 50
+    assert any(keyword in result["content"].lower() for keyword in ["業績", "売上", "利益", "revenue", "profit"])
 
 
 @pytest.mark.asyncio
-async def test_crawl_invalid_url(crawler):
-    """無効なURLの場合のエラーハンドリングテスト"""
-    url = "https://invalid-url.example.com"
-    target_data = {"revenue": "売上高"}
+@pytest.mark.timeout(30)
+async def test_crawl_with_retry(crawler):
+    """リトライ機能のテスト"""
+    target_fields = ["title", "date", "content"]
     
-    with pytest.raises(Exception):
-        await crawler.crawl(url, target_data)
+    # 無効な企業コードでテスト
+    result = await crawler.crawl_ir_info(
+        company_code="invalid_code",
+        target_fields=target_fields
+    )
+    assert result is None
 
 
 @pytest.mark.asyncio
-async def test_concurrent_requests(crawler):
-    """同時リクエスト制限のテスト"""
-    # IRサイトのURLを動的に取得
-    ir_urls = await crawler.get_ir_urls()
-    assert ir_urls, "IR URLsの取得に失敗しました"
-    assert "financial_results" in ir_urls, "決算情報のURLが見つかりません"
+@pytest.mark.timeout(30)
+async def test_adaptive_extraction(crawler):
+    """アダプティブな抽出機能のテスト"""
+    target_fields = ["title", "date", "content"]
     
-    url = ir_urls["financial_results"]
-    target_data = {
-        "title": "四半期報告書",
-        "date": "提出日"
-    }
+    result = await crawler.crawl_ir_info(
+        company_code=TEST_COMPANY_CODE,
+        target_fields=target_fields
+    )
     
-    tasks = [
-        crawler.crawl(url, target_data)
-        for _ in range(3)
-    ]
-    
-    results = await asyncio.gather(*tasks)
-    assert all(isinstance(r, dict) for r in results)
-    assert all("title" in r for r in results)
-    assert all("date" in r for r in results)
+    assert isinstance(result, dict)
+    assert all(field in result for field in target_fields)
+    assert len(result["content"]) >= 50

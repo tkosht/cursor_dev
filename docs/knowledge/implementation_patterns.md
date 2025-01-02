@@ -1,745 +1,260 @@
 # 実装パターン集
 
-## IRサイト関連パターン
+## エラーハンドリングパターン
 
-### IRSiteLocator パターン
-- **目的**: IRサイトのURLを動的に特定し、適切なページを選択する
-- **実装ポイント**:
-  ```python
-  class IRSiteLocator:
-      def __init__(self, base_url: str):
-          self.base_url = base_url
-          
-      async def find_ir_page(self) -> str:
-          # IRページの候補を探索
-          candidates = await self._find_ir_candidates()
-          # 最適なページを選択
-          return await self._select_best_candidate(candidates)
-  ```
+### 1. エラー階層の設計パターン
 
-### HTTP通信パターン
-- **目的**: ブラウザライクな振る舞いを実現する
-- **実装ポイント**:
-  ```python
-  BROWSER_HEADERS = {
-      "User-Agent": "Mozilla/5.0 ... Chrome/120.0.0.0 Safari/537.36",
-      "Accept": "text/html,application/xhtml+xml,...",
-      "Accept-Language": "ja,en-US;q=0.7,en;q=0.3",
-      "Accept-Encoding": "gzip, deflate",  # brを除外
-      "Connection": "keep-alive",
-      "Upgrade-Insecure-Requests": "1",
-      "Cache-Control": "no-cache",
-      "DNT": "1",
-      "Sec-GPC": "1",
-      "Pragma": "no-cache",
-      "Referer": "https://www.google.com/"
-  }
-  ```
-
-### エラーハンドリング階層 パターン
-- **目的**: 階層的なエラー処理を実現
-- **実装ポイント**:
-  ```python
-  class HTTPError(Exception): pass
-  class ParseError(Exception): pass
-  class DataExtractionError(Exception): pass
-  
-  async def handle_error(self, error: Exception):
-      if isinstance(error, HTTPError):
-          return await self._handle_http_error(error)
-      elif isinstance(error, ParseError):
-          return await self._handle_parse_error(error)
-      elif isinstance(error, DataExtractionError):
-          return await self._handle_extraction_error(error)
-  ```
-
-### AdaptiveCrawler パターン
-- **目的**: サイト構造の変更に適応するクローラー
-- **実装ポイント**:
-  ```python
-  class AdaptiveCrawler:
-      async def analyze_site_structure(self, url: str) -> Dict[str, Any]:
-          """サイト構造を動的に解析"""
-          content = await self._fetch_page(url)
-          return await self._analyze_content(content)
-          
-      async def find_target_page(self, base_url: str, target_type: str) -> str:
-          """目的のページを動的に探索"""
-          structure = await self.analyze_site_structure(base_url)
-          return await self._identify_page(structure, target_type)
-          
-      async def extract_data(self, page_url: str, target_data: Dict[str, str]) -> Dict[str, str]:
-          """データを抽出"""
-          content = await self._fetch_page(page_url)
-          return await self._extract_target_data(content, target_data)
-  ```
-
-### 適応的クローリングのテストパターン
-- **目的**: 動的な探索・抽出機能の検証
-- **実装ポイント**:
-  ```python
-  class AdaptiveCrawlerTest:
-      @pytest.mark.asyncio
-      async def test_site_structure_analysis(self):
-          """サイト構造の解析機能をテスト"""
-          crawler = AdaptiveCrawler()
-          structure = await crawler.analyze_site_structure("https://example.com")
-          assert "navigation" in structure
-          assert "main_content" in structure
-          
-      @pytest.mark.asyncio
-      async def test_target_page_discovery(self):
-          """目的のページの動的探索をテスト"""
-          crawler = AdaptiveCrawler()
-          ir_page = await crawler.find_target_page(
-              "https://example.com",
-              target_type="ir_info"
-          )
-          assert ir_page.endswith("/ir") or "investor" in ir_page
-          
-      @pytest.mark.asyncio
-      async def test_data_extraction(self):
-          """データ抽出機能をテスト"""
-          crawler = AdaptiveCrawler()
-          data = await crawler.extract_data(
-              "https://example.com/ir",
-              {"revenue": "売上高"}
-          )
-          assert "revenue" in data
-          assert "円" in data["revenue"]
-  ```
-
-### 統合テストパターン
-- **目的**: 実サイトを使用した信頼性の高いテスト
-- **実装ポイント**:
-  ```python
-  class IRSiteIntegrationTest:
-      @pytest.mark.asyncio
-      async def test_ir_page_access(self):
-          crawler = AdaptiveCrawler(
-              retry_delay=5.0,  # 5秒待機
-              max_concurrent=1,  # 同時接続数制限
-              timeout_total=90,
-              timeout_connect=30,
-              timeout_read=45
-          )
-          async with crawler as client:
-              result = await client.crawl("https://example.com")
-              assert result is not None
-              await asyncio.sleep(5)  # レート制限対策
-  ```
-
-### エラーケーステスト パターン
-- **目的**: エラー状況の網羅的なテスト
-- **実装ポイント**:
-  ```python
-  class ErrorCaseTest:
-      @pytest.mark.asyncio
-      async def test_http_error_handling(self):
-          with pytest.raises(HTTPError):
-              await crawler.crawl("https://non-existent.example.com")
-              
-      @pytest.mark.asyncio
-      async def test_rate_limit_handling(self):
-          for _ in range(3):
-              await crawler.crawl(url)
-              await asyncio.sleep(5)  # レート制限対策
-  ```
-
-### URL探索戦略 パターン
-- **目的**: 動的なURL探索と検証
-- **実装ポイント**:
-  ```python
-  class URLExplorer:
-      async def explore(self, base_url: str) -> List[str]:
-          candidates = await self._find_links(base_url)
-          return [url for url in candidates if self._is_ir_page(url)]
-  ```
-
-### ConcurrencyControl パターン
-- **目的**: 並行アクセスの制御
-- **実装ポイント**:
-  ```python
-  class ConcurrencyController:
-      def __init__(self, max_concurrent: int = 1):
-          self._semaphore = asyncio.Semaphore(max_concurrent)
-          
-      async def execute(self, coro):
-          async with self._semaphore:
-              result = await coro
-              await asyncio.sleep(5)  # レート制限対策
-              return result
-  ```
-
-### LLMOptimization パターン
-- **目的**: LLMを活用したクローリング最適化
-- **実装ポイント**:
-  ```python
-  class LLMOptimizer:
-      async def optimize_selector(self, html: str, target: str) -> str:
-          context = self._analyze_html_structure(html)
-          return await self._generate_optimal_selector(context, target)
-          
-      async def _generate_optimal_selector(
-          self,
-          context: str,
-          target: str,
-          timeout: int = 30
-      ) -> str:
-          """タイムアウト付きでLLMを使用"""
-          try:
-              async with asyncio.timeout(timeout):
-                  return await self.llm.generate(
-                      f"コンテキスト: {context}\n"
-                      f"ターゲット: {target}"
-                  )
-          except asyncio.TimeoutError:
-              logger.error("LLM通信タイムアウト")
-              raise
-  ``` 
-
-# キャッシュ制御パターン
-
-## HTTPキャッシュ制御
-プロジェクト全体で統一されたキャッシュ制御設定を使用します：
-
+#### 1.1 基本構造
 ```python
-CACHE_CONTROL_HEADERS = {
-    "Cache-Control": "no-cache",
-    "Pragma": "no-cache"
-}
+class BaseCrawlerError(Exception):
+    def __init__(self, message: str, **kwargs):
+        super().__init__(message)
+        self.message = message
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+class URLCollectionError(BaseCrawlerError):
+    def __init__(self, message: str, url: str, status_code: Optional[int] = None):
+        super().__init__(message, url=url, status_code=status_code)
 ```
 
-### 設定の理由
-1. `no-cache`: 
-   - 毎回サーバーに再検証を要求
-   - キャッシュは許可するが、使用前に必ず新鮮度の確認が必要
-   - 条件付きリクエストによる帯域幅の節約が可能
-
-2. `Pragma: no-cache`:
-   - HTTP/1.0との後方互換性のため
-   - 古いプロキシサーバーでも確実にキャッシュを防止
-
-### 使用方法
-1. クローラーやサイトアナライザーでのHTTPリクエスト時に設定
-2. 常に最新のコンテンツを取得する必要がある場合に使用
-3. ヘッダーは基本設定として組み込み、必要に応じてオーバーライド可能
-
-### 注意点
-- `max-age=0`ではなく`no-cache`を使用
-- キャッシュの完全な無効化が必要な場合は`no-store`を検討
-- プロキシサーバー経由のアクセスも考慮した設定
-
-### 実装例
+#### 1.2 エラー変換パターン
 ```python
-def create_headers():
-    return {
-        "User-Agent": "Mozilla/5.0...",
-        "Accept": "text/html,application/xhtml+xml...",
-        "Cache-Control": "no-cache",
-        "Pragma": "no-cache",
-        # その他のヘッダー
-    }
-``` 
-
-# テストパターン集
-
-## 非同期テストパターン
-- **目的**: 非同期処理を含むテストの安定性確保
-- **実装ポイント**:
-  ```python
-  @pytest.mark.asyncio
-  async def test_async_operation():
-      # タイムアウト設定
-      async with asyncio.timeout(30):
-          # テスト実行
-          result = await async_operation()
-          assert result is not None
-
-  @pytest.mark.asyncio
-  async def test_with_retry():
-      # リトライ付きテスト
-      for attempt in range(3):
-          try:
-              result = await async_operation()
-              assert result is not None
-              break
-          except Exception as e:
-              if attempt == 2:
-                  raise
-              await asyncio.sleep(1)
-  ```
-
-## カバレッジ最適化パターン
-- **目的**: テストカバレッジの効率的な向上
-- **実装ポイント**:
-  ```python
-  class TestWithCoverage:
-      @pytest.mark.parametrize("input,expected", [
-          ("normal", True),
-          ("edge_case", False),
-          ("error_case", None)
-      ])
-      def test_multiple_cases(self, input, expected):
-          """パラメータ化テストでカバレッジ向上"""
-          result = target_function(input)
-          assert result == expected
-
-      def test_error_handling(self):
-          """エラーケースのカバレッジ"""
-          with pytest.raises(ValueError):
-              target_function("invalid")
-  ```
-
-## モデル依存関係テストパターン
-- **目的**: SQLAlchemyモデル間の依存関係の検証
-- **実装ポイント**:
-  ```python
-  class TestModelRelations:
-      def test_model_initialization(self):
-          """モデルの初期化順序テスト"""
-          parent = ParentModel()
-          child = ChildModel(parent=parent)
-          assert child.parent_id == parent.id
-
-      def test_cascade_operations(self):
-          """カスケード操作のテスト"""
-          parent = ParentModel()
-          child = ChildModel(parent=parent)
-          session.add(parent)
-          session.commit()
-          session.delete(parent)
-          session.commit()
-          assert session.query(ChildModel).count() == 0
-  ```
-
-## キャッシュ制御テストパターン
-- **目的**: HTTPキャッシュ制御の検証
-- **実装ポイント**:
-  ```python
-  class TestCacheControl:
-      async def test_cache_headers(self):
-          """キャッシュヘッダーの検証"""
-          client = HTTPClient()
-          headers = client.headers
-          assert headers["Cache-Control"] == "no-cache"
-          assert headers["Pragma"] == "no-cache"
-
-      async def test_cache_behavior(self):
-          """キャッシュ動作の検証"""
-          client = HTTPClient()
-          response1 = await client.get(url)
-          response2 = await client.get(url)
-          assert response1.headers != response2.headers
-  ``` 
-
-# 外部サービス連携テストのパターン
-
-## 実装パターン1: 実際のサービスを使用したテスト
-```python
-@pytest_asyncio.fixture
-async def llm_manager():
-    api_key = os.getenv("API_KEY")
-    if not api_key:
-        pytest.skip("API_KEY not set")
-    
-    manager = LLMManager()
-    await manager.load_model("model-name", api_key)
-    return manager
-
-@pytest.mark.asyncio
-async def test_service_integration(llm_manager):
-    """実際のサービスを使用した統合テスト"""
-    result = await llm_manager.process_data(test_data)
-    assert result is not None
-    assert "expected_field" in result
-```
-
-### 利点
-- 実際の動作を正確に検証可能
-- エラーケースや遅延を実環境で確認可能
-- 本番環境での問題を早期発見可能
-
-### 使用場面
-- 外部APIとの統合テスト
-- エンドツーエンドテスト
-- パフォーマンステスト
-
-## 実装パターン2: 必要最小限のモック（例外的なケース）
-```python
-@pytest.fixture
-def mock_service(monkeypatch):
-    """内部ロジックテスト用の最小限のモック"""
-    async def mock_api_call(*args, **kwargs):
-        return {"status": "success"}
-    
-    monkeypatch.setattr(
-        "package.service.api_call",
-        mock_api_call
-    )
-
-@pytest.mark.asyncio
-async def test_internal_logic(mock_service):
-    """内部ロジックの単体テスト"""
-    result = await process_internal_data()
-    assert result.status == "success"
-```
-
-### 使用条件
-- ユーザーからの明示的な許可がある
-- 内部ロジックの単体テストに限定
-- 外部サービスが完全に利用不可能
-
-### 注意点
-- モックは必要最小限に留める
-- 実際の動作を可能な限り正確に再現
-- テストの目的を明確に文書化
-
-## 1. 適応的検索パターン
-
-### 1.1 基本構造
-```python
-class AdaptiveCrawler:
-    def __init__(self, config: Dict[str, Any]):
-        self._llm_manager = LLMManager()
-        self._search_manager = SearchManager()
-        self._extraction_manager = ExtractionManager()
-        self._config = config
-        self._llm_initialized = False
-        self._retry_count = 0
-        self._last_error = None
-
-    async def crawl_ir_info(
-        self,
-        company_code: str,
-        required_fields: List[str]
-    ) -> Dict[str, Any]:
-        try:
-            if not self._llm_initialized:
-                await self.initialize_llm()
-
-            while self._retry_count < self._config["max_attempts"]:
-                try:
-                    keywords = await self._generate_search_keywords(
-                        company_code,
-                        required_fields
-                    )
-                    urls = await self._search_urls(keywords)
-                    data = await self._extract_data(urls, required_fields)
-                    if self._validate_data(data, required_fields):
-                        return data
-                except Exception as e:
-                    self._last_error = e
-                    await self._handle_error()
-                    self._retry_count += 1
-
-            raise MaxRetriesExceededError()
-
-        except Exception as e:
-            logger.error(f"Crawling failed: {str(e)}")
-            raise
-
-### 1.2 検索キーワード生成
-```python
-async def _generate_search_keywords(
-    self,
-    company_code: str,
-    required_fields: List[str]
-) -> List[str]:
-    context = {
-        "company_code": company_code,
-        "fields": required_fields,
-        "attempt": self._retry_count
-    }
-    return await self._llm_manager.generate_keywords(context)
-```
-
-### 1.3 URL検索
-```python
-async def _search_urls(self, keywords: List[str]) -> List[str]:
-    options = {
-        "num": 10,
-        "site_restrict": self._config.get("site_restrict"),
-        "date_restrict": self._config.get("date_restrict")
-    }
-    results = await self._search_manager.search(keywords, options)
-    return [r.url for r in results if r.score >= THRESHOLDS["relevance"]]
-```
-
-### 1.4 データ抽出
-```python
-async def _extract_data(
-    self,
-    urls: List[str],
-    required_fields: List[str]
-) -> Dict[str, Any]:
-    for url in urls:
-        try:
-            data = await self._extraction_manager.extract(url, required_fields)
-            if data.validation_score >= THRESHOLDS["validation"]:
-                return data.data
-        except ExtractionError as e:
-            logger.warning(f"Extraction failed for {url}: {str(e)}")
-            continue
-    raise NoValidDataError()
-```
-
-### 1.5 エラーハンドリング
-```python
-async def _handle_error(self) -> None:
-    delay = min(
-        self._config["base_delay"] * (2 ** self._retry_count),
-        self._config["max_delay"]
-    )
-    logger.warning(
-        f"Retry {self._retry_count + 1} after {delay}s due to {self._last_error}"
-    )
-    await asyncio.sleep(delay)
-```
-
-## 2. LLM管理パターン
-
-### 2.1 プロンプトテンプレート
-```python
-class LLMManager:
-    def _load_prompt_templates(self) -> Dict[str, str]:
-        return {
-            "keyword_generation": """
-                企業コード: {company_code}
-                必要な情報: {fields}
-                試行回数: {attempt}
-                
-                上記の情報を取得するための効果的な検索キーワードを
-                5つ生成してください。
-            """,
-            "data_validation": """
-                取得データ: {data}
-                期待データ: {expected}
-                
-                取得データが期待データの要件を満たしているか
-                検証してください。
-            """
-        }
-```
-
-### 2.2 キーワード生成
-```python
-async def generate_keywords(
-    self,
-    context: Dict[str, Any]
-) -> List[str]:
-    prompt = self._prompt_templates["keyword_generation"].format(**context)
-    response = await self._llm.generate(prompt)
-    return self._parse_keywords(response)
-```
-
-## 3. 検索管理パターン
-
-### 3.1 検索実行
-```python
-class SearchManager:
-    async def search(
-        self,
-        keywords: List[str],
-        options: Dict[str, Any]
-    ) -> List[SearchResult]:
-        query = " OR ".join(keywords)
-        try:
-            results = await self._execute_search(query, options)
-            return [
-                SearchResult(
-                    url=item["link"],
-                    title=item["title"],
-                    snippet=item["snippet"],
-                    score=self._calculate_relevance(item, keywords)
-                )
-                for item in results
-            ]
-        except Exception as e:
-            logger.error(f"Search failed: {str(e)}")
-            raise SearchError(str(e))
-```
-
-### 3.2 関連性計算
-```python
-def _calculate_relevance(
-    self,
-    item: Dict[str, Any],
-    keywords: List[str]
-) -> float:
-    text = f"{item['title']} {item['snippet']}"
-    return sum(
-        text.lower().count(k.lower()) for k in keywords
-    ) / len(keywords)
-```
-
-## 4. データ抽出パターン
-
-### 4.1 ページ取得
-```python
-class ExtractionManager:
-    async def _fetch_page(self, url: str) -> str:
-        async with self._session.get(url) as response:
-            if response.status != 200:
-                raise ExtractionError(f"HTTP {response.status}")
-            return await response.text()
-```
-
-### 4.2 検証スコア計算
-```python
-def _calculate_validation_score(
-    self,
-    data: Dict[str, Any],
-    target_data: List[str]
-) -> float:
-    return len([k for k in target_data if k in data]) / len(target_data)
-```
-
-### 4.3 セレクターベース抽出
-```python
-def extract_with_selector(html: str, selectors: Dict[str, str]) -> Dict[str, Any]:
-    """セレクターを使用したデータ抽出
-
-    Args:
-        html: HTML文字列
-        selectors: 抽出用セレクター定義
-
-    Returns:
-        抽出したデータ
-    """
-    soup = BeautifulSoup(html, "html.parser")
-    result = {}
-
-    for key, selector in selectors.items():
-        if element := soup.select_one(selector):
-            result[key] = element.text.strip()
-
-    return result
-```
-
-### 4.4 金額パース
-```python
-def parse_amount(text: str) -> Optional[float]:
-    """金額文字列のパース
-
-    Args:
-        text: 金額を含む文字列
-
-    Returns:
-        パースした金額、失敗時はNone
-    """
+async def fetch_url(self, url: str) -> str:
     try:
-        # カンマと単位を除去
-        amount = text.replace(",", "").replace("円", "")
-        
-        # 単位の変換
-        if "百万" in amount:
-            amount = float(amount.replace("百万", "")) * 1_000_000
-        elif "億" in amount:
-            amount = float(amount.replace("億", "")) * 100_000_000
-        else:
-            amount = float(amount)
-            
-        return amount
-    except ValueError:
-        return None
+        async with self.session.get(url) as response:
+            if not response.ok:
+                raise URLCollectionError(
+                    f"Failed to fetch URL: {url}",
+                    url=url,
+                    status_code=response.status_code
+                )
+            return await response.text()
+    except aiohttp.ClientError as e:
+        raise URLCollectionError(f"Network error: {str(e)}", url=url)
+    except asyncio.TimeoutError:
+        raise URLCollectionError(f"Timeout while fetching: {url}", url=url)
 ```
 
-## 5. 設定パターン
+### 2. ログ出力パターン
 
-### 5.1 タイムアウト設定
+#### 2.1 構造化ログ
 ```python
-TIMEOUTS = {
-    "llm": 30,        # 秒
-    "search": 10,     # 秒
-    "extraction": 45, # 秒
-    "total": 90       # 秒
-}
+def log_error(logger: Logger, error: BaseCrawlerError):
+    extra = {
+        "error_type": error.__class__.__name__,
+        "error_message": str(error)
+    }
+    for key, value in error.__dict__.items():
+        if key != "message":
+            extra[key] = value
+    
+    logger.error(
+        f"{error.__class__.__name__} occurred",
+        extra=extra
+    )
 ```
 
-### 5.2 再試行設定
+#### 2.2 コンテキスト付きログ
 ```python
-RETRY_CONFIG = {
-    "max_attempts": 5,
-    "base_delay": 2,  # 秒
-    "max_delay": 32   # 秒
-}
+@contextmanager
+def log_context(logger: Logger, **context):
+    try:
+        yield
+    except BaseCrawlerError as e:
+        logger.error(
+            f"Operation failed: {str(e)}",
+            extra={**context, "error": e.__class__.__name__}
+        )
+        raise
 ```
 
-### 5.3 検証閾値
-```python
-THRESHOLDS = {
-    "relevance": 0.7,
-    "validation": 0.8,
-    "confidence": 0.6
-}
-``` 
+### 3. テストパターン
 
-## テストパターン
-
-### モックHTMLテスト
+#### 3.1 実URL使用パターン
 ```python
 @pytest.mark.asyncio
-async def test_with_mock_html():
-    """モックHTMLを使用したテスト"""
-    html_content = """
-    <html>
-        <h1 class="title">テストタイトル</h1>
-        <div class="content">テスト内容</div>
-    </html>
-    """
+async def test_url_collection():
+    collector = URLCollector()
+    urls = ["https://example.com", "https://test.example.com"]
     
-    selectors = {
-        "title": "h1.title",
-        "content": "div.content"
+    async with collector:
+        results = await collector.collect_urls(urls)
+        
+    assert all(isinstance(r, str) for r in results)
+    assert len(results) == len(urls)
+```
+
+#### 3.2 エラーケーステスト
+```python
+@pytest.mark.asyncio
+async def test_error_handling():
+    collector = URLCollector()
+    invalid_urls = [
+        "invalid://url",
+        "http://nonexistent.example.com",
+        "https://timeout.example.com"
+    ]
+    
+    for url in invalid_urls:
+        with pytest.raises(URLCollectionError) as exc_info:
+            async with collector:
+                await collector.collect_urls([url])
+        
+        error = exc_info.value
+        assert error.url == url
+        assert isinstance(str(error), str)
+```
+
+### 4. リソース管理パターン
+
+#### 4.1 非同期コンテキストマネージャ
+```python
+class URLCollector:
+    async def __aenter__(self):
+        self.session = aiohttp.ClientSession()
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.session.close()
+```
+
+#### 4.2 リトライ処理
+```python
+async def with_retry(func: Callable, max_retries: int = 3, delay: float = 1.0):
+    for attempt in range(max_retries):
+        try:
+            return await func()
+        except URLCollectionError as e:
+            if attempt == max_retries - 1:
+                raise
+            await asyncio.sleep(delay * (2 ** attempt))
+```
+
+# テストコードの実装パターン
+
+## 1. 外部接続を含むテストの実装パターン
+
+```python
+@pytest.mark.asyncio
+async def test_external_api():
+    """外部APIとの連携テスト"""
+    # 実際のURLとパラメータを使用
+    url = "https://www.release.tdnet.info/inbs/I_list_001_[企業コード].html"
+    
+    try:
+        result = await api.fetch_data(url)
+        
+        # ビジネスルールに基づく検証
+        assert "適時開示情報" in result.title
+        assert len(result.content) >= 100
+        assert re.match(r"\d{4}-\d{2}-\d{2}", result.date)
+        
+    except Exception as e:
+        logger.error(f"外部API呼び出しエラー: {url}, {str(e)}")
+        raise
+```
+
+## 2. ドメイン検証の実装パターン
+
+```python
+@pytest.mark.asyncio
+async def test_domain_validation():
+    """ドメイン検証機能のテスト"""
+    # 実在する信頼できるドメイン
+    trusted_domains = [
+        "jpx.co.jp",         # 取引所
+        "release.tdnet.info" # 適時開示
+    ]
+    
+    for domain in trusted_domains:
+        is_trusted = await validator.validate_domain(domain)
+        assert is_trusted, f"信頼できるドメインの検証に失敗: {domain}"
+```
+
+## 3. データ抽出の実装パターン
+
+```python
+@pytest.mark.asyncio
+async def test_data_extraction():
+    """データ抽出機能のテスト"""
+    # 実際のIR情報フォーマット
+    test_data = {
+        "title": "2024年3月期 第3四半期決算短信",
+        "date": "2024-01-25",
+        "content": "当社の2024年3月期第3四半期の連結業績についてお知らせいたします。"
     }
     
-    result = extract_with_selector(html_content, selectors)
-    assert result["title"] == "テストタイトル"
-    assert result["content"] == "テスト内容"
+    extracted = await extractor.extract(test_data)
+    
+    # ビジネスルールに基づく検証
+    assert len(extracted.title) >= 3
+    assert len(extracted.title) <= 200
+    assert len(extracted.content) >= 50
+    assert len(extracted.date) == 10  # YYYY-MM-DD
 ```
 
-### 非同期テスト
+## 4. エラーハンドリングの実装パターン
+
 ```python
 @pytest.mark.asyncio
-async def test_concurrent_execution():
-    """並行実行のテスト"""
-    urls = ["url1", "url2", "url3"]
-    tasks = [process_url(url) for url in urls]
+async def test_error_handling():
+    """エラーハンドリング機能のテスト"""
+    # 実際のエラーケース
+    invalid_urls = [
+        "https://suspicious-financial.com",  # 信頼性の低いドメイン
+        "https://unofficial-stock-info.net"  # 非公式サイト
+    ]
     
-    # 同時実行
+    for url in invalid_urls:
+        with pytest.raises(NoValidDataError) as exc:
+            await crawler.fetch(url)
+        assert "信頼性の低いドメイン" in str(exc.value)
+```
+
+## 5. 同時リクエストの実装パターン
+
+```python
+@pytest.mark.asyncio
+async def test_concurrent_requests():
+    """同時リクエスト制限のテスト"""
+    urls = [
+        "https://www.jpx.co.jp",
+        "https://www.release.tdnet.info"
+    ]
+    
+    tasks = [crawler.fetch(url) for url in urls]
     results = await asyncio.gather(*tasks, return_exceptions=True)
     
     # 結果の検証
-    success = [r for r in results if not isinstance(r, Exception)]
-    assert len(success) > 0  # 少なくとも1つは成功
+    success_count = len([r for r in results if not isinstance(r, Exception)])
+    assert success_count > 0, "すべてのリクエストが失敗"
 ```
 
-### データ検証スコアリング
+## 6. データ信頼性評価の実装パターン
+
 ```python
-def calculate_validation_score(
-    data: Dict[str, Any],
-    schema: Dict[str, Type]
-) -> float:
-    """データ検証スコアの計算
+@pytest.mark.asyncio
+async def test_data_reliability():
+    """データ信頼性評価機能のテスト"""
+    test_cases = [
+        {
+            "url": "https://www.jpx.co.jp",
+            "min_score": 0.8  # 取引所は高信頼性
+        },
+        {
+            "url": "https://unofficial-site.com",
+            "max_score": 0.3  # 非公式サイトは低信頼性
+        }
+    ]
+    
+    for case in test_cases:
+        score = await evaluator.evaluate_reliability(case["url"])
+        if "min_score" in case:
+            assert score >= case["min_score"]
+        if "max_score" in case:
+            assert score <= case["max_score"]
+```
 
-    Args:
-        data: 検証対象データ
-        schema: 期待する型定義
-
-    Returns:
-        検証スコア（0.0 - 1.0）
-    """
-    if not data or not schema:
-        return 0.0
-
-    total = len(schema)
-    valid = sum(
-        1.0 if isinstance(data.get(key), type_)
-        else 0.5 if type_ == float and data.get(key) is not None
-        else 0.0
-        for key, type_ in schema.items()
-    )
-
-    return valid / total
-``` 
+これらのパターンは、`knowledge.md`に記載された原則に基づいて実装されています。
+各パターンは、実際のビジネスケースを想定し、具体的なドメインやデータを使用しています。 

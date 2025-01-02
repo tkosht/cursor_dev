@@ -7,4 +7,4 @@ from .adaptive import AdaptiveCrawler
 from .adaptive_url_collector import AdaptiveURLCollector
 from .base import BaseCrawler
 
-__all__ = ["BaseCrawler", "AdaptiveCrawler", "AdaptiveURLCollector"]
+__all__ = ["BaseCrawler", "AdaptiveURLCollector", "AdaptiveCrawler"]

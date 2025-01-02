@@ -34,7 +34,7 @@ class Company(Base):
         news (List[News]): ニュースのリスト
     """
 
-    __tablename__ = "company"
+    __tablename__ = "companies"
 
     company_code = Column(String(4), nullable=True, unique=True)
     name = Column(String(255), nullable=False)

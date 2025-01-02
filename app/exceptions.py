@@ -1,7 +1,15 @@
 """Exception classes for the application."""
 
 
-class CrawlerError(Exception):
+class BaseError(Exception):
+    """Base class for all application exceptions."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+        self.message = message
+
+
+class CrawlerError(BaseError):
     """Base class for crawler exceptions."""
     pass
 
@@ -16,11 +24,6 @@ class MaxRetriesExceededError(CrawlerError):
     pass
 
 
-class NoValidDataError(CrawlerError):
-    """Raised when no valid data could be extracted."""
-    pass
-
-
 class RateLimitError(CrawlerError):
     """Raised when rate limit is exceeded."""
     pass
@@ -31,11 +34,31 @@ class URLCollectionError(CrawlerError):
     pass
 
 
-class LLMError(Exception):
-    """Raised when LLM operations fail."""
+class NoValidDataError(CrawlerError):
+    """Raised when no valid data could be extracted."""
     pass
 
 
-class SearchError(Exception):
+class LLMError(BaseError):
+    """Base class for LLM related errors."""
+    pass
+
+
+class ModelNotFoundError(LLMError):
+    """Raised when model is not found."""
+    pass
+
+
+class SearchError(BaseError):
     """Raised when search operations fail."""
+    pass
+
+
+class TooFrequentAccessError(CrawlerError):
+    """アクセス間隔が短すぎる場合の例外"""
+    pass
+
+
+class NoValidURLError(Exception):
+    """有効なURLが見つからない場合に発生する例外。"""
     pass 

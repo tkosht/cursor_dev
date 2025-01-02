@@ -1,125 +1,163 @@
-"""Adaptive crawler implementation."""
+"""Adaptive crawler for collecting IR information."""
 
-import asyncio
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-from ..exceptions import ExtractionError, MaxRetriesExceededError, NoValidDataError
 from ..extraction.manager import ExtractionManager
 from ..llm.manager import LLMManager
 from ..search.manager import SearchManager
+from ..validation.field_validator import FieldValidator
 from .base import BaseCrawler
 
 logger = logging.getLogger(__name__)
 
-THRESHOLDS = {
-    "relevance": 0.5,
-    "validation": 0.8
-}
 
-class AdaptiveCrawler:
-    def __init__(self, config: Dict[str, Any]):
-        self._llm_manager = LLMManager()
-        self._search_manager = SearchManager()
-        self._extraction_manager = ExtractionManager()
-        self._config = config
-        self._llm_initialized = False
-        self._retry_count = 0
-        self._last_error = None
+class AdaptiveCrawler(BaseCrawler):
+    """IR情報を収集するアダプティブクローラー"""
 
-    async def initialize_llm(self) -> None:
-        """LLMの初期化を行う"""
-        await self._llm_manager.initialize()
-        self._llm_initialized = True
+    def __init__(
+        self,
+        llm_manager: Optional[LLMManager] = None,
+        search_manager: Optional[SearchManager] = None,
+        extraction_manager: Optional[ExtractionManager] = None,
+        field_validator: Optional[FieldValidator] = None
+    ):
+        """クローラーを初期化する。
+
+        Args:
+            llm_manager: LLMマネージャー
+            search_manager: 検索マネージャー
+            extraction_manager: 抽出マネージャー
+            field_validator: フィールドバリデーター
+        """
+        super().__init__()
+        self._llm_manager = llm_manager or LLMManager()
+        self._search_manager = search_manager or SearchManager()
+        self._extraction_manager = extraction_manager or ExtractionManager()
+        self._field_validator = field_validator or FieldValidator()
 
     async def crawl_ir_info(
         self,
         company_code: str,
-        required_fields: List[str]
-    ) -> Dict[str, Any]:
-        """IR情報のクローリングを実行"""
+        target_fields: List[str]
+    ) -> Optional[Dict[str, Any]]:
+        """IR情報をクロールして収集する。
+
+        Args:
+            company_code (str): 企業コード
+            target_fields (List[str]): 収集対象のフィールド
+
+        Returns:
+            Optional[Dict[str, Any]]: 収集されたデータ。失敗時はNone。
+        """
         try:
-            if not self._llm_initialized:
-                await self.initialize_llm()
+            # 検索キーワードを生成
+            keywords = await self._llm_manager.generate_search_keywords(
+                company_code,
+                target_fields
+            )
+            if not keywords:
+                logger.warning(f"Failed to generate search keywords for: {company_code}")
+                return None
 
-            while self._retry_count < self._config["max_attempts"]:
-                try:
-                    keywords = await self._generate_search_keywords(
-                        company_code,
-                        required_fields
-                    )
-                    urls = await self._search_urls(keywords)
-                    data = await self._extract_data(urls, required_fields)
-                    if self._validate_data(data, required_fields):
-                        return data
-                except Exception as e:
-                    self._last_error = e
-                    await self._handle_error()
-                    self._retry_count += 1
+            # URLを検索
+            urls = await self._search_urls(keywords)
+            if not urls:
+                logger.warning(f"No URLs found for: {company_code}")
+                return None
 
-            raise MaxRetriesExceededError()
+            # 各URLからデータを収集
+            collected_data = None
+            for url in urls:
+                data = await self._collect_from_url(url, target_fields)
+                if data:
+                    collected_data = data
+                    break
+
+            if not collected_data:
+                logger.warning(f"No valid data collected for: {company_code}")
+                return None
+
+            return collected_data
 
         except Exception as e:
-            logger.error(f"Crawling failed: {str(e)}")
-            raise
-
-    async def _generate_search_keywords(
-        self,
-        company_code: str,
-        required_fields: List[str]
-    ) -> List[str]:
-        """検索キーワードの生成"""
-        context = {
-            "company_code": company_code,
-            "fields": required_fields,
-            "attempt": self._retry_count
-        }
-        return await self._llm_manager.generate_keywords(context)
+            logger.error(f"Crawling failed for {company_code}: {e}")
+            return None
 
     async def _search_urls(self, keywords: List[str]) -> List[str]:
-        """URLの検索"""
-        options = {
-            "num": 10,
-            "site_restrict": self._config.get("site_restrict"),
-            "date_restrict": self._config.get("date_restrict")
+        """キーワードを使用してURLを検索する。
+
+        Args:
+            keywords (List[str]): 検索キーワードのリスト
+
+        Returns:
+            List[str]: 検索結果のURLリスト
+        """
+        search_options = {
+            "num": 10,  # 検索結果の最大数
+            "date_restrict": "m6",  # 過去6ヶ月以内の結果に制限
+            "safe": "active",  # セーフサーチを有効化
         }
-        results = await self._search_manager.search(keywords, options)
-        return [r.url for r in results if r.score >= THRESHOLDS["relevance"]]
 
-    async def _extract_data(
-        self,
-        urls: List[str],
-        required_fields: List[str]
-    ) -> Dict[str, Any]:
-        """データの抽出"""
-        for url in urls:
+        urls = []
+        for keyword in keywords:
             try:
-                data = await self._extraction_manager.extract(url, required_fields)
-                if data.validation_score >= THRESHOLDS["validation"]:
-                    return data.data
-            except ExtractionError as e:
-                logger.warning(f"Extraction failed for {url}: {str(e)}")
+                results = await self._search_manager.search(
+                    keyword,
+                    options=search_options
+                )
+                if results:
+                    urls.extend(results)
+            except Exception as e:
+                logger.error(f"Search failed for keyword '{keyword}': {e}")
                 continue
-        raise NoValidDataError()
 
-    def _validate_data(
+        return list(set(urls))  # 重複を除去
+
+    async def _collect_from_url(
         self,
-        data: Dict[str, Any],
-        required_fields: List[str]
-    ) -> bool:
-        """データの検証"""
-        return all(
-            field in data and data[field] is not None
-            for field in required_fields
-        )
+        url: str,
+        target_fields: List[str]
+    ) -> Optional[Dict[str, Any]]:
+        """指定されたURLからデータを収集する。
 
-    async def _handle_error(self) -> None:
-        """エラーハンドリング"""
-        delay = min(
-            self._config["base_delay"] * (2 ** self._retry_count),
-            self._config["max_delay"]
-        )
-        logger.warning(
-            f"Retry {self._retry_count + 1} after {delay}s due to {self._last_error}"
-        )
-        await asyncio.sleep(delay)
+        Args:
+            url (str): 収集対象のURL
+            target_fields (List[str]): 収集対象のフィールド
+
+        Returns:
+            Optional[Dict[str, Any]]: 収集されたデータ。失敗時はNone。
+        """
+        try:
+            # ページを取得
+            content = await self._fetch_page(url)
+            if not content:
+                logger.warning(f"Failed to fetch page: {url}")
+                return None
+
+            # データを抽出
+            data = await self._extraction_manager.extract_data(
+                url=url,
+                content=content,
+                target_fields=target_fields
+            )
+            if not data:
+                logger.warning(f"No data extracted from: {url}")
+                return None
+
+            # 必須フィールドの検証
+            missing_fields = self._field_validator.get_missing_fields(
+                data,
+                target_fields
+            )
+            if missing_fields:
+                logger.warning(
+                    f"Missing required fields {missing_fields} in data from: {url}"
+                )
+                return None
+
+            return data
+
+        except Exception as e:
+            logger.error(f"Data collection failed for {url}: {e}")
+            return None 
