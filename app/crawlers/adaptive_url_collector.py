@@ -1,12 +1,11 @@
-"""Adaptive URL collector implementation."""
+"""Adaptive URL collector for crawling."""
 
 import logging
-from typing import Any, Dict, List, Optional, Set
-from urllib.parse import urljoin, urlparse
+import re
+from typing import List, Optional, Pattern, Set
 
-from bs4 import BeautifulSoup
-
-from ..exceptions import ExtractionError, URLCollectionError
+from ..exceptions import NoValidDataError
+from ..llm.constants import LLMConstants
 from ..llm.manager import LLMManager
 from .base import BaseCrawler
 
@@ -14,210 +13,205 @@ logger = logging.getLogger(__name__)
 
 
 class AdaptiveURLCollector(BaseCrawler):
-    """Adaptive URL collector that uses LLM for intelligent crawling."""
+    """Adaptive URL collector for crawling."""
 
     def __init__(
         self,
-        llm_manager: LLMManager,
+        llm_manager: Optional[LLMManager] = None,
         max_concurrent_requests: int = 3,
         request_timeout: float = 30.0,
         max_retries: int = 3,
+        retry_delay: float = 5.0,
         allowed_domains: Optional[List[str]] = None
     ):
-        """Initialize the adaptive URL collector.
+        """Initialize the collector.
 
         Args:
-            llm_manager: LLM manager for intelligent analysis
+            llm_manager: LLM manager instance
             max_concurrent_requests: Maximum number of concurrent requests
             request_timeout: Request timeout in seconds
             max_retries: Maximum number of retry attempts
-            allowed_domains: List of allowed domains
+            retry_delay: Delay between retries in seconds
+            allowed_domains: List of allowed domains to crawl
         """
         super().__init__(
             max_concurrent_requests=max_concurrent_requests,
             request_timeout=request_timeout,
             max_retries=max_retries
         )
-        self.llm_manager = llm_manager
+        self.llm_manager = llm_manager or LLMManager()
         self.allowed_domains = set(allowed_domains) if allowed_domains else set()
-        self.extraction_patterns = {}
+        self.retry_delay = retry_delay
+        self._url_pattern: Pattern = re.compile(LLMConstants.URL_PATTERN)
 
-    def _is_allowed_domain(self, url: str, base_url: str) -> bool:
-        """Check if the URL's domain is allowed.
-
-        Args:
-            url: URL to check
-            base_url: Base URL for comparison
-
-        Returns:
-            True if the domain is allowed
-        """
-        if not url.startswith(("http://", "https://")):
-            return True
-
-        domain = urlparse(url).netloc
-        base_domain = urlparse(base_url).netloc
-
-        if domain == base_domain:
-            return True
-
-        if self.allowed_domains:
-            return any(
-                domain == allowed_domain or domain.endswith(f".{allowed_domain}")
-                for allowed_domain in self.allowed_domains
-            )
-
-        return False
-
-    def _filter_urls(self, urls: Set[str], base_url: str) -> List[str]:
-        """Filter URLs based on domain and convert relative paths.
-
-        Args:
-            urls: Set of URLs to filter
-            base_url: Base URL for resolving relative paths
-
-        Returns:
-            List of filtered URLs
-        """
-        filtered_urls = []
-
-        for url in urls:
-            if not url.startswith(("http://", "https://")):
-                url = urljoin(base_url, url.lstrip("/"))
-
-            if self._is_allowed_domain(url, base_url):
-                filtered_urls.append(url)
-
-        return sorted(filtered_urls)
-
-    async def analyze_page_structure(
+    async def collect_urls(
         self,
-        html: str,
-        url: str,
-        context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        """Analyze page structure using LLM.
+        start_url: str,
+        max_depth: int = 2,
+        max_urls: int = 10
+    ) -> Set[str]:
+        """Collect URLs from a starting point.
 
         Args:
-            html: HTML content to analyze
-            url: URL of the page
-            context: Additional context for analysis
+            start_url: Starting URL
+            max_depth: Maximum depth to crawl
+            max_urls: Maximum number of URLs to collect
 
         Returns:
-            Analysis results including extraction patterns
+            Set of collected URLs
+
+        Raises:
+            NoValidDataError: If no valid URLs could be collected
         """
         try:
-            analysis_context = {
-                "url": url,
-                "previous_patterns": self.extraction_patterns,
-                **(context or {})
-            }
-            
-            soup = BeautifulSoup(html, "html.parser")
-            analysis_context["page_structure"] = {
-                "title": soup.title.string if soup.title else None,
-                "main_content": bool(soup.find("main")),
-                "navigation": bool(soup.find(["nav", "header"])),
-                "footer": bool(soup.find("footer"))
-            }
+            # 初期URLの検証
+            if not self._is_valid_url(start_url):
+                raise NoValidDataError(f"無効なURL: {start_url}")
 
-            analysis = await self.llm_manager.analyze_structure(analysis_context)
-            
-            if "patterns" in analysis:
-                self.extraction_patterns.update(analysis["patterns"])
-            
-            return analysis
+            # URLの収集
+            collected_urls = await self._collect_urls_recursive(
+                start_url=start_url,
+                max_depth=max_depth,
+                max_urls=max_urls
+            )
+
+            # 結果の検証
+            if not collected_urls:
+                raise NoValidDataError("URLを収集できませんでした")
+
+            return collected_urls
+
+        except NoValidDataError:
+            raise
 
         except Exception as e:
-            logger.error(f"Failed to analyze page structure: {e}")
-            raise ExtractionError(f"Page structure analysis failed: {e}")
+            logger.error(f"URL収集中にエラー: {e}")
+            raise NoValidDataError(f"URL収集中にエラーが発生しました: {e}")
 
-    async def _extract_urls_with_strategy(
+    async def _collect_urls_recursive(
         self,
-        html: str,
-        analysis: Dict[str, Any]
+        start_url: str,
+        max_depth: int,
+        max_urls: int,
+        current_depth: int = 0,
+        collected_urls: Optional[Set[str]] = None
     ) -> Set[str]:
-        """Extract URLs using the analysis-based strategy.
+        """Recursively collect URLs.
 
         Args:
-            html: HTML content to extract from
-            analysis: Analysis results from LLM
+            start_url: Starting URL
+            max_depth: Maximum depth to crawl
+            max_urls: Maximum number of URLs to collect
+            current_depth: Current crawling depth
+            collected_urls: Set of already collected URLs
+
+        Returns:
+            Set of collected URLs
+        """
+        if collected_urls is None:
+            collected_urls = set()
+
+        if current_depth >= max_depth or len(collected_urls) >= max_urls:
+            return collected_urls
+
+        try:
+            # ページを取得
+            content = await self._fetch_page(start_url)
+            if not content:
+                logger.warning(f"ページ取得に失敗: {start_url}")
+                return collected_urls
+
+            # URLを抽出
+            page_urls = await self._extract_urls(content, start_url)
+            if not page_urls:
+                logger.warning(f"URLが見つかりませんでした: {start_url}")
+                return collected_urls
+
+            # URLを追加
+            collected_urls.update(page_urls)
+            if len(collected_urls) >= max_urls:
+                return collected_urls
+
+            # 再帰的に収集
+            for url in page_urls - collected_urls:
+                if len(collected_urls) >= max_urls:
+                    break
+                await self._collect_urls_recursive(
+                    start_url=url,
+                    max_depth=max_depth,
+                    max_urls=max_urls,
+                    current_depth=current_depth + 1,
+                    collected_urls=collected_urls
+                )
+
+            return collected_urls
+
+        except Exception as e:
+            logger.error(f"再帰的URL収集中にエラー: {e}")
+            return collected_urls
+
+    async def _extract_urls(self, content: str, base_url: str) -> Set[str]:
+        """Extract URLs from content.
+
+        Args:
+            content: HTML content
+            base_url: Base URL for resolving relative URLs
 
         Returns:
             Set of extracted URLs
         """
         try:
-            soup = BeautifulSoup(html, "html.parser")
-            urls = set()
+            # URLを抽出
+            urls = set(self._url_pattern.findall(content))
+            if not urls:
+                return set()
 
-            for pattern in analysis.get("patterns", []):
-                if "selector" in pattern:
-                    elements = soup.select(pattern["selector"])
-                    for element in elements:
-                        if pattern.get("type") == "link":
-                            href = element.get("href")
-                            if href and not href.startswith(("#", "javascript:")):
-                                urls.add(href)
-                        elif pattern.get("type") == "text":
-                            text = element.get_text(strip=True)
-                            if text:
-                                # URLを抽出するための追加処理
-                                pass
+            # URLをフィルタリング
+            filtered_urls = set()
+            for url in urls:
+                if self._is_valid_url(url) and self._is_allowed_domain(url):
+                    filtered_urls.add(url)
 
-            return urls
+            return filtered_urls
 
         except Exception as e:
-            logger.error(f"Failed to extract URLs with strategy: {e}")
-            raise ExtractionError(f"URL extraction failed: {e}")
+            logger.error(f"URL抽出中にエラー: {e}")
+            return set()
 
-    async def collect_urls_adaptively(
-        self,
-        url: str,
-        context: Optional[Dict[str, Any]] = None
-    ) -> List[str]:
-        """Collect URLs using adaptive strategy.
+    def _is_valid_url(self, url: str) -> bool:
+        """Check if URL is valid.
 
         Args:
-            url: Target page URL
-            context: Additional context for collection
+            url: URL to check
 
         Returns:
-            List of collected URLs
-
-        Raises:
-            URLCollectionError: If URL collection fails
+            bool: Whether URL is valid
         """
         try:
-            html = await self.get_page(url)
-            analysis = await self.analyze_page_structure(html, url, context)
-            urls = await self._extract_urls_with_strategy(html, analysis)
-            
-            # フィードバックを収集
-            self._update_extraction_patterns(analysis, len(urls))
-            
-            return self._filter_urls(urls, url)
-
+            return bool(self._url_pattern.match(url))
         except Exception as e:
-            logger.error(f"Failed to collect URLs adaptively: {e}")
-            raise URLCollectionError(f"Adaptive URL collection failed: {e}")
+            logger.error(f"URL検証中にエラー: {e}")
+            return False
 
-    def _update_extraction_patterns(
-        self,
-        analysis: Dict[str, Any],
-        num_urls: int
-    ) -> None:
-        """Update extraction patterns based on results.
+    def _is_allowed_domain(self, url: str) -> bool:
+        """Check if URL domain is allowed.
 
         Args:
-            analysis: Analysis results
-            num_urls: Number of URLs collected
+            url: URL to check
+
+        Returns:
+            bool: Whether domain is allowed
         """
-        if num_urls > 0 and "patterns" in analysis:
-            for pattern in analysis["patterns"]:
-                if "selector" in pattern:
-                    self.extraction_patterns[pattern["selector"]] = {
-                        "success_count": self.extraction_patterns.get(
-                            pattern["selector"], {}
-                        ).get("success_count", 0) + 1,
-                        "last_used": pattern
-                    } 
+        try:
+            if not self.allowed_domains:
+                return True
+
+            for domain in self.allowed_domains:
+                if domain in url:
+                    return True
+
+            return False
+
+        except Exception as e:
+            logger.error(f"ドメイン検証中にエラー: {e}")
+            return False 

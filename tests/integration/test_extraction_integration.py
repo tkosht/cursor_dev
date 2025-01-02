@@ -10,7 +10,7 @@ from datetime import date
 import pytest
 from sqlalchemy.orm import Session
 
-from app.errors.url_analysis_errors import ExtractionError
+from app.exceptions import ExtractionError
 from app.extraction.manager import ExtractionManager
 from app.models.company import Company
 
