@@ -2,19 +2,19 @@ services:
   neo4j:
     image: neo4j:latest
     container_name: $pj_name.neo4j
-    build:
-      context: ./
-      dockerfile: docker/Dockerfile.neo4j
     environment:
+      - TZ=Asia/Tokyo
       - NEO4J_AUTH=$neo4j_user/$neo4j_pswd
-      - NEO4JLABS_PLUGINS=["apoc"]
+      # - NEO4JLABS_PLUGINS=["apoc"]
     volumes:
       - ./data/neo4j/data:/data
       - ./data/neo4j/logs:/logs
+      - ./data/neo4j/config:/config
       - ./data/neo4j/import:/var/lib/neo4j/import
       - ./data/neo4j/plugins:/var/lib/neo4j/plugins
       # - ./conf:/var/lib/neo4j/conf
     ports:
       - "7474:7474"     # for HTTP
       - "7687:7687"     # for Bolt
+    restart: always
 
