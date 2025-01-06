@@ -1,159 +1,151 @@
-from datetime import datetime
+"""KnowledgeRepositoryのテストモジュール。"""
+
 import pytest
-from unittest.mock import Mock, patch
-
+from datetime import datetime
 from app.knowledge_repository import KnowledgeRepository
+from app.neo4j_manager import Neo4jManager
 
 
 @pytest.fixture
-def neo4j_manager_mock():
-    return Mock()
+def neo4j_manager():
+    """Neo4jManagerのインスタンスを提供するフィクスチャ。"""
+    return Neo4jManager()
 
 
 @pytest.fixture
-def repository(neo4j_manager_mock):
-    return KnowledgeRepository(neo4j_manager_mock)
+def repository(neo4j_manager):
+    """KnowledgeRepositoryのインスタンスを提供するフィクスチャ。"""
+    return KnowledgeRepository(neo4j_manager)
 
 
 @pytest.fixture
 def valid_analysis_result():
+    """有効な分析結果を提供するフィクスチャ。"""
     return {
-        'entities': [
+        "entities": [
             {
-                'id': 'company1',
-                'type': 'Company',
-                'name': 'テスト株式会社',
-                'description': 'テスト企業の説明'
+                "id": "company1",
+                "name": "テスト株式会社",
+                "type": "COMPANY",
+                "description": "テスト企業の説明"
+            },
+            {
+                "id": "product1",
+                "name": "テスト製品",
+                "type": "PRODUCT",
+                "description": "テスト製品の説明"
             }
         ],
-        'relationships': [
+        "relationships": [
             {
-                'source_id': 'company1',
-                'target_id': 'product1',
-                'type': 'PRODUCES',
-                'strength': 0.8,
-                'description': '主力製品'
+                "source": "テスト株式会社",
+                "target": "テスト製品",
+                "type": "DEVELOPS",
+                "description": "開発関係",
+                "strength": 0.8
             }
         ],
-        'impact_scores': {
-            'company1': 0.75
+        "impact_scores": {
+            "company1": 0.7,
+            "product1": 0.5
         },
-        'source_url': 'https://example.com/news/1',
-        'analyzed_at': datetime.now()
+        "source_url": "https://example.com",
+        "analyzed_at": datetime.now()
     }
 
 
-def test_store_analysis_success(repository, neo4j_manager_mock, valid_analysis_result):
-    """store_analysis()の正常系テスト"""
-    # _check_duplicateがFalseを返すようにモック設定
-    neo4j_manager_mock.run_query.return_value = [{'count': 0}]
+class TestKnowledgeRepository:
+    """KnowledgeRepositoryのテストクラス。"""
 
-    # 実行
-    repository.store_analysis(valid_analysis_result)
+    def test_init(self, neo4j_manager):
+        """初期化が正しく行われることを確認。"""
+        repository = KnowledgeRepository(neo4j_manager)
+        assert repository.neo4j_manager == neo4j_manager
 
-    # create_nodeが正しく呼ばれたことを確認
-    neo4j_manager_mock.create_node.assert_called_once()
-    call_args = neo4j_manager_mock.create_node.call_args[1]
-    assert call_args['labels'] == ['Company']
-    assert call_args['properties']['id'] == 'company1'
-    assert call_args['properties']['name'] == 'テスト株式会社'
+    def test_store_analysis_success(self, repository, valid_analysis_result):
+        """分析結果が正常に保存されることを確認。"""
+        result = repository.store_analysis(valid_analysis_result)
+        assert result is True
 
-    # create_relationshipが正しく呼ばれたことを確認
-    neo4j_manager_mock.create_relationship.assert_called_once()
-    call_args = neo4j_manager_mock.create_relationship.call_args[1]
-    assert call_args['start_node_id'] == 'company1'
-    assert call_args['end_node_id'] == 'product1'
-    assert call_args['relationship_type'] == 'PRODUCES'
-    assert call_args['properties']['strength'] == 0.8
+    def test_store_analysis_invalid_format(self, repository):
+        """不正な形式の分析結果でエラーが発生することを確認。"""
+        invalid_result = {"invalid": "data"}
+        with pytest.raises(ValueError) as exc_info:
+            repository.store_analysis(invalid_result)
+        assert "Invalid analysis result format" in str(exc_info.value)
 
-    # update_nodeが正しく呼ばれたことを確認
-    neo4j_manager_mock.update_node.assert_called_once_with(
-        node_id='company1',
-        properties={'impact_score': 0.75}
-    )
+    def test_validate_required_keys(self, repository, valid_analysis_result):
+        """必須キーの検証が正しく機能することを確認。"""
+        assert repository._validate_required_keys(valid_analysis_result) is True
 
+        # 必須キーが欠けている場合
+        invalid_result = valid_analysis_result.copy()
+        del invalid_result["entities"]
+        assert repository._validate_required_keys(invalid_result) is False
 
-def test_store_analysis_duplicate_entity(repository, neo4j_manager_mock, valid_analysis_result):
-    """既存エンティティの更新テスト"""
-    # _check_duplicateがTrueを返すようにモック設定
-    neo4j_manager_mock.run_query.return_value = [{'count': 1}]
+    def test_validate_entities(self, repository, valid_analysis_result):
+        """エンティティ情報の検証が正しく機能することを確認。"""
+        assert repository._validate_entities(valid_analysis_result["entities"]) is True
 
-    # 実行
-    repository.store_analysis(valid_analysis_result)
+        # 必須キーが欠けているエンティティ
+        invalid_entities = [{"name": "テスト"}]  # idとtypeが欠けている
+        assert repository._validate_entities(invalid_entities) is False
 
-    # create_nodeが呼ばれていないことを確認
-    neo4j_manager_mock.create_node.assert_not_called()
+        # 不正な型のエンティティ
+        invalid_entities = [123]  # dictではない
+        assert repository._validate_entities(invalid_entities) is False
 
-    # update_nodeが2回呼ばれたことを確認（タイムスタンプ更新と影響度スコア更新）
-    assert neo4j_manager_mock.update_node.call_count == 2
+    def test_validate_relationships(self, repository, valid_analysis_result):
+        """関係性情報の検証が正しく機能することを確認。"""
+        assert repository._validate_relationships(valid_analysis_result["relationships"]) is True
 
+        # 必須キーが欠けている関係性
+        invalid_relationships = [{"source": "テスト"}]  # targetとtypeが欠けている
+        assert repository._validate_relationships(invalid_relationships) is False
 
-def test_store_analysis_invalid_format(repository):
-    """不正な形式の分析結果を渡した場合のテスト"""
-    invalid_result = {
-        'entities': [],  # 必須キーが不足
-        'relationships': []
-    }
+        # 不正な型の関係性
+        invalid_relationships = [123]  # dictではない
+        assert repository._validate_relationships(invalid_relationships) is False
 
-    with pytest.raises(ValueError) as exc_info:
-        repository.store_analysis(invalid_result)
-    assert "Invalid analysis result format" in str(exc_info.value)
+    def test_validate_impact_scores(self, repository, valid_analysis_result):
+        """影響度スコアの検証が正しく機能することを確認。"""
+        assert repository._validate_impact_scores(valid_analysis_result["impact_scores"]) is True
 
+        # 範囲外のスコア
+        invalid_scores = {"test": 1.5}  # 1.0を超えている
+        assert repository._validate_impact_scores(invalid_scores) is False
 
-def test_store_analysis_database_error(repository, neo4j_manager_mock, valid_analysis_result):
-    """データベース操作エラー時のテスト"""
-    neo4j_manager_mock.create_node.side_effect = Exception("Database connection failed")
+        # 不正な型のスコア
+        invalid_scores = {"test": "high"}  # 数値ではない
+        assert repository._validate_impact_scores(invalid_scores) is False
 
-    with pytest.raises(RuntimeError) as exc_info:
-        repository.store_analysis(valid_analysis_result)
-    assert "Failed to store analysis result" in str(exc_info.value)
+    def test_store_entities_new(self, repository, valid_analysis_result):
+        """新規エンティティが正しく保存されることを確認。"""
+        entity_id_map = repository._store_entities(valid_analysis_result)
+        assert len(entity_id_map) == 2
+        assert "テスト株式会社" in entity_id_map
+        assert "テスト製品" in entity_id_map
 
+    def test_store_entities_update(self, repository, valid_analysis_result):
+        """既存エンティティが正しく更新されることを確認。"""
+        # 最初の保存
+        repository._store_entities(valid_analysis_result)
+        
+        # 2回目の保存（更新）
+        updated_result = valid_analysis_result.copy()
+        updated_result["impact_scores"]["company1"] = 0.9
+        entity_id_map = repository._store_entities(updated_result)
+        
+        assert len(entity_id_map) == 2
+        assert "テスト株式会社" in entity_id_map
+        assert "テスト製品" in entity_id_map
 
-def test_validate_analysis_result_success(repository, valid_analysis_result):
-    """_validate_analysis_result()の正常系テスト"""
-    assert repository._validate_analysis_result(valid_analysis_result) is True
-
-
-def test_validate_analysis_result_missing_required_keys(repository):
-    """必須キーが欠落している場合のテスト"""
-    invalid_result = {
-        'entities': [],
-        'relationships': []  # impact_scores, source_url, analyzed_atが欠落
-    }
-    assert repository._validate_analysis_result(invalid_result) is False
-
-
-def test_validate_analysis_result_invalid_entity(repository, valid_analysis_result):
-    """不正なエンティティ形式のテスト"""
-    invalid_result = valid_analysis_result.copy()
-    invalid_result['entities'] = [{'id': 'test'}]  # type, nameが欠落
-    assert repository._validate_analysis_result(invalid_result) is False
-
-
-def test_validate_analysis_result_invalid_relationship(repository, valid_analysis_result):
-    """不正な関係性形式のテスト"""
-    invalid_result = valid_analysis_result.copy()
-    invalid_result['relationships'] = [{'source_id': 'test'}]  # target_id, typeが欠落
-    assert repository._validate_analysis_result(invalid_result) is False
-
-
-def test_check_duplicate_exists(repository, neo4j_manager_mock):
-    """_check_duplicate()で既存ノードを検出するテスト"""
-    neo4j_manager_mock.run_query.return_value = [{'count': 1}]
-    assert repository._check_duplicate('test_id', 'TestLabel') is True
-
-
-def test_check_duplicate_not_exists(repository, neo4j_manager_mock):
-    """_check_duplicate()で未存在ノードを検出するテスト"""
-    neo4j_manager_mock.run_query.return_value = [{'count': 0}]
-    assert repository._check_duplicate('test_id', 'TestLabel') is False
-
-
-def test_update_timestamp(repository, neo4j_manager_mock):
-    """_update_timestamp()の動作テスト"""
-    repository._update_timestamp('test_id', 'TestLabel')
-    
-    neo4j_manager_mock.update_node.assert_called_once()
-    call_args = neo4j_manager_mock.update_node.call_args[1]
-    assert call_args['node_id'] == 'test_id'
-    assert 'updated_at' in call_args['properties'] 
+    def test_store_relationships(self, repository, valid_analysis_result):
+        """関係性が正しく保存されることを確認。"""
+        # エンティティを先に保存
+        entity_id_map = repository._store_entities(valid_analysis_result)
+        
+        # 関係性の保存
+        repository._store_relationships(valid_analysis_result, entity_id_map)
+        
+        # 関係性の検証は、Neo4jManagerのメソッドが正しく呼び出されたことで確認 

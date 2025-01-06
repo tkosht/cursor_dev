@@ -37,6 +37,9 @@
 		- Neo4jユーザ: .env の `neo4j_user`
 		- Neo4jパスワード: .env の `neo4j_pswd`
 		- Neo4jサーバ: `neo4j`
+	- 当環境はすでに 起動された docker コンテナとして存在している。
+		- neo4j への接続確認・起動確認が必要な場合は、curl コマンドで確認する。
+		- `curl http://neo4j:7474/`
 
 ## データ構造とスキーマ
 

@@ -2,6 +2,7 @@
 
 import logging
 from typing import Dict, Optional
+
 from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
@@ -16,44 +17,31 @@ class ContentParser:
             'nav', 'header', 'footer', 'aside'
         }
 
-    def parse_html(self, raw_html: str) -> Dict[str, str]:
+    def parse_html(self, raw_html: str) -> dict:
         """
-        HTMLから本文やタイトル、日付などを抽出する。
+        HTMLを解析し、必要な情報を抽出する。
 
         Args:
             raw_html (str): 解析対象のHTML文字列
 
         Returns:
-            Dict[str, str]: {
-                "title": "ページタイトル",
-                "content": "本文",
-                "date": "日付" (存在する場合)
-            }
+            dict: 抽出された情報（title, content, url）
 
         Raises:
-            ValueError: HTMLの解析に失敗した場合
+            ValueError: HTML解析に失敗した場合
         """
         if not raw_html:
-            raise ValueError("HTMLが空です。")
+            raise ValueError("HTMLが空です")
 
-        try:
-            soup = BeautifulSoup(raw_html, 'html.parser')
-            soup = self._remove_unwanted_tags(soup)
+        soup = BeautifulSoup(raw_html, 'html.parser')
+        soup = self._remove_unwanted_tags(soup)
 
-            result = {
-                "title": self._extract_title(soup),
-                "content": self._extract_content(soup)
-            }
-
-            date = self._extract_date(soup)
-            if date:
-                result["date"] = date
-
-            return result
-
-        except Exception as e:
-            logger.error(f"HTML解析中にエラーが発生しました: {str(e)}")
-            raise ValueError(f"HTMLの解析に失敗しました: {str(e)}")
+        return {
+            "title": self._extract_title(soup),
+            "content": self._extract_content(soup),
+            "date": self._extract_date(soup),
+            "url": self._extract_url(soup) or "unknown"  # URLが見つからない場合はunknownを設定
+        }
 
     def _remove_unwanted_tags(self, soup: BeautifulSoup) -> BeautifulSoup:
         """
@@ -134,6 +122,28 @@ class ContentParser:
         for meta in soup.find_all('meta'):
             if meta.get('property') in ['article:published_time', 'og:published_time']:
                 return meta.get('content')
+
+        return None
+
+    def _extract_url(self, soup: BeautifulSoup) -> str:
+        """
+        HTMLからURLを抽出する。
+
+        Args:
+            soup (BeautifulSoup): BeautifulSoupオブジェクト
+
+        Returns:
+            str: 抽出されたURL、見つからない場合はNone
+        """
+        # canonical URLを探す
+        canonical = soup.find('link', {'rel': 'canonical'})
+        if canonical and canonical.get('href'):
+            return canonical['href']
+
+        # Open Graph URLを探す
+        og_url = soup.find('meta', {'property': 'og:url'})
+        if og_url and og_url.get('content'):
+            return og_url['content']
 
         return None
 
