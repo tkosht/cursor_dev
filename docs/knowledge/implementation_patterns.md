@@ -146,4 +146,154 @@ class EnvValidator:
             return int(value) if value is not None else default
         except ValueError:
             raise ValueError(f"Environment variable {key} must be an integer")
+```
+
+### 入力値検証パターン
+```python
+def validate_input(data: dict, required_fields: list) -> bool:
+    # 1. 必須フィールドの存在確認
+    if not all(field in data for field in required_fields):
+        return False
+        
+    # 2. 型チェック
+    if not isinstance(data.get('id'), str):
+        return False
+        
+    # 3. 値の範囲チェック
+    if not 0.0 <= data.get('impact_score', 0.0) <= 1.0:
+        return False
+        
+    # 4. 形式チェック（例：URLバリデーション）
+    if not is_valid_url(data.get('source_url', '')):
+        return False
+        
+    return True
+```
+
+### エンティティ検証パターン
+```python
+def validate_entity(entity: dict, existing_entities: list) -> bool:
+    # 1. 基本的なフィールド検証
+    if not validate_input(entity, ['id', 'type', 'properties']):
+        return False
+        
+    # 2. 重複チェック
+    if any(e['id'] == entity['id'] for e in existing_entities):
+        return False
+        
+    # 3. プロパティの型・値チェック
+    if not validate_properties(entity['properties']):
+        return False
+        
+    return True
+```
+
+## データベース操作パターン
+
+### Neo4jトランザクション処理パターン
+```python
+def store_with_transaction(self, data: dict) -> bool:
+    try:
+        with self.driver.session() as session:
+            # トランザクション開始
+            with session.begin_transaction() as tx:
+                try:
+                    # 1. エンティティの保存
+                    self._store_entity(tx, data)
+                    
+                    # 2. リレーションシップの保存
+                    self._store_relationships(tx, data)
+                    
+                    # 3. コミット
+                    tx.commit()
+                    return True
+                    
+                except Exception as e:
+                    # エラー時はロールバック
+                    tx.rollback()
+                    logging.error(f"Transaction failed: {str(e)}")
+                    return False
+                    
+    except Exception as e:
+        logging.error(f"Session creation failed: {str(e)}")
+        return False
+```
+
+### エンティティ更新パターン
+```python
+def update_entity(self, entity_id: str, properties: dict) -> bool:
+    try:
+        with self.driver.session() as session:
+            # 1. エンティティの存在確認
+            if not self._entity_exists(session, entity_id):
+                return False
+                
+            # 2. プロパティの検証
+            if not self._validate_properties(properties):
+                return False
+                
+            # 3. 更新処理
+            result = session.write_transaction(
+                self._do_update_entity,
+                entity_id,
+                properties
+            )
+            
+            return result
+            
+    except Exception as e:
+        logging.error(f"Entity update failed: {str(e)}")
+        return False
+```
+
+## テストパターン
+
+### バリデーションテストパターン
+```python
+def test_validate_entity():
+    # 1. 正常系テスト
+    valid_entity = {
+        'id': 'test_id',
+        'type': 'Company',
+        'properties': {'name': 'Test Corp'}
+    }
+    assert validate_entity(valid_entity, []) is True
+    
+    # 2. 必須フィールド欠落テスト
+    invalid_entity = {
+        'type': 'Company',
+        'properties': {'name': 'Test Corp'}
+    }
+    assert validate_entity(invalid_entity, []) is False
+    
+    # 3. 型不一致テスト
+    invalid_type_entity = {
+        'id': 123,  # should be string
+        'type': 'Company',
+        'properties': {'name': 'Test Corp'}
+    }
+    assert validate_entity(invalid_type_entity, []) is False
+    
+    # 4. 重複チェックテスト
+    existing = [{'id': 'test_id', 'type': 'Company'}]
+    assert validate_entity(valid_entity, existing) is False
+```
+
+### トランザクションテストパターン
+```python
+def test_store_with_transaction(mocker):
+    # 1. モックセットアップ
+    mock_session = mocker.MagicMock()
+    mock_tx = mocker.MagicMock()
+    
+    # 2. 正常系テスト
+    mock_session.begin_transaction.return_value = mock_tx
+    result = store_with_transaction({'id': 'test'})
+    assert result is True
+    
+    # 3. ロールバックテスト
+    mock_tx.commit.side_effect = Exception('Test error')
+    result = store_with_transaction({'id': 'test'})
+    assert result is False
+    mock_tx.rollback.assert_called_once()
 ``` 

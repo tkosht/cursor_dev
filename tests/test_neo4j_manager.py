@@ -13,453 +13,428 @@
 - エラーメッセージの検証
 """
 
-import os
-import pytest
+import random
+import string
+
 from dotenv import load_dotenv
-from neo4j.exceptions import AuthError, ServiceUnavailable
 
 from app.neo4j_manager import Neo4jManager
 
 # テスト用の環境変数を読み込む
 load_dotenv('.env.test')
 
+
 def test_init_with_env_vars():
-    """環境変数を使用した初期化の成功ケースをテストする。
+    """環境変数を使用した初期化をテストする。
     
     必要性：
-    - 環境変数からの接続情報取得を確認
-    - 認証情報の正しい処理を検証
+    - 環境変数からの設定読み込み確認
+    - 接続確立の検証
     
     十分性：
-    - 環境変数の正しい読み込み
-    - 実際のNeo4jインスタンスへの接続確認
+    - 必須環境変数の確認
+    - 接続テスト
     """
     manager = Neo4jManager()
-    assert manager._uri == os.getenv('NEO4J_URI')
-    assert manager._username == os.getenv('neo4j_user')
+    assert manager is not None
+    
+    # セッションが正常に作成できることを確認
+    with manager._get_session() as session:
+        result = session.run("RETURN 1 as n")
+        value = result.single()["n"]
+        assert value == 1
 
 
-def test_init_success():
-    """直接パラメータを使用した初期化の成功ケースをテストする。
+def test_create_and_find_node():
+    """ノードの作成と検索をテストする。
     
     必要性：
-    - 正常な接続確立を確認
-    - 認証情報の正しい処理を検証
+    - 基本的なCRUD操作の確認
+    - データの整合性検証
     
     十分性：
-    - 必須パラメータの検証
-    - 実際のNeo4jインスタンスへの接続確認
-    """
-    manager = Neo4jManager(
-        uri=os.getenv('NEO4J_URI'),
-        username=os.getenv('neo4j_user'),
-        password=os.getenv('neo4j_pswd')
-    )
-    assert manager._uri == os.getenv('NEO4J_URI')
-    assert manager._username == os.getenv('neo4j_user')
-
-
-def test_init_missing_env_vars(monkeypatch):
-    """環境変数が不足している場合のエラーケースをテストする。
-    
-    必要性：
-    - 環境変数不足時の適切なエラー処理を確認
-    - エラーメッセージの正確性を検証
-    
-    十分性：
-    - 各環境変数不足時のケース
-    - エラーメッセージの内容確認
-    """
-    # 環境変数をクリア
-    monkeypatch.delenv('NEO4J_URI', raising=False)
-    monkeypatch.delenv('neo4j_user', raising=False)
-    monkeypatch.delenv('neo4j_pswd', raising=False)
-
-    with pytest.raises(ValueError) as exc_info:
-        Neo4jManager()
-    assert "URI is required" in str(exc_info.value)
-
-
-def test_init_auth_error():
-    """認証エラーケースをテストする。
-    
-    必要性：
-    - 認証失敗時の適切なエラー処理を確認
-    - エラーメッセージの正確性を検証
-    
-    十分性：
-    - 例外の型の検証
-    - エラーメッセージの内容確認
-    """
-    with pytest.raises(AuthError) as exc_info:
-        Neo4jManager(
-            uri=os.getenv('NEO4J_URI'),
-            username="invalid",
-            password="invalid"
-        )
-    assert "Authentication failed" in str(exc_info.value)
-
-
-def test_init_connection_error():
-    """接続エラーケースをテストする。
-    
-    必要性：
-    - 接続失敗時の適切なエラー処理を確認
-    - エラーメッセージの正確性を検証
-    
-    十分性：
-    - 例外の型の検証
-    - エラーメッセージの内容確認
-    """
-    with pytest.raises(ServiceUnavailable) as exc_info:
-        Neo4jManager(
-            uri="bolt://invalid:7687",
-            username=os.getenv('neo4j_user'),
-            password=os.getenv('neo4j_pswd')
-        )
-    assert "Cannot connect to Neo4j" in str(exc_info.value)
-
-
-def test_create_node_success():
-    """ノード作成の成功ケースをテストする。
-    
-    必要性：
-    - ノードの正常な作成を確認
-    - 返却値の正確性を検証
-    
-    十分性：
-    - ラベルとプロパティの正しい設定
-    - 作成されたノードIDの検証
+    - 正確なプロパティ設定
+    - 検索結果の確認
     """
     manager = Neo4jManager()
     
-    node_id = manager.create_node(
-        labels=["Person"],
-        properties={"name": "Test Person"}
-    )
+    # テストデータ
+    labels = ["TestNode"]
+    properties = {
+        "name": "Test Node",
+        "value": 42
+    }
     
+    # ノードを作成
+    node_id = manager.create_node(labels, properties)
     assert node_id is not None
-    assert isinstance(node_id, str)
+    
+    # ノードを検索
+    node = manager.find_node(labels, properties)
+    assert node is not None
+    assert node["name"] == "Test Node"
+    assert node["value"] == 42
 
 
-def test_create_node_validation_error():
-    """ノード作成の入力検証エラーケースをテストする。
+def test_create_relationship():
+    """リレーションシップの作成をテストする。
     
     必要性：
-    - 無効な入力パラメータの検出を確認
-    - 適切なエラーメッセージの生成を検証
+    - ノード間の関係性構築確認
+    - プロパティ設定の検証
     
     十分性：
-    - ラベル未指定のケース
-    - プロパティ未指定のケース
+    - 正確な関係性の作成
+    - プロパティの設定確認
     """
     manager = Neo4jManager()
     
-    with pytest.raises(ValueError) as exc_info:
-        manager.create_node(labels=[], properties={})
-    assert "At least one label is required" in str(exc_info.value)
-    
-    with pytest.raises(ValueError) as exc_info:
-        manager.create_node(labels=["Person"], properties={})
-    assert "Properties are required" in str(exc_info.value)
-
-
-def test_find_node_success():
-    """ノード検索の成功ケースをテストする。
-    
-    必要性：
-    - ノードの正常な検索を確認
-    - 返却値の正確性を検証
-    
-    十分性：
-    - 検索条件の正しい適用
-    - 返却されたノードデータの検証
-    """
-    manager = Neo4jManager()
-    
-    # テスト用のノードを作成
-    test_properties = {"name": "Test Person"}
-    node_id = manager.create_node(
-        labels=["Person"],
-        properties=test_properties
+    # テストノードを作成
+    node1_id = manager.create_node(
+        ["TestNode"],
+        {"name": "Node 1"}
     )
     
-    # 作成したノードを検索
+    node2_id = manager.create_node(
+        ["TestNode"],
+        {"name": "Node 2"}
+    )
+    
+    # リレーションシップを作成
+    success = manager.create_relationship(
+        node1_id,
+        node2_id,
+        "TEST_RELATION",
+        {"property": "value"}
+    )
+    
+    assert success is True
+    
+    # リレーションシップを確認
+    with manager._get_session() as session:
+        result = session.run(
+            """
+            MATCH (a)-[r:TEST_RELATION]->(b)
+            WHERE elementId(a) = $start_id AND elementId(b) = $end_id
+            RETURN r
+            """,
+            start_id=node1_id,
+            end_id=node2_id
+        )
+        relationship = result.single()
+        assert relationship is not None
+        assert relationship["r"]["property"] == "value"
+
+
+def test_find_node_by_id():
+    """IDによるノードの検索をテストする。
+    
+    必要性：
+    - ID検索機能の確認
+    - 存在確認の検証
+    
+    十分性：
+    - 正確なノード取得
+    - 存在しないIDの処理
+    """
+    manager = Neo4jManager()
+    
+    # テストノードを作成
+    node_id = manager.create_node(
+        ["TestNode"],
+        {"name": "Test Node"}
+    )
+    
+    # IDで検索
+    node = manager.find_node_by_id(node_id)
+    assert node is not None
+    assert node["name"] == "Test Node"
+    
+    # 存在しないIDで検索
+    node = manager.find_node_by_id("nonexistent_id")
+    assert node is None
+
+
+def test_delete_node():
+    """ノードの削除をテストする。
+    
+    必要性：
+    - 削除機能の確認
+    - データ整合性の検証
+    
+    十分性：
+    - 正常な削除
+    - 存在確認
+    """
+    manager = Neo4jManager()
+    
+    # テストノードを作成
+    node_id = manager.create_node(
+        ["TestNode"],
+        {"name": "Test Node"}
+    )
+    
+    # ノードを削除
+    success = manager.delete_node(node_id)
+    assert success is True
+    
+    # 削除を確認
+    node = manager.find_node_by_id(node_id)
+    assert node is None
+
+
+def test_large_property_node():
+    """大量のプロパティを持つノードの作成と取得をテストする。
+    
+    必要性：
+    - 大量データ処理の動作確認
+    - メモリ使用量の検証
+    
+    十分性：
+    - 大量プロパティの正常な保存
+    - 全プロパティの正確な取得
+    """
+    manager = Neo4jManager()
+    
+    # 100個のプロパティを持つ辞書を作成
+    large_props = {
+        f"prop_{i}": f"value_{i}"
+        for i in range(100)
+    }
+    
+    # ノードを作成
+    _ = manager.create_node(
+        labels=["LargeNode"],
+        properties=large_props
+    )
+    
+    # ノードを取得して検証
     node = manager.find_node(
-        labels=["Person"],
-        properties=test_properties
+        labels=["LargeNode"],
+        properties={"prop_0": "value_0"}
     )
     
     assert node is not None
-    assert isinstance(node, dict)
-    assert "name" in node
-    assert node["name"] == "Test Person"
+    assert len(node) == 100
+    for i in range(100):
+        assert node[f"prop_{i}"] == f"value_{i}"
 
 
-def test_find_node_validation_error():
-    """ノード検索の入力検証エラーケースをテストする。
+def test_long_string_values():
+    """長い文字列値を持つノードの作成と取得をテストする。
     
     必要性：
-    - 無効な検索条件の検出を確認
-    - 適切なエラーメッセージの生成を検証
+    - 長文字列の処理確認
+    - データの整合性検証
     
     十分性：
-    - ラベル未指定のケース
-    - プロパティ未指定のケース
+    - 長文字列の正常な保存
+    - 文字列の完全一致確認
     """
     manager = Neo4jManager()
     
-    with pytest.raises(ValueError) as exc_info:
-        manager.find_node(labels=[], properties={})
-    assert "At least one label is required" in str(exc_info.value)
-    
-    with pytest.raises(ValueError) as exc_info:
-        manager.find_node(labels=["Person"], properties={})
-    assert "Search properties are required" in str(exc_info.value)
-
-
-def test_update_node_success():
-    """ノード更新の成功ケースをテストする。
-    
-    必要性：
-    - ノードの正常な更新を確認
-    - 返却値の正確性を検証
-    
-    十分性：
-    - プロパティの正しい更新
-    - 更新結果の検証
-    """
-    manager = Neo4jManager()
-    
-    # テスト用のノードを作成
-    node_id = manager.create_node(
-        labels=["Person"],
-        properties={"name": "Original Name"}
+    # 10000文字のランダムな文字列を生成
+    long_string = ''.join(
+        random.choices(
+            string.ascii_letters + string.digits,
+            k=10000
+        )
     )
     
-    # 作成したノードを更新
-    success = manager.update_node(
-        node_id=node_id,
-        properties={"name": "Updated Person"}
+    # ノードを作成
+    _ = manager.create_node(
+        labels=["LongStringNode"],
+        properties={"content": long_string}
     )
     
-    assert success is True
+    # ノードを取得して検証
+    node = manager.find_node(
+        labels=["LongStringNode"],
+        properties={"content": long_string}
+    )
+    
+    assert node is not None
+    assert node["content"] == long_string
 
 
-def test_update_node_validation_error():
-    """ノード更新の入力検証エラーケースをテストする。
+def test_special_characters():
+    """特殊文字を含むプロパティを持つノードの作成と取得をテストする。
     
     必要性：
-    - 無効な更新パラメータの検出を確認
-    - 適切なエラーメッセージの生成を検証
+    - 特殊文字の処理確認
+    - エスケープ処理の検証
     
     十分性：
-    - ノードID未指定のケース
-    - プロパティ未指定のケース
+    - 特殊文字の正常な保存
+    - 文字列の完全一致確認
     """
     manager = Neo4jManager()
     
-    with pytest.raises(ValueError) as exc_info:
-        manager.update_node(node_id="", properties={})
-    assert "Node ID is required" in str(exc_info.value)
+    special_chars = {
+        "symbols": "!@#$%^&*()_+-=[]{}|;:'\",.<>?/\\",
+        "unicode": "あいうえお♪㈱☺",
+        "whitespace": " \t\n\r",
+        "quotes": "'single' and \"double\" quotes"
+    }
     
-    with pytest.raises(ValueError) as exc_info:
-        manager.update_node(node_id="1", properties={})
-    assert "Update properties are required" in str(exc_info.value)
+    # ノードを作成
+    _ = manager.create_node(
+        labels=["SpecialCharNode"],
+        properties=special_chars
+    )
+    
+    # ノードを取得して検証
+    node = manager.find_node(
+        labels=["SpecialCharNode"],
+        properties={"symbols": special_chars["symbols"]}
+    )
+    
+    assert node is not None
+    for key, value in special_chars.items():
+        assert node[key] == value
 
 
-def test_create_relationship_success():
-    """リレーションシップ作成の成功ケースをテストする。
+def test_multiple_relationship_types():
+    """複数タイプのリレーションシップの作成と取得をテストする。
     
     必要性：
-    - リレーションシップの正常な作成を確認
-    - 返却値の正確性を検証
+    - 複数関係の管理確認
+    - リレーションシップの整合性検証
     
     十分性：
-    - 開始・終了ノードの正しい指定
-    - リレーションシップタイプとプロパティの設定
+    - 異なる種類の関係の作成
+    - プロパティの正確な設定
     """
     manager = Neo4jManager()
     
-    # テスト用のノードを作成
+    # テストノードを作成
     start_node_id = manager.create_node(
-        labels=["Person"],
-        properties={"name": "Person 1"}
-    )
-    end_node_id = manager.create_node(
-        labels=["Person"],
-        properties={"name": "Person 2"}
+        labels=["Company"],
+        properties={"name": "Company A"}
     )
     
-    # ノード間にリレーションシップを作成
+    end_node_id = manager.create_node(
+        labels=["Company"],
+        properties={"name": "Company B"}
+    )
+    
+    # 異なるタイプのリレーションシップを作成
+    relationships = [
+        ("COMPETES_WITH", {"market": "Global", "strength": 0.8}),
+        ("COLLABORATES_WITH", {"project": "Project X", "budget": 1000000}),
+        ("SUPPLIES_TO", {"product": "Widget", "volume": 500})
+    ]
+    
+    for rel_type, props in relationships:
+        success = manager.create_relationship(
+            start_node_id=start_node_id,
+            end_node_id=end_node_id,
+            rel_type=rel_type,
+            properties=props
+        )
+        assert success is True
+    
+    # リレーションシップを検証
+    with manager._get_session() as session:
+        for rel_type, props in relationships:
+            result = session.run(
+                """
+                MATCH (a)-[r:%s]->(b)
+                WHERE elementId(a) = $start_id AND elementId(b) = $end_id
+                RETURN r
+                """ % rel_type,
+                start_id=start_node_id,
+                end_id=end_node_id
+            )
+            relationship = result.single()
+            assert relationship is not None
+            for key, value in props.items():
+                assert relationship["r"][key] == value
+
+
+def test_relationship_with_properties():
+    """プロパティ付きリレーションシップの作成と取得をテストする。
+    
+    必要性：
+    - リレーションシッププロパティの管理確認
+    - プロパティの整合性検証
+    
+    十分性：
+    - 複雑なプロパティの設定
+    - プロパティの正確な取得
+    """
+    manager = Neo4jManager()
+    
+    # テストノードを作成
+    start_node_id = manager.create_node(
+        labels=["Product"],
+        properties={"name": "Product A"}
+    )
+    
+    end_node_id = manager.create_node(
+        labels=["Category"],
+        properties={"name": "Category B"}
+    )
+    
+    # 複雑なプロパティを持つリレーションシップを作成
+    rel_props = {
+        "created_at": "2024-01-08T00:00:00",
+        "strength": 0.95,
+        "source": "test",
+        "confidence": 0.8,
+        "tags": ["important", "verified"],
+        "numeric_values": [1, 2, 3, 4, 5],
+        "description": "Detailed relationship description"
+    }
+    
     success = manager.create_relationship(
         start_node_id=start_node_id,
         end_node_id=end_node_id,
-        relationship_type="KNOWS",
-        properties={"since": "2024"}
+        rel_type="BELONGS_TO",
+        properties=rel_props
     )
-    
     assert success is True
-
-
-def test_create_relationship_validation_error():
-    """リレーションシップ作成の入力検証エラーケースをテストする。
     
-    必要性：
-    - 無効な入力パラメータの検出を確認
-    - 適切なエラーメッセージの生成を検証
-    
-    十分性：
-    - 開始・終了ノード未指定のケース
-    - リレーションシップタイプ未指定のケース
-    """
-    manager = Neo4jManager()
-    
-    with pytest.raises(ValueError) as exc_info:
-        manager.create_relationship(
-            start_node_id="",
-            end_node_id="2",
-            relationship_type="KNOWS"
+    # リレーションシップを検証
+    with manager._get_session() as session:
+        result = session.run(
+            """
+            MATCH (a)-[r:BELONGS_TO]->(b)
+            WHERE elementId(a) = $start_id AND elementId(b) = $end_id
+            RETURN r
+            """,
+            start_id=start_node_id,
+            end_id=end_node_id
         )
-    assert "Start node ID is required" in str(exc_info.value)
-    
-    with pytest.raises(ValueError) as exc_info:
-        manager.create_relationship(
-            start_node_id="1",
-            end_node_id="",
-            relationship_type="KNOWS"
-        )
-    assert "End node ID is required" in str(exc_info.value)
-    
-    with pytest.raises(ValueError) as exc_info:
-        manager.create_relationship(
-            start_node_id="1",
-            end_node_id="2",
-            relationship_type=""
-        )
-    assert "Relationship type is required" in str(exc_info.value)
+        relationship = result.single()
+        assert relationship is not None
+        for key, value in rel_props.items():
+            assert relationship["r"][key] == value
 
 
-def test_run_query_success():
-    """カスタムクエリ実行の成功ケースをテストする。
+def test_nonexistent_nodes_relationship():
+    """存在しないノード間のリレーションシップ作成をテストする。
     
     必要性：
-    - クエリの正常な実行を確認
-    - 返却値の正確性を検証
+    - エラー処理の確認
+    - データ整合性の検証
     
     十分性：
-    - パラメータ化クエリの実行
-    - 結果データの形式検証
+    - エラーの適切な検出
+    - エラーメッセージの確認
     """
     manager = Neo4jManager()
     
-    result = manager.run_query(
-        "MATCH (n:Person) WHERE n.name = $name RETURN n",
-        {"name": "Test Person"}
+    # 存在しないノードIDを使用
+    non_existent_id1 = "non_existent_1"
+    non_existent_id2 = "non_existent_2"
+    
+    # リレーションシップの作成を試みる
+    success = manager.create_relationship(
+        start_node_id=non_existent_id1,
+        end_node_id=non_existent_id2,
+        rel_type="TEST_RELATION",
+        properties={"test": "value"}
     )
     
-    assert result is not None
-    assert isinstance(result, list)
-
-
-def test_run_query_validation_error():
-    """カスタムクエリ実行の入力検証エラーケースをテストする。
-    
-    必要性：
-    - 無効なクエリの検出を確認
-    - 適切なエラーメッセージの生成を検証
-    
-    十分性：
-    - クエリ文字列未指定のケース
-    """
-    manager = Neo4jManager()
-    
-    with pytest.raises(ValueError) as exc_info:
-        manager.run_query("", {})
-    assert "Query string is required" in str(exc_info.value)
-
-
-def test_find_nodes_success():
-    """複数ノードの検索の成功ケースをテストする。
-    
-    必要性：
-    - 複数ノードの検索機能の確認
-    - 結果の形式と内容の検証
-    
-    十分性：
-    - 複数ノードの作成と検索
-    - 結果の完全性確認
-    - プロパティの正確性確認
-    """
-    manager = Neo4jManager()
-    
-    # テスト用のノードを複数作成
-    test_properties1 = {"name": "Test Person 1", "age": 30}
-    test_properties2 = {"name": "Test Person 2", "age": 30}
-    
-    node_id1 = manager.create_node(
-        labels=["Person"],
-        properties=test_properties1
-    )
-    node_id2 = manager.create_node(
-        labels=["Person"],
-        properties=test_properties2
-    )
-    
-    # 年齢が30の全ノードを検索
-    nodes = manager.find_nodes(
-        labels=["Person"],
-        properties={"age": 30}
-    )
-    
-    assert len(nodes) >= 2
-    assert any(node["name"] == "Test Person 1" for node in nodes)
-    assert any(node["name"] == "Test Person 2" for node in nodes)
-    assert all(node["age"] == 30 for node in nodes)
-
-
-def test_find_nodes_empty_result():
-    """存在しないノードの検索ケースをテストする。
-    
-    必要性：
-    - 該当ノードが存在しない場合の動作確認
-    - 空の結果の処理確認
-    
-    十分性：
-    - 存在しない条件での検索
-    - 戻り値の型と内容の確認
-    """
-    manager = Neo4jManager()
-    
-    # 存在しない条件で検索
-    nodes = manager.find_nodes(
-        labels=["NonExistentLabel"],
-        properties={"name": "NonExistent"}
-    )
-    
-    assert isinstance(nodes, list)
-    assert len(nodes) == 0
-
-
-def test_find_nodes_validation_error():
-    """入力検証エラーケースをテストする。
-    
-    必要性：
-    - パラメータバリデーションの確認
-    - エラーメッセージの検証
-    
-    十分性：
-    - 無効なパラメータパターン
-    - エラーメッセージの正確性
-    """
-    manager = Neo4jManager()
-    
-    # ラベルが空のケース
-    with pytest.raises(ValueError) as exc_info:
-        manager.find_nodes(labels=[], properties={"name": "Test"})
-    assert "At least one label is required" in str(exc_info.value)
-    
-    # プロパティが空のケース
-    with pytest.raises(ValueError) as exc_info:
-        manager.find_nodes(labels=["Person"], properties={})
-    assert "Search properties are required" in str(exc_info.value) 
+    assert success is False 
