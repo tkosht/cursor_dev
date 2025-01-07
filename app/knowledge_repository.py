@@ -1,8 +1,10 @@
 """Neo4jデータベースを使用して市場分析結果を保存・管理するモジュール。"""
 
 import logging
+import re
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
 from .neo4j_manager import Neo4jManager
 
@@ -21,174 +23,134 @@ class KnowledgeRepository:
         self.neo4j_manager = neo4j_manager
 
     def store_analysis(self, analysis_result: Dict[str, Any]) -> bool:
-        """市場分析結果をNeo4jデータベースに保存する。
+        """分析結果を保存する。
 
         Args:
-            analysis_result (Dict[str, Any]): 市場分析結果
-                {
-                    "entities": List[Dict],  # エンティティ情報のリスト
-                    "relationships": List[Dict],  # 関係性情報のリスト
-                    "impact_scores": Dict[str, float],  # エンティティごとの影響度スコア
-                    "source_url": str,  # 分析元のURL
-                    "analyzed_at": datetime  # 分析実施日時
-                }
+            analysis_result (Dict[str, Any]): 分析結果
 
         Returns:
-            bool: 保存が成功した場合はTrue、失敗した場合はFalse
+            bool: 保存が成功した場合はTrue
 
         Raises:
             ValueError: 分析結果の形式が不正な場合
-            RuntimeError: データベース操作に失敗した場合
+            Exception: データベース操作に失敗した場合
         """
         try:
-            # 分析結果の検証
             if not self._validate_analysis_result(analysis_result):
                 raise ValueError("Invalid analysis result format")
 
-            # エンティティの保存
-            entity_id_map = self._store_entities(analysis_result)
+            # 空のデータセットの場合は成功として扱う
+            if not analysis_result['entities']:
+                logger.info("No entities to store")
+                return True
 
-            # 関係性の保存
-            self._store_relationships(analysis_result, entity_id_map)
+            entity_id_map = self._store_entities(analysis_result)
+            if not entity_id_map:
+                logger.error("Failed to store entities")
+                raise Exception("Failed to store entities")
+
+            try:
+                self._store_relationships(analysis_result, entity_id_map)
+            except RuntimeError as e:
+                logger.error(f"Failed to store relationships: {str(e)}")
+                raise
 
             return True
 
         except ValueError as e:
             logger.error(f"Validation error: {str(e)}")
             raise
-        except RuntimeError as e:
+        except Exception as e:
             logger.error(f"Database operation error: {str(e)}")
             raise
-        except Exception as e:
-            logger.error(f"Failed to store analysis result: {str(e)}")
-            return False
 
-    def _store_entities(self, analysis_result: Dict[str, Any]) -> Dict[str, str]:
-        """エンティティを保存する
+    def _validate_url(self, url: str) -> bool:
+        """URLの形式を検証する。
 
         Args:
-            analysis_result (Dict[str, Any]): 分析結果
+            url (str): 検証するURL
 
         Returns:
-            Dict[str, str]: エンティティ名とIDのマッピング
-
-        Raises:
-            RuntimeError: データベース操作に失敗した場合
-        """
-        entity_id_map = {}
-        for entity in analysis_result['entities']:
-            # エンティティの存在確認
-            if self._check_duplicate(entity['id'], entity['type']):
-                # 既存のエンティティを更新
-                self._update_timestamp(entity['id'], entity['type'])
-                success = self.neo4j_manager.update_node(
-                    node_id=entity['id'],
-                    properties={
-                        'impact_score': analysis_result['impact_scores'].get(entity['id'], 0.5)
-                    }
-                )
-                if not success:
-                    raise RuntimeError(f"Failed to update entity: {entity['name']}")
-                entity_id_map[entity['name']] = entity['id']
-            else:
-                # 新規エンティティを作成
-                node_id = self.neo4j_manager.create_node(
-                    labels=[entity['type']],
-                    properties={
-                        'id': entity['id'],
-                        'name': entity['name'],
-                        'description': entity.get('description', ''),
-                        'created_at': datetime.now().isoformat(),
-                        'impact_score': analysis_result['impact_scores'].get(entity['id'], 0.5)
-                    }
-                )
-                if not node_id:
-                    raise RuntimeError(f"Failed to create entity: {entity['name']}")
-                entity_id_map[entity['name']] = node_id
-
-        return entity_id_map
-
-    def _store_relationships(
-        self,
-        analysis_result: Dict[str, Any],
-        entity_id_map: Dict[str, str]
-    ) -> None:
-        """関係性を保存する
-
-        Args:
-            analysis_result (Dict[str, Any]): 分析結果
-            entity_id_map (Dict[str, str]): エンティティ名とIDのマッピング
-
-        Raises:
-            RuntimeError: データベース操作に失敗した場合
-        """
-        for rel in analysis_result['relationships']:
-            source_id = entity_id_map.get(rel['source'])
-            target_id = entity_id_map.get(rel['target'])
-            
-            if source_id and target_id:
-                rel_id = self.neo4j_manager.create_relationship(
-                    start_node_id=source_id,
-                    end_node_id=target_id,
-                    rel_type=rel['type'],
-                    properties={
-                        'description': rel.get('description', ''),
-                        'strength': rel.get('strength', 1.0),
-                        'created_at': datetime.now().isoformat()
-                    }
-                )
-                if not rel_id:
-                    raise RuntimeError(
-                        f"Failed to create relationship: {rel['type']}"
-                    )
-
-    def _validate_analysis_result(self, analysis_result: Dict[str, Any]) -> bool:
-        """分析結果の形式を検証する
-
-        Args:
-            analysis_result (Dict[str, Any]): 検証する分析結果
-
-        Returns:
-            bool: 検証が成功した場合はTrue、失敗した場合はFalse
+            bool: 検証結果
         """
         try:
-            # 必須キーの検証
-            if not self._validate_required_keys(analysis_result):
+            result = urlparse(url)
+            return all([result.scheme, result.netloc])
+        except Exception:
+            return False
+
+    def _validate_analysis_result(self, analysis_result: Dict[str, Any]) -> bool:
+        """分析結果のバリデーション。
+
+        Args:
+            analysis_result (Dict[str, Any]): 分析結果
+
+        Returns:
+            bool: バリデーション結果
+        """
+        try:
+            # 型の確認
+            if not isinstance(analysis_result, dict):
+                logger.error("Analysis result must be a dictionary")
                 return False
 
-            # エンティティの検証
+            # 必須キーの存在確認
+            required_keys = ['entities', 'relationships', 'impact_scores', 'source_url', 'analyzed_at']
+            if not all(key in analysis_result for key in required_keys):
+                logger.error("Missing required keys in analysis result")
+                return False
+
+            # 各フィールドの型確認
+            if not isinstance(analysis_result['entities'], list):
+                logger.error("Entities must be a list")
+                return False
+
+            if not isinstance(analysis_result['relationships'], list):
+                logger.error("Relationships must be a list")
+                return False
+
+            if not isinstance(analysis_result['impact_scores'], dict):
+                logger.error("Impact scores must be a dictionary")
+                return False
+
+            if not isinstance(analysis_result['source_url'], str):
+                logger.error("Source URL must be a string")
+                return False
+
+            # URLの形式を検証
+            if not self._validate_url(analysis_result['source_url']):
+                logger.error("Invalid URL format")
+                return False
+
+            if not isinstance(analysis_result['analyzed_at'], datetime):
+                logger.error("Analyzed at must be a datetime")
+                return False
+
+            # 各フィールドの詳細バリデーション
             if not self._validate_entities(analysis_result['entities']):
                 return False
 
-            # リレーションシップの検証
             if not self._validate_relationships(analysis_result['relationships']):
                 return False
 
-            # 影響度スコアの検証
-            if not self._validate_impact_scores(analysis_result['impact_scores']):
+            if not self._validate_impact_scores(analysis_result['impact_scores'], analysis_result['entities']):
                 return False
 
             return True
 
         except Exception as e:
-            logger.error(f"Validation failed: {str(e)}")
+            logger.error(f"Error validating analysis result: {str(e)}")
             return False
-
-    def _validate_required_keys(self, analysis_result: Dict[str, Any]) -> bool:
-        """必須キーの存在を確認する"""
-        if not isinstance(analysis_result, dict):
-            logger.error("Analysis result must be a dictionary")
-            return False
-
-        required_keys = ['entities', 'relationships', 'impact_scores', 'source_url', 'analyzed_at']
-        missing_keys = [key for key in required_keys if key not in analysis_result]
-        if missing_keys:
-            logger.error(f"Missing required keys in analysis result: {missing_keys}")
-            return False
-        return True
 
     def _validate_entities(self, entities: Any) -> bool:
-        """エンティティ情報を検証する"""
+        """エンティティ情報を検証する。
+
+        Args:
+            entities (Any): 検証するエンティティ情報
+
+        Returns:
+            bool: 検証結果
+        """
         if not isinstance(entities, list):
             logger.error("Entities must be a list")
             return False
@@ -204,50 +166,186 @@ class KnowledgeRepository:
                 logger.error(f"Missing required keys in entity: {missing_keys}")
                 return False
 
+            # IDは文字列型であることを確認
+            if not isinstance(entity['id'], str):
+                logger.error(f"Entity ID must be a string: {entity['id']}")
+                return False
+
             if not isinstance(entity['name'], str) or not isinstance(entity['type'], str):
                 logger.error(f"Entity name and type must be strings: {entity}")
                 return False
 
         return True
 
-    def _validate_relationships(self, relationships: Any) -> bool:
-        """関係性情報を検証する"""
-        if not isinstance(relationships, list):
-            logger.error("Relationships must be a list")
-            return False
+    def _validate_impact_scores(self, impact_scores: Dict[str, float], entities: List[Dict[str, Any]]) -> bool:
+        """影響度スコアのバリデーション。
 
-        for rel in relationships:
-            if not isinstance(rel, dict):
-                logger.error(f"Relationship must be a dictionary: {rel}")
-                return False
+        Args:
+            impact_scores (Dict[str, float]): 影響度スコア
+            entities (List[Dict[str, Any]]): エンティティリスト
 
-            required_keys = ['source', 'target', 'type']
-            missing_keys = [key for key in required_keys if key not in rel]
-            if missing_keys:
-                logger.error(f"Missing required keys in relationship: {missing_keys}")
-                return False
-
-            if not all(isinstance(rel[k], str) for k in ['source', 'target', 'type']):
-                logger.error(f"Relationship source, target, and type must be strings: {rel}")
-                return False
-
-        return True
-
-    def _validate_impact_scores(self, impact_scores: Any) -> bool:
-        """影響度スコアを検証する"""
+        Returns:
+            bool: バリデーション結果
+        """
         if not isinstance(impact_scores, dict):
             logger.error("Impact scores must be a dictionary")
             return False
 
-        for key, score in impact_scores.items():
-            if not isinstance(key, str):
-                logger.error(f"Impact score key must be a string: {key}")
+        # エンティティIDのリストを作成
+        entity_ids = {entity['id'] for entity in entities}
+
+        for entity_id, score in impact_scores.items():
+            # スコアの型チェック
+            if not isinstance(score, (int, float)):
+                logger.error(f"Impact score must be a number: {score}")
                 return False
-            if not isinstance(score, (int, float)) or not 0 <= score <= 1:
-                logger.error(f"Impact score must be a number between 0 and 1: {score}")
+
+            # スコアの範囲チェック
+            if not 0 <= score <= 1:
+                logger.error(f"Impact score must be between 0 and 1: {score}")
+                return False
+
+            # エンティティの存在チェック
+            if entity_id not in entity_ids:
+                logger.error(f"Entity ID not found in entities: {entity_id}")
                 return False
 
         return True
+
+    def _store_entities(
+        self,
+        analysis_result: Dict[str, Any]
+    ) -> Optional[Dict[str, str]]:
+        """エンティティを保存する。
+
+        Args:
+            analysis_result (Dict[str, Any]): 分析結果
+
+        Returns:
+            Optional[Dict[str, str]]: エンティティ名とIDのマッピング、失敗時はNone
+
+        Raises:
+            Exception: データベース操作に失敗した場合
+        """
+        entity_id_map = {}
+        try:
+            for entity in analysis_result['entities']:
+                # 既存のエンティティを検索
+                existing = self.neo4j_manager.find_node(
+                    labels=[entity['type']],
+                    properties={'id': entity['id']}
+                )
+
+                node_id = None
+                if existing:
+                    # 既存のエンティティを更新
+                    success = self.neo4j_manager.update_node(
+                        node_id=entity['id'],
+                        properties=entity
+                    )
+                    if success:
+                        node_id = entity['id']
+                    else:
+                        logger.error(f"Failed to update entity: {entity['id']}")
+                        raise Exception(f"Failed to update entity: {entity['id']}")
+                else:
+                    # 新しいエンティティを作成
+                    node_id = self.neo4j_manager.create_node(
+                        labels=[entity['type']],
+                        properties=entity
+                    )
+                    if not node_id:
+                        logger.error(f"Failed to create entity: {entity['id']}")
+                        raise Exception(f"Failed to create entity: {entity['id']}")
+
+                entity_id_map[entity['name']] = node_id
+
+            return entity_id_map
+
+        except Exception as e:
+            logger.error(f"Error storing entities: {str(e)}")
+            raise
+
+    def _store_relationships(
+        self,
+        analysis_result: Dict[str, Any],
+        entity_id_map: Dict[str, str]
+    ) -> None:
+        """関係性を保存する。
+
+        Args:
+            analysis_result (Dict[str, Any]): 分析結果
+            entity_id_map (Dict[str, str]): エンティティ名とIDのマッピング
+
+        Raises:
+            RuntimeError: データベース操作に失敗した場合
+        """
+        for rel in analysis_result['relationships']:
+            source_id = entity_id_map.get(rel['source'])
+            target_id = entity_id_map.get(rel['target'])
+
+            if source_id and target_id:
+                success = self.neo4j_manager.create_relationship(
+                    start_node_id=source_id,
+                    end_node_id=target_id,
+                    rel_type=rel['type'],
+                    properties={
+                        'description': rel.get('description', ''),
+                        'strength': rel.get('strength', 1.0),
+                        'created_at': datetime.now().isoformat()
+                    }
+                )
+                if not success:
+                    logger.error(f"Failed to create relationship: {rel['type']}")
+                    continue  # 失敗したリレーションシップはスキップ
+
+    def _validate_required_keys(self, analysis_result: Dict[str, Any]) -> bool:
+        """必須キーの存在を確認する"""
+        if not isinstance(analysis_result, dict):
+            logger.error("Analysis result must be a dictionary")
+            return False
+
+        required_keys = ['entities', 'relationships', 'impact_scores', 'source_url', 'analyzed_at']
+        missing_keys = [key for key in required_keys if key not in analysis_result]
+        if missing_keys:
+            logger.error(f"Missing required keys in analysis result: {missing_keys}")
+            return False
+        return True
+
+    def _validate_relationships(self, relationships: List[Dict[str, Any]]) -> bool:
+        """関係性のバリデーション。
+
+        Args:
+            relationships (List[Dict[str, Any]]): 関係性のリスト
+
+        Returns:
+            bool: バリデーション結果
+        """
+        try:
+            for rel in relationships:
+                # 必須キーの存在確認
+                if not all(key in rel for key in ['source', 'target', 'type']):
+                    return False
+
+                # 型の確認
+                if not isinstance(rel['source'], str) or \
+                   not isinstance(rel['target'], str) or \
+                   not isinstance(rel['type'], str):
+                    return False
+
+                # strengthが存在する場合は数値であることを確認
+                if 'strength' in rel and not isinstance(rel['strength'], (int, float)):
+                    return False
+
+                # strengthが範囲内であることを確認
+                if 'strength' in rel and (rel['strength'] < 0 or rel['strength'] > 1):
+                    return False
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Error validating relationships: {str(e)}")
+            return False
 
     def _check_duplicate(self, node_id: str, label: str) -> bool:
         """指定されたIDとラベルを持つノードが存在するかチェックする
