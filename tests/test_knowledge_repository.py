@@ -295,3 +295,179 @@ def test_store_analysis_transaction_rollback(knowledge_repo, valid_analysis_resu
     
     with pytest.raises(Exception):
         knowledge_repo.store_analysis(valid_analysis_result) 
+
+
+def test_validate_basic_structure_success(knowledge_repo, valid_analysis_result):
+    """基本構造の検証成功テスト"""
+    assert knowledge_repo._validate_basic_structure(valid_analysis_result) is True
+
+
+def test_validate_basic_structure_invalid_type(knowledge_repo):
+    """基本構造の型エラーテスト"""
+    invalid_result = "not a dict"
+    assert knowledge_repo._validate_basic_structure(invalid_result) is False
+
+
+def test_validate_basic_structure_missing_keys(knowledge_repo):
+    """基本構造の必須キー欠如テスト"""
+    invalid_result = {
+        "entities": [],
+        "relationships": []  # impact_scores, source_url, analyzed_at が欠けている
+    }
+    assert knowledge_repo._validate_basic_structure(invalid_result) is False
+
+
+def test_validate_field_types_success(knowledge_repo, valid_analysis_result):
+    """フィールド型の検証成功テスト"""
+    assert knowledge_repo._validate_field_types(valid_analysis_result) is True
+
+
+def test_validate_field_types_invalid_entities(knowledge_repo, valid_analysis_result):
+    """フィールド型のエンティティ型エラーテスト"""
+    invalid_result = valid_analysis_result.copy()
+    invalid_result["entities"] = "not a list"
+    assert knowledge_repo._validate_field_types(invalid_result) is False
+
+
+def test_validate_field_types_invalid_relationships(knowledge_repo, valid_analysis_result):
+    """フィールド型のリレーションシップ型エラーテスト"""
+    invalid_result = valid_analysis_result.copy()
+    invalid_result["relationships"] = "not a list"
+    assert knowledge_repo._validate_field_types(invalid_result) is False
+
+
+def test_validate_field_types_invalid_impact_scores(knowledge_repo, valid_analysis_result):
+    """フィールド型の影響度スコア型エラーテスト"""
+    invalid_result = valid_analysis_result.copy()
+    invalid_result["impact_scores"] = "not a dict"
+    assert knowledge_repo._validate_field_types(invalid_result) is False
+
+
+def test_validate_field_types_invalid_source_url(knowledge_repo, valid_analysis_result):
+    """フィールド型のソースURL型エラーテスト"""
+    invalid_result = valid_analysis_result.copy()
+    invalid_result["source_url"] = 123  # not a string
+    assert knowledge_repo._validate_field_types(invalid_result) is False
+
+
+def test_validate_field_types_invalid_analyzed_at(knowledge_repo, valid_analysis_result):
+    """フィールド型の分析日時型エラーテスト"""
+    invalid_result = valid_analysis_result.copy()
+    invalid_result["analyzed_at"] = "not a datetime"
+    assert knowledge_repo._validate_field_types(invalid_result) is False
+
+
+def test_validate_impact_scores_basic_types_success(knowledge_repo, valid_analysis_result):
+    """影響度スコアの基本型検証成功テスト"""
+    assert knowledge_repo._validate_impact_scores_basic_types(
+        valid_analysis_result["impact_scores"],
+        valid_analysis_result["entities"]
+    ) is True
+
+
+def test_validate_impact_scores_basic_types_invalid_scores(knowledge_repo, valid_analysis_result):
+    """影響度スコアの基本型エラーテスト（スコア）"""
+    assert knowledge_repo._validate_impact_scores_basic_types(
+        "not a dict",
+        valid_analysis_result["entities"]
+    ) is False
+
+
+def test_validate_impact_scores_basic_types_invalid_entities(knowledge_repo, valid_analysis_result):
+    """影響度スコアの基本型エラーテスト（エンティティ）"""
+    assert knowledge_repo._validate_impact_scores_basic_types(
+        valid_analysis_result["impact_scores"],
+        "not a list"
+    ) is False
+
+
+def test_extract_entity_ids_success(knowledge_repo, valid_analysis_result):
+    """エンティティID抽出成功テスト"""
+    entity_ids = knowledge_repo._extract_entity_ids(valid_analysis_result["entities"])
+    assert entity_ids is not None
+    assert isinstance(entity_ids, set)
+    assert "company_1" in entity_ids
+    assert "product_1" in entity_ids
+
+
+def test_extract_entity_ids_empty_list(knowledge_repo):
+    """空のエンティティリストからのID抽出テスト"""
+    assert knowledge_repo._extract_entity_ids([]) is None
+
+
+def test_extract_entity_ids_invalid_entities(knowledge_repo):
+    """不正なエンティティからのID抽出テスト"""
+    invalid_entities = [
+        {"name": "test"},  # idが欠けている
+        {"id": 123}  # idが文字列でない
+    ]
+    assert knowledge_repo._extract_entity_ids(invalid_entities) is None
+
+
+def test_validate_impact_scores_consistency_success(knowledge_repo, valid_analysis_result):
+    """影響度スコアの整合性検証成功テスト"""
+    entity_ids = {"company_1", "product_1"}
+    assert knowledge_repo._validate_impact_scores_consistency(
+        valid_analysis_result["impact_scores"],
+        entity_ids
+    ) is True
+
+
+def test_validate_impact_scores_consistency_missing_scores(knowledge_repo):
+    """影響度スコアの整合性エラーテスト（スコア欠如）"""
+    entity_ids = {"company_1", "product_1"}
+    scores = {"company_1": 0.5}  # product_1のスコアが欠けている
+    assert knowledge_repo._validate_impact_scores_consistency(scores, entity_ids) is False
+
+
+def test_validate_impact_scores_consistency_extra_scores(knowledge_repo):
+    """影響度スコアの整合性エラーテスト（余分なスコア）"""
+    entity_ids = {"company_1"}
+    scores = {
+        "company_1": 0.5,
+        "nonexistent": 0.7  # 存在しないエンティティのスコア
+    }
+    assert knowledge_repo._validate_impact_scores_consistency(scores, entity_ids) is False
+
+
+def test_validate_score_values_success(knowledge_repo, valid_analysis_result):
+    """スコア値の検証成功テスト"""
+    assert knowledge_repo._validate_score_values(valid_analysis_result["impact_scores"]) is True
+
+
+def test_validate_score_values_invalid_type(knowledge_repo):
+    """スコア値の型エラーテスト"""
+    invalid_scores = {
+        "entity1": "not a number"
+    }
+    assert knowledge_repo._validate_score_values(invalid_scores) is False
+
+
+def test_validate_score_values_out_of_range(knowledge_repo):
+    """スコア値の範囲外エラーテスト"""
+    invalid_scores = {
+        "entity1": 1.5  # 1.0を超える値
+    }
+    assert knowledge_repo._validate_score_values(invalid_scores) is False
+
+
+def test_validate_score_values_special_values(knowledge_repo):
+    """スコア値の特殊値エラーテスト"""
+    invalid_scores = {
+        "entity1": float('inf'),  # 無限大
+        "entity2": float('nan')   # 非数
+    }
+    assert knowledge_repo._validate_score_values(invalid_scores) is False
+
+
+def test_store_analysis_data_success(knowledge_repo, valid_analysis_result):
+    """分析データ保存成功テスト"""
+    assert knowledge_repo._store_analysis_data(valid_analysis_result) is True
+
+
+def test_store_analysis_data_entity_error(knowledge_repo, valid_analysis_result):
+    """分析データ保存エラーテスト（エンティティ）"""
+    # エンティティの保存に失敗するケース
+    valid_analysis_result["entities"][0]["id"] = None  # 無効なID
+    with pytest.raises(Exception):
+        knowledge_repo._store_analysis_data(valid_analysis_result) 
