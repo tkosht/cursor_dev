@@ -1,7 +1,6 @@
 """Neo4jデータベースを使用して市場分析結果を保存・管理するモジュール。"""
 
 import logging
-import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
@@ -186,31 +185,60 @@ class KnowledgeRepository:
 
         Returns:
             bool: バリデーション結果
+
+        Note:
+            - スコアは0.0から1.0の範囲内の数値
+            - すべてのエンティティにスコアが設定されている必要がある
+            - スコアは数値型（int or float）である必要がある
         """
-        if not isinstance(impact_scores, dict):
-            logger.error("Impact scores must be a dictionary")
+        try:
+            if not isinstance(impact_scores, dict):
+                logger.error("Impact scores must be a dictionary")
+                return False
+
+            if not isinstance(entities, list):
+                logger.error("Entities must be a list")
+                return False
+
+            # エンティティIDのセットを作成
+            entity_ids = {entity['id'] for entity in entities if isinstance(entity, dict) and 'id' in entity}
+            if not entity_ids:
+                logger.error("No valid entity IDs found")
+                return False
+
+            # すべてのエンティティにスコアが設定されているか確認
+            missing_entities = entity_ids - set(impact_scores.keys())
+            if missing_entities:
+                logger.error(f"Missing impact scores for entities: {missing_entities}")
+                return False
+
+            # 余分なエンティティIDがないか確認
+            extra_entities = set(impact_scores.keys()) - entity_ids
+            if extra_entities:
+                logger.error(f"Impact scores found for non-existent entities: {extra_entities}")
+                return False
+
+            for entity_id, score in impact_scores.items():
+                # スコアの型チェック
+                if not isinstance(score, (int, float)):
+                    logger.error(f"Impact score must be a number: {entity_id} -> {score}")
+                    return False
+
+                # スコアの範囲チェック（0.0 <= score <= 1.0）
+                if not 0 <= score <= 1:
+                    logger.error(f"Impact score must be between 0 and 1: {entity_id} -> {score}")
+                    return False
+
+                # スコアが数値として有効か確認（NaN, Inf チェック）
+                if isinstance(score, float) and (score != score or score == float('inf') or score == float('-inf')):
+                    logger.error(f"Invalid impact score value: {entity_id} -> {score}")
+                    return False
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Error validating impact scores: {str(e)}")
             return False
-
-        # エンティティIDのリストを作成
-        entity_ids = {entity['id'] for entity in entities}
-
-        for entity_id, score in impact_scores.items():
-            # スコアの型チェック
-            if not isinstance(score, (int, float)):
-                logger.error(f"Impact score must be a number: {score}")
-                return False
-
-            # スコアの範囲チェック
-            if not 0 <= score <= 1:
-                logger.error(f"Impact score must be between 0 and 1: {score}")
-                return False
-
-            # エンティティの存在チェック
-            if entity_id not in entity_ids:
-                logger.error(f"Entity ID not found in entities: {entity_id}")
-                return False
-
-        return True
 
     def _store_entities(
         self,

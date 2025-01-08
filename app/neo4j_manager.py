@@ -337,3 +337,49 @@ class Neo4jManager:
         except Neo4jError as e:
             logger.error(f"Error finding relationships: {str(e)}")
             return [] 
+
+    def store_entity(
+        self,
+        label: str,
+        entity_id: str,
+        properties: Dict[str, Any]
+    ) -> Optional[str]:
+        """エンティティを保存または更新する。
+
+        Args:
+            label: エンティティのラベル
+            entity_id: エンティティのID
+            properties: エンティティのプロパティ
+
+        Returns:
+            str: 作成または更新されたノードのID、失敗時はNone
+
+        Raises:
+            ValueError: 無効な入力パラメータ
+            Neo4jError: データベース操作エラー
+        """
+        if not label or not isinstance(label, str):
+            raise ValueError("Label must be a non-empty string")
+        if not entity_id or not isinstance(entity_id, str):
+            raise ValueError("Entity ID must be a non-empty string")
+        if not properties or not isinstance(properties, dict):
+            raise ValueError("Properties must be a non-empty dictionary")
+
+        try:
+            with self._get_session() as session:
+                # MERGE文を使用して、存在しない場合は作成、存在する場合は更新
+                result = session.run(
+                    f"""
+                    MERGE (n:{label} {{id: $entity_id}})
+                    SET n += $properties
+                    RETURN elementId(n) as node_id
+                    """,
+                    entity_id=entity_id,
+                    properties=properties
+                )
+                record = result.single()
+                return record["node_id"] if record else None
+
+        except Neo4jError as e:
+            logger.error(f"Error storing entity: {str(e)}")
+            raise 
