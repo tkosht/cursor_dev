@@ -192,6 +192,281 @@ class TestMarketAnalyzer(unittest.TestCase):
         with self.assertRaises(Exception):
             self.analyzer.process_gemini_output({})
 
+    def test_extract_entities(self):
+        """_extract_entities メソッドのテスト
+        
+        必要性：
+        - エンティティ抽出の正確性確認
+        - IDとプロパティの検証
+        
+        十分性：
+        - 必須フィールドの存在確認
+        - プロパティの型チェック
+        - エンティティの一意性確認
+        """
+        raw_entities = [
+            {
+                'name': 'テスト企業A',
+                'type': 'COMPANY',
+                'description': 'テスト用企業A',
+                'properties': {
+                    'importance': 0.8,
+                    'category': 'Test'
+                }
+            },
+            {
+                'name': 'テスト製品X',
+                'type': 'PRODUCT',
+                'description': 'テスト用製品X',
+                'properties': {
+                    'importance': 0.6,
+                    'category': 'Test'
+                }
+            }
+        ]
+        
+        result = self.analyzer._extract_entities(raw_entities)
+        
+        # 結果の検証
+        self.assertEqual(len(result), 2)
+        for entity in result:
+            self.assertIn('id', entity)
+            self.assertIn('name', entity)
+            self.assertIn('type', entity)
+            self.assertIn('description', entity)
+            self.assertIn('properties', entity)
+            self.assertIsInstance(entity['properties'], dict)
+            self.assertIsInstance(entity['properties'].get('importance'), float)
+
+    def test_extract_entities_with_invalid_input(self):
+        """_extract_entities メソッドの無効な入力のテスト
+        
+        必要性：
+        - エラー処理の確認
+        - 無効なデータの除外確認
+        
+        十分性：
+        - 必須フィールド欠落の処理
+        - 無効な型の処理
+        - エラーメッセージの確認
+        """
+        # 無効なエンティティを含むリスト
+        invalid_entities = [
+            {},  # 空辞書
+            {'name': 'Invalid'},  # 必須フィールド欠落
+            None,  # None
+            {  # 無効な型のプロパティ
+                'name': 'Test',
+                'type': 'TEST',
+                'description': 'Test',
+                'properties': 'invalid'
+            }
+        ]
+        
+        result = self.analyzer._extract_entities(invalid_entities)
+        self.assertEqual(len(result), 0)
+
+    def test_detect_relationships(self):
+        """_detect_relationships メソッドのテスト
+        
+        必要性：
+        - リレーションシップ検出の正確性確認
+        - IDマッピングの検証
+        
+        十分性：
+        - 必須フィールドの存在確認
+        - プロパティの型チェック
+        - 関係の方向性確認
+        """
+        name_to_id = {
+            'テスト企業A': 'entity_0',
+            'テスト製品X': 'entity_1'
+        }
+        
+        raw_relationships = [
+            {
+                'source': 'テスト企業A',
+                'target': 'テスト製品X',
+                'type': 'DEVELOPS',
+                'strength': 0.7,
+                'description': 'テスト用関係'
+            }
+        ]
+        
+        result = self.analyzer._detect_relationships(raw_relationships, name_to_id)
+        
+        # 結果の検証
+        self.assertEqual(len(result), 1)
+        rel = result[0]
+        self.assertEqual(rel['source'], 'entity_0')
+        self.assertEqual(rel['target'], 'entity_1')
+        self.assertEqual(rel['type'], 'DEVELOPS')
+        self.assertIsInstance(rel['strength'], float)
+        self.assertIn('description', rel)
+
+    def test_detect_relationships_with_invalid_input(self):
+        """_detect_relationships メソッドの無効な入力のテスト
+        
+        必要性：
+        - エラー処理の確認
+        - 無効なデータの除外確認
+        
+        十分性：
+        - 必須フィールド欠落の処理
+        - 存在しないエンティティの処理
+        - 無効な型の処理
+        """
+        name_to_id = {'テスト企業A': 'entity_0'}
+        
+        # 無効なリレーションシップを含むリスト
+        invalid_relationships = [
+            {},  # 空辞書
+            {  # 必須フィールド欠落
+                'source': 'テスト企業A'
+            },
+            None,  # None
+            {  # 存在しないエンティティ
+                'source': '存在しない企業',
+                'target': 'テスト企業A',
+                'type': 'TEST'
+            },
+            {  # 無効な型のプロパティ
+                'source': 'テスト企業A',
+                'target': 'テスト企業A',
+                'type': 'TEST',
+                'strength': 'invalid'
+            }
+        ]
+        
+        result = self.analyzer._detect_relationships(invalid_relationships, name_to_id)
+        self.assertEqual(len(result), 0)
+
+    def test_analyze_trends_detailed(self):
+        """_analyze_trends メソッドの詳細テスト
+        
+        必要性：
+        - トレンド分析の正確性確認
+        - 重要度計算の検証
+        - 関連エンティティの検出確認
+        
+        十分性：
+        - 複数トレンドの処理
+        - 重要度の順序確認
+        - 関連情報の正確性
+        """
+        raw_trends = ['AI技術', 'デジタル化', '市場動向']
+        entities = [
+            {
+                'id': 'entity_0',
+                'name': 'AI企業X',
+                'type': 'COMPANY',
+                'description': 'AI技術を開発する企業',
+                'properties': {'importance': 0.8}
+            },
+            {
+                'id': 'entity_1',
+                'name': 'デジタルソリューション',
+                'type': 'PRODUCT',
+                'description': 'デジタル化支援ツール',
+                'properties': {'importance': 0.6}
+            }
+        ]
+        relationships = [
+            {
+                'source': 'entity_0',
+                'target': 'entity_1',
+                'type': 'DEVELOPS',
+                'strength': 0.7
+            }
+        ]
+        
+        result = self.analyzer._analyze_trends(raw_trends, entities, relationships)
+        
+        # 結果の検証
+        self.assertEqual(len(result), 3)
+        self.assertTrue(all(isinstance(trend, dict) for trend in result))
+        self.assertTrue(all('importance' in trend for trend in result))
+        self.assertTrue(all('related_entities' in trend for trend in result))
+        self.assertTrue(all('market_impact' in trend for trend in result))
+        
+        # 重要度でソートされていることを確認
+        importances = [trend['importance'] for trend in result]
+        self.assertEqual(importances, sorted(importances, reverse=True))
+
+    def test_analyze_trends_with_empty_input(self):
+        """_analyze_trends メソッドの空入力テスト
+        
+        必要性：
+        - エッジケースの処理確認
+        - 空データの処理検証
+        
+        十分性：
+        - 空リストの処理
+        - デフォルト値の確認
+        """
+        result = self.analyzer._analyze_trends([], [], [])
+        self.assertEqual(result, [])
+        
+        result = self.analyzer._analyze_trends(['テストトレンド'], [], [])
+        self.assertEqual(len(result), 1)
+        self.assertLessEqual(result[0]['importance'], 0.5)
+        self.assertEqual(result[0]['related_entities'], [])
+
+    def test_analyze_trends_with_invalid_input(self):
+        """_analyze_trends メソッドの無効な入力テスト
+        
+        必要性：
+        - エラー処理の確認
+        - 無効データの処理検証
+        
+        十分性：
+        - 無効な型の処理
+        - エラー時のデフォルト値
+        """
+        # 無効なエンティティ
+        invalid_entities = [{'invalid': 'data'}]
+        # 無効なリレーションシップ
+        invalid_relationships = [{'invalid': 'data'}]
+        
+        result = self.analyzer._analyze_trends(
+            ['テストトレンド'],
+            invalid_entities,
+            invalid_relationships
+        )
+        
+        self.assertEqual(len(result), 1)
+        trend = result[0]
+        self.assertEqual(trend['name'], 'テストトレンド')
+        self.assertGreaterEqual(trend['importance'], 0.0)
+        self.assertLessEqual(trend['importance'], 1.0)
+        self.assertEqual(trend['related_entities'], [])
+        self.assertEqual(trend['market_impact'], 0.0)
+
+    def test_calculate_novelty_factor(self):
+        """_calculate_novelty_factor メソッドのテスト
+        
+        必要性：
+        - 新規性評価の確認
+        - スコア計算の検証
+        
+        十分性：
+        - 異なるトレンドの評価
+        - スコア範囲の確認
+        """
+        # 新しいトレンド
+        factor1 = self.analyzer._calculate_novelty_factor('新技術XYZ')
+        self.assertGreaterEqual(factor1, 0.0)
+        self.assertLessEqual(factor1, 1.0)
+        
+        # 一般的なトレンド
+        factor2 = self.analyzer._calculate_novelty_factor('AI')
+        self.assertGreaterEqual(factor2, 0.0)
+        self.assertLessEqual(factor2, 1.0)
+        
+        # 空文字列
+        factor3 = self.analyzer._calculate_novelty_factor('')
+        self.assertEqual(factor3, 0.0)
+
 
 if __name__ == '__main__':
     unittest.main() 

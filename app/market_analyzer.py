@@ -137,18 +137,57 @@ class MarketAnalyzer:
         Returns:
             List[Dict[str, Any]]: 分析済みのトレンドリスト
         """
-        analyzed_trends = []
-        for trend in raw_trends:
-            trend_info = {
-                'name': trend,
-                'importance': self._calculate_trend_factor(trend, entities, relationships),
-                'related_entities': self._find_related_entities(trend, entities),
-                'market_impact': self._calculate_market_impact(trend, entities, relationships)
-            }
-            analyzed_trends.append(trend_info)
-        
-        # 重要度でソート
-        return sorted(analyzed_trends, key=lambda x: x['importance'], reverse=True)
+        try:
+            if not raw_trends:
+                return []
+
+            # エンティティとリレーションシップの妥当性確認
+            valid_entities = [
+                entity for entity in entities
+                if isinstance(entity, dict) and
+                all(key in entity for key in ['id', 'name', 'type', 'description'])
+            ]
+            
+            valid_relationships = [
+                rel for rel in relationships
+                if isinstance(rel, dict) and
+                all(key in rel for key in ['source', 'target', 'type'])
+            ]
+
+            analyzed_trends = []
+            for trend in raw_trends:
+                if not isinstance(trend, str):
+                    continue
+                    
+                try:
+                    trend_info = {
+                        'name': trend,
+                        'importance': self._calculate_trend_factor(
+                            trend,
+                            valid_entities,
+                            valid_relationships
+                        ),
+                        'related_entities': self._find_related_entities(
+                            trend,
+                            valid_entities
+                        ),
+                        'market_impact': self._calculate_market_impact(
+                            trend,
+                            valid_entities,
+                            valid_relationships
+                        )
+                    }
+                    analyzed_trends.append(trend_info)
+                except Exception as e:
+                    self.logger.error(f"トレンド '{trend}' の分析中にエラーが発生しました: {str(e)}")
+                    continue
+
+            # 重要度でソート
+            return sorted(analyzed_trends, key=lambda x: x['importance'], reverse=True)
+            
+        except Exception as e:
+            self.logger.error(f"トレンド分析中にエラーが発生しました: {str(e)}")
+            return []
 
     def _calculate_trend_factor(
         self,
@@ -271,9 +310,33 @@ class MarketAnalyzer:
         Returns:
             float: 0.0-1.0の新規性スコア
         """
+        if not trend or not isinstance(trend, str):
+            return 0.0
+
         # 現時点では簡易的な実装
         # TODO: 過去のトレンドデータとの比較や時系列分析を追加
-        return 0.5
+        try:
+            # トレンドの長さと複雑さに基づく評価
+            words = trend.split()
+            if not words:
+                return 0.0
+            
+            # 一般的な用語リスト（低い新規性）
+            common_terms = {'ai', 'iot', 'cloud', 'digital', 'data', 'tech', 'technology'}
+            
+            # トレンドに含まれる一般的な用語の割合を計算
+            common_word_ratio = sum(
+                1 for word in words 
+                if word.lower() in common_terms
+            ) / len(words)
+            
+            # 新規性スコアの計算（一般的な用語が多いほど低スコア）
+            novelty_score = 1.0 - common_word_ratio
+            return max(0.0, min(1.0, novelty_score))
+            
+        except Exception as e:
+            self.logger.error(f"新規性評価中にエラーが発生しました: {str(e)}")
+            return 0.0
 
     def _find_related_entities(
         self,
@@ -334,7 +397,7 @@ class MarketAnalyzer:
         trends: List[Dict[str, Any]]
     ) -> Dict[str, float]:
         """
-        各エンティティの影響度スコアを計算する
+        影響度スコアを計算する
 
         Args:
             output (Dict[str, Any]): Gemini出力
@@ -343,51 +406,52 @@ class MarketAnalyzer:
             trends (List[Dict[str, Any]]): トレンドリスト
 
         Returns:
-            Dict[str, float]: エンティティIDをキー、影響度スコアを値とする辞書
+            Dict[str, float]: 各種影響度スコア
         """
-        impact_scores = {}
-        
-        # すべてのエンティティに対してスコアを計算
-        for entity in entities:
-            entity_id = entity.get('id')
-            if not entity_id:
-                continue
+        try:
+            # 基本的な影響度スコアを取得
+            market_impact = self._calculate_impact_score(
+                output.get('market_impact', 0.5)
+            )
+            technology_impact = self._calculate_impact_score(
+                output.get('technology_impact', 0.5)
+            )
+            social_impact = self._calculate_impact_score(
+                output.get('social_impact', 0.5)
+            )
 
-            # エンティティの基本スコアを計算
-            base_score = 0.5  # デフォルトの基本スコア
+            # トレンドの重要度を考慮した調整
+            trend_importance = sum(
+                trend.get('importance', 0.5)
+                for trend in trends
+            ) / max(len(trends), 1)
 
-            # エンティティタイプに基づくスコア調整
-            type_weights = {
-                'COMPANY': 0.8,
-                'PRODUCT': 0.6,
-                'TECHNOLOGY': 0.7,
-                'MARKET': 0.8,
-                'SERVICE': 0.6
+            # エンティティの影響度を考慮した調整
+            entity_importance = sum(
+                float(entity.get('properties', {}).get('importance', 0.5))
+                for entity in entities
+            ) / max(len(entities), 1)
+
+            # リレーションシップの強度を考慮した調整
+            relationship_strength = sum(
+                float(rel.get('strength', 0.5))
+                for rel in relationships
+            ) / max(len(relationships), 1)
+
+            # 最終的な影響度スコアを計算
+            return {
+                'market_impact': min(1.0, market_impact * (1 + trend_importance * 0.2)),
+                'technology_impact': min(1.0, technology_impact * (1 + entity_importance * 0.2)),
+                'social_impact': min(1.0, social_impact * (1 + relationship_strength * 0.2))
             }
-            type_weight = type_weights.get(entity.get('type', ''), 0.5)
 
-            # 関係性の数に基づくスコア調整
-            rel_count = sum(1 for rel in relationships if
-                          rel.get('source_id') == entity_id or
-                          rel.get('target_id') == entity_id)
-            rel_factor = min(1.0, rel_count * 0.2)  # 関係性が多いほどスコアが高くなる
-
-            # トレンドとの関連性に基づくスコア調整
-            trend_factor = 0.0
-            for trend in trends:
-                if entity.get('name', '').lower() in trend.get('description', '').lower():
-                    trend_factor = max(trend_factor, trend.get('impact', 0.0))
-
-            # 最終スコアの計算
-            final_score = (base_score * 0.3 +
-                         type_weight * 0.3 +
-                         rel_factor * 0.2 +
-                         trend_factor * 0.2)
-
-            # スコアを0.0-1.0の範囲に正規化
-            impact_scores[entity_id] = min(1.0, max(0.0, final_score))
-
-        return impact_scores
+        except Exception as e:
+            self.logger.error(f"影響度スコアの計算中にエラーが発生しました: {str(e)}")
+            return {
+                'market_impact': 0.5,
+                'technology_impact': 0.5,
+                'social_impact': 0.5
+            }
 
     def _calculate_impact_score(self, value: Any) -> float:
         """
@@ -419,58 +483,111 @@ class MarketAnalyzer:
         Returns:
             List[Dict[str, Any]]: 処理済みのエンティティリスト
         """
+        if not self._validate_entity_list(entities):
+            return []
+
         try:
             processed_entities = []
             for i, entity in enumerate(entities):
-                processed_entity = self._process_single_entity(i, entity)
+                processed_entity = self._process_entity(i, entity)
                 if processed_entity:
                     processed_entities.append(processed_entity)
             return processed_entities
+
         except Exception as e:
             self.logger.error(f"エンティティの抽出中にエラーが発生しました: {str(e)}")
             return []
 
-    def _process_single_entity(self, index: int, entity: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _validate_entity_list(self, entities: Any) -> bool:
+        """
+        エンティティリストの妥当性を検証する
+
+        Args:
+            entities: 検証対象のエンティティリスト
+
+        Returns:
+            bool: 妥当な場合はTrue
+        """
+        if not isinstance(entities, list):
+            self.logger.error("エンティティリストが無効です")
+            return False
+        return True
+
+    def _process_entity(self, index: int, entity: Any) -> Optional[Dict[str, Any]]:
         """
         単一のエンティティを処理する
 
         Args:
             index (int): エンティティのインデックス
-            entity (Dict[str, Any]): 処理対象のエンティティ
+            entity: 処理対象のエンティティ
 
         Returns:
             Optional[Dict[str, Any]]: 処理済みのエンティティ、無効な場合はNone
         """
-        if not isinstance(entity, dict) or 'name' not in entity:
+        if not self._validate_entity_structure(index, entity):
             return None
 
-        # importanceを数値に変換
-        importance = entity.get('importance', 0.5)
-        if isinstance(importance, str):
-            importance = {
-                'high': 0.8,
-                'medium': 0.5,
-                'low': 0.2
-            }.get(importance.lower(), 0.5)
+        try:
+            return self._create_processed_entity(index, entity)
+        except (ValueError, TypeError) as e:
+            self.logger.warning(f"エンティティ {index} の変換中にエラーが発生しました: {str(e)}")
+            return None
 
-        processed_entity = {
-            'id': f"entity_{index}",
-            'name': entity['name'],
-            'type': entity.get('type', 'ENTITY').upper(),
-            'description': entity.get('description', ''),
+    def _validate_entity_structure(self, index: int, entity: Any) -> bool:
+        """
+        エンティティの構造を検証する
+
+        Args:
+            index (int): エンティティのインデックス
+            entity: 検証対象のエンティティ
+
+        Returns:
+            bool: 妥当な場合はTrue
+        """
+        if not isinstance(entity, dict):
+            self.logger.warning(f"エンティティ {index} は辞書形式ではありません")
+            return False
+
+        required_fields = ['name', 'type', 'description']
+        if not all(field in entity for field in required_fields):
+            self.logger.warning(f"エンティティ {index} に必須フィールドが欠落しています")
+            return False
+
+        if not isinstance(entity.get('properties'), dict):
+            self.logger.warning(f"エンティティ {index} のプロパティが無効です")
+            return False
+
+        return True
+
+    def _create_processed_entity(self, index: int, entity: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        処理済みエンティティを作成する
+
+        Args:
+            index (int): エンティティのインデックス
+            entity (Dict[str, Any]): 元のエンティティ
+
+        Returns:
+            Dict[str, Any]: 処理済みのエンティティ
+
+        Raises:
+            ValueError: 値の変換に失敗した場合
+            TypeError: 型の変換に失敗した場合
+        """
+        return {
+            'id': f'entity_{index}',
+            'name': str(entity['name']),
+            'type': str(entity['type']),
+            'description': str(entity['description']),
             'properties': {
-                'importance': importance,
-                'category': entity.get('category', ''),
-                'source': entity.get('source', '')
+                'importance': float(
+                    entity.get('properties', {}).get('importance', 0.5)
+                ),
+                'category': str(
+                    entity.get('properties', {}).get('category', 'UNKNOWN')
+                )
             }
         }
-
-        if 'properties' in entity and isinstance(entity['properties'], dict):
-            for key, value in entity['properties'].items():
-                if key not in processed_entity['properties']:
-                    processed_entity['properties'][key] = value
-
-        return processed_entity
 
     def _detect_relationships(
         self,

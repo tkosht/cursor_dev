@@ -432,3 +432,49 @@ def test_validation(input_data, expected):
     result = validate_input(input_data)
     assert result == expected
 ``` 
+
+## リファクタリング�ターン
+
+### 複雑度低減パターン
+1. メソッド分割
+   - 大きな責任を持つメソッドを、より小さな単一責任のメソッドに分割
+   - 例：`_extract_entities`を以下のメソッドに分割
+     - `_validate_entity_list`: 入力検証
+     - `_process_entity`: 個別処理
+     - `_validate_entity_structure`: 構造検証
+     - `_create_processed_entity`: オブジェクト生成
+
+2. 検証ロジックの分離
+   - 入力検証を独立したメソッドに抽出
+   - 早期リターンパターンの活用
+   - エラーメッセージの一貫性維持
+
+3. エラーハンドリング
+   - try-except ブロックの適切な配置
+   - エラーの詳細なログ記録
+   - 適切なエラー型の選択
+
+## テストカバレッジ改善パターン
+
+### テストケース設計
+1. 正常系テスト
+   - 期待される入力での動作確認
+   - 境界値での動作確認
+   - 典型的なユースケースの網羅
+
+2. 異常系テスト
+   - 無効な入力値の処理
+   - エラー発生時の挙動確認
+   - 境界外の値での動作確認
+
+3. エッジケーステスト
+   - 空の入力
+   - 最大値/最小値
+   - 特殊文字
+   - 型の不一致
+
+### テストメソッド命名規則
+- test_[テスト対象メソッド名]_[テストシナリオ]
+- 例：
+  - test_extract_entities_with_invalid_input
+  - test_validate_entity_structure_missing_fields 
