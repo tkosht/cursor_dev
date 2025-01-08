@@ -499,14 +499,25 @@ class KnowledgeRepository:
         entity_id_map = {}
         try:
             for entity in analysis_result['entities']:
-                # �ンティティIDの検証
+                # エンティティIDの検証
                 if not entity.get('id') or not isinstance(entity['id'], str):
                     logger.error(f"Invalid entity ID: {entity.get('id')}")
                     raise ValueError(f"Invalid entity ID: {entity.get('id')}")
 
+                # プロパティを基本型に変換
+                properties = {
+                    'id': entity['id'],
+                    'name': entity.get('name', ''),
+                    'type': entity.get('type', 'ENTITY'),
+                    'description': entity.get('description', ''),
+                    'importance': float(entity.get('properties', {}).get('importance', 0.5)),
+                    'category': str(entity.get('properties', {}).get('category', '')),
+                    'source': str(entity.get('properties', {}).get('source', ''))
+                }
+
                 # 既存のエンティティを検索
                 existing = self.neo4j_manager.find_node(
-                    labels=[entity['type']],
+                    labels=[entity.get('type', 'ENTITY')],
                     properties={'id': entity['id']}
                 )
 
@@ -515,21 +526,16 @@ class KnowledgeRepository:
                     # 既存のエンティティを更新
                     success = self.neo4j_manager.update_node(
                         node_id=entity['id'],
-                        properties=entity
+                        properties=properties
                     )
                     if success:
                         node_id = entity['id']
-                    else:
-                        # 更新に失敗した場合は新規作成を試みる
-                        node_id = self.neo4j_manager.create_node(
-                            labels=[entity['type']],
-                            properties=entity
-                        )
+                        self._update_timestamp(node_id, entity.get('type', 'ENTITY'))
                 else:
                     # 新規エンティティを作成
                     node_id = self.neo4j_manager.create_node(
-                        labels=[entity['type']],
-                        properties=entity
+                        labels=[entity.get('type', 'ENTITY')],
+                        properties=properties
                     )
 
                 if not node_id:

@@ -74,36 +74,28 @@ class Neo4jManager:
             self._driver.close()
 
     def _get_session(self):
-        """
-        Neo4jセッションを取得する。
+        """セッションを取得する。
 
         Returns:
-            Session: Neo4jセッション
+            Session: Neo4jセッションオブジェクト
         """
-        try:
-            if not hasattr(self, '_driver') or self._driver is None:
-                self._connect()
-            return self._driver.session(database=self._database)
-        except Exception as e:
-            self.logger.error(f"Error getting session: {str(e)}")
-            raise
+        return self._driver.session(database=self._database)
 
     def _execute_transaction(self, work_func):
-        """
-        トランザクションを実行する。
+        """トランザクションを実行する。
 
         Args:
-            work_func: トランザクション内で実行する関数
+            work_func (callable): トランザクション内で実行する関数
 
         Returns:
             Any: work_funcの戻り値
         """
-        try:
-            with self._get_session() as session:
+        with self._get_session() as session:
+            try:
                 return session.execute_write(work_func)
-        except Exception as e:
-            self.logger.error(f"Transaction error: {str(e)}")
-            raise
+            except Exception as e:
+                self.logger.error(f"Transaction error: {str(e)}")
+                raise
 
     def _execute_read_transaction(self, work_func):
         """
@@ -147,39 +139,42 @@ class Neo4jManager:
             raise
 
     def create_node(self, labels: List[str], properties: Dict[str, Any]) -> Optional[str]:
-        """
-        ノードを作成する。
+        """ノードを作成する。
 
         Args:
             labels: ノードのラベルリスト
             properties: ノードのプロパティ
 
         Returns:
-            str: 作成されたノードのID、失敗時はNone
-        """
-        def create_node_tx(tx):
-            # ラベルを正しく結合
-            labels_str = ':'.join(labels)
-            result = tx.run(
-                f"""
-                CREATE (n:{labels_str} $props)
-                RETURN elementId(n) as id
-                """,
-                props=properties
-            )
-            record = result.single()
-            return record["id"] if record else None
+            Optional[str]: 作成されたノードのID、失敗時はNone
 
-        try:
-            return self._execute_transaction(create_node_tx)
-        except Exception as e:
-            self.logger.error(f"Error creating node: {str(e)}")
-            return None
+        Note:
+            - トランザクション内で実行され、エラー時は自動的にロールバック
+            - プロパティは基本型（str、int、float、bool）のみ許可
+        """
+        if not labels or not isinstance(labels, list):
+            raise ValueError("Labels must be a non-empty list")
+        if not isinstance(properties, dict):
+            raise ValueError("Properties must be a dictionary")
+
+        def create_node_tx(tx):
+            labels_str = ":".join(labels)
+            query = (
+                f"CREATE (n:{labels_str} $props) "
+                "RETURN elementId(n) as id"
+            )
+            result = tx.run(query, props=properties)
+            record = result.single()
+            if not record:
+                raise RuntimeError("Failed to create node")
+            return record["id"]
+
+        return self._execute_transaction(create_node_tx)
 
     def find_node(
         self,
-        labels: List[str],
-        properties: Dict[str, Any]
+        labels: List[str] = None,
+        properties: Dict[str, Any] = None
     ) -> Optional[Dict[str, Any]]:
         """指定された条件に一致するノードを検索する。
 
@@ -209,12 +204,16 @@ class Neo4jManager:
                     WHERE ALL(key IN keys($props) WHERE n[key] = $props[key])
                     WITH n
                     LIMIT 1
-                    RETURN properties(n) as props
+                    RETURN properties(n) as props, elementId(n) as id
                     """,
                     props=properties
                 )
                 record = result.single()
-                return record["props"] if record else None
+                if record:
+                    props = record["props"]
+                    props['id'] = record["id"]
+                    return props
+                return None
         except Neo4jError as e:
             logger.error(f"Error finding node: {str(e)}")
             return None
@@ -233,22 +232,23 @@ class Neo4jManager:
             if not node_id or not isinstance(node_id, (str, int)):
                 return None
 
-            node_id_int = int(node_id) if isinstance(node_id, str) else node_id
             with self._get_session() as session:
                 result = session.run(
                     """
                     MATCH (n)
-                    WHERE id(n) = $node_id
+                    WHERE elementId(n) = $node_id
                     WITH n
                     LIMIT 1
-                    RETURN properties(n) as props
+                    RETURN properties(n) as props, elementId(n) as id
                     """,
-                    node_id=node_id_int
+                    node_id=node_id
                 )
                 record = result.single()
-                return record["props"] if record else None
-        except (ValueError, TypeError):
-            return None
+                if record:
+                    props = record["props"]
+                    props['id'] = record["id"]
+                    return props
+                return None
         except Exception as e:
             self.logger.error(f"Error finding node: {str(e)}")
             return None
@@ -267,10 +267,10 @@ class Neo4jManager:
                 result = session.run(
                     """
                     MATCH (n)
-                    WHERE id(n) = $node_id
+                    WHERE elementId(n) = $node_id
                     DETACH DELETE n
                     """,
-                    node_id=int(node_id)
+                    node_id=node_id
                 )
                 return result.consume().counters.nodes_deleted > 0
         except Neo4jError as e:
@@ -298,28 +298,6 @@ class Neo4jManager:
         """
         def create_relationship_tx(tx):
             try:
-                # 開始ノードと終了ノードを検索
-                start_node = tx.run(
-                    """
-                    MATCH (n)
-                    WHERE elementId(n) = $node_id
-                    RETURN n
-                    """,
-                    node_id=start_node_id
-                ).single()
-
-                end_node = tx.run(
-                    """
-                    MATCH (n)
-                    WHERE elementId(n) = $node_id
-                    RETURN n
-                    """,
-                    node_id=end_node_id
-                ).single()
-
-                if not start_node or not end_node:
-                    return False
-
                 # リレーションシップを作成
                 result = tx.run(
                     f"""
@@ -420,10 +398,10 @@ class Neo4jManager:
         Raises:
             ValueError: 無効なエンティティ
         """
-        if not entity:
-            raise ValueError("entity is required")
         if not isinstance(entity, dict):
             raise ValueError("entity must be a dictionary")
+        if not entity:
+            raise ValueError("entity is required")
         
         required_fields = ["id", "type", "name", "properties"]
         for field in required_fields:
@@ -536,44 +514,22 @@ class Neo4jManager:
         Returns:
             bool: 更新成功時True、失敗時False
         """
+        if not node_id:
+            raise ValueError("Node ID must be provided")
+        if not isinstance(properties, dict):
+            raise ValueError("Properties must be a dictionary")
+
         def update_node_tx(tx):
-            try:
-                # ノードを検索
-                node = tx.run(
-                    """
-                    MATCH (n)
-                    WHERE elementId(n) = $node_id
-                    RETURN n
-                    """,
-                    node_id=node_id
-                ).single()
+            query = (
+                "MATCH (n) "
+                "WHERE elementId(n) = $node_id "
+                "SET n += $props "
+                "RETURN n"
+            )
+            result = tx.run(query, node_id=node_id, props=properties)
+            return result.single() is not None
 
-                if not node:
-                    return False
-
-                # ノードを更新
-                result = tx.run(
-                    """
-                    MATCH (n)
-                    WHERE elementId(n) = $node_id
-                    SET n += $props
-                    RETURN n
-                    """,
-                    node_id=node_id,
-                    props=properties
-                )
-                return result.single() is not None
-            except Exception as e:
-                self.logger.error(f"Error in update transaction: {str(e)}")
-                return False
-
-        try:
-            if not node_id or not isinstance(node_id, str):
-                return False
-            return self._execute_transaction(update_node_tx)
-        except Exception as e:
-            self.logger.error(f"Error updating node: {str(e)}")
-            return False
+        return self._execute_transaction(update_node_tx)
 
     def close(self) -> None:
         """Neo4jドライバーを閉じる。"""

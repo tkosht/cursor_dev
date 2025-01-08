@@ -958,4 +958,176 @@ def test_find_relationships_error():
     relationships = manager.find_relationships("non_existent_id")
     assert isinstance(relationships, list)
     assert len(relationships) == 0
+
+
+def test_find_relationships_directions():
+    """リレーションシップの方向性検索をテストする。
+    
+    必要性：
+    - 各方向（outgoing/incoming/both）の検索機能確認
+    - リレーションシップの方向性の正確な取得
+    
+    十分性：
+    - 全方向の検索結果確認
+    - プロパティと方向性の整合性確認
+    """
+    manager = Neo4jManager()
+    
+    # テストノードを作成
+    node1_id = manager.create_node(
+        ["TestNode"],
+        {"name": "Node 1"}
+    )
+    node2_id = manager.create_node(
+        ["TestNode"],
+        {"name": "Node 2"}
+    )
+    node3_id = manager.create_node(
+        ["TestNode"],
+        {"name": "Node 3"}
+    )
+    
+    # リレーションシップを作成
+    manager.create_relationship(
+        node1_id,
+        node2_id,
+        "OUTGOING_REL",
+        {"prop": "out"}
+    )
+    manager.create_relationship(
+        node3_id,
+        node1_id,
+        "INCOMING_REL",
+        {"prop": "in"}
+    )
+    
+    # Outgoing方向のテスト
+    out_rels = manager.find_relationships(node1_id, "outgoing")
+    assert len(out_rels) == 1
+    assert out_rels[0]["type"] == "OUTGOING_REL"
+    assert out_rels[0]["start_node"] == node1_id
+    assert out_rels[0]["end_node"] == node2_id
+    
+    # Incoming方向のテスト
+    in_rels = manager.find_relationships(node1_id, "incoming")
+    assert len(in_rels) == 1
+    assert in_rels[0]["type"] == "INCOMING_REL"
+    assert in_rels[0]["start_node"] == node3_id
+    assert in_rels[0]["end_node"] == node1_id
+    
+    # Both方向のテスト
+    both_rels = manager.find_relationships(node1_id, "both")
+    assert len(both_rels) == 2
+
+
+def test_validate_entity_errors():
+    """エンティティバリデーションのエラーケースをテストする。
+    
+    必要性：
+    - 無効なエンティティの検出
+    - エラーメッセージの正確性
+    
+    十分性：
+    - 全必須フィールドの検証
+    - 適切なエラーメッセージ
+    """
+    manager = Neo4jManager()
+    
+    # Noneエンティティ
+    with pytest.raises(ValueError, match="entity must be a dictionary"):
+        manager._validate_entity(None)
+    
+    # 辞書以外
+    with pytest.raises(ValueError, match="entity must be a dictionary"):
+        manager._validate_entity([])
+    
+    # 空辞書
+    with pytest.raises(ValueError, match="entity is required"):
+        manager._validate_entity({})
+    
+    # 必須フィールドの欠落
+    invalid_entities = [
+        {"id": "1"},  # idのみ
+        {"id": "1", "type": "Test"},  # typeまで
+        {"id": "1", "type": "Test", "name": "Test"}  # propertiesなし
+    ]
+    
+    for entity in invalid_entities:
+        with pytest.raises(ValueError, match=r"entity must have \w+ field"):
+            manager._validate_entity(entity)
+
+
+def test_create_relationships_failure():
+    """リレーションシップ作成の失敗ケースをテストする。
+    
+    必要性：
+    - エラー処理の確認
+    - 無効なパラメータの処理
+    
+    十分性：
+    - 各種エラーケースの処理
+    - ログ出力の確認
+    """
+    manager = Neo4jManager()
+    
+    # テストノードを作成
+    node_id = manager.create_node(
+        ["TestNode"],
+        {"name": "Test Node"}
+    )
+    
+    # 無効なリレーションシップ定義
+    invalid_relationships = [
+        {},  # 空辞書
+        {"target_id": "invalid"},  # typeなし
+        {"type": "TEST"},  # target_idなし
+        {"target_id": "nonexistent", "type": "TEST"}  # 存在しないターゲット
+    ]
+    
+    manager._create_relationships(node_id, invalid_relationships)
+    # エラーが発生せず、処理が継続することを確認
+
+
+def test_store_entity_errors():
+    """エンティティ保存のエラーケースをテストする。
+    
+    必要性：
+    - エラー処理の確認
+    - データ整合性の検証
+    
+    十分性：
+    - 各種エラーケースの処理
+    - 適切なエラーハンドリング
+    """
+    manager = Neo4jManager()
+    
+    # 無効なエンティティ
+    with pytest.raises(ValueError):
+        manager.store_entity(None)
+    
+    # 必須フィールドの欠落
+    invalid_entity = {
+        "id": "test",
+        "type": "Test",
+        # nameが欠落
+        "properties": {}
+    }
+    with pytest.raises(ValueError):
+        manager.store_entity(invalid_entity)
+    
+    # 無効なリレーションシップを含むエンティティ
+    entity_with_invalid_rel = {
+        "id": "test",
+        "type": "Test",
+        "name": "Test Entity",
+        "properties": {},
+        "relationships": [
+            {
+                "target_id": "nonexistent",
+                "type": "TEST_REL"
+            }
+        ]
+    }
+    result = manager.store_entity(entity_with_invalid_rel)
+    assert result is True  # エンティティは保存されるが、リレーションシップは失敗
  
