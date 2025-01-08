@@ -438,3 +438,402 @@ def test_nonexistent_nodes_relationship():
     )
     
     assert success is False 
+
+
+def test_update_node():
+    """ノードの更新をテストする。
+    
+    必要性：
+    - 更新機能の確認
+    - データ整合性の検証
+    
+    十分性：
+    - プロパティの更新確認
+    - 存在しないノードの処理
+    """
+    manager = Neo4jManager()
+    
+    # テストノードを作成
+    node_id = manager.create_node(
+        ["TestNode"],
+        {"name": "Original Name", "value": 42}
+    )
+    
+    # ノードを更新
+    success = manager.update_node(
+        node_id,
+        {"name": "Updated Name", "value": 100}
+    )
+    assert success is True
+    
+    # 更新を確認
+    node = manager.find_node_by_id(node_id)
+    assert node is not None
+    assert node["name"] == "Updated Name"
+    assert node["value"] == 100
+    
+    # 存在しないノードの更新を試みる
+    success = manager.update_node(
+        "nonexistent_id",
+        {"name": "Test"}
+    )
+    assert success is False
+
+
+def test_update_node_partial():
+    """ノードの部分更新をテストする。
+    
+    必要性：
+    - 部分更新の動作確認
+    - 既存プロパティの保持確認
+    
+    十分性：
+    - 一部プロパティの更新
+    - 他のプロパティの保持
+    """
+    manager = Neo4jManager()
+    
+    # テストノードを作成
+    node_id = manager.create_node(
+        ["TestNode"],
+        {
+            "name": "Original Name",
+            "value": 42,
+            "extra": "Keep This"
+        }
+    )
+    
+    # 一部のプロパティのみ更新
+    success = manager.update_node(
+        node_id,
+        {"name": "Updated Name"}
+    )
+    assert success is True
+    
+    # 更新を確認
+    node = manager.find_node_by_id(node_id)
+    assert node is not None
+    assert node["name"] == "Updated Name"
+    assert node["value"] == 42  # 未更新のプロパティは保持
+    assert node["extra"] == "Keep This"  # 未更新のプロパティは保持
+
+
+def test_update_node_invalid_params():
+    """無効なパラメータでのノード更新をテストする。
+    
+    必要性：
+    - エラー処理の確認
+    - 入力検証の確認
+    
+    十分性：
+    - 無効なIDの処理
+    - 無効なプロパティの処理
+    """
+    manager = Neo4jManager()
+    
+    # テストノードを作成
+    node_id = manager.create_node(
+        ["TestNode"],
+        {"name": "Test Node"}
+    )
+    
+    # None IDでの更新を試みる
+    try:
+        manager.update_node(None, {"name": "Test"})
+        assert False  # 例外が発生すべき
+    except ValueError:
+        assert True  # 例外が発生することを確認
+    
+    # 空のプロパティでの更新を試みる
+    try:
+        manager.update_node(node_id, {})
+        assert False  # 例外が発生すべき
+    except ValueError:
+        assert True  # 例外が発生することを確認
+    
+    # Noneプロパティでの更新を試みる
+    try:
+        manager.update_node(node_id, None)
+        assert False  # 例外が発生すべき
+    except ValueError:
+        assert True  # 例外が発生することを確認
+
+
+def test_store_entity():
+    """エンティティの保存をテストする。
+    
+    必要性：
+    - エンティティ保存機能の確認
+    - 既存エンティティの更新確認
+    
+    十分性：
+    - 新規エンティティの作成
+    - 既存エンティティの更新
+    """
+    manager = Neo4jManager()
+    
+    # 新規エンティティを保存
+    entity = {
+        "id": "test_entity_1",
+        "name": "Test Entity",
+        "type": "TestType",
+        "properties": {
+            "value": 42,
+            "description": "Test Description"
+        }
+    }
+    
+    success = manager.store_entity(entity)
+    assert success is True
+    
+    # エンティティが保存されたことを確認
+    node = manager.find_node(
+        ["Entity", "TestType"],
+        {"id": "test_entity_1"}
+    )
+    assert node is not None
+    assert node["name"] == "Test Entity"
+    assert node["value"] == 42
+    assert node["description"] == "Test Description"
+    
+    # エンティティを更新
+    entity["properties"]["value"] = 100
+    entity["properties"]["new_prop"] = "New Value"
+    
+    success = manager.store_entity(entity)
+    assert success is True
+    
+    # 更新を確認
+    node = manager.find_node(
+        ["Entity", "TestType"],
+        {"id": "test_entity_1"}
+    )
+    assert node is not None
+    assert node["value"] == 100
+    assert node["new_prop"] == "New Value"
+
+
+def test_store_entity_none():
+    """Noneエンティティの保存をテストする。
+    
+    必要性：
+    - エラー処理の確認
+    
+    十分性：
+    - Noneエンティティの処理
+    """
+    manager = Neo4jManager()
+    
+    try:
+        manager.store_entity(None)
+        assert False  # 例外が発生すべき
+    except ValueError:
+        assert True  # 例外が発生することを確認
+
+
+def test_store_entity_missing_id():
+    """IDなしエンティティの保存をテストする。
+    
+    必要性：
+    - 必須フィールドの検証
+    
+    十分性：
+    - IDなしエンティティの処理
+    """
+    manager = Neo4jManager()
+    
+    try:
+        entity = {
+            "name": "Test Entity",
+            "type": "TestType",
+            "properties": {}
+        }
+        manager.store_entity(entity)
+        assert False  # 例外が発生すべき
+    except ValueError:
+        assert True  # 例外が発生することを確認
+
+
+def test_store_entity_missing_type():
+    """タイプなしエンティティの保存をテストする。
+    
+    必要性：
+    - 必須フィールドの検証
+    
+    十分性：
+    - タイプなしエンティティの処理
+    """
+    manager = Neo4jManager()
+    
+    try:
+        entity = {
+            "id": "test_entity_2",
+            "name": "Test Entity",
+            "properties": {}
+        }
+        manager.store_entity(entity)
+        assert False  # 例外が発生すべき
+    except ValueError:
+        assert True  # 例外が発生することを確認
+
+
+def test_store_entity_missing_properties():
+    """プロパティなしエンティティの保存をテストする。
+    
+    必要性：
+    - 必須フィールドの検証
+    
+    十分性：
+    - プロパティなしエンティティの処理
+    """
+    manager = Neo4jManager()
+    
+    try:
+        entity = {
+            "id": "test_entity_2",
+            "name": "Test Entity",
+            "type": "TestType"
+        }
+        manager.store_entity(entity)
+        assert False  # 例外が発生すべき
+    except ValueError:
+        assert True  # 例外が発生することを確認
+
+
+def test_store_entity_with_relationships():
+    """関係を持つエンティティの保存をテストする。
+    
+    必要性：
+    - 関係を持つエンティティの保存確認
+    - 関係の整合性検証
+    
+    十分性：
+    - エンティティと関係の保存
+    - 関係プロパティの検証
+    """
+    manager = Neo4jManager()
+    
+    # 関連エンティティを作成
+    related_entity = {
+        "id": "related_entity_1",
+        "name": "Related Entity",
+        "type": "TestType",
+        "properties": {
+            "value": 42
+        }
+    }
+    success = manager.store_entity(related_entity)
+    assert success is True
+    
+    # メインエンティティを関係付きで保存
+    entity = {
+        "id": "main_entity_1",
+        "name": "Main Entity",
+        "type": "TestType",
+        "properties": {
+            "value": 100
+        },
+        "relationships": [
+            {
+                "target_id": "related_entity_1",
+                "type": "RELATES_TO",
+                "properties": {
+                    "strength": 0.8
+                }
+            }
+        ]
+    }
+    success = manager.store_entity(entity)
+    assert success is True
+    
+    # 関係を確認
+    with manager._get_session() as session:
+        result = session.run(
+            """
+            MATCH (a:Entity:TestType)-[r:RELATES_TO]->(b:Entity:TestType)
+            WHERE a.id = $source_id AND b.id = $target_id
+            RETURN r
+            """,
+            source_id="main_entity_1",
+            target_id="related_entity_1"
+        )
+        relationship = result.single()
+        assert relationship is not None
+        assert relationship["r"]["strength"] == 0.8
+
+
+def test_database_connection_error():
+    """データベース接続エラーをテストする。
+    
+    必要性：
+    - 接続エラー処理の確認
+    - エラーログの検証
+    
+    十分性：
+    - 接続エラーの処理
+    - エラーメッセージの確認
+    """
+    import os
+    from unittest.mock import patch
+
+    # 一時的に環境変数を変更
+    with patch.dict(os.environ, {
+        'NEO4J_URI': 'bolt://invalid:7687',
+        'NEO4J_USER': 'neo4j',
+        'NEO4J_PASSWORD': 'password'
+    }):
+        try:
+            Neo4jManager()
+            assert False  # 例外が発生すべき
+        except ValueError:
+            assert True  # 例外が発生することを確認
+
+
+def test_transaction_error():
+    """トランザクションエラーをテストする。
+    
+    必要性：
+    - トランザクション処理の確認
+    - ロールバックの検証
+    
+    十分性：
+    - エラー時のロールバック
+    - データ整合性の確認
+    """
+    manager = Neo4jManager()
+    
+    # 無効なCypherクエリを実行
+    with manager._get_session() as session:
+        try:
+            session.run("INVALID QUERY")
+            assert False  # エラーが発生すべき
+        except Exception:
+            assert True  # エラーが発生することを確認
+    
+    # トランザクションがロールバックされることを確認
+    with manager._get_session() as session:
+        result = session.run("MATCH (n) RETURN count(n) as count")
+        count_before = result.single()["count"]
+    
+    # エラーを含むトランザクションを実行
+    with manager._get_session() as session:
+        try:
+            # 正常なクエリ
+            session.run(
+                "CREATE (n:TestNode {name: $name})",
+                name="Test Node"
+            )
+            # 無効なクエリ
+            session.run("INVALID QUERY")
+            session.commit()  # トランザクションをコミット
+            assert False  # エラーが発生すべき
+        except Exception:
+            session.rollback()  # トランザクションをロールバック
+            assert True  # エラーが発生することを確認
+    
+    # ノード数が変化していないことを確認（ロールバック成功）
+    with manager._get_session() as session:
+        result = session.run("MATCH (n) RETURN count(n) as count")
+        count_after = result.single()["count"]
+        assert count_before == count_after
+ 

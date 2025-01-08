@@ -15,7 +15,7 @@
 
 import logging
 import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from neo4j import GraphDatabase, Session
 from neo4j.exceptions import Neo4jError
@@ -90,7 +90,23 @@ class Neo4jManager:
         Note:
             セッションはコンテキストマネージャとして使用することを推奨
         """
-        return self._driver.session()
+        return self._driver.session(default_access_mode="WRITE")
+
+    def run_transaction(self, work: Callable[[Session], Any]) -> Any:
+        """トランザクションを実行する。
+
+        Args:
+            work: トランザクション内で実行する処理
+
+        Returns:
+            Any: 処理の結果
+        """
+        with self._get_session() as session:
+            try:
+                return session.execute_write(work)
+            except Exception as e:
+                logger.error(f"Transaction error: {str(e)}")
+                raise
 
     def create_node(
         self,
@@ -122,12 +138,12 @@ class Neo4jManager:
                 result = session.run(
                     f"""
                     CREATE (n:{labels_str} $props)
-                    RETURN elementId(n) as id
+                    RETURN id(n) as id
                     """,
                     props=properties
                 )
                 record = result.single()
-                return record["id"] if record else None
+                return str(record["id"]) if record else None
         except Neo4jError as e:
             logger.error(f"Error creating node: {str(e)}")
             return None
@@ -163,8 +179,9 @@ class Neo4jManager:
                     f"""
                     MATCH (n:{labels_str})
                     WHERE ALL(key IN keys($props) WHERE n[key] = $props[key])
-                    RETURN properties(n) as props
+                    WITH n
                     LIMIT 1
+                    RETURN properties(n) as props
                     """,
                     props=properties
                 )
@@ -188,10 +205,12 @@ class Neo4jManager:
                 result = session.run(
                     """
                     MATCH (n)
-                    WHERE elementId(n) = $node_id
+                    WHERE id(n) = $node_id
+                    WITH n
+                    LIMIT 1
                     RETURN properties(n) as props
                     """,
-                    node_id=node_id
+                    node_id=int(node_id)
                 )
                 record = result.single()
                 return record["props"] if record else None
@@ -213,10 +232,10 @@ class Neo4jManager:
                 result = session.run(
                     """
                     MATCH (n)
-                    WHERE elementId(n) = $node_id
+                    WHERE id(n) = $node_id
                     DETACH DELETE n
                     """,
-                    node_id=node_id
+                    node_id=int(node_id)
                 )
                 return result.consume().counters.nodes_deleted > 0
         except Neo4jError as e:
@@ -240,39 +259,24 @@ class Neo4jManager:
 
         Returns:
             bool: 作成が成功した場合はTrue、失敗した場合はFalse
-
-        Note:
-            propertiesには以下の型のみ指定可能：
-            - 文字列
-            - 整数
-            - 浮動小数点数
-            - 真偽値
-            - 上記の型のリスト
         """
-        if not all([start_node_id, end_node_id, rel_type]):
-            return False
-
-        # プロパティが指定されていない場合は空の辞書を使用
-        properties = properties or {}
-
         try:
             with self._get_session() as session:
-                # リレーションシップタイプを直接文字列として埋め込む
-                query = f"""
-                    MATCH (a), (b)
-                    WHERE elementId(a) = $start_id AND elementId(b) = $end_id
-                    CREATE (a)-[r:{rel_type}]->(b)
-                    SET r = $props
-                    RETURN type(r)
-                """
                 result = session.run(
-                    query,
-                    start_id=start_node_id,
-                    end_id=end_node_id,
-                    props=properties
+                    """
+                    MATCH (a), (b)
+                    WHERE id(a) = $start_id AND id(b) = $end_id
+                    CREATE (a)-[r:$rel_type]->(b)
+                    SET r = $props
+                    RETURN r
+                    """,
+                    start_id=int(start_node_id),
+                    end_id=int(end_node_id),
+                    rel_type=rel_type,
+                    props=properties or {}
                 )
                 return result.single() is not None
-        except Neo4jError as e:
+        except Exception as e:
             logger.error(f"Error creating relationship: {str(e)}")
             return False
 
@@ -303,6 +307,7 @@ class Neo4jManager:
             query = """
             MATCH (n)-[r]->(m)
             WHERE elementId(n) = $node_id
+            WITH r, n, m
             RETURN type(r) as type, properties(r) as properties,
                    elementId(n) as start_node, elementId(m) as end_node
             """
@@ -310,6 +315,7 @@ class Neo4jManager:
             query = """
             MATCH (m)-[r]->(n)
             WHERE elementId(n) = $node_id
+            WITH r, n, m
             RETURN type(r) as type, properties(r) as properties,
                    elementId(m) as start_node, elementId(n) as end_node
             """
@@ -317,6 +323,7 @@ class Neo4jManager:
             query = """
             MATCH (n)-[r]-(m)
             WHERE elementId(n) = $node_id
+            WITH r, n, m
             RETURN type(r) as type, properties(r) as properties,
                    elementId(startNode(r)) as start_node,
                    elementId(endNode(r)) as end_node
@@ -336,50 +343,154 @@ class Neo4jManager:
                 ]
         except Neo4jError as e:
             logger.error(f"Error finding relationships: {str(e)}")
-            return [] 
+            return []
+
+    def _validate_entity(self, entity: Dict[str, Any]) -> None:
+        """エンティティの妥当性を検証する。
+
+        Args:
+            entity: 検証対象のエンティティ辞書
+
+        Raises:
+            ValueError: 無効なエンティティ
+        """
+        if not entity:
+            raise ValueError("entity is required")
+        if not isinstance(entity, dict):
+            raise ValueError("entity must be a dictionary")
+        
+        required_fields = ["id", "type", "name", "properties"]
+        for field in required_fields:
+            if field not in entity:
+                raise ValueError(f"entity must have {field} field")
+
+    def _create_relationships(
+        self,
+        entity_id: str,
+        relationships: List[Dict[str, Any]]
+    ) -> None:
+        """エンティティの関係を作成する。
+
+        Args:
+            entity_id: エンティティID
+            relationships: 関係情報のリスト
+        """
+        for rel in relationships:
+            if not all(k in rel for k in ["target_id", "type"]):
+                continue
+            
+            # 関係を作成
+            rel_props = rel.get("properties", {})
+            success = self.create_relationship(
+                entity_id,
+                rel["target_id"],
+                rel["type"],
+                rel_props
+            )
+            if not success:
+                logger.warning(
+                    f"Failed to create relationship from {entity_id} "
+                    f"to {rel['target_id']} of type {rel['type']}"
+                )
 
     def store_entity(
         self,
-        label: str,
-        entity_id: str,
-        properties: Dict[str, Any]
-    ) -> Optional[str]:
-        """エンティティを保存または更新する。
+        entity: Dict[str, Any]
+    ) -> bool:
+        """エンティティを保存する。
 
         Args:
-            label: エンティティのラベル
-            entity_id: エンティティのID
-            properties: エンティティのプロパティ
+            entity: エンティティ情報を含む辞書
+                {
+                    "id": str,          # エンティティID（必須）
+                    "type": str,        # エンティティタイプ（必須）
+                    "name": str,        # エンティティ名（必須）
+                    "properties": dict, # その他のプロパティ（必須）
+                    "relationships": [  # 関係情報（オプション）
+                        {
+                            "target_id": str,  # 関係先エンティティID
+                            "type": str,       # 関係タイプ
+                            "properties": dict # 関係のプロパティ
+                        }
+                    ]
+                }
 
         Returns:
-            str: 作成または更新されたノードのID、失敗時はNone
+            bool: 保存が成功した場合はTrue、失敗した場合はFalse
 
         Raises:
             ValueError: 無効な入力パラメータ
-            Neo4jError: データベース操作エラー
         """
-        if not label or not isinstance(label, str):
-            raise ValueError("Label must be a non-empty string")
-        if not entity_id or not isinstance(entity_id, str):
-            raise ValueError("Entity ID must be a non-empty string")
-        if not properties or not isinstance(properties, dict):
-            raise ValueError("Properties must be a non-empty dictionary")
-
         try:
+            # エンティティの妥当性を検証
+            self._validate_entity(entity)
+            
+            # プロパティを準備
+            properties = {
+                "id": entity["id"],
+                "name": entity["name"],
+                **entity["properties"]
+            }
+            
             with self._get_session() as session:
-                # MERGE文を使用して、存在しない場合は作成、存在する場合は更新
+                # エンティティを作成または更新
+                query = f"""
+                    MERGE (n:Entity:{entity['type']} {{id: $id}})
+                    SET n = $props
+                    RETURN n
+                """
                 result = session.run(
-                    f"""
-                    MERGE (n:{label} {{id: $entity_id}})
-                    SET n += $properties
-                    RETURN elementId(n) as node_id
-                    """,
-                    entity_id=entity_id,
-                    properties=properties
+                    query,
+                    id=entity["id"],
+                    props=properties
                 )
-                record = result.single()
-                return record["node_id"] if record else None
-
+                if not result.single():
+                    return False
+                
+                # 関係を作成
+                if "relationships" in entity and entity["relationships"]:
+                    self._create_relationships(
+                        entity["id"],
+                        entity["relationships"]
+                    )
+                
+                return True
         except Neo4jError as e:
             logger.error(f"Error storing entity: {str(e)}")
-            raise 
+            return False
+
+    def update_node(
+        self,
+        node_id: str,
+        properties: Dict[str, Any]
+    ) -> bool:
+        """ノードのプロパティを更新する。
+
+        Args:
+            node_id: 更新対象のノードID
+            properties: 更新するプロパティ辞書
+
+        Returns:
+            bool: 更新が成功した場合はTrue、失敗した場合はFalse
+        """
+        try:
+            with self._get_session() as session:
+                result = session.run(
+                    """
+                    MATCH (n)
+                    WHERE id(n) = $node_id
+                    SET n += $props
+                    RETURN n
+                    """,
+                    node_id=int(node_id),
+                    props=properties
+                )
+                return result.single() is not None
+        except Exception as e:
+            logger.error(f"Error updating node: {str(e)}")
+            return False
+
+    def close(self) -> None:
+        """Neo4jドライバーを閉じる。"""
+        if hasattr(self, '_driver'):
+            self._driver.close() 

@@ -107,34 +107,74 @@ class KnowledgeRepository:
             bool: バリデーション結果
         """
         try:
-            # 基本的な型と必須キーの確認
-            if not self._validate_basic_structure(analysis_result):
+            # 基本的な�証
+            if not self._validate_basic_checks(analysis_result):
                 return False
 
-            # 各フィールドの型と内容の確認
-            if not self._validate_field_types(analysis_result):
-                return False
+            # 空のデータセットは有効とする
+            if not analysis_result['entities']:
+                return True
 
-            # URLの形式を検証
-            if not self._validate_url(analysis_result['source_url']):
-                logger.error("Invalid URL format")
-                return False
-
-            # 各フィールドの詳細バリデーション
-            if not self._validate_entities(analysis_result['entities']):
-                return False
-
-            if not self._validate_relationships(analysis_result['relationships']):
-                return False
-
-            if not self._validate_impact_scores(analysis_result['impact_scores'], analysis_result['entities']):
-                return False
-
-            return True
+            # 詳細な検証
+            return self._validate_data_contents(analysis_result)
 
         except Exception as e:
             logger.error(f"Error validating analysis result: {str(e)}")
             return False
+
+    def _validate_basic_checks(self, analysis_result: Dict[str, Any]) -> bool:
+        """分析結果の基本的な検証を行う。
+
+        Args:
+            analysis_result (Dict[str, Any]): 分析結果
+
+        Returns:
+            bool: 検証結果
+        """
+        # 基本的な型と必須キーの確認
+        if not self._validate_basic_structure(analysis_result):
+            return False
+
+        # 各フィールドの型と内容の確認
+        if not self._validate_field_types(analysis_result):
+            return False
+
+        # URLの形式を検証
+        if not self._validate_url(analysis_result['source_url']):
+            logger.error("Invalid URL format")
+            return False
+
+        return True
+
+    def _validate_data_contents(self, analysis_result: Dict[str, Any]) -> bool:
+        """分析結果の詳細な内容を検証する。
+
+        Args:
+            analysis_result (Dict[str, Any]): 分析結果
+
+        Returns:
+            bool: 検証結果
+        """
+        # エンティティの検証
+        if not self._validate_entities(analysis_result['entities']):
+            return False
+
+        # リレーションシップの検証（存在する場合のみ）
+        has_relationships = bool(analysis_result['relationships'])
+        if has_relationships:
+            if not self._validate_relationships(analysis_result['relationships']):
+                return False
+
+        # 影響度スコアの検証（存在する場合のみ）
+        has_impact_scores = bool(analysis_result['impact_scores'])
+        if has_impact_scores:
+            if not self._validate_impact_scores(
+                analysis_result['impact_scores'],
+                analysis_result['entities']
+            ):
+                return False
+
+        return True
 
     def _validate_basic_structure(self, analysis_result: Dict[str, Any]) -> bool:
         """分析結果の基本構造を検証する。
@@ -158,28 +198,66 @@ class KnowledgeRepository:
         return True
 
     def _validate_field_types(self, analysis_result: Dict[str, Any]) -> bool:
-        """分析結果の各フィールドの型を検証する。
+        """�ィールドの型を検証する。
 
         Args:
-            analysis_result (Dict[str, Any]): 分析結果
+            analysis_result: 検証対象の分析結果
 
         Returns:
             bool: 検証結果
         """
-        # 各フィールドの型確認
-        type_checks = [
-            (analysis_result['entities'], list, "Entities must be a list"),
-            (analysis_result['relationships'], list, "Relationships must be a list"),
-            (analysis_result['impact_scores'], dict, "Impact scores must be a dictionary"),
-            (analysis_result['source_url'], str, "Source URL must be a string"),
-            (analysis_result['analyzed_at'], datetime, "Analyzed at must be a datetime")
-        ]
+        try:
+            return all([
+                self._validate_entities_type(analysis_result),
+                self._validate_relationships_type(analysis_result),
+                self._validate_impact_scores_type(analysis_result),
+                self._validate_source_url_type(analysis_result),
+                self._validate_analyzed_at_type(analysis_result)
+            ])
+        except Exception as e:
+            logger.error(f"Error validating field types: {str(e)}")
+            return False
 
-        for value, expected_type, error_message in type_checks:
-            if not isinstance(value, expected_type):
-                logger.error(error_message)
+    def _validate_entities_type(self, analysis_result: Dict[str, Any]) -> bool:
+        """entitiesフィールドの型を検証する。"""
+        if not isinstance(analysis_result.get('entities'), list):
+            logger.error("Entities must be a list")
+            return False
+        return True
+
+    def _validate_relationships_type(self, analysis_result: Dict[str, Any]) -> bool:
+        """relationshipsフィールドの型を検証する。"""
+        if not isinstance(analysis_result.get('relationships'), list):
+            logger.error("Relationships must be a list")
+            return False
+        return True
+
+    def _validate_impact_scores_type(self, analysis_result: Dict[str, Any]) -> bool:
+        """impact_scoresフィールドの型を検証する。"""
+        if not isinstance(analysis_result.get('impact_scores'), dict):
+            logger.error("Impact scores must be a dictionary")
+            return False
+        return True
+
+    def _validate_source_url_type(self, analysis_result: Dict[str, Any]) -> bool:
+        """source_urlフィールドの型を検証する。"""
+        if not isinstance(analysis_result.get('source_url'), str):
+            logger.error("Source URL must be a string")
+            return False
+        return True
+
+    def _validate_analyzed_at_type(self, analysis_result: Dict[str, Any]) -> bool:
+        """analyzed_atフィールドの型を検証する。"""
+        analyzed_at = analysis_result.get('analyzed_at')
+        if isinstance(analyzed_at, str):
+            try:
+                datetime.fromisoformat(analyzed_at)
+            except ValueError:
+                logger.error("Analyzed at must be a valid ISO format datetime string")
                 return False
-
+        elif not isinstance(analyzed_at, datetime):
+            logger.error("Analyzed at must be a datetime or ISO format string")
+            return False
         return True
 
     def _validate_entities(self, entities: Any) -> bool:
@@ -283,19 +361,69 @@ class KnowledgeRepository:
         """エンティティリストからIDのセットを抽出する。
 
         Args:
-            entities: エンティティリスト
+            entities (List[Dict[str, Any]]): エンティティリスト
 
         Returns:
-            Optional[set]: エンティティIDのセット、エラー時はNone
+            Optional[set]: エンティティIDのセット、無効な場合はNone
         """
-        entity_ids = {
-            entity['id']
-            for entity in entities
-            if isinstance(entity, dict) and 'id' in entity
-        }
-        if not entity_ids:
-            logger.error("No valid entity IDs found")
+        try:
+            # エンティティの基本的な検証
+            if not self._validate_entity_list_structure(entities):
+                return None
+
+            # エンティティIDの抽出
+            entity_ids = self._extract_valid_entity_ids(entities)
+            if not entity_ids:
+                logger.error("No valid entity IDs found")
+                return None
+
+            return entity_ids
+
+        except Exception as e:
+            logger.error(f"Error extracting entity IDs: {str(e)}")
             return None
+
+    def _validate_entity_list_structure(self, entities: Any) -> bool:
+        """エンティティリストの構造を検証する。
+
+        Args:
+            entities (Any): 検証するエンティティリスト
+
+        Returns:
+            bool: 検証結果
+        """
+        if not isinstance(entities, list):
+            logger.error("Entities must be a list")
+            return False
+
+        for entity in entities:
+            if not isinstance(entity, dict):
+                logger.error(f"Entity must be a dictionary: {entity}")
+                return False
+
+        return True
+
+    def _extract_valid_entity_ids(self, entities: List[Dict[str, Any]]) -> Optional[set]:
+        """有効なエンティティIDを抽出する。
+
+        Args:
+            entities (List[Dict[str, Any]]): エンティティリスト
+
+        Returns:
+            Optional[set]: 有効なエンティティIDのセット
+        """
+        entity_ids = set()
+        for entity in entities:
+            if 'id' not in entity:
+                logger.error("Entity missing required 'id' field")
+                return None
+
+            if not isinstance(entity['id'], str):
+                logger.error(f"Entity ID must be a string: {entity['id']}")
+                return None
+
+            entity_ids.add(entity['id'])
+
         return entity_ids
 
     def _validate_impact_scores_consistency(
@@ -371,6 +499,11 @@ class KnowledgeRepository:
         entity_id_map = {}
         try:
             for entity in analysis_result['entities']:
+                # �ンティティIDの検証
+                if not entity.get('id') or not isinstance(entity['id'], str):
+                    logger.error(f"Invalid entity ID: {entity.get('id')}")
+                    raise ValueError(f"Invalid entity ID: {entity.get('id')}")
+
                 # 既存のエンティティを検索
                 existing = self.neo4j_manager.find_node(
                     labels=[entity['type']],
@@ -387,17 +520,21 @@ class KnowledgeRepository:
                     if success:
                         node_id = entity['id']
                     else:
-                        logger.error(f"Failed to update entity: {entity['id']}")
-                        raise Exception(f"Failed to update entity: {entity['id']}")
+                        # 更新に失敗した場合は新規作成を試みる
+                        node_id = self.neo4j_manager.create_node(
+                            labels=[entity['type']],
+                            properties=entity
+                        )
                 else:
-                    # 新しいエンティティを作成
+                    # 新規エンティティを作成
                     node_id = self.neo4j_manager.create_node(
                         labels=[entity['type']],
                         properties=entity
                     )
-                    if not node_id:
-                        logger.error(f"Failed to create entity: {entity['id']}")
-                        raise Exception(f"Failed to create entity: {entity['id']}")
+
+                if not node_id:
+                    logger.error(f"Failed to store entity: {entity['id']}")
+                    raise Exception(f"Failed to store entity: {entity['id']}")
 
                 entity_id_map[entity['name']] = node_id
 
@@ -506,7 +643,7 @@ class KnowledgeRepository:
         return result[0]['count'] > 0
 
     def _update_timestamp(self, node_id: str, label: str) -> None:
-        """指定されたノードの更新日時を現在時刻に更新する
+        """指定されたノードドドの更新日時を現在時刻に更新する
 
         Args:
             node_id (str): ノードID
