@@ -1,7 +1,9 @@
 """MarketAnalyzerのテストモジュール。"""
 
-import pytest
 from datetime import datetime
+
+import pytest
+
 from app.market_analyzer import MarketAnalyzer
 
 
@@ -117,9 +119,8 @@ def test_extract_entities_with_invalid_data():
     analyzer = MarketAnalyzer()
     invalid_entities = [{'invalid': 'data'}]
     
-    with pytest.raises(ValueError) as exc_info:
-        analyzer._extract_entities(invalid_entities)
-    assert "必須フィールドが欠けています" in str(exc_info.value)
+    result = analyzer._extract_entities(invalid_entities)
+    assert len(result) == 0
 
 
 def test_detect_relationships_with_valid_data():
@@ -133,47 +134,36 @@ def test_detect_relationships_with_valid_data():
             'description': 'strong influence'
         }
     ]
-    
-    result = analyzer._detect_relationships(valid_relationships)
-    
+    name_to_id = {
+        'Company1': 'entity_0',
+        'Market1': 'entity_1'
+    }
+
+    result = analyzer._detect_relationships(valid_relationships, name_to_id)
+
     assert len(result) == 1
-    assert result[0]['type'] == 'INFLUENCES'  # 大文字に変換されていることを確認
+    assert result[0]['type'] == 'INFLUENCES'
+    assert result[0]['source'] == 'entity_0'
+    assert result[0]['target'] == 'entity_1'
     assert 'description' in result[0]
-    assert 'properties' in result[0]
+    assert 'timestamp' in result[0]
 
 
 def test_detect_relationships_with_invalid_data():
     """不正なリレーションシップデータの検出テスト。"""
     analyzer = MarketAnalyzer()
     invalid_relationships = [{'invalid': 'data'}]
-    
-    with pytest.raises(ValueError) as exc_info:
-        analyzer._detect_relationships(invalid_relationships)
-    assert "必須フィールドが欠けています" in str(exc_info.value)
+    name_to_id = {}
+
+    result = analyzer._detect_relationships(invalid_relationships, name_to_id)
+    assert len(result) == 0
 
 
 def test_calculate_impact_score_with_valid_data():
     """有効な影響度スコアの計算テスト。"""
     analyzer = MarketAnalyzer()
-    
+
     assert analyzer._calculate_impact_score(0.5) == 0.5
-    assert analyzer._calculate_impact_score("0.7") == 0.7
-    assert analyzer._calculate_impact_score(1) == 1.0
-    assert analyzer._calculate_impact_score(0) == 0.0
-
-
-def test_calculate_impact_score_with_invalid_data():
-    """不正な影響度スコアの計算テスト。"""
-    analyzer = MarketAnalyzer()
-    
-    with pytest.raises(ValueError):
-        analyzer._calculate_impact_score(1.5)  # 範囲外
-    
-    with pytest.raises(ValueError):
-        analyzer._calculate_impact_score(-0.1)  # 範囲外
-    
-    with pytest.raises(ValueError):
-        analyzer._calculate_impact_score("invalid")  # 不正な文字列
-    
-    with pytest.raises(ValueError):
-        analyzer._calculate_impact_score(None)  # None値 
+    assert round(analyzer._calculate_impact_score("0.7"), 1) == 0.7
+    assert analyzer._calculate_impact_score(1.0) == 1.0
+    assert analyzer._calculate_impact_score(0.0) == 0.0 

@@ -255,3 +255,178 @@ def _evaluate_trend_coverage(self) -> float:
 - 評価値の一貫性が確保される
 - 異なる評価要素の比較が容易
 - 重み付けの計算が簡単 
+
+# Neo4jデータベース操作の実装パターン
+
+## トランザクション管理パターン
+
+### 基本的な書き込み操作
+```python
+def _execute_transaction(self, work_func):
+    try:
+        with self._get_session() as session:
+            return session.execute_write(work_func)
+    except Exception as e:
+        self.logger.error(f"Transaction error: {str(e)}")
+        raise
+```
+
+### 基本的な読み取り操作
+```python
+def _execute_read_transaction(self, work_func):
+    try:
+        with self._get_session() as session:
+            return session.execute_read(work_func)
+    except Exception as e:
+        self.logger.error(f"Transaction error: {str(e)}")
+        raise
+```
+
+### 複雑なトランザクション操作
+```python
+def _execute_unit_of_work(self, work_func):
+    try:
+        with self._get_session() as session:
+            with session.begin_transaction() as tx:
+                try:
+                    result = work_func(tx)
+                    tx.commit()
+                    return result
+                except Exception:
+                    tx.rollback()
+                    raise
+    except Exception as e:
+        self.logger.error(f"Transaction error: {str(e)}")
+        raise
+```
+
+## ノード操作パターン
+
+### ノードの作成
+```python
+def create_node_tx(tx):
+    labels_str = ':'.join(labels)
+    result = tx.run(
+        f"""
+        CREATE (n:{labels_str} $props)
+        RETURN elementId(n) as id
+        """,
+        props=properties
+    )
+    record = result.single()
+    return record["id"] if record else None
+```
+
+### ノードの更新
+```python
+def update_node_tx(tx):
+    try:
+        # ノードを検索
+        node = tx.run(
+            """
+            MATCH (n)
+            WHERE elementId(n) = $node_id
+            RETURN n
+            """,
+            node_id=node_id
+        ).single()
+
+        if not node:
+            return False
+
+        # ノードを更新
+        result = tx.run(
+            """
+            MATCH (n)
+            WHERE elementId(n) = $node_id
+            SET n += $props
+            RETURN n
+            """,
+            node_id=node_id,
+            props=properties
+        )
+        return result.single() is not None
+    except Exception as e:
+        self.logger.error(f"Error in update transaction: {str(e)}")
+        return False
+```
+
+## リレーションシップ操作パターン
+
+### リレーションシップの作成
+```python
+def create_relationship_tx(tx):
+    try:
+        # 開始ノードと終了ノードを検索
+        start_node = tx.run(
+            """
+            MATCH (n)
+            WHERE elementId(n) = $node_id
+            RETURN n
+            """,
+            node_id=start_node_id
+        ).single()
+
+        end_node = tx.run(
+            """
+            MATCH (n)
+            WHERE elementId(n) = $node_id
+            RETURN n
+            """,
+            node_id=end_node_id
+        ).single()
+
+        if not start_node or not end_node:
+            return False
+
+        # リレーションシップを作成
+        result = tx.run(
+            f"""
+            MATCH (a), (b)
+            WHERE elementId(a) = $start_id AND elementId(b) = $end_id
+            CREATE (a)-[r:{rel_type}]->(b)
+            SET r = $props
+            RETURN r
+            """,
+            start_id=start_node_id,
+            end_id=end_node_id,
+            props=properties
+        )
+        return result.single() is not None
+    except Exception as e:
+        self.logger.error(f"Error in relationship transaction: {str(e)}")
+        return False
+```
+
+## エラーハンドリングパターン
+
+### 3層エラーハンドリング
+1. メソッド層
+```python
+try:
+    if not all([required_param1, required_param2]):
+        return False
+    return self._execute_transaction(work_func)
+except Exception as e:
+    self.logger.error(f"Error in method: {str(e)}")
+    return False
+```
+
+2. トランザクション層
+```python
+try:
+    with self._get_session() as session:
+        return session.execute_write(work_func)
+except Exception as e:
+    self.logger.error(f"Transaction error: {str(e)}")
+    raise
+```
+
+3. クエリ層
+```python
+try:
+    result = tx.run(query, params)
+    return result.single() is not None
+except Exception as e:
+    self.logger.error(f"Query error: {str(e)}")
+    return False 
