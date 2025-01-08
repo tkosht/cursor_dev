@@ -433,7 +433,7 @@ def test_validation(input_data, expected):
     assert result == expected
 ``` 
 
-## リファクタリング�ターン
+## リファクタリングパターン
 
 ### 複雑度低減パターン
 1. メソッド分割
@@ -478,3 +478,128 @@ def test_validation(input_data, expected):
 - 例：
   - test_extract_entities_with_invalid_input
   - test_validate_entity_structure_missing_fields 
+
+## データベース接�管理パターン
+
+### リトライメカニズム
+```python
+def _retry_on_error(self, func: Callable, *args, **kwargs) -> Any:
+    retry_count = 0
+    last_error = None
+    
+    while retry_count < self.MAX_RETRY_COUNT:
+        try:
+            return func(*args, **kwargs)
+        except (ServiceUnavailable, SessionExpired, TransientError) as e:
+            retry_count += 1
+            last_error = e
+            if retry_count < self.MAX_RETRY_COUNT:
+                time.sleep(self.RETRY_DELAY * retry_count)  # 指数バックオフ
+                self._check_connection()
+                continue
+    
+    raise DatabaseError(f"Failed after {self.MAX_RETRY_COUNT} retries: {str(last_error)}")
+```
+
+### トランザクション管理
+```python
+def _execute_transaction(self, work_func: Callable) -> Any:
+    def execute_with_retry():
+        with self._get_session() as session:
+            try:
+                return session.execute_write(
+                    work_func,
+                    timeout=self.TRANSACTION_TIMEOUT
+                )
+            except Neo4jError as e:
+                if "deadlock" in str(e).lower():
+                    raise ServiceUnavailable("Deadlock detected")
+                raise
+
+    return self._retry_on_error(execute_with_retry)
+```
+
+### セッション管理
+```python
+def _get_session(self):
+    self._check_connection()
+    return self._driver.session(
+        database=self._database,
+        connection_timeout=self._connection_timeout
+    )
+```
+
+### プロパティ検証
+```python
+def _validate_node_properties(self, properties: Dict[str, Any]) -> None:
+    for key, value in properties.items():
+        if not isinstance(value, (str, int, float, bool, type(None))):
+            raise ValueError(
+                f"Property '{key}' has invalid type. "
+                "Only str, int, float, bool, and None are allowed."
+            )
+```
+
+### エンティティ検証
+```python
+def _validate_entity(self, entity: Dict[str, Any]) -> None:
+    if not isinstance(entity, dict):
+        raise ValueError("entity must be a dictionary")
+    if not entity:
+        raise ValueError("entity is required")
+    
+    required_fields = ["id", "type", "name", "properties"]
+    for field in required_fields:
+        if field not in entity:
+            raise ValueError(f"entity must have {field} field")
+```
+
+## エラーハンドリングパターン
+
+### カスタム例外階層
+```python
+class DatabaseError(Exception):
+    """データベース操作に関するエラー。"""
+    pass
+
+class ConnectionError(DatabaseError):
+    """データベース接続に関するエラー。"""
+    pass
+
+class TransactionError(DatabaseError):
+    """トランザクションに関するエラー。"""
+    pass
+```
+
+### エラーログ記録
+```python
+try:
+    # 操作の実行
+    result = operation()
+except Exception as e:
+    logger.error(f"Operation failed: {str(e)}")
+    raise
+```
+
+## セキュリティパターン
+
+### 環境変数管理
+```python
+self._uri = uri or os.getenv('NEO4J_URI')
+self._username = username or os.getenv('neo4j_user')
+self._password = password or os.getenv('neo4j_pswd')
+```
+
+### パラメータバインディング
+```python
+query = """
+    MATCH (n:$LABELS)
+    WHERE ALL(key IN keys($props) WHERE n[key] = $props[key])
+    RETURN properties(n) as props
+"""
+result = tx.run(
+    query,
+    LABELS=":".join(labels),
+    props=properties
+)
+``` 

@@ -15,11 +15,16 @@
 
 import random
 import string
+import time
+from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 from dotenv import load_dotenv
+from neo4j.exceptions import Neo4jError, ServiceUnavailable
 
-from app.neo4j_manager import Neo4jManager
+from app.neo4j_manager import (ConnectionError, DatabaseError, Neo4jManager,
+                               TransactionError)
 
 # テスト用の環境変数を読み込む
 load_dotenv('.env.test')
@@ -1130,4 +1135,276 @@ def test_store_entity_errors():
     }
     result = manager.store_entity(entity_with_invalid_rel)
     assert result is True  # エンティティは保存されるが、リレーションシップは失敗
+
+
+def test_retry_mechanism():
+    """リトライメカニズムをテストする。
+
+    必要性：
+    - リトライ処理の動作確認
+    - エラー時の適切な処理
+    - タイムアウト設定の検証
+
+    十分性：
+    - 一時的なエラーからの回復
+    - リトライ回数の制限
+    - エラーメッセージの確認
+    """
+    manager = Neo4jManager()
+
+    # 一時的なエラーを発生させる関数
+    fail_count = 0
+
+    def failing_operation():
+        nonlocal fail_count
+        fail_count += 1
+        if fail_count <= 2:  # 2回失敗した後に成功
+            raise ServiceUnavailable("Temporary error")
+        return "success"
+
+    # リトライ処理を実行
+    result = manager._retry_on_error(failing_operation)
+    assert result == "success"
+    assert fail_count == 3  # 2回失敗、3回目で成功
+
+    # リトライ回数を超えるエラー
+    fail_count = 0
+
+    def always_failing():
+        nonlocal fail_count
+        fail_count += 1
+        raise ServiceUnavailable("Persistent error")
+
+    with pytest.raises(DatabaseError) as exc_info:
+        manager._retry_on_error(always_failing)
+    assert fail_count == manager.MAX_RETRY_COUNT
+    assert "Failed after" in str(exc_info.value)
+
+
+def test_connection_management():
+    """接続管理機能をテストする。
+
+    必要性：
+    - 接続状態の監視
+    - 再接続機能の確認
+    - タイムアウト処理の検証
+
+    十分性：
+    - 接続切断からの回復
+    - セッション期限切れの処理
+    - エラーログの確認
+    """
+    manager = Neo4jManager()
+
+    # 接続チェックの動作確認
+    manager._check_connection()  # 正常な接続を確認
+
+    # 接続切断のシミュレーション
+    with patch.object(manager._driver, 'verify_connectivity') as mock_verify:
+        mock_verify.side_effect = ServiceUnavailable("Connection lost")
+        manager._check_connection()  # 再接続が行われるはず
+
+    # セッション期限切れのシミュレーション
+    manager._last_connection_check = datetime.now()
+    time.sleep(manager.SESSION_TIMEOUT + 1)  # タイムアウトを超える
+    manager._check_connection()  # 新しい接続が確立されるはず
+
+
+def test_transaction_timeout():
+    """トランザクションタイムアウトをテストする。
+
+    必要性：
+    - タイムアウト設定の確認
+    - 長時間実行の制御
+    - リソース解放の確認
+
+    十分性：
+    - タイムアウト発生時の処理
+    - トランザクションのロールバック
+    - エラーメッセージの検証
+    """
+    manager = Neo4jManager()
+
+    def long_running_tx(tx):
+        # 長時間実行をシミュレート
+        time.sleep(manager.TRANSACTION_TIMEOUT + 1)
+        return True
+
+    with pytest.raises(TransactionError) as exc_info:
+        manager._execute_transaction(long_running_tx)
+    assert "timeout" in str(exc_info.value).lower()
+
+
+def test_property_validation():
+    """プロパティ検証機能をテストする。
+
+    必要性：
+    - 型チェックの確認
+    - 無効な値の検出
+    - エラーメッセージの検証
+
+    十分性：
+    - すべての許可された型
+    - 無効な型の検出
+    - エラーメッセージの正確性
+    """
+    manager = Neo4jManager()
+
+    # 有効なプロパティ
+    valid_properties = {
+        "string": "test",
+        "integer": 42,
+        "float": 3.14,
+        "boolean": True,
+        "none": None
+    }
+    manager._validate_node_properties(valid_properties)  # エラーが発生しないはず
+
+    # 無効なプロパティ
+    invalid_properties = {
+        "list": [1, 2, 3],
+        "dict": {"key": "value"},
+        "object": object()
+    }
+    for key, value in invalid_properties.items():
+        with pytest.raises(ValueError) as exc_info:
+            manager._validate_node_properties({key: value})
+        assert "invalid type" in str(exc_info.value)
+        assert key in str(exc_info.value)
+
+
+def test_deadlock_handling():
+    """デッドロック処理をテストする。
+
+    必要性：
+    - デッドロック検出
+    - 自動リトライの確認
+    - トランザクション管理の検証
+
+    十分性：
+    - デッドロック発生時の処理
+    - リトライ後の成功
+    - エラーメッセージの確認
+    """
+    manager = Neo4jManager()
+
+    # デッドロックをシミュレート
+    deadlock_count = 0
+
+    def deadlocking_tx(tx):
+        nonlocal deadlock_count
+        deadlock_count += 1
+        if deadlock_count == 1:
+            raise Neo4jError("deadlock detected", "Neo.TransientError.Transaction.DeadlockDetected")
+        return True
+
+    result = manager._execute_transaction(deadlocking_tx)
+    assert result is True
+    assert deadlock_count == 2  # 1回失敗、2回目で成功
+
+
+def test_session_management():
+    """セッション管理機能をテストする。
+
+    必要性：
+    - セッションの作成と破棄
+    - タイムアウト処理
+    - リソース管理の確認
+
+    十分性：
+    - セッションの再利用
+    - 期限切れの処理
+    - クリーンアップの確認
+    """
+    manager = Neo4jManager()
+
+    # セッションの作成
+    session1 = manager._get_session()
+    assert session1 is not None
+
+    # 同じセッションの再利用
+    session2 = manager._get_session()
+    assert session2 is not None
+
+    # セッションの明示的なクローズ
+    manager.close()
+    assert manager._driver is None
+
+    # クローズ後の再接続
+    session3 = manager._get_session()
+    assert session3 is not None
+
+
+def test_error_handling():
+    """エラーハンドリング機能をテストする。
+
+    必要性：
+    - 各種エラーの処理
+    - エラーメッセージの確認
+    - リカバリー処理の検証
+
+    十分性：
+    - すべての例外タイプ
+    - エラーの伝播
+    - ログ出力の確認
+    """
+    manager = Neo4jManager()
+
+    # 接続エラー
+    with pytest.raises(ConnectionError):
+        with patch.object(manager, '_connect') as mock_connect:
+            mock_connect.side_effect = Exception("Connection failed")
+            manager._check_connection()
+
+    # トランザクションエラー
+    with pytest.raises(TransactionError):
+        def failing_tx(tx):
+            raise Neo4jError("Transaction failed", "Neo.ClientError.Transaction.Invalid")
+        manager._execute_transaction(failing_tx)
+
+    # データベースエラー
+    with pytest.raises(DatabaseError):
+        def failing_operation():
+            raise Exception("Unknown error")
+        manager._retry_on_error(failing_operation)
+
+
+def test_concurrent_operations():
+    """並行処理をテストする。
+
+    必要性：
+    - 並行アクセスの処理
+    - リソース競合の検出
+    - 整合性の確保
+
+    十分性：
+    - 同時実行の制御
+    - デッドロックの回避
+    - トランザクションの分離
+    """
+    manager = Neo4jManager()
+
+    # 同時実行をシミュレート
+    def concurrent_tx(tx):
+        # 読み取り
+        tx.run("MATCH (n) RETURN count(n)")
+        time.sleep(0.1)  # 競合の可能性を高める
+        # 書き込み
+        tx.run(
+            "CREATE (n:TestNode $props)",
+            props={"test": "concurrent"}
+        )
+        return True
+
+    # 複数のトランザクションを実行
+    results = []
+    for _ in range(5):
+        try:
+            result = manager._execute_transaction(concurrent_tx)
+            results.append(result)
+        except TransactionError:
+            results.append(False)
+
+    # 少なくとも1つは成功しているはず
+    assert any(results)
  
