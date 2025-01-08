@@ -258,175 +258,177 @@ def _evaluate_trend_coverage(self) -> float:
 
 # Neo4jデータベース操作の実装パターン
 
-## トランザクション管理パターン
+## 1. トランザクション管理パターン
 
-### 基本的な書き込み操作
+### 1.1 基本的な書き込みトランザクション
 ```python
 def _execute_transaction(self, work_func):
-    try:
-        with self._get_session() as session:
+    with self._get_session() as session:
+        try:
             return session.execute_write(work_func)
-    except Exception as e:
-        self.logger.error(f"Transaction error: {str(e)}")
-        raise
+        except Exception as e:
+            self.logger.error(f"Transaction error: {str(e)}")
+            raise
 ```
 
-### 基本的な読み取り操作
+### 1.2 読み取り専用トランザクション
 ```python
 def _execute_read_transaction(self, work_func):
-    try:
-        with self._get_session() as session:
+    with self._get_session() as session:
+        try:
             return session.execute_read(work_func)
-    except Exception as e:
-        self.logger.error(f"Transaction error: {str(e)}")
-        raise
+        except Exception as e:
+            self.logger.error(f"Transaction error: {str(e)}")
+            raise
 ```
 
-### 複雑なトランザクション操作
-```python
-def _execute_unit_of_work(self, work_func):
-    try:
-        with self._get_session() as session:
-            with session.begin_transaction() as tx:
-                try:
-                    result = work_func(tx)
-                    tx.commit()
-                    return result
-                except Exception:
-                    tx.rollback()
-                    raise
-    except Exception as e:
-        self.logger.error(f"Transaction error: {str(e)}")
-        raise
-```
+## 2. ノード操作パターン
 
-## ノード操作パターン
-
-### ノードの作成
+### 2.1 ノード作成
 ```python
 def create_node_tx(tx):
-    labels_str = ':'.join(labels)
-    result = tx.run(
-        f"""
-        CREATE (n:{labels_str} $props)
-        RETURN elementId(n) as id
-        """,
-        props=properties
+    labels_str = ":".join(labels)
+    query = (
+        f"CREATE (n:{labels_str} $props) "
+        "RETURN elementId(n) as id"
     )
+    result = tx.run(query, props=properties)
     record = result.single()
-    return record["id"] if record else None
+    if not record:
+        raise RuntimeError("Failed to create node")
+    return record["id"]
 ```
 
-### ノードの更新
+### 2.2 ノード検索
 ```python
-def update_node_tx(tx):
-    try:
-        # ノードを検索
-        node = tx.run(
-            """
-            MATCH (n)
-            WHERE elementId(n) = $node_id
-            RETURN n
-            """,
-            node_id=node_id
-        ).single()
-
-        if not node:
-            return False
-
-        # ノードを更新
-        result = tx.run(
-            """
-            MATCH (n)
-            WHERE elementId(n) = $node_id
-            SET n += $props
-            RETURN n
-            """,
-            node_id=node_id,
-            props=properties
-        )
-        return result.single() is not None
-    except Exception as e:
-        self.logger.error(f"Error in update transaction: {str(e)}")
-        return False
+def find_node_tx(tx):
+    labels_str = ":".join(labels) if labels else ""
+    where_clause = " AND ".join(
+        f"n.{k} = ${k}" for k in (properties or {}).keys()
+    )
+    query = f"MATCH (n{labels_str})"
+    if where_clause:
+        query += f" WHERE {where_clause}"
+    query += " RETURN properties(n) as props"
+    
+    result = tx.run(query, **(properties or {}))
+    record = result.single()
+    return record["props"] if record else None
 ```
 
-## リレーションシップ操作パターン
+## 3. リレーションシップ操作パターン
 
-### リレーションシップの作成
+### 3.1 リレーションシップ作成
 ```python
 def create_relationship_tx(tx):
-    try:
-        # 開始ノードと終了ノードを検索
-        start_node = tx.run(
-            """
-            MATCH (n)
-            WHERE elementId(n) = $node_id
-            RETURN n
-            """,
-            node_id=start_node_id
-        ).single()
-
-        end_node = tx.run(
-            """
-            MATCH (n)
-            WHERE elementId(n) = $node_id
-            RETURN n
-            """,
-            node_id=end_node_id
-        ).single()
-
-        if not start_node or not end_node:
-            return False
-
-        # リレーションシップを作成
-        result = tx.run(
-            f"""
-            MATCH (a), (b)
-            WHERE elementId(a) = $start_id AND elementId(b) = $end_id
-            CREATE (a)-[r:{rel_type}]->(b)
-            SET r = $props
-            RETURN r
-            """,
-            start_id=start_node_id,
-            end_id=end_node_id,
-            props=properties
-        )
-        return result.single() is not None
-    except Exception as e:
-        self.logger.error(f"Error in relationship transaction: {str(e)}")
-        return False
+    query = f"""
+    MATCH (a), (b)
+    WHERE elementId(a) = $start_id AND elementId(b) = $end_id
+    CREATE (a)-[r:{rel_type}]->(b)
+    SET r = $props
+    RETURN r
+    """
+    result = tx.run(
+        query,
+        start_id=start_node_id,
+        end_id=end_node_id,
+        props=properties
+    )
+    return result.single() is not None
 ```
 
-## エラーハンドリングパターン
-
-### 3層エラーハンドリング
-1. メソッド層
+### 3.2 リレーションシップ検索
 ```python
-try:
-    if not all([required_param1, required_param2]):
-        return False
-    return self._execute_transaction(work_func)
-except Exception as e:
-    self.logger.error(f"Error in method: {str(e)}")
-    return False
+def find_relationships_query(direction="both"):
+    if direction == "outgoing":
+        return """
+        MATCH (n)-[r]->(m)
+        WHERE elementId(n) = $node_id
+        RETURN type(r) as type, properties(r) as properties,
+               elementId(n) as start_node, elementId(m) as end_node
+        """
+    elif direction == "incoming":
+        return """
+        MATCH (m)-[r]->(n)
+        WHERE elementId(n) = $node_id
+        RETURN type(r) as type, properties(r) as properties,
+               elementId(m) as start_node, elementId(n) as end_node
+        """
+    else:
+        return """
+        MATCH (n)-[r]-(m)
+        WHERE elementId(n) = $node_id
+        RETURN type(r) as type, properties(r) as properties,
+               elementId(startNode(r)) as start_node,
+               elementId(endNode(r)) as end_node
+        """
 ```
 
-2. トランザクション層
+## 4. エラーハンドリングパターン
+
+### 4.1 入力検証
+```python
+def validate_input(self, required_fields, data):
+    if not data or not isinstance(data, dict):
+        raise ValueError("Invalid input data")
+    
+    for field in required_fields:
+        if field not in data:
+            raise ValueError(f"Missing required field: {field}")
+```
+
+### 4.2 トランザクションエラー処理
 ```python
 try:
     with self._get_session() as session:
-        return session.execute_write(work_func)
+        result = session.execute_write(work_func)
+        return result
+except Neo4jError as e:
+    self.logger.error(f"Database error: {str(e)}")
+    raise
 except Exception as e:
-    self.logger.error(f"Transaction error: {str(e)}")
+    self.logger.error(f"Unexpected error: {str(e)}")
     raise
 ```
 
-3. クエリ層
+## 5. テストパターン
+
+### 5.1 基本的なテストケース構造
 ```python
-try:
-    result = tx.run(query, params)
-    return result.single() is not None
-except Exception as e:
-    self.logger.error(f"Query error: {str(e)}")
-    return False 
+def test_operation():
+    """操作のテスト。
+    
+    必要性：
+    - テストの目的
+    - 検証項目
+    
+    十分性：
+    - 期待される結果
+    - エッジケース
+    """
+    # 1. セットアップ
+    manager = Neo4jManager()
+    test_data = {...}
+    
+    # 2. 実行
+    result = manager.some_operation(test_data)
+    
+    # 3. 検証
+    assert result is not None
+    assert result["property"] == expected_value
+    
+    # 4. クリーンアップ
+    manager.cleanup()
+```
+
+### 5.2 パラメータ化テスト
+```python
+@pytest.mark.parametrize("input_data,expected", [
+    ({"valid": "data"}, True),
+    ({"invalid": None}, False),
+    ({}, False)
+])
+def test_validation(input_data, expected):
+    result = validate_input(input_data)
+    assert result == expected
+``` 
