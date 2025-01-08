@@ -2,12 +2,30 @@
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+import time
+from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional
 
 from neo4j import GraphDatabase
-from neo4j.exceptions import Neo4jError
+from neo4j.exceptions import (Neo4jError, ServiceUnavailable, SessionExpired,
+                              TransientError)
 
 logger = logging.getLogger(__name__)
+
+
+class DatabaseError(Exception):
+    """データベース操作に関するエラー。"""
+    pass
+
+
+class ConnectionError(DatabaseError):
+    """データベース接続に関するエラー。"""
+    pass
+
+
+class TransactionError(DatabaseError):
+    """トランザクションに関するエラー。"""
+    pass
 
 
 class Neo4jManager:
@@ -24,13 +42,19 @@ class Neo4jManager:
     """
 
     logger = logger  # クラス変数としてloggerを設定
+    MAX_RETRY_COUNT = 3  # 最大リトライ回数
+    RETRY_DELAY = 1.0  # リトライ間隔（秒）
+    TRANSACTION_TIMEOUT = 30.0  # トランザクションタイムアウト（秒）
+    SESSION_TIMEOUT = 30.0  # セッションタイムアウト（秒）
 
     def __init__(
         self,
         uri: Optional[str] = None,
         username: Optional[str] = None,
         password: Optional[str] = None,
-        database: str = "neo4j"
+        database: str = "neo4j",
+        max_connection_lifetime: int = 3600,  # 接続の最大生存時間（秒）
+        connection_timeout: float = 5.0  # 接続タイムアウト（秒）
     ) -> None:
         """Neo4jManagerを初期化する。
 
@@ -39,16 +63,26 @@ class Neo4jManager:
             username: 接続ユーザー名（オプション）
             password: 接続パスワード（オプション）
             database: 使用するデータベース名（デフォルト: "neo4j"）
+            max_connection_lifetime: 接続の最大生存時間（秒）
+            connection_timeout: 接続タイムアウト（秒）
 
         環境変数から接続情報を取得する場合：
             NEO4J_URI: データベースのURI
             neo4j_user: 接続ユーザー名
             neo4j_pswd: 接続パスワード
+
+        Raises:
+            ConnectionError: 接続に失敗した場合
+            ValueError: 必要な接続情報が不足している場合
         """
         self._uri = uri or os.getenv('NEO4J_URI')
         self._username = username or os.getenv('neo4j_user')
         self._password = password or os.getenv('neo4j_pswd')
         self._database = database
+        self._max_connection_lifetime = max_connection_lifetime
+        self._connection_timeout = connection_timeout
+        self._last_connection_check = datetime.now()
+        self._driver = None
 
         if not all([self._uri, self._username, self._password]):
             raise ValueError(
@@ -57,119 +91,146 @@ class Neo4jManager:
             )
 
         try:
-            self._driver = GraphDatabase.driver(
-                self._uri,
-                auth=(self._username, self._password)
-            )
-            # 接続テスト
-            with self._driver.session() as session:
-                session.run("RETURN 1")
+            self._connect()
         except Exception as e:
             logger.error(f"Failed to connect to Neo4j: {str(e)}")
-            raise
+            raise ConnectionError(f"Failed to connect to Neo4j: {str(e)}")
+
+    def _connect(self) -> None:
+        """データベースに接続する。
+
+        Raises:
+            ConnectionError: 接続に失敗した場合
+        """
+        try:
+            self._driver = GraphDatabase.driver(
+                self._uri,
+                auth=(self._username, self._password),
+                max_connection_lifetime=self._max_connection_lifetime,
+                connection_timeout=self._connection_timeout
+            )
+            # 接続テスト
+            with self._driver.session(
+                database=self._database,
+                connection_timeout=self._connection_timeout
+            ) as session:
+                session.run("RETURN 1")
+            self._last_connection_check = datetime.now()
+        except Exception as e:
+            logger.error(f"Failed to connect to Neo4j: {str(e)}")
+            raise ConnectionError(f"Failed to connect to Neo4j: {str(e)}")
+
+    def _check_connection(self) -> None:
+        """接続状態を確認し、必要に応じて再接続する。
+
+        Note:
+            - 最後の接続確認から一定時間経過している場合に実行
+            - 接続が切れている場合は再接続を試みる
+        """
+        now = datetime.now()
+        if (now - self._last_connection_check).total_seconds() > self.SESSION_TIMEOUT:
+            try:
+                if self._driver:
+                    self._driver.verify_connectivity()
+                else:
+                    self._connect()
+                self._last_connection_check = now
+            except Exception as e:
+                logger.warning(f"Connection check failed: {str(e)}")
+                self._connect()
 
     def __del__(self) -> None:
         """デストラクタ。ドライバーを適切にクローズする。"""
-        if hasattr(self, '_driver'):
-            self._driver.close()
+        self.close()
+
+    def close(self) -> None:
+        """接続を明示的にクローズする。"""
+        if hasattr(self, '_driver') and self._driver:
+            try:
+                self._driver.close()
+            except Exception as e:
+                logger.error(f"Error closing driver: {str(e)}")
+            finally:
+                self._driver = None
 
     def _get_session(self):
         """セッションを取得する。
 
         Returns:
             Session: Neo4jセッションオブジェクト
-        """
-        return self._driver.session(database=self._database)
-
-    def _execute_transaction(self, work_func):
-        """トランザクションを実行する。
-
-        Args:
-            work_func (callable): トランザクション内で実行する関数
-
-        Returns:
-            Any: work_funcの戻り値
-        """
-        with self._get_session() as session:
-            try:
-                return session.execute_write(work_func)
-            except Exception as e:
-                self.logger.error(f"Transaction error: {str(e)}")
-                raise
-
-    def _execute_read_transaction(self, work_func):
-        """
-        読み取り専用トランザクションを実行する。
-
-        Args:
-            work_func: トランザクション内で実行する関数
-
-        Returns:
-            Any: work_funcの戻り値
-        """
-        try:
-            with self._get_session() as session:
-                return session.execute_read(work_func)
-        except Exception as e:
-            self.logger.error(f"Transaction error: {str(e)}")
-            raise
-
-    def _execute_unit_of_work(self, work_func):
-        """
-        作業単位を実行する。
-
-        Args:
-            work_func: 実行する関数
-
-        Returns:
-            Any: work_funcの戻り値
-        """
-        try:
-            with self._get_session() as session:
-                with session.begin_transaction() as tx:
-                    try:
-                        result = work_func(tx)
-                        tx.commit()
-                        return result
-                    except Exception:
-                        tx.rollback()
-                        raise
-        except Exception as e:
-            self.logger.error(f"Transaction error: {str(e)}")
-            raise
-
-    def create_node(self, labels: List[str], properties: Dict[str, Any]) -> Optional[str]:
-        """ノードを作成する。
-
-        Args:
-            labels: ノードのラベルリスト
-            properties: ノードのプロパティ
-
-        Returns:
-            Optional[str]: 作成されたノードのID、失敗時はNone
 
         Note:
-            - トランザクション内で実行され、エラー時は自動的にロールバック
-            - プロパティは基本型（str、int、float、bool）のみ許可
+            - セッションタイムアウトを設定
+            - 接続状態を確認し、必要に応じて再接続
         """
-        if not labels or not isinstance(labels, list):
-            raise ValueError("Labels must be a non-empty list")
-        if not isinstance(properties, dict):
-            raise ValueError("Properties must be a dictionary")
+        self._check_connection()
+        return self._driver.session(
+            database=self._database,
+            connection_timeout=self._connection_timeout
+        )
 
-        def create_node_tx(tx):
-            labels_str = ":".join(labels)
-            query = (
-                f"CREATE (n:{labels_str} $props) "
-                "RETURN elementId(n) as id"
-            )
-            result = tx.run(query, props=properties)
-            record = result.single()
-            if not record:
-                raise RuntimeError("Failed to create node")
-            return record["id"]
+    def _retry_on_error(self, func: Callable, *args, **kwargs) -> Any:
+        """エラー発生時にリトライを行う。
 
-        return self._execute_transaction(create_node_tx)
+        Args:
+            func: 実行する関数
+            *args: 関数の位置引数
+            **kwargs: 関数のキー引数
+
+        Returns:
+            Any: 関数の戻り値
+
+        Raises:
+            DatabaseError: すべてのリトライが失敗した場合
+        """
+        retry_count = 0
+        last_error = None
+
+        while retry_count < self.MAX_RETRY_COUNT:
+            try:
+                return func(*args, **kwargs)
+            except (ServiceUnavailable, SessionExpired, TransientError) as e:
+                retry_count += 1
+                last_error = e
+                if retry_count < self.MAX_RETRY_COUNT:
+                    logger.warning(
+                        f"Retry {retry_count}/{self.MAX_RETRY_COUNT} "
+                        f"after error: {str(e)}"
+                    )
+                    time.sleep(self.RETRY_DELAY * retry_count)  # 指数バックオフ
+                    # 接続状態を確認
+                    self._check_connection()
+                continue
+            except Neo4jError as e:
+                logger.error(f"Neo4j error: {str(e)}")
+                raise TransactionError(f"Neo4j error: {str(e)}")
+            except Exception as e:
+                logger.error(f"Unrecoverable error: {str(e)}")
+                raise DatabaseError(f"Unrecoverable error: {str(e)}")
+
+        logger.error(
+            f"Failed after {self.MAX_RETRY_COUNT} retries. "
+            f"Last error: {str(last_error)}"
+        )
+        raise DatabaseError(
+            f"Failed after {self.MAX_RETRY_COUNT} retries: {str(last_error)}"
+        )
+
+    def _validate_node_properties(self, properties: Dict[str, Any]) -> None:
+        """ノードのプロパティを検証する。
+
+        Args:
+            properties: 検証するプロパティ辞書
+
+        Raises:
+            ValueError: プロパティの型が無効な場合
+        """
+        for key, value in properties.items():
+            if not isinstance(value, (str, int, float, bool, type(None))):
+                raise ValueError(
+                    f"Property '{key}' has invalid type. "
+                    "Only str, int, float, bool, and None are allowed."
+                )
 
     def find_node(
         self,
@@ -187,33 +248,40 @@ class Neo4jManager:
 
         Raises:
             ValueError: 無効な入力パラメータ
+
+        Note:
+            - SQLインジェクション対策としてパラメータバインディングを使用
+            - プロパティの型チェックを実施
         """
         if not labels:
             raise ValueError("At least one label is required")
         if not properties:
             raise ValueError("Search properties are required")
 
-        # ラベルを結合
-        labels_str = ':'.join(labels)
-        
+        self._validate_node_properties(properties)
+
+        def find_node_tx(tx):
+            query = """
+                MATCH (n:$LABELS)
+                WHERE ALL(key IN keys($props) WHERE n[key] = $props[key])
+                WITH n
+                LIMIT 1
+                RETURN properties(n) as props, elementId(n) as id
+            """
+            result = tx.run(
+                query,
+                LABELS=":".join(labels),
+                props=properties
+            )
+            record = result.single()
+            if record:
+                props = record["props"]
+                props['id'] = record["id"]
+                return props
+            return None
+
         try:
-            with self._get_session() as session:
-                result = session.run(
-                    f"""
-                    MATCH (n:{labels_str})
-                    WHERE ALL(key IN keys($props) WHERE n[key] = $props[key])
-                    WITH n
-                    LIMIT 1
-                    RETURN properties(n) as props, elementId(n) as id
-                    """,
-                    props=properties
-                )
-                record = result.single()
-                if record:
-                    props = record["props"]
-                    props['id'] = record["id"]
-                    return props
-                return None
+            return self._execute_read_transaction(find_node_tx)
         except Neo4jError as e:
             logger.error(f"Error finding node: {str(e)}")
             return None
@@ -284,8 +352,7 @@ class Neo4jManager:
         rel_type: str,
         properties: Dict[str, Any]
     ) -> bool:
-        """
-        2つのノード間にリレーションシップを作成する。
+        """リレーションシップを作成する。
 
         Args:
             start_node_id: 開始ノードのID
@@ -295,33 +362,45 @@ class Neo4jManager:
 
         Returns:
             bool: 作成成功時True、失敗時False
+
+        Note:
+            - SQLインジェクション対策としてパラメータバインディングを使用
+            - プロパティの型チェックを実施
         """
-        def create_relationship_tx(tx):
-            try:
-                # リレーションシップを作成
-                result = tx.run(
-                    f"""
-                    MATCH (a), (b)
-                    WHERE elementId(a) = $start_id AND elementId(b) = $end_id
-                    CREATE (a)-[r:{rel_type}]->(b)
-                    SET r = $props
-                    RETURN r
-                    """,
-                    start_id=start_node_id,
-                    end_id=end_node_id,
-                    props=properties
+        if not all([start_node_id, end_node_id, rel_type]):
+            raise ValueError("start_node_id, end_node_id, and rel_type are required")
+        if not isinstance(properties, dict):
+            raise ValueError("Properties must be a dictionary")
+
+        # プロパティの型チェック
+        for key, value in properties.items():
+            if not isinstance(value, (str, int, float, bool, type(None))):
+                raise ValueError(
+                    f"Property '{key}' has invalid type. "
+                    "Only str, int, float, bool, and None are allowed."
                 )
-                return result.single() is not None
-            except Exception as e:
-                self.logger.error(f"Error in relationship transaction: {str(e)}")
-                return False
+
+        def create_relationship_tx(tx):
+            # リレーションシップタイプもパラメータとして渡す
+            query = """
+                MATCH (a), (b)
+                WHERE elementId(a) = $start_id AND elementId(b) = $end_id
+                CREATE (a)-[r:$REL_TYPE $props]->(b)
+                RETURN elementId(r) as id
+            """
+            result = tx.run(
+                query,
+                start_id=start_node_id,
+                end_id=end_node_id,
+                REL_TYPE=rel_type,
+                props=properties
+            )
+            return result.single() is not None
 
         try:
-            if not all([start_node_id, end_node_id, rel_type]):
-                return False
             return self._execute_transaction(create_relationship_tx)
-        except Exception as e:
-            self.logger.error(f"Error creating relationship: {str(e)}")
+        except Neo4jError as e:
+            logger.error(f"Error creating relationship: {str(e)}")
             return False
 
     def find_relationships(
@@ -396,7 +475,7 @@ class Neo4jManager:
             entity: 検証対象のエンティティ辞書
 
         Raises:
-            ValueError: 無効なエンティティ
+            ValueError: 無効なエンティティィ
         """
         if not isinstance(entity, dict):
             raise ValueError("entity must be a dictionary")
@@ -444,7 +523,7 @@ class Neo4jManager:
         """エンティティを保存する。
 
         Args:
-            entity: エンティティ情報を含む辞書
+            entity: エンテティティ情報を含む辞書
                 {
                     "id": str,          # エンティティID（必須）
                     "type": str,        # エンティティタイプ（必須）
@@ -531,7 +610,119 @@ class Neo4jManager:
 
         return self._execute_transaction(update_node_tx)
 
-    def close(self) -> None:
-        """Neo4jドライバーを閉じる。"""
-        if hasattr(self, '_driver'):
-            self._driver.close() 
+    def _execute_transaction(self, work_func: Callable) -> Any:
+        """トランザクションを実行する。
+
+        Args:
+            work_func: トランザクション内で実行する関数
+
+        Returns:
+            Any: work_funcの戻り値
+
+        Note:
+            - タイムアウトとリトライメカニズムを実装
+            - デッドロック検出時は自動的にリトライ
+        """
+        def execute_with_retry():
+            with self._get_session() as session:
+                try:
+                    return session.execute_write(
+                        work_func,
+                        timeout=self.TRANSACTION_TIMEOUT
+                    )
+                except Neo4jError as e:
+                    if "deadlock" in str(e).lower():
+                        logger.warning("Deadlock detected, will retry")
+                        raise ServiceUnavailable("Deadlock detected")
+                    raise
+
+        return self._retry_on_error(execute_with_retry)
+
+    def _execute_read_transaction(self, work_func: Callable) -> Any:
+        """読み取り専用トランザクションを実行する。
+
+        Args:
+            work_func: トランザクション内で実行する関数
+
+        Returns:
+            Any: work_funcの戻り値
+        """
+        def execute_with_retry():
+            with self._get_session() as session:
+                return session.execute_read(
+                    work_func,
+                    timeout=self.TRANSACTION_TIMEOUT
+                )
+
+        return self._retry_on_error(execute_with_retry)
+
+    def _execute_unit_of_work(self, work_func: Callable) -> Any:
+        """作業単位を実行する。
+
+        Args:
+            work_func: 実行する関数
+
+        Returns:
+            Any: work_funcの戻り値
+
+        Note:
+            - タイムアウトとリトライメカニズムを実装
+            - トランザクションの一貫性を保証
+        """
+        def execute_with_retry():
+            with self._get_session() as session:
+                with session.begin_transaction(
+                    timeout=self.TRANSACTION_TIMEOUT
+                ) as tx:
+                    try:
+                        result = work_func(tx)
+                        tx.commit()
+                        return result
+                    except Exception:
+                        tx.rollback()
+                        raise
+
+        return self._retry_on_error(execute_with_retry)
+
+    def create_node(self, labels: List[str], properties: Dict[str, Any]) -> Optional[str]:
+        """ノードを作成する。
+
+        Args:
+            labels: ノードのラベルリスト
+            properties: ノードのプロパティ
+
+        Returns:
+            Optional[str]: 作成されたノードのID、失敗時はNone
+
+        Note:
+            - トランザクション内で実行され、エラー時は自動的にロールバック
+            - プロパティは基本型（str、int、float、bool）のみ許可
+            - SQLインジェクション対策としてパラメータバインディングを使用
+        """
+        if not labels or not isinstance(labels, list):
+            raise ValueError("Labels must be a non-empty list")
+        if not isinstance(properties, dict):
+            raise ValueError("Properties must be a dictionary")
+
+        self._validate_node_properties(properties)
+
+        def create_node_tx(tx):
+            query = """
+                CREATE (n:$LABELS $props)
+                RETURN elementId(n) as id
+            """
+            result = tx.run(
+                query,
+                LABELS=":".join(labels),
+                props=properties
+            )
+            record = result.single()
+            if not record:
+                raise RuntimeError("Failed to create node")
+            return record["id"]
+
+        try:
+            return self._execute_transaction(create_node_tx)
+        except Neo4jError as e:
+            logger.error(f"Error creating node: {str(e)}")
+            return None 
