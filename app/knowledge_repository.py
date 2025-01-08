@@ -35,32 +35,51 @@ class KnowledgeRepository:
             Exception: データベース操作に失敗した場合
         """
         try:
+            # バリデーションチェック
             if not self._validate_analysis_result(analysis_result):
                 raise ValueError("Invalid analysis result format")
 
-            # 空のデータセットの場合は成功として扱う
+            # 空のデータセットの処理
             if not analysis_result['entities']:
                 logger.info("No entities to store")
                 return True
 
-            entity_id_map = self._store_entities(analysis_result)
-            if not entity_id_map:
-                logger.error("Failed to store entities")
-                raise Exception("Failed to store entities")
-
-            try:
-                self._store_relationships(analysis_result, entity_id_map)
-            except RuntimeError as e:
-                logger.error(f"Failed to store relationships: {str(e)}")
-                raise
-
-            return True
+            # エンティティの保存とリレーションシップの作成
+            return self._store_analysis_data(analysis_result)
 
         except ValueError as e:
             logger.error(f"Validation error: {str(e)}")
             raise
         except Exception as e:
             logger.error(f"Database operation error: {str(e)}")
+            raise
+
+    def _store_analysis_data(self, analysis_result: Dict[str, Any]) -> bool:
+        """分析結果のデータを保存する。
+
+        Args:
+            analysis_result: 分析結果
+
+        Returns:
+            bool: 保存が成功した場合はTrue
+
+        Raises:
+            Exception: データベース操作に失敗した場合
+        """
+        try:
+            # エンティティの保存
+            entity_id_map = self._store_entities(analysis_result)
+            if not entity_id_map:
+                logger.error("Failed to store entities")
+                raise Exception("Failed to store entities")
+
+            # リレーションシップの保存
+            self._store_relationships(analysis_result, entity_id_map)
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Error storing analysis data: {str(e)}")
             raise
 
     def _validate_url(self, url: str) -> bool:
@@ -88,41 +107,17 @@ class KnowledgeRepository:
             bool: バリデーション結果
         """
         try:
-            # 型の確認
-            if not isinstance(analysis_result, dict):
-                logger.error("Analysis result must be a dictionary")
+            # 基本的な型と必須キーの確認
+            if not self._validate_basic_structure(analysis_result):
                 return False
 
-            # 必須キーの存在確認
-            required_keys = ['entities', 'relationships', 'impact_scores', 'source_url', 'analyzed_at']
-            if not all(key in analysis_result for key in required_keys):
-                logger.error("Missing required keys in analysis result")
-                return False
-
-            # 各フィールドの型確認
-            if not isinstance(analysis_result['entities'], list):
-                logger.error("Entities must be a list")
-                return False
-
-            if not isinstance(analysis_result['relationships'], list):
-                logger.error("Relationships must be a list")
-                return False
-
-            if not isinstance(analysis_result['impact_scores'], dict):
-                logger.error("Impact scores must be a dictionary")
-                return False
-
-            if not isinstance(analysis_result['source_url'], str):
-                logger.error("Source URL must be a string")
+            # 各フィールドの型と内容の確認
+            if not self._validate_field_types(analysis_result):
                 return False
 
             # URLの形式を検証
             if not self._validate_url(analysis_result['source_url']):
                 logger.error("Invalid URL format")
-                return False
-
-            if not isinstance(analysis_result['analyzed_at'], datetime):
-                logger.error("Analyzed at must be a datetime")
                 return False
 
             # 各フィールドの詳細バリデーション
@@ -140,6 +135,52 @@ class KnowledgeRepository:
         except Exception as e:
             logger.error(f"Error validating analysis result: {str(e)}")
             return False
+
+    def _validate_basic_structure(self, analysis_result: Dict[str, Any]) -> bool:
+        """分析結果の基本構造を検証する。
+
+        Args:
+            analysis_result (Dict[str, Any]): 分析結果
+
+        Returns:
+            bool: 検証結果
+        """
+        if not isinstance(analysis_result, dict):
+            logger.error("Analysis result must be a dictionary")
+            return False
+
+        # 必須キーの存在確認
+        required_keys = ['entities', 'relationships', 'impact_scores', 'source_url', 'analyzed_at']
+        if not all(key in analysis_result for key in required_keys):
+            logger.error("Missing required keys in analysis result")
+            return False
+
+        return True
+
+    def _validate_field_types(self, analysis_result: Dict[str, Any]) -> bool:
+        """分析結果の各フィールドの型を検証する。
+
+        Args:
+            analysis_result (Dict[str, Any]): 分析結果
+
+        Returns:
+            bool: 検証結果
+        """
+        # 各フィールドの型確認
+        type_checks = [
+            (analysis_result['entities'], list, "Entities must be a list"),
+            (analysis_result['relationships'], list, "Relationships must be a list"),
+            (analysis_result['impact_scores'], dict, "Impact scores must be a dictionary"),
+            (analysis_result['source_url'], str, "Source URL must be a string"),
+            (analysis_result['analyzed_at'], datetime, "Analyzed at must be a datetime")
+        ]
+
+        for value, expected_type, error_message in type_checks:
+            if not isinstance(value, expected_type):
+                logger.error(error_message)
+                return False
+
+        return True
 
     def _validate_entities(self, entities: Any) -> bool:
         """エンティティ情報を検証する。
@@ -192,53 +233,125 @@ class KnowledgeRepository:
             - スコアは数値型（int or float）である必要がある
         """
         try:
-            if not isinstance(impact_scores, dict):
-                logger.error("Impact scores must be a dictionary")
+            # 基本的な型チェック
+            if not self._validate_impact_scores_basic_types(impact_scores, entities):
                 return False
 
-            if not isinstance(entities, list):
-                logger.error("Entities must be a list")
-                return False
-
-            # エンティティIDのセットを作成
-            entity_ids = {entity['id'] for entity in entities if isinstance(entity, dict) and 'id' in entity}
+            # エンティティIDの整合性チェック
+            entity_ids = self._extract_entity_ids(entities)
             if not entity_ids:
-                logger.error("No valid entity IDs found")
                 return False
 
-            # すべてのエンティティにスコアが設定されているか確認
-            missing_entities = entity_ids - set(impact_scores.keys())
-            if missing_entities:
-                logger.error(f"Missing impact scores for entities: {missing_entities}")
+            if not self._validate_impact_scores_consistency(impact_scores, entity_ids):
                 return False
 
-            # 余分なエンティティIDがないか確認
-            extra_entities = set(impact_scores.keys()) - entity_ids
-            if extra_entities:
-                logger.error(f"Impact scores found for non-existent entities: {extra_entities}")
+            # スコア値の検証
+            if not self._validate_score_values(impact_scores):
                 return False
-
-            for entity_id, score in impact_scores.items():
-                # スコアの型チェック
-                if not isinstance(score, (int, float)):
-                    logger.error(f"Impact score must be a number: {entity_id} -> {score}")
-                    return False
-
-                # スコアの範囲チェック（0.0 <= score <= 1.0）
-                if not 0 <= score <= 1:
-                    logger.error(f"Impact score must be between 0 and 1: {entity_id} -> {score}")
-                    return False
-
-                # スコアが数値として有効か確認（NaN, Inf チェック）
-                if isinstance(score, float) and (score != score or score == float('inf') or score == float('-inf')):
-                    logger.error(f"Invalid impact score value: {entity_id} -> {score}")
-                    return False
 
             return True
 
         except Exception as e:
             logger.error(f"Error validating impact scores: {str(e)}")
             return False
+
+    def _validate_impact_scores_basic_types(
+        self,
+        impact_scores: Dict[str, float],
+        entities: List[Dict[str, Any]]
+    ) -> bool:
+        """影響度スコアの基本的な型チェック。
+
+        Args:
+            impact_scores: 影響度スコア
+            entities: エンティティリスト
+
+        Returns:
+            bool: 検証結果
+        """
+        if not isinstance(impact_scores, dict):
+            logger.error("Impact scores must be a dictionary")
+            return False
+
+        if not isinstance(entities, list):
+            logger.error("Entities must be a list")
+            return False
+
+        return True
+
+    def _extract_entity_ids(self, entities: List[Dict[str, Any]]) -> Optional[set]:
+        """エンティティリストからIDのセットを抽出する。
+
+        Args:
+            entities: エンティティリスト
+
+        Returns:
+            Optional[set]: エンティティIDのセット、エラー時はNone
+        """
+        entity_ids = {
+            entity['id']
+            for entity in entities
+            if isinstance(entity, dict) and 'id' in entity
+        }
+        if not entity_ids:
+            logger.error("No valid entity IDs found")
+            return None
+        return entity_ids
+
+    def _validate_impact_scores_consistency(
+        self,
+        impact_scores: Dict[str, float],
+        entity_ids: set
+    ) -> bool:
+        """影響度スコアとエンティティIDの整合性を検証する。
+
+        Args:
+            impact_scores: 影響度スコア
+            entity_ids: エンティティIDのセット
+
+        Returns:
+            bool: 検証結果
+        """
+        # すべてのエンティティにスコアが設定されているか確認
+        missing_entities = entity_ids - set(impact_scores.keys())
+        if missing_entities:
+            logger.error(f"Missing impact scores for entities: {missing_entities}")
+            return False
+
+        # 余分なエンティティIDがないか確認
+        extra_entities = set(impact_scores.keys()) - entity_ids
+        if extra_entities:
+            logger.error(f"Impact scores found for non-existent entities: {extra_entities}")
+            return False
+
+        return True
+
+    def _validate_score_values(self, impact_scores: Dict[str, float]) -> bool:
+        """影響度スコアの値を検証する。
+
+        Args:
+            impact_scores: 影響度スコア
+
+        Returns:
+            bool: 検証結果
+        """
+        for entity_id, score in impact_scores.items():
+            # スコアの型チェック
+            if not isinstance(score, (int, float)):
+                logger.error(f"Impact score must be a number: {entity_id} -> {score}")
+                return False
+
+            # スコアの範囲チェック（0.0 <= score <= 1.0）
+            if not 0 <= score <= 1:
+                logger.error(f"Impact score must be between 0 and 1: {entity_id} -> {score}")
+                return False
+
+            # スコアが数値として有効か確認（NaN, Inf チェック）
+            if isinstance(score, float) and (score != score or score == float('inf') or score == float('-inf')):
+                logger.error(f"Invalid impact score value: {entity_id} -> {score}")
+                return False
+
+        return True
 
     def _store_entities(
         self,
