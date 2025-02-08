@@ -1,223 +1,120 @@
-"""ContentFetcherのテストモジュール。
+"""ContentFetcherのテストモジュール。"""
 
-このモジュールは、ContentFetcherクラスの各メソッドの動作を検証します。
-
-必要性：
-- HTMLコンテンツの取得機能の検証
-- エラーハンドリングの確認
-- ファイル操作の検証
-
-十分性：
-- 実際のHTTPリクエストのテスト
-- エラーケースの網羅
-- ファイル操作の完全性確認
-"""
-
-import os
-import pytest
-import requests
+import unittest
 from unittest.mock import Mock, patch
-from pathlib import Path
+
+import requests
 
 from app.content_fetcher import ContentFetcher
 
-def test_init_default_values():
-    """デフォルト値での初期化をテストする。
-    
-    必要性：
-    - デフォルトパラメータの確認
-    - セッション初期化の確認
-    
-    十分性：
-    - パラメータ値の検証
-    - セッションの存在確認
-    """
-    fetcher = ContentFetcher()
-    assert fetcher._timeout == 30.0
-    assert fetcher._max_retries == 3
-    assert fetcher._session is not None
 
-def test_init_custom_values():
-    """カスタム値での初期化をテストする。
-    
-    必要性：
-    - カスタムパラメータの反映確認
-    - セッション初期化の確認
-    
-    十分性：
-    - パラメータ値の検証
-    - セッションの存在確認
-    """
-    fetcher = ContentFetcher(timeout=10.0, max_retries=5)
-    assert fetcher._timeout == 10.0
-    assert fetcher._max_retries == 5
-    assert fetcher._session is not None
+class TestContentFetcher(unittest.TestCase):
+    """ContentFetcherのテストクラス。"""
 
-@patch('requests.Session')
-def test_fetch_html_success(mock_session):
-    """HTMLの取得成功ケースをテストする。
-    
-    必要性：
-    - 正常系の動作確認
-    - レスポンス処理の確認
-    
-    十分性：
-    - ステータスコードの確認
-    - レスポンス内容の検証
-    """
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.text = "<html>Test Content</html>"
-    mock_session.return_value.get.return_value = mock_response
-    
-    fetcher = ContentFetcher()
-    content = fetcher.fetch_html("http://example.com")
-    
-    assert content == "<html>Test Content</html>"
-    mock_session.return_value.get.assert_called_once_with(
-        "http://example.com",
-        timeout=30.0
-    )
+    def setUp(self):
+        """テストの前準備。"""
+        self.fetcher = ContentFetcher(timeout=5)
+        self.test_url = "https://example.com"
+        self.test_content = "<html><head><title>Test Page</title></head><body>Test content</body></html>"
 
-def test_fetch_html_empty_url():
-    """空のURLでの取得をテストする。
-    
-    必要性：
-    - 入力検証の確認
-    - エラーメッセージの検証
-    
-    十分性：
-    - 空文字列での呼び出し
-    - エラーメッセージの確認
-    """
-    fetcher = ContentFetcher()
-    with pytest.raises(ValueError) as exc_info:
-        fetcher.fetch_html("")
-    assert "URL must not be empty" in str(exc_info.value)
+    def test_fetch_content_success(self):
+        """正常系: コンテンツの取得が成功するケース。"""
+        with patch('requests.get') as mock_get:
+            mock_response = Mock()
+            mock_response.text = self.test_content
+            mock_response.raise_for_status.return_value = None
+            mock_get.return_value = mock_response
 
-@patch('requests.Session')
-def test_fetch_html_timeout(mock_session):
-    """タイムアウトケースをテストする。
-    
-    必要性：
-    - タイムアウト処理の確認
-    - エラーハンドリングの検証
-    
-    十分性：
-    - タイムアウト例外の発生
-    - エラーメッセージの確認
-    """
-    mock_session.return_value.get.side_effect = requests.Timeout()
-    
-    fetcher = ContentFetcher()
-    with pytest.raises(TimeoutError) as exc_info:
-        fetcher.fetch_html("http://example.com")
-    assert "Request timed out" in str(exc_info.value)
+            result = self.fetcher.fetch_content(self.test_url)
 
-@patch('requests.Session')
-def test_fetch_html_connection_error(mock_session):
-    """接続エラーケースをテストする。
-    
-    必要性：
-    - 接続エラー処理の確認
-    - エラーハンドリングの検証
-    
-    十分性：
-    - 接続エラー例外の発生
-    - エラーメッセージの確認
-    """
-    mock_session.return_value.get.side_effect = requests.RequestException("Connection failed")
-    
-    fetcher = ContentFetcher()
-    with pytest.raises(ConnectionError) as exc_info:
-        fetcher.fetch_html("http://example.com")
-    assert "Failed to fetch content" in str(exc_info.value)
+            self.assertEqual(result['url'], self.test_url)
+            self.assertEqual(result['content'], self.test_content)
+            self.assertEqual(result['title'], 'Test Page')
+            mock_get.assert_called_once_with(self.test_url, timeout=5)
 
-def test_fetch_from_file_success(tmp_path):
-    """ファイルからの読み込み成功ケースをテストする。
-    
-    必要性：
-    - ファイル読み込み機能の確認
-    - 文字エンコーディングの確認
-    
-    十分性：
-    - ファイル作成と読み込み
-    - 内容の正確性確認
-    """
-    test_content = "<html>Test Content</html>"
-    test_file = tmp_path / "test.html"
-    test_file.write_text(test_content, encoding='utf-8')
-    
-    fetcher = ContentFetcher()
-    content = fetcher.fetch_from_file(str(test_file))
-    
-    assert content == test_content
+    def test_fetch_content_invalid_url(self):
+        """異常系: 不正なURLが指定された場合。"""
+        invalid_urls = [
+            "",
+            "not_a_url",
+            "http://.com",
+            "ftp://example.com"  # HTTPSのみサポート
+        ]
 
-def test_fetch_from_file_not_found():
-    """存在しないファイルの読み込みをテストする。
-    
-    必要性：
-    - ファイル不在時の処理確認
-    - エラーハンドリングの検証
-    
-    十分性：
-    - 存在しないファイルパスでの呼び出し
-    - エラーメッセージの確認
-    """
-    fetcher = ContentFetcher()
-    with pytest.raises(FileNotFoundError) as exc_info:
-        fetcher.fetch_from_file("nonexistent.html")
-    assert "File not found" in str(exc_info.value)
+        for url in invalid_urls:
+            with self.assertRaises(ValueError):
+                self.fetcher.fetch_content(url)
 
-@patch('builtins.open')
-def test_fetch_from_file_io_error(mock_open):
-    """ファイル読み込みエラーケースをテストする。
-    
-    必要性：
-    - IO エラー処理の確認
-    - エラーハンドリングの検証
-    
-    十分性：
-    - IO エラー例外の発生
-    - エラーメッセージの確認
-    """
-    mock_open.side_effect = IOError("Read error")
-    
-    fetcher = ContentFetcher()
-    with pytest.raises(IOError) as exc_info:
-        fetcher.fetch_from_file("test.html")
-    assert "Failed to read file" in str(exc_info.value)
+    def test_fetch_content_request_error(self):
+        """異常系: リクエストエラーが発生した場合。"""
+        with patch('requests.get') as mock_get:
+            mock_get.side_effect = requests.RequestException("Network error")
 
-def test_verify_response():
-    """レスポンス検証メソッドをテストする。
-    
-    必要性：
-    - ステータスコード検証の確認
-    - 成功/失敗の判定確認
-    
-    十分性：
-    - 様々なステータスコードでのテスト
-    - 境界値のテスト
-    """
-    fetcher = ContentFetcher()
-    
-    # 成功ケース
-    response = Mock()
-    response.status_code = 200
-    assert fetcher._verify_response(response) is True
-    
-    response.status_code = 299
-    assert fetcher._verify_response(response) is True
-    
-    # 失敗ケース
-    response.status_code = 199
-    assert fetcher._verify_response(response) is False
-    
-    response.status_code = 300
-    assert fetcher._verify_response(response) is False
-    
-    response.status_code = 404
-    assert fetcher._verify_response(response) is False
-    
-    response.status_code = 500
-    assert fetcher._verify_response(response) is False 
+            with self.assertRaises(requests.RequestException):
+                self.fetcher.fetch_content(self.test_url)
+
+    def test_fetch_content_timeout(self):
+        """異常系: タイムアウトが発生した場合。"""
+        with patch('requests.get') as mock_get:
+            mock_get.side_effect = requests.Timeout("Request timed out")
+
+            with self.assertRaises(requests.Timeout):
+                self.fetcher.fetch_content(self.test_url)
+
+    def test_fetch_content_http_error(self):
+        """異常系: HTTPエラーが発生した場合。"""
+        with patch('requests.get') as mock_get:
+            mock_response = Mock()
+            mock_response.raise_for_status.side_effect = requests.HTTPError("404 Not Found")
+            mock_get.return_value = mock_response
+
+            with self.assertRaises(requests.HTTPError):
+                self.fetcher.fetch_content(self.test_url)
+
+    def test_get_metrics(self):
+        """メトリクス取得機能のテスト。"""
+        # 正常系のリクエストを実行
+        with patch('requests.get') as mock_get:
+            mock_response = Mock()
+            mock_response.text = self.test_content
+            mock_response.raise_for_status.return_value = None
+            mock_get.return_value = mock_response
+
+            self.fetcher.fetch_content(self.test_url)
+
+        # メトリクスを取得して検証
+        metrics = self.fetcher.get_metrics()
+        self.assertIn('content_fetch', metrics)
+        self.assertIsInstance(metrics['content_fetch']['success'], int)
+        self.assertIsInstance(metrics['content_fetch']['error'], int)
+        self.assertIsInstance(metrics['content_fetch']['total_time'], float)
+
+    def test_fetch_content_no_title(self):
+        """正常系: タイトルが存在しないコンテンツの取得。"""
+        content_without_title = "<html><body>No title here</body></html>"
+        with patch('requests.get') as mock_get:
+            mock_response = Mock()
+            mock_response.text = content_without_title
+            mock_response.raise_for_status.return_value = None
+            mock_get.return_value = mock_response
+
+            result = self.fetcher.fetch_content(self.test_url)
+
+            self.assertEqual(result['url'], self.test_url)
+            self.assertEqual(result['content'], content_without_title)
+            self.assertEqual(result['title'], '')
+
+    def test_fetch_content_malformed_title(self):
+        """正常系: 不正な形式のタイトルを含むコンテンツの取得。"""
+        malformed_content = "<html><head><title>Test</title><title>Duplicate</title></head><body>Test</body></html>"
+        with patch('requests.get') as mock_get:
+            mock_response = Mock()
+            mock_response.text = malformed_content
+            mock_response.raise_for_status.return_value = None
+            mock_get.return_value = mock_response
+
+            result = self.fetcher.fetch_content(self.test_url)
+
+            self.assertEqual(result['url'], self.test_url)
+            self.assertEqual(result['content'], malformed_content)
+            self.assertEqual(result['title'], 'Test') 

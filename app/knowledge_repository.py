@@ -1,11 +1,14 @@
-"""Neo4jデータベースを使用して市場分析結果を保存・管理するモジュール。"""
+"""知識リポジトリを管理するモジュール。"""
 
 import logging
+import math
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 from urllib.parse import urlparse
 
-from .neo4j_manager import Neo4jManager
+from app.exceptions import ValidationError
+from app.neo4j_manager import Neo4jManager
+from app.performance_monitor import PerformanceMonitor
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +23,7 @@ class KnowledgeRepository:
             neo4j_manager (Neo4jManager): Neo4jデータベース管理オブジェクト
         """
         self.neo4j_manager = neo4j_manager
+        self._monitor = PerformanceMonitor()
 
     def store_analysis(self, analysis_result: Dict[str, Any]) -> bool:
         """分析結果を保存する。
@@ -67,6 +71,9 @@ class KnowledgeRepository:
             Exception: データベース操作に失敗した場合
         """
         try:
+            self._monitor.start_operation()
+            self.neo4j_manager.begin_transaction()
+
             # エンティティの保存
             entity_id_map = self._store_entities(analysis_result)
             if not entity_id_map:
@@ -76,10 +83,24 @@ class KnowledgeRepository:
             # リレーションシップの保存
             self._store_relationships(analysis_result, entity_id_map)
 
+            self.neo4j_manager.commit_transaction()
+            self._monitor.end_operation(
+                'store_analysis',
+                True,
+                entities_count=len(analysis_result['entities']),
+                relationships_count=len(analysis_result['relationships']),
+                scores_count=len(analysis_result['impact_scores'])
+            )
             return True
 
         except Exception as e:
-            logger.error(f"Error storing analysis data: {str(e)}")
+            self.neo4j_manager.rollback_transaction()
+            self._monitor.end_operation(
+                'store_analysis',
+                False,
+                error=str(e)
+            )
+            logger.error(f"分析結果の保存中にエラーが発生しました: {str(e)}")
             raise
 
     def _validate_url(self, url: str) -> bool:
@@ -107,7 +128,7 @@ class KnowledgeRepository:
             bool: バリデーション結果
         """
         try:
-            # 基本的な�証
+            # 基本的な検証
             if not self._validate_basic_checks(analysis_result):
                 return False
 
@@ -176,89 +197,117 @@ class KnowledgeRepository:
 
         return True
 
-    def _validate_basic_structure(self, analysis_result: Dict[str, Any]) -> bool:
-        """分析結果の基本構造を検証する。
+    def _validate_basic_structure(self, analysis_result: Dict[str, Any]) -> None:
+        """基本構造を検証する。
 
         Args:
-            analysis_result (Dict[str, Any]): 分析結果
+            analysis_result: 分析結果
 
-        Returns:
-            bool: 検証結果
+        Raises:
+            ValidationError: 検証に失敗した場合
         """
         if not isinstance(analysis_result, dict):
             logger.error("Analysis result must be a dictionary")
-            return False
+            raise ValidationError("Analysis result must be a dictionary")
 
-        # 必須キーの存在確認
-        required_keys = ['entities', 'relationships', 'impact_scores', 'source_url', 'analyzed_at']
-        if not all(key in analysis_result for key in required_keys):
+        required_keys = {'entities', 'relationships', 'impact_scores'}
+        missing_keys = required_keys - set(analysis_result.keys())
+        if missing_keys:
             logger.error("Missing required keys in analysis result")
-            return False
+            raise ValidationError(f"Missing required keys: {missing_keys}")
 
-        return True
-
-    def _validate_field_types(self, analysis_result: Dict[str, Any]) -> bool:
-        """�ィールドの型を検証する。
+    def _validate_field_types(self, analysis_result: Dict[str, Any]) -> None:
+        """フィールドの型を検証する。
 
         Args:
-            analysis_result: 検証対象の分析結果
+            analysis_result: 分析結果
 
-        Returns:
-            bool: 検証結果
+        Raises:
+            ValidationError: 検証に失敗した場合
         """
-        try:
-            return all([
-                self._validate_entities_type(analysis_result),
-                self._validate_relationships_type(analysis_result),
-                self._validate_impact_scores_type(analysis_result),
-                self._validate_source_url_type(analysis_result),
-                self._validate_analyzed_at_type(analysis_result)
-            ])
-        except Exception as e:
-            logger.error(f"Error validating field types: {str(e)}")
-            return False
+        self._validate_entities_type(analysis_result)
+        self._validate_relationships_type(analysis_result)
+        self._validate_impact_scores_type(analysis_result)
+        self._validate_source_url_type(analysis_result)
+        self._validate_analyzed_at_type(analysis_result)
 
-    def _validate_entities_type(self, analysis_result: Dict[str, Any]) -> bool:
-        """entitiesフィールドの型を検証する。"""
-        if not isinstance(analysis_result.get('entities'), list):
+    def _validate_entities_type(self, analysis_result: Dict[str, Any]) -> None:
+        """エンティティの型を検証する。
+
+        Args:
+            analysis_result: 分析結果
+
+        Raises:
+            ValidationError: 検証に失敗した場合
+        """
+        if not isinstance(analysis_result['entities'], list):
             logger.error("Entities must be a list")
-            return False
-        return True
+            raise ValidationError("Entities must be a list")
 
-    def _validate_relationships_type(self, analysis_result: Dict[str, Any]) -> bool:
-        """relationshipsフィールドの型を検証する。"""
-        if not isinstance(analysis_result.get('relationships'), list):
+    def _validate_relationships_type(self, analysis_result: Dict[str, Any]) -> None:
+        """リレーションシップの型を検証する。
+
+        Args:
+            analysis_result: 分析結果
+
+        Raises:
+            ValidationError: 検証に失敗した場合
+        """
+        if not isinstance(analysis_result['relationships'], list):
             logger.error("Relationships must be a list")
-            return False
-        return True
+            raise ValidationError("Relationships must be a list")
 
-    def _validate_impact_scores_type(self, analysis_result: Dict[str, Any]) -> bool:
-        """impact_scoresフィールドの型を検証する。"""
-        if not isinstance(analysis_result.get('impact_scores'), dict):
+    def _validate_impact_scores_type(self, analysis_result: Dict[str, Any]) -> None:
+        """インパクトスコアの型を検証する。
+
+        Args:
+            analysis_result: 分析結果
+
+        Raises:
+            ValidationError: 検証に失敗した場合
+        """
+        if not isinstance(analysis_result['impact_scores'], dict):
             logger.error("Impact scores must be a dictionary")
-            return False
-        return True
+            raise ValidationError("Impact scores must be a dictionary")
 
-    def _validate_source_url_type(self, analysis_result: Dict[str, Any]) -> bool:
-        """source_urlフィールドの型を検証する。"""
-        if not isinstance(analysis_result.get('source_url'), str):
+    def _validate_source_url_type(self, analysis_result: Dict[str, Any]) -> None:
+        """ソースURLの型を検証する。
+
+        Args:
+            analysis_result: 分析結果
+
+        Raises:
+            ValidationError: 検証に失敗した場合
+        """
+        if 'source_url' in analysis_result and not isinstance(analysis_result['source_url'], str):
             logger.error("Source URL must be a string")
-            return False
-        return True
+            raise ValidationError("Source URL must be a string")
 
-    def _validate_analyzed_at_type(self, analysis_result: Dict[str, Any]) -> bool:
-        """analyzed_atフィールドの型を検証する。"""
-        analyzed_at = analysis_result.get('analyzed_at')
-        if isinstance(analyzed_at, str):
-            try:
-                datetime.fromisoformat(analyzed_at)
-            except ValueError:
-                logger.error("Analyzed at must be a valid ISO format datetime string")
-                return False
-        elif not isinstance(analyzed_at, datetime):
-            logger.error("Analyzed at must be a datetime or ISO format string")
-            return False
-        return True
+    def _validate_analyzed_at_type(self, analysis_result: Dict[str, Any]) -> None:
+        """分析日時の型を検証する。
+
+        Args:
+            analysis_result: 分析結果
+
+        Raises:
+            ValidationError: 検証に失敗した場合
+        """
+        if 'analyzed_at' in analysis_result:
+            if isinstance(analysis_result['analyzed_at'], str):
+                try:
+                    datetime.fromisoformat(
+                        analysis_result['analyzed_at'].replace('Z', '+00:00')
+                    )
+                except ValueError:
+                    logger.error("Analyzed at must be a valid ISO format datetime string")
+                    raise ValidationError(
+                        "Analyzed at must be a valid ISO format datetime string"
+                    )
+            elif not isinstance(analysis_result['analyzed_at'], datetime):
+                logger.error("Analyzed at must be a datetime or ISO format string")
+                raise ValidationError(
+                    "Analyzed at must be a datetime or ISO format string"
+                )
 
     def _validate_entities(self, entities: Any) -> bool:
         """エンティティ情報を検証する。
@@ -337,149 +386,143 @@ class KnowledgeRepository:
         self,
         impact_scores: Dict[str, float],
         entities: List[Dict[str, Any]]
-    ) -> bool:
-        """影響度スコアの基本的な型チェック。
+    ) -> None:
+        """インパクトスコアの基本型を検証する。
 
         Args:
-            impact_scores: 影響度スコア
+            impact_scores: インパクトスコア
             entities: エンティティリスト
 
-        Returns:
-            bool: 検証結果
+        Raises:
+            ValidationError: 検証に失敗した場合
         """
-        if not isinstance(impact_scores, dict):
-            logger.error("Impact scores must be a dictionary")
-            return False
+        # エンティティIDの抽出
+        entity_ids = self._extract_entity_ids(entities)
+        if not entity_ids:
+            logger.error("No valid entity IDs found")
+            raise ValidationError("No valid entity IDs found")
 
-        if not isinstance(entities, list):
-            logger.error("Entities must be a list")
-            return False
+        # スコアの型チェック
+        for entity_id, score in impact_scores.items():
+            if not isinstance(entity_id, str):
+                logger.error(
+                    f"Entity ID must be a string: {entity_id}"
+                )
+                raise ValidationError(
+                    f"Entity ID must be a string: {entity_id}"
+                )
 
-        return True
+            if not isinstance(score, (int, float)):
+                logger.error(
+                    f"Impact score must be a number: {entity_id} -> {score}"
+                )
+                raise ValidationError(
+                    f"Impact score must be a number: {entity_id} -> {score}"
+                )
 
-    def _extract_entity_ids(self, entities: List[Dict[str, Any]]) -> Optional[set]:
-        """エンティティリストからIDのセットを抽出する。
-
-        Args:
-            entities (List[Dict[str, Any]]): エンティティリスト
-
-        Returns:
-            Optional[set]: エンティティIDのセット、無効な場合はNone
-        """
-        try:
-            # エンティティの基本的な検証
-            if not self._validate_entity_list_structure(entities):
-                return None
-
-            # エンティティIDの抽出
-            entity_ids = self._extract_valid_entity_ids(entities)
-            if not entity_ids:
-                logger.error("No valid entity IDs found")
-                return None
-
-            return entity_ids
-
-        except Exception as e:
-            logger.error(f"Error extracting entity IDs: {str(e)}")
-            return None
-
-    def _validate_entity_list_structure(self, entities: Any) -> bool:
-        """エンティティリストの構造を検証する。
-
-        Args:
-            entities (Any): 検証するエンティティリスト
-
-        Returns:
-            bool: 検証結果
-        """
-        if not isinstance(entities, list):
-            logger.error("Entities must be a list")
-            return False
-
-        for entity in entities:
-            if not isinstance(entity, dict):
-                logger.error(f"Entity must be a dictionary: {entity}")
-                return False
-
-        return True
-
-    def _extract_valid_entity_ids(self, entities: List[Dict[str, Any]]) -> Optional[set]:
-        """有効なエンティティIDを抽出する。
-
-        Args:
-            entities (List[Dict[str, Any]]): エンティティリスト
-
-        Returns:
-            Optional[set]: 有効なエンティティIDのセット
-        """
-        entity_ids = set()
-        for entity in entities:
-            if 'id' not in entity:
-                logger.error("Entity missing required 'id' field")
-                return None
-
-            if not isinstance(entity['id'], str):
-                logger.error(f"Entity ID must be a string: {entity['id']}")
-                return None
-
-            entity_ids.add(entity['id'])
-
-        return entity_ids
+            if not 0 <= score <= 1:
+                logger.error(
+                    f"Impact score must be between 0 and 1: {entity_id} -> {score}"
+                )
+                raise ValidationError(
+                    f"Impact score must be between 0 and 1: {entity_id} -> {score}"
+                )
 
     def _validate_impact_scores_consistency(
         self,
-        impact_scores: Dict[str, float],
-        entity_ids: set
-    ) -> bool:
-        """影響度スコアとエンティティIDの整合性を検証する。
+        entities: List[Dict[str, Any]],
+        impact_scores: Dict[str, float]
+    ) -> None:
+        """インパクトスコアとエンティティIDの整合性を検証する。
 
         Args:
-            impact_scores: 影響度スコア
-            entity_ids: エンティティIDのセット
+            entities: エンティティリスト
+            impact_scores: インパクトスコア
 
-        Returns:
-            bool: 検証結果
+        Raises:
+            ValidationError: 検証に失敗した場合
         """
+        # エンティティIDの抽出
+        entity_ids = self._extract_entity_ids(entities)
+        if not entity_ids:
+            logger.error("No valid entity IDs found")
+            raise ValidationError("No valid entity IDs found")
+
         # すべてのエンティティにスコアが設定されているか確認
         missing_entities = entity_ids - set(impact_scores.keys())
         if missing_entities:
-            logger.error(f"Missing impact scores for entities: {missing_entities}")
-            return False
+            logger.error(
+                f"Missing impact scores for entities: {missing_entities}"
+            )
+            raise ValidationError(
+                f"Missing impact scores for entities: {missing_entities}"
+            )
 
-        # 余分なエンティティIDがないか確認
-        extra_entities = set(impact_scores.keys()) - entity_ids
-        if extra_entities:
-            logger.error(f"Impact scores found for non-existent entities: {extra_entities}")
-            return False
+        # 余分なスコアがないか確認
+        extra_scores = set(impact_scores.keys()) - entity_ids
+        if extra_scores:
+            logger.error(
+                f"Found impact scores for non-existent entities: {extra_scores}"
+            )
+            raise ValidationError(
+                f"Found impact scores for non-existent entities: {extra_scores}"
+            )
 
-        return True
-
-    def _validate_score_values(self, impact_scores: Dict[str, float]) -> bool:
-        """影響度スコアの値を検証する。
+    def _validate_score_values(self, impact_scores: Dict[str, float]) -> None:
+        """スコア値を検証する。
 
         Args:
-            impact_scores: 影響度スコア
+            impact_scores: インパクトスコア
 
-        Returns:
-            bool: 検証結果
+        Raises:
+            ValidationError: 検証に失敗した場合
         """
         for entity_id, score in impact_scores.items():
-            # スコアの型チェック
             if not isinstance(score, (int, float)):
                 logger.error(f"Impact score must be a number: {entity_id} -> {score}")
-                return False
+                raise ValidationError(f"Impact score must be a number: {entity_id} -> {score}")
 
-            # スコアの範囲チェック（0.0 <= score <= 1.0）
             if not 0 <= score <= 1:
                 logger.error(f"Impact score must be between 0 and 1: {entity_id} -> {score}")
-                return False
+                raise ValidationError(f"Impact score must be between 0 and 1: {entity_id} -> {score}")
 
-            # スコアが数値として有効か確認（NaN, Inf チェック）
-            if isinstance(score, float) and (score != score or score == float('inf') or score == float('-inf')):
-                logger.error(f"Invalid impact score value: {entity_id} -> {score}")
-                return False
+            if isinstance(score, float) and (math.isnan(score) or math.isinf(score)):
+                logger.error(f"Impact score must be a finite number: {entity_id} -> {score}")
+                raise ValidationError(f"Impact score must be a finite number: {entity_id} -> {score}")
 
-        return True
+    def _extract_entity_ids(self, entities: List[Dict[str, Any]]) -> Set[str]:
+        """エンティティIDを抽出する。
+
+        Args:
+            entities: エンティティリスト
+
+        Returns:
+            Set[str]: エンティティIDのセット
+
+        Raises:
+            ValidationError: 検証に失敗した場合
+        """
+        entity_ids = set()
+        for entity in entities:
+            if not isinstance(entity, dict):
+                logger.error("Entity must be a dictionary")
+                raise ValidationError("Entity must be a dictionary")
+
+            if 'id' not in entity:
+                logger.error("Entity missing required 'id' field")
+                raise ValidationError("Entity missing required 'id' field")
+
+            if not isinstance(entity['id'], str):
+                logger.error("Entity ID must be a string")
+                raise ValidationError("Entity ID must be a string")
+
+            entity_ids.add(entity['id'])
+
+        if not entity_ids:
+            logger.error("No valid entity IDs found")
+            raise ValidationError("No valid entity IDs found")
+
+        return entity_ids
 
     def _store_entities(
         self,
@@ -659,3 +702,63 @@ class KnowledgeRepository:
             node_id=node_id,
             properties={'updated_at': datetime.now().isoformat()}
         ) 
+
+    def save_analysis_result(self, result: Dict[str, Any]) -> bool:
+        """
+        市場分析結果をNeo4jに保存する。
+
+        Args:
+            result (Dict[str, Any]): 保存する分析結果
+
+        Returns:
+            bool: 保存に成功した場合はTrue、失敗した場合はFalse
+
+        Raises:
+            ValueError: 分析結果が不正な形式の場合
+        """
+        if not self._validate_result_format(result):
+            raise ValueError("Invalid analysis result format")
+
+        try:
+            self._monitor.start_operation()
+            self.neo4j_manager.begin_transaction()
+
+            # エンティティの保存
+            for entity in result.get('entities', []):
+                self.neo4j_manager.create_or_update_entity(entity)
+
+            # リレーションシップの保存
+            for rel in result.get('relationships', []):
+                self.neo4j_manager.create_or_update_relationship(rel)
+
+            # インパクトスコアの保存
+            for score in result.get('impact_scores', []):
+                self.neo4j_manager.create_or_update_impact_score(score)
+
+            self.neo4j_manager.commit_transaction()
+            self._monitor.end_operation(
+                'save_analysis',
+                True,
+                entities_count=len(result.get('entities', [])),
+                relationships_count=len(result.get('relationships', [])),
+                scores_count=len(result.get('impact_scores', []))
+            )
+            return True
+        except Exception as e:
+            self.neo4j_manager.rollback_transaction()
+            self._monitor.end_operation(
+                'save_analysis',
+                False,
+                error=str(e)
+            )
+            logger.error(f"分析結果の保存中にエラーが発生しました: {str(e)}")
+            return False
+
+    def get_metrics(self) -> dict:
+        """
+        現在のメトリクスを取得する。
+
+        Returns:
+            dict: 収集されたメトリクス
+        """
+        return self._monitor.get_metrics() 

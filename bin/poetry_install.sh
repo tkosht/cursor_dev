@@ -15,3 +15,5 @@ poetry install
 poetry add matplotlib
 poetry run sed -i -e 's/^#font.family:\s*sans-serif/#font.family: IPAexGothic/' $(poetry run python -c 'import matplotlib as m; print(m.matplotlib_fname())')
 
+poetry self add poetry-plugin-shell
+

@@ -1,471 +1,115 @@
-"""MarketAnalyzerのテストモジュール"""
+"""MarketAnalyzerのテストモジュール。"""
 
 import unittest
 from datetime import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, patch
 
+from app.exceptions import MarketAnalysisError, ValidationError
+from app.gemini_analyzer import GeminiAnalyzer
 from app.market_analyzer import MarketAnalyzer
+from app.neo4j_manager import Neo4jManager
 
 
 class TestMarketAnalyzer(unittest.TestCase):
-    """MarketAnalyzerクラスのテストケース"""
+    """MarketAnalyzerのテストクラス。"""
 
     def setUp(self):
-        """テストの前準備"""
-        self.analyzer = MarketAnalyzer()
-        self.sample_data = {
-            'title': 'テストニュース',
-            'content': 'AIによる市場分析の進展について',
-            'url': 'https://example.com/news/1',
-            'published_at': '2024-01-01T00:00:00'
+        """テストの前準備。"""
+        self.neo4j_manager = MagicMock(spec=Neo4jManager)
+        self.gemini_analyzer = MagicMock(spec=GeminiAnalyzer)
+        self.analyzer = MarketAnalyzer(
+            neo4j_manager=self.neo4j_manager,
+            gemini_analyzer=self.gemini_analyzer
+        )
+
+    def test_init_validation(self):
+        """初期化時の引数検証をテスト。"""
+        with self.assertRaises(ValidationError):
+            MarketAnalyzer(neo4j_manager=None, gemini_analyzer=self.gemini_analyzer)
+        
+        with self.assertRaises(ValidationError):
+            MarketAnalyzer(neo4j_manager=self.neo4j_manager, gemini_analyzer=None)
+
+    def test_analyze_content_success(self):
+        """コンテンツ分析が成功することを確認。"""
+        # モックの設定
+        content = "テスト用コンテンツ"
+        analysis_result = {
+            'entities': ['企業A', '製品X'],
+            'relationships': ['企業Aが製品Xを発表']
         }
-        self.sample_entities = [
+        self.gemini_analyzer.analyze_content.return_value = analysis_result
+        self.neo4j_manager.create_content_node.return_value = "content-123"
+        self.neo4j_manager.create_entity_node.side_effect = ["entity-1", "entity-2"]
+        self.neo4j_manager.create_relationship.return_value = "rel-1"
+
+        # テスト実行
+        result = self.analyzer.analyze_content(content)
+
+        # 検証
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result['content_id'], "content-123")
+        self.assertEqual(result['entities'], ['企業A', '製品X'])
+        self.assertEqual(result['relationships'], ['企業Aが製品Xを発表'])
+
+    def test_analyze_content_validation(self):
+        """コンテンツのバリデーションをテスト。"""
+        invalid_inputs = [None, "", 123, [], {}]
+        for invalid_input in invalid_inputs:
+            with self.assertRaises(ValidationError):
+                self.analyzer.analyze_content(invalid_input)
+
+    def test_get_market_trends(self):
+        """市場トレンド取得をテスト。"""
+        # モックの設定
+        expected_trends = [
             {
-                'id': 'entity_0',
-                'name': 'AI企業X',
-                'type': 'COMPANY',
-                'description': 'AI技術を開発する企業',
-                'properties': {
-                    'importance': 0.8,
-                    'category': 'Technology',
-                    'source': 'news'
-                }
-            },
-            {
-                'id': 'entity_1',
-                'name': '市場分析ツール',
-                'type': 'PRODUCT',
-                'description': 'AIを活用した市場分析ツール',
-                'properties': {
-                    'importance': 0.6,
-                    'category': 'Software',
-                    'source': 'news'
-                }
+                'title': 'トレンド1',
+                'url': 'http://example.com/1',
+                'published_at': '2025-01-01T00:00:00',
+                'market_impact': 0.8
             }
         ]
-        self.sample_relationships = [
+        self.neo4j_manager.execute_query.return_value = expected_trends
+
+        # テスト実行
+        start_date = datetime(2025, 1, 1)
+        end_date = datetime(2025, 1, 31)
+        result = self.analyzer.get_market_trends(start_date, end_date)
+
+        # 検証
+        self.assertEqual(result, expected_trends)
+        self.neo4j_manager.execute_query.assert_called_once()
+
+    def test_get_entity_relationships(self):
+        """エンティティ関係取得をテスト。"""
+        # モックの設定
+        expected_relationships = [
             {
-                'source': 'entity_0',
-                'target': 'entity_1',
-                'type': 'DEVELOPS',
-                'strength': 0.7,
-                'description': '開発関係'
-            }
-        ]
-        self.sample_trends = ['AI市場分析', 'デジタルトランスフォーメーション']
-
-    def test_analyze(self):
-        """analyze メソッドのテスト"""
-        with patch.object(self.analyzer.gemini, 'analyze_content') as mock_analyze:
-            # モックの戻り値を設定
-            mock_analyze.return_value = {
-                'entities': self.sample_entities,
-                'relationships': self.sample_relationships,
-                'trends': self.sample_trends,
-                'market_impact': 0.7,
-                'technology_impact': 0.8,
-                'social_impact': 0.6
-            }
-
-            # 分析を実行
-            result = self.analyzer.analyze(self.sample_data)
-
-            # 結果の検証
-            self.assertIsInstance(result, dict)
-            self.assertIn('entities', result)
-            self.assertIn('relationships', result)
-            self.assertIn('impact_scores', result)
-            self.assertIn('trends', result)
-            self.assertEqual(result['source_url'], self.sample_data['url'])
-            self.assertTrue(isinstance(result['analyzed_at'], str))
-
-    def test_calculate_trend_factor(self):
-        """_calculate_trend_factor メソッドのテスト"""
-        trend = 'AI市場分析'
-        factor = self.analyzer._calculate_trend_factor(
-            trend,
-            self.sample_entities,
-            self.sample_relationships
-        )
-        self.assertIsInstance(factor, float)
-        self.assertGreaterEqual(factor, 0.0)
-        self.assertLessEqual(factor, 1.0)
-
-    def test_calculate_company_factor(self):
-        """_calculate_company_factor メソッドのテスト"""
-        trend = 'AI'
-        factor = self.analyzer._calculate_company_factor(
-            trend,
-            self.sample_entities
-        )
-        self.assertIsInstance(factor, float)
-        self.assertGreaterEqual(factor, 0.0)
-        self.assertLessEqual(factor, 1.0)
-
-    def test_calculate_market_factor(self):
-        """_calculate_market_factor メソッドのテスト"""
-        trend = 'AI市場分析'
-        factor = self.analyzer._calculate_market_factor(
-            trend,
-            self.sample_relationships
-        )
-        self.assertIsInstance(factor, float)
-        self.assertGreaterEqual(factor, 0.0)
-        self.assertLessEqual(factor, 1.0)
-
-    def test_find_related_entities(self):
-        """_find_related_entities メソッドのテスト"""
-        trend = 'AI'
-        related = self.analyzer._find_related_entities(
-            trend,
-            self.sample_entities
-        )
-        self.assertIsInstance(related, list)
-        self.assertTrue(all(isinstance(id_, str) for id_ in related))
-        self.assertGreater(len(related), 0)
-
-    def test_calculate_market_impact(self):
-        """_calculate_market_impact メソッドのテスト"""
-        trend = 'AI市場分析'
-        impact = self.analyzer._calculate_market_impact(
-            trend,
-            self.sample_entities,
-            self.sample_relationships
-        )
-        self.assertIsInstance(impact, float)
-        self.assertGreaterEqual(impact, 0.0)
-        self.assertLessEqual(impact, 1.0)
-
-    def test_calculate_impact_scores(self):
-        """_calculate_impact_scores メソッドのテスト"""
-        output = {
-            'market_impact': 0.7,
-            'technology_impact': 0.8,
-            'social_impact': 0.6
-        }
-        trends = [
-            {
-                'name': 'AI市場分析',
-                'importance': 0.8
-            }
-        ]
-        scores = self.analyzer._calculate_impact_scores(
-            output,
-            self.sample_entities,
-            self.sample_relationships,
-            trends
-        )
-        self.assertIsInstance(scores, dict)
-        self.assertIn('market_impact', scores)
-        self.assertIn('technology_impact', scores)
-        self.assertIn('social_impact', scores)
-        for score in scores.values():
-            self.assertGreaterEqual(score, 0.0)
-            self.assertLessEqual(score, 1.0)
-
-    def test_calculate_impact_score_with_invalid_input(self):
-        """_calculate_impact_score メソッドの無効な入力のテスト"""
-        # 文字列の場合
-        self.assertEqual(self.analyzer._calculate_impact_score('invalid'), 0.5)
-        # Noneの場合
-        self.assertEqual(self.analyzer._calculate_impact_score(None), 0.5)
-        # 範囲外の値の場合
-        self.assertEqual(self.analyzer._calculate_impact_score(1.5), 1.0)
-        self.assertEqual(self.analyzer._calculate_impact_score(-0.5), 0.0)
-
-    def test_analyze_with_invalid_input(self):
-        """analyze メソッドの無効な入力のテスト"""
-        invalid_data = {
-            'title': 'テスト',
-            # 必須フィールドの欠落
-        }
-        with self.assertRaises(Exception):
-            self.analyzer.analyze(invalid_data)
-
-    def test_process_gemini_output_with_invalid_input(self):
-        """process_gemini_output メソッドの無効な入力のテスト"""
-        # 辞書以外の入力
-        with self.assertRaises(ValueError):
-            self.analyzer.process_gemini_output([])
-        
-        # 必須フィールドが欠落した辞書
-        with self.assertRaises(Exception):
-            self.analyzer.process_gemini_output({})
-
-    def test_extract_entities(self):
-        """_extract_entities メソッドのテスト
-        
-        必要性：
-        - エンティティ抽出の正確性確認
-        - IDとプロパティの検証
-        
-        十分性：
-        - 必須フィールドの存在確認
-        - プロパティの型チェック
-        - エンティティの一意性確認
-        """
-        raw_entities = [
-            {
-                'name': 'テスト企業A',
-                'type': 'COMPANY',
-                'description': 'テスト用企業A',
-                'properties': {
-                    'importance': 0.8,
-                    'category': 'Test'
-                }
-            },
-            {
-                'name': 'テスト製品X',
-                'type': 'PRODUCT',
-                'description': 'テスト用製品X',
-                'properties': {
-                    'importance': 0.6,
-                    'category': 'Test'
-                }
-            }
-        ]
-        
-        result = self.analyzer._extract_entities(raw_entities)
-        
-        # 結果の検証
-        self.assertEqual(len(result), 2)
-        for entity in result:
-            self.assertIn('id', entity)
-            self.assertIn('name', entity)
-            self.assertIn('type', entity)
-            self.assertIn('description', entity)
-            self.assertIn('properties', entity)
-            self.assertIsInstance(entity['properties'], dict)
-            self.assertIsInstance(entity['properties'].get('importance'), float)
-
-    def test_extract_entities_with_invalid_input(self):
-        """_extract_entities メソッドの無効な入力のテスト
-        
-        必要性：
-        - エラー処理の確認
-        - 無効なデータの除外確認
-        
-        十分性：
-        - 必須フィールド欠落の処理
-        - 無効な型の処理
-        - エラーメッセージの確認
-        """
-        # 無効なエンティティを含むリスト
-        invalid_entities = [
-            {},  # 空辞書
-            {'name': 'Invalid'},  # 必須フィールド欠落
-            None,  # None
-            {  # 無効な型のプロパティ
-                'name': 'Test',
-                'type': 'TEST',
-                'description': 'Test',
-                'properties': 'invalid'
-            }
-        ]
-        
-        result = self.analyzer._extract_entities(invalid_entities)
-        self.assertEqual(len(result), 0)
-
-    def test_detect_relationships(self):
-        """_detect_relationships メソッドのテスト
-        
-        必要性：
-        - リレーションシップ検出の正確性確認
-        - IDマッピングの検証
-        
-        十分性：
-        - 必須フィールドの存在確認
-        - プロパティの型チェック
-        - 関係の方向性確認
-        """
-        name_to_id = {
-            'テスト企業A': 'entity_0',
-            'テスト製品X': 'entity_1'
-        }
-        
-        raw_relationships = [
-            {
-                'source': 'テスト企業A',
-                'target': 'テスト製品X',
-                'type': 'DEVELOPS',
-                'strength': 0.7,
-                'description': 'テスト用関係'
-            }
-        ]
-        
-        result = self.analyzer._detect_relationships(raw_relationships, name_to_id)
-        
-        # 結果の検証
-        self.assertEqual(len(result), 1)
-        rel = result[0]
-        self.assertEqual(rel['source'], 'entity_0')
-        self.assertEqual(rel['target'], 'entity_1')
-        self.assertEqual(rel['type'], 'DEVELOPS')
-        self.assertIsInstance(rel['strength'], float)
-        self.assertIn('description', rel)
-
-    def test_detect_relationships_with_invalid_input(self):
-        """_detect_relationships メソッドの無効な入力のテスト
-        
-        必要性：
-        - エラー処理の確認
-        - 無効なデータの除外確認
-        
-        十分性：
-        - 必須フィールド欠落の処理
-        - 存在しないエンティティの処理
-        - 無効な型の処理
-        """
-        name_to_id = {'テスト企業A': 'entity_0'}
-        
-        # 無効なリレーションシップを含むリスト
-        invalid_relationships = [
-            {},  # 空辞書
-            {  # 必須フィールド欠落
-                'source': 'テスト企業A'
-            },
-            None,  # None
-            {  # 存在しないエンティティ
-                'source': '存在しない企業',
-                'target': 'テスト企業A',
-                'type': 'TEST'
-            },
-            {  # 無効な型のプロパティ
-                'source': 'テスト企業A',
-                'target': 'テスト企業A',
-                'type': 'TEST',
-                'strength': 'invalid'
-            }
-        ]
-        
-        result = self.analyzer._detect_relationships(invalid_relationships, name_to_id)
-        self.assertEqual(len(result), 0)
-
-    def test_analyze_trends_detailed(self):
-        """_analyze_trends メソッドの詳細テスト
-        
-        必要性：
-        - トレンド分析の正確性確認
-        - 重要度計算の検証
-        - 関連エンティティの検出確認
-        
-        十分性：
-        - 複数トレンドの処理
-        - 重要度の順序確認
-        - 関連情報の正確性
-        """
-        raw_trends = ['AI技術', 'デジタル化', '市場動向']
-        entities = [
-            {
-                'id': 'entity_0',
-                'name': 'AI企業X',
-                'type': 'COMPANY',
-                'description': 'AI技術を開発する企業',
-                'properties': {'importance': 0.8}
-            },
-            {
-                'id': 'entity_1',
-                'name': 'デジタルソリューション',
-                'type': 'PRODUCT',
-                'description': 'デジタル化支援ツール',
-                'properties': {'importance': 0.6}
-            }
-        ]
-        relationships = [
-            {
-                'source': 'entity_0',
-                'target': 'entity_1',
-                'type': 'DEVELOPS',
+                'source': '企業A',
+                'target': '企業B',
+                'type': 'COMPETES_WITH',
                 'strength': 0.7
             }
         ]
-        
-        result = self.analyzer._analyze_trends(raw_trends, entities, relationships)
-        
-        # 結果の検証
-        self.assertEqual(len(result), 3)
-        self.assertTrue(all(isinstance(trend, dict) for trend in result))
-        self.assertTrue(all('importance' in trend for trend in result))
-        self.assertTrue(all('related_entities' in trend for trend in result))
-        self.assertTrue(all('market_impact' in trend for trend in result))
-        
-        # 重要度でソートされていることを確認
-        importances = [trend['importance'] for trend in result]
-        self.assertEqual(importances, sorted(importances, reverse=True))
+        self.neo4j_manager.execute_query.return_value = expected_relationships
 
-    def test_analyze_trends_with_empty_input(self):
-        """_analyze_trends メソッドの空入力テスト
-        
-        必要性：
-        - エッジケースの処理確認
-        - 空データの処理検証
-        
-        十分性：
-        - 空リストの処理
-        - デフォルト値の確認
-        """
-        result = self.analyzer._analyze_trends([], [], [])
-        self.assertEqual(result, [])
-        
-        result = self.analyzer._analyze_trends(['テストトレンド'], [], [])
-        self.assertEqual(len(result), 1)
-        self.assertLessEqual(result[0]['importance'], 0.5)
-        self.assertEqual(result[0]['related_entities'], [])
+        # テスト実行
+        result = self.analyzer.get_entity_relationships('企業A')
 
-    def test_analyze_trends_with_invalid_input(self):
-        """_analyze_trends メソッドの無効な入力テスト
-        
-        必要性：
-        - エラー処理の確認
-        - 無効データの処理検証
-        
-        十分性：
-        - 無効な型の処理
-        - エラー時のデフォルト値
-        """
-        # 無効なエンティティ
-        invalid_entities = [{'invalid': 'data'}]
-        # 無効なリレーションシップ
-        invalid_relationships = [{'invalid': 'data'}]
-        
-        result = self.analyzer._analyze_trends(
-            ['テストトレンド'],
-            invalid_entities,
-            invalid_relationships
-        )
-        
-        self.assertEqual(len(result), 1)
-        trend = result[0]
-        self.assertEqual(trend['name'], 'テストトレンド')
-        self.assertGreaterEqual(trend['importance'], 0.0)
-        self.assertLessEqual(trend['importance'], 1.0)
-        self.assertEqual(trend['related_entities'], [])
-        self.assertEqual(trend['market_impact'], 0.0)
+        # 検証
+        self.assertEqual(result, expected_relationships)
+        self.neo4j_manager.execute_query.assert_called_once()
 
-    def test_calculate_novelty_factor(self):
-        """_calculate_novelty_factor メソッドのテスト
-        
-        必要性：
-        - 新規性評価の確認
-        - スコア計算の検証
-        
-        十分性：
-        - 異なるトレンドの評価
-        - スコア範囲の確認
-        """
-        # 新しいトレンド
-        factor1 = self.analyzer._calculate_novelty_factor('新技術XYZ')
-        self.assertGreaterEqual(factor1, 0.0)
-        self.assertLessEqual(factor1, 1.0)
-        
-        # 一般的なトレンド
-        factor2 = self.analyzer._calculate_novelty_factor('AI')
-        self.assertGreaterEqual(factor2, 0.0)
-        self.assertLessEqual(factor2, 1.0)
-        
-        # 空文字列
-        factor3 = self.analyzer._calculate_novelty_factor('')
-        self.assertEqual(factor3, 0.0)
+    def test_get_metrics(self):
+        """メトリクス取得をテスト。"""
+        expected_metrics = {
+            'entity_count': 10,
+            'relationship_count': 5
+        }
+        self.analyzer._monitor.get_metrics.return_value = expected_metrics
+        result = self.analyzer.get_metrics()
+        self.assertEqual(result, expected_metrics)
 
 
 if __name__ == '__main__':

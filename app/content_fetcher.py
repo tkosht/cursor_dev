@@ -1,85 +1,87 @@
-"""HTMLコンテンツを取得するためのモジュール。"""
+"""コンテンツを取得するモジュール。"""
 
 import logging
-from typing import Optional
+from typing import Dict
+from urllib.parse import urlparse
+
 import requests
-from requests.exceptions import RequestException
-from pathlib import Path
+
+from app.exceptions import ContentFetchError
+from app.performance_monitor import PerformanceMonitor
 
 logger = logging.getLogger(__name__)
 
+
 class ContentFetcher:
-    """HTMLコンテンツを取得するクラス"""
+    """コンテンツを取得するクラス。"""
 
-    def __init__(self, timeout: float = 30.0, max_retries: int = 3):
-        """
-        Args:
-            timeout (float, optional): リクエストのタイムアウト時間（秒）. デフォルトは30秒
-            max_retries (int, optional): リトライ回数. デフォルトは3回
-        """
-        self._timeout = timeout
-        self._max_retries = max_retries
-        self._session = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
-        self._session.mount('http://', adapter)
-        self._session.mount('https://', adapter)
+    def __init__(self):
+        """初期化。"""
+        self._monitor = PerformanceMonitor()
 
-    def fetch_html(self, url: str) -> str:
-        """指定されたURLからHTMLコンテンツを取得
+    def fetch_content(self, url: str) -> str:
+        """URLからコンテンツを取得する。
 
         Args:
-            url (str): 取得対象のURL
+            url: 取得対象のURL
 
         Returns:
             str: 取得したHTMLコンテンツ
 
         Raises:
-            ValueError: URLが空の場合
-            ConnectionError: HTTPエラーが発生した場合
-            TimeoutError: タイムアウトが発生した場合
+            ValueError: URLが不正な場合
+            ContentFetchError: コンテンツの取得に失敗した場合
         """
-        if not url:
-            raise ValueError("URL must not be empty")
-
         try:
-            response = self._session.get(url, timeout=self._timeout)
-            if not self._verify_response(response):
-                raise ConnectionError(f"HTTP error: {response.status_code}")
+            self._validate_url(url)
+            self._monitor.start_operation('fetch_content')
+
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+
+            self._monitor.end_operation('fetch_content', True)
             return response.text
 
-        except requests.Timeout:
-            raise TimeoutError("Request timed out")
-        except requests.RequestException as e:
-            raise ConnectionError(f"Failed to fetch content: {str(e)}")
+        except requests.Timeout as e:
+            self._monitor.end_operation('fetch_content', False, error='timeout')
+            logger.error(f"タイムアウトが発生しました: {str(e)}")
+            raise ContentFetchError(f"タイムアウトが発生しました: {str(e)}")
 
-    def fetch_from_file(self, file_path: str) -> str:
-        """指定されたファイルからHTMLコンテンツを読み込み
+        except requests.RequestException as e:
+            self._monitor.end_operation('fetch_content', False, error='request_error')
+            logger.error(f"リクエストエラーが発生しました: {str(e)}")
+            raise ContentFetchError(f"リクエストエラーが発生しました: {str(e)}")
+
+        except Exception as e:
+            self._monitor.end_operation('fetch_content', False, error='unknown')
+            logger.error(f"予期せぬエラーが発生しました: {str(e)}")
+            raise ContentFetchError(f"予期せぬエラーが発生しました: {str(e)}")
+
+    def _validate_url(self, url: str) -> None:
+        """URLを検証する。
 
         Args:
-            file_path (str): 読み込むファイルのパス
-
-        Returns:
-            str: 読み込んだHTMLコンテンツ
+            url: 検証対象のURL
 
         Raises:
-            FileNotFoundError: ファイルが存在しない場合
-            IOError: ファイルの読み込みに失敗した場合
+            ValueError: URLが不正な場合
         """
+        if not url:
+            raise ValueError("URLが空です")
+
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return f.read()
-        except FileNotFoundError:
-            raise FileNotFoundError(f"File not found: {file_path}")
-        except IOError as e:
-            raise IOError(f"Failed to read file: {str(e)}")
+            result = urlparse(url)
+            if not all([result.scheme, result.netloc]):
+                raise ValueError("URLの形式が不正です")
+            if result.scheme not in ['http', 'https']:
+                raise ValueError("HTTPSプロトコルのみサポートしています")
+        except Exception as e:
+            raise ValueError(f"URLの解析に失敗しました: {str(e)}")
 
-    def _verify_response(self, response: requests.Response) -> bool:
-        """HTTPレスポンスが正常かどうかを確認
-
-        Args:
-            response (requests.Response): 確認対象のレスポンス
+    def get_metrics(self) -> Dict[str, any]:
+        """メトリクスを取得する。
 
         Returns:
-            bool: 正常な場合はTrue、それ以外はFalse
+            Dict[str, any]: メトリクス
         """
-        return 200 <= response.status_code < 300 
+        return self._monitor.get_metrics() 

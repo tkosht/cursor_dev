@@ -1,165 +1,284 @@
-"""Gemini APIを使用してコンテンツを解析するモジュール。"""
+"""Gemini APIを使用してコンテンツ分析モジュール。"""
 
 import json
 import logging
-import os
-from datetime import datetime
-from dotenv import load_dotenv
+from typing import Any, Dict
 
 import google.generativeai as genai
 
+from app.exceptions import GeminiError, ValidationError
+from app.monitoring import PerformanceMonitor
+
 logger = logging.getLogger(__name__)
 
-# .env.testファイルを読み込む
-load_dotenv('.env.test')
-
-
 class GeminiAnalyzer:
-    """Gemini APIを使用してコンテンツを解析するクラス。"""
+    """Gemini APIを使用してコンテンツを分析するクラス。"""
 
-    def __init__(self, api_key: str = None):
-        """
-        GeminiAnalyzerを初期化する。
+    def __init__(self, api_key: str):
+        """初期化。
 
         Args:
-            api_key (str, optional): Gemini APIのキー。指定されない場合は環境変数から取得。
+            api_key: Gemini APIキー
 
         Raises:
-            ValueError: APIキーが指定されておらず、環境変数にも設定されていない場合
+            ValidationError: APIキーが不正な場合
         """
-        if api_key == "":
-            raise ValueError("APIキーが指定されておらず、環境変数 GOOGLE_API_KEY_GEMINI も設定されていません")
+        if not isinstance(api_key, str) or not api_key:
+            raise ValidationError("APIキーは空でない文字列である必要があります")
 
-        self.api_key = api_key or os.getenv("GOOGLE_API_KEY_GEMINI")
-        if not self.api_key:
-            raise ValueError("APIキーが指定されておらず、環境変数 GOOGLE_API_KEY_GEMINI も設定されていません")
-        
-        genai.configure(api_key=self.api_key)
-        self._model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        genai.configure(api_key=api_key)
+        self._performance_monitor = PerformanceMonitor()
+        self._request_count = 0
+        self._error_count = 0
 
-    def analyze_content(self, content: dict) -> dict:
-        """
-        コンテンツを解析し、市場影響度やトレンドを抽出する。
+    def analyze_content(self, content: Dict[str, str]) -> dict:
+        """コンテンツを分析する。
 
         Args:
-            content (dict): 解析対象のコンテンツ（title, content, urlを含む）
+            content: 分析対象のコンテンツ
 
         Returns:
-            dict: 解析結果を含む辞書
+            dict: 分析結果
 
         Raises:
-            ValueError: コンテンツが不正な形式の場合
+            ValidationError: 入力値が不正な場合
+            GeminiError: API呼び出しに失敗した場合
         """
-        if not isinstance(content, dict) or not all(k in content for k in ['title', 'content', 'url']):
-            raise ValueError("Invalid content format")
+        self._validate_input(content)
 
-        prompt = self._construct_prompt(content)
-        response = self._call_gemini_api(prompt)
-        return self._parse_response(response)
+        try:
+            prompt = self._create_prompt(content)
+            model = self._get_model()
+            response = self._generate_response(model, prompt)
+            result = self._process_response(response)
+            parsed_result = self._parse_response(result)
+            self._validate_analysis_result(parsed_result)
+            return parsed_result
+        except (ValidationError, GeminiError):
+            self._error_count += 1
+            raise
 
-    def _construct_prompt(self, content: dict) -> str:
-        """
-        Gemini APIに送信するプロンプトを生成する。
+    def _validate_input(self, content: Dict[str, str]) -> bool:
+        """入力コンテンツを検証する。
 
         Args:
-            content (dict): 解析対象のコンテンツ
+            content: 検証対象のコンテンツ
+
+        Returns:
+            bool: 検証結果
+
+        Raises:
+            ValidationError: 検証に失敗した場合
+        """
+        if not isinstance(content, dict):
+            raise ValidationError("コンテンツは辞書型である必要があります")
+
+        required_keys = {'title', 'content', 'date', 'url'}
+        missing_keys = required_keys - set(content.keys())
+        if missing_keys:
+            raise ValidationError(f"必須キーが欠落しています: {missing_keys}")
+
+        for key in required_keys:
+            if not isinstance(content[key], str):
+                raise ValidationError(f"{key}は文字列型である必要があります")
+
+        return True
+
+    def get_metrics(self) -> dict:
+        """メトリクスを取得する。
+
+        Returns:
+            dict: メトリクス情報
+        """
+        return {
+            'request_count': self._request_count,
+            'error_count': self._error_count,
+            'average_response_time': self._performance_monitor.get_average('api_call'),
+            'p95_response_time': self._performance_monitor.get_percentile('api_call', 95),
+            'p99_response_time': self._performance_monitor.get_percentile('api_call', 99)
+        }
+
+    def _create_prompt(self, content: Dict[str, str]) -> str:
+        """プロンプトを生成する。
+
+        Args:
+            content: 分析対象のコンテンツ
 
         Returns:
             str: 生成されたプロンプト
         """
-        current_time = datetime.now().isoformat()
         return f"""
-        以下のコンテンツを解析し、市場影響度とトレンドを抽出してください。
-        広告や不要な情報は除外し、以下の形式でJSON形式で返してください：
-
+        以下のコンテンツを分析し、エンティティと関係性を抽出してください。
+        
+        タイトル: {content['title']}
+        本文: {content['content']}
+        日付: {content['date']}
+        URL: {content['url']}
+        
+        以下のJSON形式で出力してください:
         {{
-            "market_impact": 0.0-1.0の数値,
-            "trends": ["トレンド1", "トレンド2", ...],
             "entities": [
-                {{"name": "企業名や製品名", "type": "COMPANY/PRODUCT/SERVICE", "description": "説明"}}
+                {{"id": "string", "name": "string", "type": "string"}}
             ],
             "relationships": [
-                {{"source": "エンティティ1", "target": "エンティティ2", "type": "INFLUENCES/COMPETES/DEVELOPS",
-                  "strength": 0.0-1.0}}
-            ]
+                {{"source": "string", "target": "string", "type": "string"}}
+            ],
+            "impact_scores": {{
+                "entity_id": float  // 0.0から1.0の範囲
+            }}
         }}
-
-        タイトル: {content.get('title', 'Unknown')}
-        URL: {content.get('url', 'Unknown')}
-        日時: {current_time}
-
-        コンテンツ:
-        {content.get('content', '')}
         """
 
-    def _call_gemini_api(self, prompt: str) -> str:
-        """
-        Gemini APIを呼び出し、レスポンスを取得する。
-
-        Args:
-            prompt (str): APIに送信するプロンプト
+    def _get_model(self) -> Any:
+        """Geminiモデルを取得する。
 
         Returns:
-            str: APIからのレスポンス
+            Any: Geminiモデル
 
         Raises:
-            ConnectionError: API呼び出しに失敗した場合
+            GeminiError: モデルの取得に失敗した場合
         """
         try:
-            response = self._model.generate_content(prompt)
+            return genai.GenerativeModel('gemini-pro')
+        except Exception as e:
+            raise GeminiError(f"モデルの取得に失敗しました: {str(e)}")
+
+    def _generate_response(self, model: Any, prompt: str) -> Any:
+        """レスポンスを生成する。
+
+        Args:
+            model: Geminiモデル
+            prompt: プロンプト
+
+        Returns:
+            Any: 生成されたレスポンス
+
+        Raises:
+            GeminiError: レスポンスの生成に失敗した場合
+        """
+        try:
+            return model.generate_content(prompt)
+        except Exception as e:
+            raise GeminiError(f"レスポンスの生成に失敗しました: {str(e)}")
+
+    def _process_response(self, response: Any) -> str:
+        """レスポンスを処理する。
+
+        Args:
+            response: APIレスポンス
+
+        Returns:
+            str: 処理されたレスポンス
+
+        Raises:
+            GeminiError: レスポンスの処理に失敗した場合
+        """
+        try:
+            if not response.text:
+                raise GeminiError("空のレスポンスが返されました")
             return response.text
         except Exception as e:
-            raise ConnectionError(f"Gemini APIの呼び出しに失敗しました: {str(e)}")
+            raise GeminiError(f"レスポンスの処理に失敗しました: {str(e)}")
 
     def _parse_response(self, response: str) -> dict:
-        """
-        APIレスポンスをパースし、構造化されたデータに変換する。
+        """APIレスポンスをパースする。
 
         Args:
-            response (str): APIからのレスポンス
+            response: APIレスポンス（JSON文字列）
 
         Returns:
-            dict: パースされた解析結果
+            dict: パースされたレスポンス
 
         Raises:
-            ValueError: レスポンスのパースに失敗した場合
+            ValidationError: レスポンスの形式が不正な場合
         """
-        if not response:
-            raise ValueError("Invalid JSON format")
-
         try:
-            # マークダウンのコードブロックを処理
-            if "```json" in response:
-                json_content = response.split("```json")[1].split("```")[0].strip()
-            else:
-                json_content = response.strip()
+            # レスポンスからJSON部分を抽出
+            text = response.strip()
+            if text.startswith('```json'):
+                text = text[7:]  # '```json'を削除
+            if text.endswith('```'):
+                text = text[:-3]  # '```'を削除
+            text = text.strip()
 
-            result = json.loads(json_content)
-            return self._validate_json_result(result)
-        except json.JSONDecodeError:
-            raise ValueError("Invalid JSON format")
+            # シングルクォートをダブルクォートに置換
+            text = text.replace("'", '"')
 
-    def _validate_json_result(self, result: dict) -> dict:
-        """
-        JSONの内容を検証する。
+            # JSONパース
+            result = json.loads(text)
+            if not isinstance(result, dict):
+                raise ValidationError("APIレスポンスが辞書型ではありません")
+            return result
+        except json.JSONDecodeError as e:
+            raise ValidationError(f"APIレスポンスのJSONパースに失敗しました: {str(e)}")
+
+    def _validate_result_type(self, result: Any) -> None:
+        """分析結果の型を検証する。
 
         Args:
-            result (dict): 検証対象のJSON
-
-        Returns:
-            dict: 検証済みのJSON
+            result: 検証対象の分析結果
 
         Raises:
-            ValueError: 検証に失敗した場合
+            ValidationError: 型が不正な場合
         """
-        # 必須フィールドの検証
-        required_fields = ["market_impact", "trends", "entities", "relationships"]
-        for field in required_fields:
-            if field not in result:
-                raise ValueError(f"必須フィールド {field} が見つかりません")
+        if not isinstance(result, dict):
+            raise ValidationError("分析結果が辞書型ではありません")
 
-        # market_impactの範囲チェック
-        if not 0 <= result["market_impact"] <= 1:
-            raise ValueError("Impact score must be between 0 and 1")
+    def _validate_required_keys(self, result: Dict[str, Any]) -> None:
+        """必須キーの存在を検証する。
 
-        return result 
+        Args:
+            result: 検証対象の分析結果
+
+        Raises:
+            ValidationError: 必須キーが存在しない場合
+        """
+        required_keys = {"entities", "relationships", "impact_scores"}
+        missing_keys = required_keys - set(result.keys())
+        if missing_keys:
+            raise ValidationError(f"必須キーが不足しています: {missing_keys}")
+
+    def _validate_field_types(self, result: Dict[str, Any]) -> None:
+        """各フィールドの型を検証する。
+
+        Args:
+            result: 検証対象の分析結果
+
+        Raises:
+            ValidationError: フィールドの型が不正な場合
+        """
+        if not isinstance(result["entities"], list):
+            raise ValidationError("entitiesがリスト型ではありません")
+        if not isinstance(result["relationships"], list):
+            raise ValidationError("relationshipsがリスト型ではありません")
+        if not isinstance(result["impact_scores"], dict):
+            raise ValidationError("impact_scoresが辞書型ではありません")
+
+    def _validate_impact_scores(self, result: Dict[str, Any]) -> None:
+        """影響度スコアを検証する。
+
+        Args:
+            result: 検証対象の分析結果
+
+        Raises:
+            ValidationError: 影響度スコアが不正な場合
+        """
+        for entity_id, score in result["impact_scores"].items():
+            if not isinstance(score, (int, float)):
+                raise ValidationError(f"影響度スコアが数値型ではありません: {entity_id}")
+            if not 0 <= score <= 1:
+                raise ValidationError(f"影響度スコアが0-1の範囲外です: {entity_id}")
+
+    def _validate_analysis_result(self, result: Dict[str, Any]) -> None:
+        """分析結果を検証する。
+
+        Args:
+            result: 検証対象の分析結果
+
+        Raises:
+            ValidationError: 検証に失敗した場合
+        """
+        self._validate_result_type(result)
+        self._validate_required_keys(result)
+        self._validate_field_types(result)
+        self._validate_impact_scores(result) 
