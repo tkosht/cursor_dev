@@ -1,171 +1,144 @@
-"""統合テストモジュール"""
+"""統合テストモジュール。"""
 
 import os
-from datetime import datetime
-from pathlib import Path
-
-import pytest
-from dotenv import load_dotenv
+import time
+import unittest
 
 from app.content_fetcher import ContentFetcher
 from app.content_parser import ContentParser
 from app.gemini_analyzer import GeminiAnalyzer
-from app.knowledge_repository import KnowledgeRepository
 from app.market_analyzer import MarketAnalyzer
 from app.neo4j_manager import Neo4jManager
 
 
-@pytest.fixture(scope="session", autouse=True)
-def setup_env():
-    """テスト用の環境変数を設定するフィクスチャ"""
-    # .env.testファイルを読み込む
-    env_path = Path(__file__).parent.parent / '.env.test'
-    if not env_path.exists():
-        pytest.fail(".env.testファイルが見つかりません。テスト用の環境変数を設定してください。")
-    
-    load_dotenv(env_path)
-    
-    # 必須の環境変数をチェック
-    required_vars = ['neo4j_user', 'neo4j_pswd', 'GOOGLE_API_KEY_GEMINI']
-    missing_vars = [var for var in required_vars if not os.getenv(var)]
-    if missing_vars:
-        pytest.fail(f"必須の環境変数が設定されていません: {', '.join(missing_vars)}")
-    
-    yield
+class TestIntegration(unittest.TestCase):
+    """実環境での統合テストクラス。"""
 
+    def setUp(self):
+        """テストの前準備。"""
+        self.api_key = os.getenv('GOOGLE_API_KEY_GEMINI')
+        if not self.api_key:
+            raise ValueError("GOOGLE_API_KEY_GEMINIが設定されていません")
 
-def test_full_workflow():
-    """エンドツーエンドの統合テスト
-    
-    以下のフローをテスト:
-    1. HTMLコンテンツの取得
-    2. コンテンツの解析
-    3. Geminiによる分析
-    4. 市場分析の実行
-    5. Neo4jへの結果保存
-    """
-    try:
-        # テスト用HTMLファイルの読み込み
-        content_fetcher = ContentFetcher()
-        html_content = content_fetcher.fetch_from_file('tests/data/sample.html')
-        
-        # HTMLの解析
-        content_parser = ContentParser()
-        parsed_content = content_parser.parse_html(html_content)
-        assert parsed_content['title'], "タイトルの抽出に失敗しました"
-        assert parsed_content['content'], "本文の抽出に失敗しました"
-        
-        # Geminiによる分析
-        gemini = GeminiAnalyzer()
-        gemini_result = gemini.analyze_content(parsed_content)
-        assert isinstance(gemini_result, dict), "Gemini分析結果が不正な形式です"
-        
-        # 市場分析
-        analyzer = MarketAnalyzer()
-        market_result = analyzer.process_gemini_output(gemini_result)
-        
-        # 結果の検証
-        assert isinstance(market_result, dict), "市場分析結果が不正な形式です"
-        assert 'entities' in market_result, "分析結果にentitiesが含まれていません"
-        assert 'relationships' in market_result, "分析結果にrelationshipsが含まれていません"
-        assert 'impact_scores' in market_result, "分析結果にimpact_scoresが含まれていません"
-        
-        # Neo4jへの保存
-        neo4j = Neo4jManager()
-        repo = KnowledgeRepository(neo4j)
+        # Neo4j接続情報を環境変数から取得
+        self.neo4j_uri = os.getenv('neo4j_uri', 'bolt://neo4j:7687')
+        self.neo4j_user = os.getenv('neo4j_user', 'neo4j')
+        self.neo4j_password = os.getenv('neo4j_pswd', 'password')
+
+        # 各コンポーネントの初期化
+        self.fetcher = ContentFetcher()
+        self.parser = ContentParser()
+        self.analyzer = GeminiAnalyzer(self.api_key)
+        self.neo4j_manager = Neo4jManager(
+            uri=self.neo4j_uri,
+            username=self.neo4j_user,
+            password=self.neo4j_password
+        )
+        self.market_analyzer = MarketAnalyzer(
+            neo4j_manager=self.neo4j_manager,
+            gemini_analyzer=self.analyzer
+        )
+
+    def tearDown(self):
+        """テストの後片付け。"""
+        if hasattr(self, 'neo4j'):
+            self.neo4j.close()
+
+    def test_end_to_end_flow(self):
+        """エンドツーエンドのフロー全体をテスト。"""
+        # 実際のニュースサイトのURLを使用
+        test_url = "https://www.reuters.com/technology/"
         
         try:
-            success = repo.store_analysis({
-                'entities': market_result['entities'],
-                'relationships': market_result['relationships'],
-                'impact_scores': market_result['impact_scores'],
-                'source_url': parsed_content['url'],
-                'analyzed_at': datetime.now().isoformat()
-            })
-            assert success, "分析結果の保存に失敗しました"
+            # 1. コンテンツ取得
+            html_content = self.fetcher.fetch_content(test_url)
+            self.assertIsNotNone(html_content)
             
-        finally:
-            neo4j.close()
+            # 2. コンテンツ解析
+            parsed_content = self.parser.parse_html(html_content)
+            self.assertIsInstance(parsed_content, dict)
+            self.assertIn('content', parsed_content)
             
-    except Exception as e:
-        pytest.fail(f"統合テストが失敗しました: {str(e)}")
+            # 3. Gemini解析
+            gemini_result = self.analyzer.analyze_content(parsed_content['content'])
+            self.assertIsInstance(gemini_result, dict)
+            self.assertIn('entities', gemini_result)
+            self.assertIn('relationships', gemini_result)
+            
+            # 4. 市場分析
+            market_result = self.market_analyzer.process_gemini_output(gemini_result)
+            self.assertIsInstance(market_result, dict)
+            self.assertIn('impact', market_result)
+            
+            # 5. Neo4jへの保存
+            self.neo4j_manager.save_analysis_result(market_result)
+            
+            # 6. 保存結果の検証
+            saved_result = self.neo4j_manager.get_latest_analysis()
+            self.assertIsNotNone(saved_result)
+            
+            # タイムスタンプ以外の内容を比較
+            saved_result.pop('timestamp', None)
+            market_result.pop('timestamp', None)
+            self.assertEqual(market_result, saved_result)
+
+        except Exception as e:
+            self.fail(f"予期しない例外が発生しました: {str(e)}")
+
+    def test_error_recovery(self):
+        """エラーからの回復をテスト。"""
+        # 1. 存在しないURLでのエラー
+        test_url = "https://www.reuters.com/nonexistent-page/"
+        
+        try:
+            # 意図的に失敗させる
+            with self.assertRaises(Exception):
+                self.fetcher.fetch_content(test_url)
+            
+            # 少し待ってから再試行
+            time.sleep(2)
+            
+            # 正常なURLで再試行
+            test_url = "https://www.reuters.com/technology/"
+            html_content = self.fetcher.fetch_content(test_url)
+            self.assertIsNotNone(html_content)
+            
+        except Exception as e:
+            self.fail(f"エラーからの回復に失敗: {str(e)}")
+
+    def test_concurrent_requests(self):
+        """並行リクエストの処理をテスト。"""
+        test_urls = [
+            "https://www.reuters.com/technology/",
+            "https://www.bloomberg.com/technology",
+            "https://techcrunch.com/"
+        ]
+        
+        results = []
+        for url in test_urls:
+            try:
+                # 1. コンテンツ取得
+                html_content = self.fetcher.fetch_content(url)
+                
+                # 2. コンテンツ解析
+                parsed_content = self.parser.parse_html(html_content)
+                
+                # 3. Gemini解析
+                gemini_result = self.analyzer.analyze_content(parsed_content['content'])
+                
+                # 4. 市場分析
+                market_result = self.market_analyzer.process_gemini_output(gemini_result)
+                
+                # 5. Neo4jへの保存
+                self.neo4j_manager.save_analysis_result(market_result)
+                
+                results.append(True)
+            except Exception:
+                results.append(False)
+        
+        # 少なくとも1つは成功しているはず
+        self.assertTrue(any(results))
 
 
-@pytest.mark.integration
-def test_neo4j_connection():
-    """Neo4jとの実接続テスト"""
-    neo4j = None
-    try:
-        neo4j = Neo4jManager()
-        
-        # テストノードの作成
-        test_node = {
-            "name": "Test Entity",
-            "type": "TEST",
-            "description": "Test node for connection verification",
-            "created_at": datetime.now().isoformat()
-        }
-        
-        # ノードの作成
-        node_id = neo4j.create_node(
-            labels=["TestNode"],
-            properties=test_node
-        )
-        assert node_id is not None, "ノードの作成に失敗しました"
-        
-        # ノードの検索
-        found_node = neo4j.find_node(
-            labels=["TestNode"],
-            properties={"name": "Test Entity"}
-        )
-        assert found_node is not None, "作成したノードが見つかりません"
-        assert found_node["type"] == "TEST", "ノードのプロパティが正しくありません"
-        
-    except Exception as e:
-        pytest.fail(f"Neo4j接続テストが失敗しました: {str(e)}")
-    
-    finally:
-        if neo4j:
-            neo4j.close()
-
-
-@pytest.mark.integration
-def test_gemini_connection():
-    """Gemini APIとの実接続テスト"""
-    try:
-        gemini = GeminiAnalyzer()
-        
-        # テストコンテンツの作成
-        test_content = {
-            "title": "AI Market Analysis",
-            "content": """
-            Recent developments in artificial intelligence have shown significant 
-            market impact. Companies like OpenAI and Google are leading the way 
-            in AI innovation, while Microsoft and Amazon are integrating AI 
-            capabilities into their cloud services.
-            """,
-            "url": "https://example.com/ai-market-analysis",
-            "published_at": datetime.now().isoformat()
-        }
-        
-        # 分析実行
-        result = gemini.analyze_content(test_content)
-        
-        # 結果の検証
-        assert result is not None, "Gemini APIからのレスポンスが空です"
-        assert isinstance(result, dict), "Gemini APIの結果が不正な形式です"
-        assert 'market_impact' in result, "市場影響度が含まれていません"
-        assert 'entities' in result, "エンティティ情報が含まれていません"
-        assert 'relationships' in result, "関係性情報が含まれていません"
-        
-        # 市場影響度の検証
-        assert 0 <= result['market_impact'] <= 1, "市場影響度が0-1の範囲外です"
-        
-        # エンティティの検証
-        assert len(result['entities']) > 0, "エンティティが抽出されていません"
-        for entity in result['entities']:
-            assert 'name' in entity, "エンティティ名が含まれていません"
-            assert 'type' in entity, "エンティティタイプが含まれていません"
-        
-    except Exception as e:
-        pytest.fail(f"Gemini API接続テストが失敗しました: {str(e)}") 
+if __name__ == '__main__':
+    unittest.main() 

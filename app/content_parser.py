@@ -1,165 +1,232 @@
-"""HTMLコンテンツから必要な情報を抽出するモジュール。"""
+"""HTMLコンテンツを解析するモジュール。"""
 
 import logging
+import re
+from datetime import datetime
 from typing import Dict, Optional
 
 from bs4 import BeautifulSoup
 
+from app.exceptions import ContentParseError
+
 logger = logging.getLogger(__name__)
 
+
 class ContentParser:
-    """HTMLコンテンツから本文や見出しなどを抽出するクラス。"""
+    """HTMLコンテンツを解析するクラス。"""
 
     def __init__(self):
-        """ContentParserを初期化する。"""
-        self.unwanted_tags = {
-            'script', 'style', 'iframe', 'form',
-            'nav', 'header', 'footer', 'aside'
-        }
+        """初期化。"""
+        self._unwanted_tags = ['script', 'style', 'noscript', 'iframe', 'header', 'footer', 'nav']
 
-    def parse_html(self, raw_html: str) -> dict:
-        """
-        HTMLを解析し、必要な情報を抽出する。
+    def parse_content(self, html: str) -> Dict[str, str]:
+        """HTMLコンテンツを解析する。
 
         Args:
-            raw_html (str): 解析対象のHTML文字列
+            html: HTMLコンテンツ
 
         Returns:
-            dict: 抽出された情報（title, content, url）
+            Dict[str, str]: 解析結果
+                - title: タイトル
+                - content: 本文
+                - date: 日付（ISO形式）
+                - url: URL
 
         Raises:
-            ValueError: HTML解析に失敗した場合
+            ContentParseError: 解析に失敗した場合
         """
-        if not raw_html:
-            raise ValueError("HTMLが空です")
+        try:
+            soup = BeautifulSoup(html, 'html.parser')
+            self._remove_unwanted_tags(soup)
 
-        soup = BeautifulSoup(raw_html, 'html.parser')
-        soup = self._remove_unwanted_tags(soup)
+            title = self._extract_title(soup)
+            content = self._extract_content(soup)
+            date = self._extract_date(soup)
 
-        return {
-            "title": self._extract_title(soup),
-            "content": self._extract_content(soup),
-            "date": self._extract_date(soup),
-            "url": self._extract_url(soup) or "unknown"  # URLが見つからない場合はunknownを設定
-        }
+            if not title or not content:
+                logger.error("必須コンテンツが見つかりません")
+                raise ContentParseError("必須コンテンツが見つかりません")
 
-    def _remove_unwanted_tags(self, soup: BeautifulSoup) -> BeautifulSoup:
-        """
-        不要なタグを削除する。
+            return {
+                'title': title,
+                'content': content,
+                'date': date.isoformat() if date else None,
+                'url': self._extract_canonical_url(soup)
+            }
+
+        except Exception as e:
+            logger.error(f"コンテンツの解析に失敗しました: {str(e)}")
+            raise ContentParseError(f"コンテンツの解析に失敗しました: {str(e)}")
+
+    def _remove_unwanted_tags(self, soup: BeautifulSoup) -> None:
+        """不要なタグを削除する。
 
         Args:
-            soup (BeautifulSoup): BeautifulSoupオブジェクト
-
-        Returns:
-            BeautifulSoup: 不要タグを削除したBeautifulSoupオブジェクト
+            soup: BeautifulSoupオブジェクト
         """
-        for tag in self.unwanted_tags:
+        for tag in self._unwanted_tags:
             for element in soup.find_all(tag):
                 element.decompose()
-        return soup
 
-    def _extract_title(self, soup: BeautifulSoup) -> str:
-        """
-        タイトルを抽出する。
+    def _extract_title(self, soup: BeautifulSoup) -> Optional[str]:
+        """タイトルを抽出する。
 
         Args:
-            soup (BeautifulSoup): BeautifulSoupオブジェクト
+            soup: BeautifulSoupオブジェクト
 
         Returns:
-            str: 抽出したタイトル
+            Optional[str]: タイトル
         """
-        title_tag = soup.title
-        if title_tag and title_tag.string:
-            return self._normalize_text(title_tag.string)
-
+        # h1タグを優先的に使用
         h1_tag = soup.find('h1')
         if h1_tag:
-            return self._normalize_text(h1_tag.get_text())
+            return self._normalize_text(h1_tag.string)
 
-        return "タイトルなし"
+        # og:titleメタタグを次に使用
+        og_title = soup.find('meta', property='og:title')
+        if og_title and og_title.get('content'):
+            return self._normalize_text(og_title.get('content'))
 
-    def _extract_content(self, soup: BeautifulSoup) -> str:
-        """
-        本文を抽出する。
-
-        Args:
-            soup (BeautifulSoup): BeautifulSoupオブジェクト
-
-        Returns:
-            str: 抽出した本文
-        """
-        # article, main, divタグの順で探索
-        for tag in ['article', 'main']:
-            content = soup.find(tag)
-            if content:
-                return self._normalize_text(content.get_text())
-
-        # 上記タグがない場合は、最も長いテキストを含むdivを探す
-        divs = soup.find_all('div')
-        if divs:
-            main_div = max(divs, key=lambda x: len(x.get_text()))
-            return self._normalize_text(main_div.get_text())
-
-        # どれも見つからない場合は、bodyの全テキストを返す
-        return self._normalize_text(soup.body.get_text() if soup.body else "")
-
-    def _extract_date(self, soup: BeautifulSoup) -> Optional[str]:
-        """
-        日付情報を抽出する。
-
-        Args:
-            soup (BeautifulSoup): BeautifulSoupオブジェクト
-
-        Returns:
-            Optional[str]: 抽出した日付（見つからない場合はNone）
-        """
-        # time要素を探す
-        time_tag = soup.find('time')
-        if time_tag and time_tag.get('datetime'):
-            return time_tag['datetime']
-
-        # meta要素の日付を探す
-        for meta in soup.find_all('meta'):
-            if meta.get('property') in ['article:published_time', 'og:published_time']:
-                return meta.get('content')
+        # 最後にtitleタグを使用
+        title_tag = soup.find('title')
+        if title_tag:
+            return self._normalize_text(title_tag.string)
 
         return None
 
-    def _extract_url(self, soup: BeautifulSoup) -> str:
-        """
-        HTMLからURLを抽出する。
+    def _extract_content(self, soup: BeautifulSoup) -> Optional[str]:
+        """本文を抽出する。
 
         Args:
-            soup (BeautifulSoup): BeautifulSoupオブジェクト
+            soup: BeautifulSoupオブジェクト
 
         Returns:
-            str: 抽出されたURL、見つからない場合はNone
+            Optional[str]: 本文
         """
-        # canonical URLを探す
-        canonical = soup.find('link', {'rel': 'canonical'})
-        if canonical and canonical.get('href'):
-            return canonical['href']
+        article = soup.find('article')
+        if article:
+            return self._normalize_text(article.get_text())
 
-        # Open Graph URLを探す
-        og_url = soup.find('meta', {'property': 'og:url'})
-        if og_url and og_url.get('content'):
-            return og_url['content']
+        main = soup.find('main')
+        if main:
+            return self._normalize_text(main.get_text())
+
+        # 最も長いテキストブロックを探す
+        text_blocks = []
+        for tag in soup.find_all(['p', 'div']):
+            text = self._normalize_text(tag.get_text())
+            if text:
+                text_blocks.append(text)
+
+        if text_blocks:
+            return max(text_blocks, key=len)
 
         return None
 
-    def _normalize_text(self, text: str) -> str:
-        """
-        テキストを正規化する。
+    def _extract_date(self, soup: BeautifulSoup) -> Optional[datetime]:
+        """日付を抽出する。
 
         Args:
-            text (str): 正規化対象のテキスト
+            soup: BeautifulSoupオブジェクト
 
         Returns:
-            str: 正規化したテキスト
+            Optional[datetime]: 日付
+        """
+        # メタデータから日付を抽出
+        date = self._extract_date_from_meta(soup)
+        if date:
+            return date
+
+        # テキストから日付を抽出
+        return self._extract_date_from_text(soup)
+
+    def _extract_date_from_meta(self, soup: BeautifulSoup) -> Optional[datetime]:
+        """メタデータから日付を抽出する。
+
+        Args:
+            soup: BeautifulSoupオブジェクト
+
+        Returns:
+            Optional[datetime]: 日付
+        """
+        date_tag = (
+            soup.find('meta', property='article:published_time') or
+            soup.find('time') or
+            soup.find('meta', property='og:article:published_time')
+        )
+
+        if date_tag:
+            date_str = date_tag.get('content') or date_tag.get('datetime')
+            if date_str:
+                try:
+                    return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                except ValueError:
+                    pass
+        return None
+
+    def _extract_date_from_text(self, soup: BeautifulSoup) -> Optional[datetime]:
+        """テキストから日付を抽出する。
+
+        Args:
+            soup: BeautifulSoupオブジェクト
+
+        Returns:
+            Optional[datetime]: 日付
+        """
+        date_pattern = r'\d{4}[-/]\d{1,2}[-/]\d{1,2}'
+        for tag in soup.find_all(['p', 'span', 'div']):
+            match = re.search(date_pattern, tag.get_text())
+            if match:
+                date = self._parse_date_string(match.group())
+                if date:
+                    return date
+        return None
+
+    def _parse_date_string(self, date_str: str) -> Optional[datetime]:
+        """日付文字列をパースする。
+
+        Args:
+            date_str: 日付文字列
+
+        Returns:
+            Optional[datetime]: 日付
+        """
+        formats = ['%Y-%m-%d', '%Y/%m/%d']
+        for fmt in formats:
+            try:
+                return datetime.strptime(date_str, fmt)
+            except ValueError:
+                continue
+        return None
+
+    def _extract_canonical_url(self, soup: BeautifulSoup) -> Optional[str]:
+        """正規URLを抽出する。
+
+        Args:
+            soup: BeautifulSoupオブジェクト
+
+        Returns:
+            Optional[str]: 正規URL
+        """
+        canonical = soup.find('link', rel='canonical')
+        if canonical:
+            return canonical.get('href')
+        return None
+
+    def _normalize_text(self, text: Optional[str]) -> Optional[str]:
+        """テキストを正規化する。
+
+        Args:
+            text: テキスト
+
+        Returns:
+            Optional[str]: 正規化されたテキスト
         """
         if not text:
-            return ""
+            return None
 
-        # 改行や空白を調整
-        lines = [line.strip() for line in text.splitlines() if line.strip()]
-        return "\n".join(lines) 
+        # 改行と空白を正規化
+        text = re.sub(r'\s+', ' ', text.strip())
+        # 全角スペースを半角に
+        text = text.replace('　', ' ')
+        return text 
