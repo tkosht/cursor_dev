@@ -4,27 +4,86 @@
 ブックマークの検索機能を提供するモジュール
 """
 
-from typing import Dict, List
+import os
+from typing import Dict, List, Tuple
 
 import faiss
 import numpy as np
+import torch
 from sentence_transformers import SentenceTransformer
+
+
+class SearchEngineError(Exception):
+    """SearchEngine固有のエラー"""
+    pass
 
 
 class SearchEngine:
     """検索エンジンクラス"""
 
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
+    def __init__(
+        self,
+        model_name: str = "intfloat/multilingual-e5-large",
+        index_dir: str = None,
+        use_gpu: bool = True
+    ):
         """
         SearchEngineの初期化
 
         Args:
-            model_name: 使用する文章埋め込みモデル名（デフォルト: all-MiniLM-L6-v2）
+            model_name: 使用する文章埋め込みモデル名（デフォルト: intfloat/multilingual-e5-large）
+            index_dir: インデックスファイルを保存するディレクトリ
+                      （デフォルト: ~/workspace/data/search_index）
+            use_gpu: GPUを使用するかどうか（デフォルト: True）
         """
-        self.model = SentenceTransformer(model_name)
-        self.dimension = self.model.get_sentence_embedding_dimension()
-        self.index = faiss.IndexFlatL2(self.dimension)
-        self.bookmarks: List[Dict] = []
+        try:
+            self.model = SentenceTransformer(model_name)
+            if torch.cuda.is_available() and use_gpu:
+                self.model = self.model.to('cuda')
+            self.dimension = self.model.get_sentence_embedding_dimension()
+            self.use_gpu = use_gpu and torch.cuda.is_available()
+            
+            if index_dir is None:
+                self.index_dir = os.path.expanduser('~/workspace/data/search_index')
+            else:
+                self.index_dir = index_dir
+            
+            os.makedirs(self.index_dir, exist_ok=True)
+            self.index_file = os.path.join(self.index_dir, 'faiss.index')
+            self.bookmarks_file = os.path.join(self.index_dir, 'bookmarks.npy')
+            
+            # インデックスの読み込みまたは新規作成
+            if os.path.exists(self.index_file):
+                self.index = faiss.read_index(self.index_file)
+            else:
+                self.index = faiss.IndexFlatL2(self.dimension)
+
+            # GPUが利用可能な場合、インデックスをGPUに移動
+            if self.use_gpu:
+                res = faiss.StandardGpuResources()
+                self.index = faiss.index_cpu_to_gpu(res, 0, self.index)
+
+            if os.path.exists(self.bookmarks_file):
+                self.bookmarks = np.load(self.bookmarks_file, allow_pickle=True).tolist()
+            else:
+                self.bookmarks: List[Dict] = []
+                self._save_index()
+        
+        except Exception as e:
+            raise SearchEngineError(f"SearchEngineの初期化に失敗: {e}")
+
+    def _save_index(self) -> None:
+        """インデックスを保存する"""
+        try:
+            # GPUインデックスの場合、保存前にCPUに移動
+            if self.use_gpu:
+                cpu_index = faiss.index_gpu_to_cpu(self.index)
+                faiss.write_index(cpu_index, self.index_file)
+            else:
+                faiss.write_index(self.index, self.index_file)
+            np.save(self.bookmarks_file, np.array(self.bookmarks, dtype=object))
+        except Exception as e:
+            raise SearchEngineError(f"インデックスの保存に失敗: {e}")
 
     def add_bookmarks(self, bookmarks: List[Dict]) -> None:
         """
@@ -36,12 +95,21 @@ class SearchEngine:
         if not bookmarks:
             return
 
-        texts = [bookmark["text"] for bookmark in bookmarks]
-        embeddings = self.model.encode(texts)
-        self.index.add(np.array(embeddings).astype('float32'))
-        self.bookmarks.extend(bookmarks)
+        try:
+            # E5モデル用のプレフィックス "query: " を追加
+            texts = [f"passage: {bookmark['text']}" for bookmark in bookmarks]
+            embeddings = self.model.encode(texts)
+            self.index.add(np.array(embeddings).astype('float32'))
+            self.bookmarks.extend(bookmarks)
+            self._save_index()
+        except Exception as e:
+            raise SearchEngineError(f"ブックマークの追加に失敗: {e}")
 
-    def search(self, query: str, top_k: int = 5) -> List[Dict]:
+    def search(
+        self,
+        query: str,
+        top_k: int = 5
+    ) -> List[Tuple[Dict, float]]:
         """
         クエリに関連するブックマークを検索する
 
@@ -50,19 +118,42 @@ class SearchEngine:
             top_k: 返す結果の最大数（デフォルト: 5）
 
         Returns:
-            List[Dict]: 関連度順のブックマークリスト
+            List[Tuple[Dict, float]]: (ブックマーク, スコア) のタプルのリスト
+                                    スコアが小さいほど類似度が高い
         """
         if not self.bookmarks:
             return []
 
-        query_embedding = self.model.encode([query])
-        distances, indices = self.index.search(
-            np.array(query_embedding).astype('float32'),
-            min(top_k, len(self.bookmarks))
-        )
+        try:
+            # E5モデル用のプレフィックス "query: " を追加
+            query_embedding = self.model.encode([f"query: {query}"])
+            distances, indices = self.index.search(
+                np.array(query_embedding).astype('float32'),
+                min(top_k, len(self.bookmarks))
+            )
 
-        results = []
-        for idx in indices[0]:
-            results.append(self.bookmarks[idx])
+            results = []
+            for dist, idx in zip(distances[0], indices[0]):
+                results.append((self.bookmarks[idx], float(dist)))
 
-        return results 
+            return results
+        except Exception as e:
+            raise SearchEngineError(f"検索に失敗: {e}")
+
+    def clear(self) -> None:
+        """インデックスをクリアする"""
+        try:
+            self.index = faiss.IndexFlatL2(self.dimension)
+            self.bookmarks = []
+            self._save_index()
+        except Exception as e:
+            raise SearchEngineError(f"インデックスのクリアに失敗: {e}")
+
+    def get_total_bookmarks(self) -> int:
+        """
+        インデックスされているブックマークの総数を返す
+
+        Returns:
+            int: ブックマークの総数
+        """
+        return len(self.bookmarks) 
