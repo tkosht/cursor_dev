@@ -1,0 +1,30 @@
+---
+description: 
+globs: 
+---
+
+# ワークフロー
+
+## 前提
+
+以下の内容に従う
+
+- [project.mdc](mdc:.cursor/rules/project.mdc)
+- [python-development.mdc](mdc:.cursor/rules/python-development.mdc)
+
+## ワークフローの定義
+
+- 現状ステータスの確認
+    - memory-bank/ の最新情報を確認
+- 目的・ゴールステータスの確認
+    - 目的を改めて明示的に確認
+- タスク計画
+    - 次に実行すべきタスクを計画
+- タスク実行
+    - 計画したタスクを実行
+- タスクのコミット
+    - 実行したタスクに関して、git commit & push
+- 現状ステータスの更新
+    - memory-bank/ に最新の状態を更新
+- memory-bank/ の内容をコミット
+    - 実行したタスクに関して、git commit & push

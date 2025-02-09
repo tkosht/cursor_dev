@@ -1,6 +1,6 @@
 ---
 description: Python 開発に関するルール
-globs: 
+globs: *.py
 ---
 # Python 開発ルール
 
