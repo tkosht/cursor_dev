@@ -1,0 +1,34 @@
+---
+description: Python 開発に関するルール
+globs: 
+---
+# Python 開発ルール
+
+
+# Python環境
+- バージョン: 3.10～3.12
+- 依存関係管理: Poetry
+- 仮想環境: /.venv（Poetry により管理）
+- flake8, black, isort, pytest を使用
+
+
+## コードスタイル & パターン
+
+- Python 3.10～3.12 を使用する
+- ライブラリは poetry でのみ管理する
+- flake8 のLintエラーを全消去する
+- テストコードは tests/ に置き、pytest 使用する
+- 変数名は snake_case を使用する
+- クラス名は PascalCase を使用する
+- 定数は UPPER_SNAKE_CASE を使用する
+- プライベートには先頭アンダースコアを付加する
+- docstring は Google スタイル、typing モジュールを使わない型ヒントを積極利用する
+- 1行79文字以内、インデント4スペースとする
+
+
+## テストコード
+
+- テストコードは tests/ に置き、pytest 使用する
+
+
+
