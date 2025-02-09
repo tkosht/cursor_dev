@@ -28,6 +28,8 @@ bkup/
 # Allow cursor file
 !.cursorrules
 !.cursorban
+!.clinerules
+!.gitkeep
 
 # LLM
 *.gguf
