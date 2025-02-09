@@ -7,7 +7,7 @@
 
 ## Docker開発コンテナ
 - ベースイメージ: python:3.12-slim
-- 作業ディレクトリ: /app
+- 作業ディレクトリ: /home/devuser/workspace
 - 公開ポート: 7860（Gradio用）
 - Git操作はコンテナ内で実施
 
@@ -47,7 +47,7 @@
 
 # 作業ディレクトリ
 
-コンテナ内の /app とします。変更禁止
+コンテナ内の /home/devuser/workspace とします。変更禁止
 
 
 # 作業方針
