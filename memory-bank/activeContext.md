@@ -10,6 +10,7 @@
    - VSCode Dev Container環境の確認
    - 作業ディレクトリの設定（~/workspace）
    - コンテナ設定の確認（.devcontainer）
+   - Dockerfileの不要確認および削除
 
 2. プロジェクト構造の整備
    - memory-bankの設定と更新

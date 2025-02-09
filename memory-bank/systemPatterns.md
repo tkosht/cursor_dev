@@ -15,6 +15,7 @@
    - VSCode Dev Container開発
    - コンテナ設定の一元管理
    - 環境の再現性確保
+   - Dockerfileは不要
 
 ## 設計パターン
 1. Factory Pattern
