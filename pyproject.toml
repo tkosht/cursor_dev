@@ -1,11 +1,19 @@
 [tool.poetry]
-name = "cursor project"
+name = "x-bookmark-rag"
 version = "0.1.0"
-description = "Cursor 実験用"
-authors = ["tkosht <your.email@example.com>"]
+description = "X（旧Twitter）のブックマークをリアルタイムで検索し、RAGを実現するPythonツール"
+authors = ["AI Developer <dev@example.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+gradio = "^4.14.0"
+aiohttp = "^3.9.1"
+sentence-transformers = "^2.2.2"
+faiss-cpu = "^1.7.4"
+google-generativeai = "^0.3.2"
+openai = "^1.10.0"
+anthropic = "^0.8.1"
+ollama = "^0.1.6"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
@@ -13,14 +21,20 @@ pytest-cov = "*"
 pytest-mock = "*"
 black = "*"
 flake8 = "*"
+isort = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
-line-length = 100
+line-length = 79
 target-version = ['py310']
+
+[tool.isort]
+profile = "black"
+line_length = 79
+multi_line_output = 3
 
 [tool.pytest]
 testpaths = ["tests"]
