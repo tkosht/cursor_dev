@@ -1,74 +1,67 @@
 # 技術コンテキスト
 
 ## 開発環境
-- Python 3.10～3.12
-- Poetry による依存関係管理
-- flake8 によるコード品質管理
-- pytest によるテスト自動化
+1. VSCode Dev Container環境
+   - ベースイメージ: python:3.12-slim
+   - 作業ディレクトリ: ~/workspace
+   - 公開ポート: 7860（Gradio用）
+   - コンテナ設定は.devcontainerで管理
+   - 新規Dockerfile作成は禁止
 
-## 主要技術スタック
-1. データ取得
-   - Twitter API v2
-   - Selenium/Playwright（ブラウザ自動化）
-   - aiohttp（非同期HTTP通信）
+2. Python環境
+   - バージョン: 3.10～3.12
+   - 依存関係管理: Poetry
+   - 仮想環境: 無効（Dev Container内のため）
+   - flake8, black, isort, pytest を使用
 
-2. 検索エンジン
-   - Faiss/Pinecone（ベクトルDB）
-   - Elasticsearch（キーワード検索）
-   - sentence-transformers（Embedding生成）
+3. セキュリティ
+   - 機密情報は環境変数で管理
+   - .envファイルは.gitignoreに追加
+   - APIキーは.devcontainer経由で管理
+   - コンテナ内での機密情報管理を徹底
 
-3. LLM統合
-   - Gemini 2.0 Flash API
-   - OpenAI API
-   - Anthropic Claude API
-   - Ollama API
+## 使用技術
+1. LLM
+   - Gemini 2.0 Flash
+   - Google Cloud API
 
-4. フロントエンド
-   - Gradio
-   - HTML/CSS
-   - JavaScript
+2. ベクトルDB
+   - Faiss
+   - インメモリ検索
+
+3. フロントエンド
+   - Gradio UI
+   - ポート7860で公開
 
 ## 技術的制約
-1. パフォーマンス要件
-   - 検索レイテンシ: 3秒以内
-   - LLM応答時間: 10秒以内
-   - メモリ使用量: 4GB以内
+1. 開発環境
+   - VSCode Dev Container環境での開発必須
+   - コンテナ外での開発は不可
+   - .devcontainer設定の変更は慎重に
 
-2. スケーラビリティ
-   - ブックマーク数: 〜100,000件
-   - 同時ユーザー数: 1ユーザー
-   - ストレージ容量: 〜10GB
+2. 依存関係
+   - Poetryでの管理必須
+   - バージョン固定
+   - 最小限の依存関係
 
-3. 依存関係
-   - Python 3.10以上必須
-   - CUDA対応GPU（オプション）
-   - 最小8GBメモリ
+3. セキュリティ
+   - 機密情報の直接コミット禁止
+   - 環境変数経由での管理必須
+   - コンテナ内でのセキュリティ確保
 
-## セキュリティ要件
-1. 認証・認可
-   - Twitter OAuth2.0
-   - LLM APIキー管理
-   - 環境変数による機密情報管理
+## 依存関係
+1. 必須パッケージ
+   - google-cloud-aiplatform
+   - faiss-cpu
+   - gradio
+   - python-dotenv
 
-2. データ保護
-   - ローカルストレージのみ
-   - 暗号化不要
-   - バックアップ任意
-
-## 開発プラクティス
-1. コーディング規約
-   - Google Style Python Docstrings
-   - Type Hints 必須
-   - 行長制限: 79文字
-   - インデント: 4スペース
-
-2. テスト要件
-   - Unit Tests: カバレッジ80%以上
-   - Integration Tests: 主要フロー
-   - E2E Tests: 重要ユースケース
+2. 開発用パッケージ
+   - flake8
+   - black
+   - isort
+   - pytest
 
 3. CI/CD
    - GitHub Actions
-   - 自動テスト
-   - Lint チェック
-   - 依存関係チェック 
+   - Docker Hub 
