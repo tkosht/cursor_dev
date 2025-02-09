@@ -1,126 +1,234 @@
-# システムパターン
+# システムパターン（MVP版）
 
-## アーキテクチャパターン
-1. レイヤードアーキテクチャ
-   - プレゼンテーション層（Gradio UI）
-   - アプリケーション層（ビジネスロジック）
-   - インフラストラクチャ層（外部サービス連携）
+## 1. アーキテクチャ概要
 
-2. クリーンアーキテクチャ
-   - 依存関係の方向は内側に向かう
-   - インターフェースによる疎結合
-   - ドメインロジックの独立性確保
+### 1.1 全体構造
+```mermaid
+flowchart TD
+    UI[ai-gradio UI] --> Main[Main Controller]
+    Main --> TC[TwitterClient]
+    Main --> SE[SearchEngine]
+    Main --> LLM[LLMProcessor]
+    
+    TC --> Twitter[Twitter API]
+    SE --> Faiss[Faiss Index]
+    LLM --> Gemini[Gemini 2.0]
+```
 
-3. 開発環境パターン
-   - VSCode Dev Container開発
-   - コンテナ設定の一元管理
-   - 環境の再現性確保
-   - Dockerfileは不要
+### 1.2 データフロー
+```mermaid
+flowchart LR
+    A[ブックマーク取得] --> B[データ保存]
+    B --> C[インデックス作成]
+    D[検索クエリ] --> E[ベクトル検索]
+    E --> F[LLM処理]
+    F --> G[結果表示]
+```
 
-## 設計パターン
-1. Factory Pattern
-   - LLMクライアントの生成
-   - ベクトルDBの初期化
-   - UIコンポーネントの生成
+## 2. モジュール構成
 
-2. Repository Pattern
-   - ブックマークデータの永続化
-   - 検索インデックスの管理
-   - 設定情報の管理
+### 2.1 TwitterClient
+- **責務:** ブックマークデータの取得
+- **パターン:** Adapter Pattern
+- **実装:**
+  ```python
+  class TwitterClient:
+      def __init__(self, auth_config: dict):
+          self.auth = OAuth2Handler(auth_config)
+          
+      async def get_bookmarks(self) -> List[Tweet]:
+          # 基本的なブックマーク取得
+          pass
+  ```
 
-3. Strategy Pattern
-   - 検索アルゴリズムの切り替え
-   - LLMプロバイダーの切り替え
-   - UIテーマの切り替え
+### 2.2 SearchEngine
+- **責務:** ベクトル検索の実行
+- **パターン:** Repository Pattern
+- **実装:**
+  ```python
+  class SearchEngine:
+      def __init__(self, index_path: str):
+          self.index = faiss.IndexFlatL2(...)
+          
+      def search(self, query: str) -> List[SearchResult]:
+          # 基本的な検索処理
+          pass
+  ```
 
-## 実装パターン
-1. 依存関係管理
-   - Poetry使用
-   - バージョン固定
-   - 最小限の依存関係
+### 2.3 LLMProcessor
+- **責務:** LLMによる回答生成
+- **パターン:** Strategy Pattern
+- **実装:**
+  ```python
+  class LLMProcessor:
+      def __init__(self, model_config: dict):
+          self.model = GeminiModel(model_config)
+          
+      async def generate_response(self, context: str) -> str:
+          # 基本的な回答生成
+          pass
+  ```
 
-2. コード品質管理
-   - flake8によるLint
-   - blackによるフォーマット
-   - isortによるimport整理
+### 2.4 UI
+- **責務:** ユーザーインターフェース
+- **パターン:** Facade Pattern
+- **実装:**
+  ```python
+  class UI:
+      def __init__(self, controller: MainController):
+          self.controller = controller
+          
+      def build_interface(self):
+          # 基本的なUI構築
+          pass
+  ```
 
-3. テストパターン
-   - pytestによるテスト実装
-   - カバレッジ80%以上
-   - テストピラミッドの適用
+## 3. デザインパターン
 
-## 統合パターン
-1. 外部サービス連携
-   - Google Cloud API
-   - Twitter API
-   - ベクトルDB
+### 3.1 採用パターン
+1. **Adapter Pattern**
+   - TwitterAPIとの連携
+   - LLM APIとの連携
 
-2. 非同期処理
-   - async/await
-   - バックグラウンドタスク
-   - キャッシュ戦略
+2. **Repository Pattern**
+   - 検索エンジンの実装
+   - データ永続化
 
-3. エラーハンドリング
-   - 例外の階層化
-   - ログ出力の標準化
-   - リトライ戦略
+3. **Strategy Pattern**
+   - LLMの処理
+   - 検索ロジック
 
-## 開発プラクティス
-1. コーディング規約
-   - Google Style Python Docstrings
-   - Type Hints必須
-   - 行長制限79文字
-   - インデント4スペース
+4. **Facade Pattern**
+   - UIインターフェース
+   - メインコントローラー
 
-2. バージョン管理
-   - Git Flow
-   - コミットメッセージ規約
-   - PRレビュー必須
+### 3.2 エラー処理
+```mermaid
+flowchart TD
+    A[エラー発生] --> B{エラー種別}
+    B -->|API| C[APIエラー処理]
+    B -->|検索| D[検索エラー処理]
+    B -->|LLM| E[LLMエラー処理]
+    C --> F[UI表示]
+    D --> F
+    E --> F
+```
 
-3. CI/CD
-   - GitHub Actions
-   - 自動テスト
-   - コード品質チェック
+## 4. データ構造
 
-## 主要コンポーネント
-1. データ取得層
-   - TwitterAPI連携
-   - ブラウザ自動化
-   - ポーリング管理
+### 4.1 Tweet
+```python
+@dataclass
+class Tweet:
+    id: str
+    text: str
+    author: str
+    created_at: datetime
+    url: str
+```
 
-2. 検索エンジン層
-   - ベクトルデータベース
-   - キーワードインデックス
-   - ハイブリッド検索
+### 4.2 SearchResult
+```python
+@dataclass
+class SearchResult:
+    tweet: Tweet
+    score: float
+```
 
-3. LLM処理層
-   - マルチバックエンド対応
-   - プロンプト管理
-   - コンテキスト制御
+### 4.3 LLMResponse
+```python
+@dataclass
+class LLMResponse:
+    text: str
+    context: List[Tweet]
+```
 
-4. UI層
-   - Gradioインターフェース
-   - 検索・フィルタリング
-   - 結果表示
+## 5. 非同期処理
 
-## データフロー
-1. ブックマーク取得
-   ```mermaid
-   sequenceDiagram
-       Controller->>BookmarkFetcher: 取得要求
-       BookmarkFetcher->>TwitterAPI: API呼び出し
-       TwitterAPI-->>BookmarkFetcher: ブックマークデータ
-       BookmarkFetcher->>SearchEngine: インデックス更新
-   ```
+### 5.1 基本フロー
+```mermaid
+sequenceDiagram
+    UI->>Main: 検索リクエスト
+    Main->>SearchEngine: 検索実行
+    SearchEngine-->>Main: 結果返却
+    Main->>LLM: 回答生成
+    LLM-->>Main: 回答返却
+    Main-->>UI: 結果表示
+```
 
-2. 検索処理
-   ```mermaid
-   sequenceDiagram
-       UI->>Controller: 検索クエリ
-       Controller->>SearchEngine: 検索実行
-       SearchEngine->>VectorDB: ベクトル検索
-       SearchEngine->>KeywordIndex: キーワード検索
-       SearchEngine-->>Controller: 統合結果
-       Controller->>LLMProcessor: 回答生成
-       LLMProcessor-->>UI: 結果表示
-   ``` 
+## 6. エラー処理戦略
+
+### 6.1 基本方針
+1. **エラーの種類**
+   - APIエラー
+   - 検索エラー
+   - LLMエラー
+   - UIエラー
+
+2. **エラーハンドリング**
+   - 基本的な例外捕捉
+   - ユーザーへのフィードバック
+   - ログ出力
+
+### 6.2 実装例
+```python
+try:
+    result = await process_request()
+except APIError as e:
+    log_error(e)
+    show_error_message(str(e))
+except SearchError as e:
+    log_error(e)
+    show_error_message(str(e))
+```
+
+## 7. テスト戦略
+
+### 7.1 単体テスト
+- 各モジュールの基本機能テスト
+- 主要メソッドのテスト
+- エラーケースのテスト
+
+### 7.2 統合テスト
+- モジュール間の連携テスト
+- 主要フローのテスト
+- エラー処理の確認
+
+## 8. 設定管理
+
+### 8.1 環境変数
+```python
+TWITTER_API_KEY=xxx
+TWITTER_API_SECRET=xxx
+GEMINI_API_KEY=xxx
+```
+
+### 8.2 設定ファイル
+```python
+config = {
+    'twitter': {
+        'max_bookmarks': 800,
+        'timeout': 30
+    },
+    'search': {
+        'top_k': 5,
+        'threshold': 0.5
+    },
+    'llm': {
+        'model': 'gemini-2.0-flash',
+        'max_tokens': 1000
+    }
+}
+```
+
+## 9. MVPの制約
+
+### 9.1 機能制約
+- 単一LLMのみ対応
+- 基本的な検索機能のみ
+- シンプルなUI
+
+### 9.2 性能制約
+- 同時1ユーザーのみ
+- 基本的なエラー処理
+- 最小限の最適化 
