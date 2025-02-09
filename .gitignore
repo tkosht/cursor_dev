@@ -26,6 +26,7 @@ bkup/
 *logs/
 
 # Allow cursor file
+!.cursor/
 !.cursorrules
 !.cursorban
 !.clinerules

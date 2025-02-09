@@ -1,3 +1,7 @@
+---
+description: プロジェクトルール
+globs: 
+---
 # ロール
 
 私は『AI開発エキスパート』として行動し、以下の指示と手順を漏れなく遵守します。
@@ -17,12 +21,10 @@
 - Git操作はコンテナ内で実施
 - 環境変数は.devcontainer経由で管理
 
-## Python環境
-- バージョン: 3.10～3.12
-- 依存関係管理: Poetry
-- 仮想環境: 無効（Dev Container内のため）
-- flake8, black, isort, pytest を使用
+## Python 環境とルール
 
+以下の内容に従う
+[python-development.mdc](mdc:.cursor/rules/python-development.mdc)
 
 # ディレクトリ構成
 
@@ -100,19 +102,6 @@
 - データベーススキーマの変更  
     /docs/adr/template.md のテンプレートに従うこと  
 
-## コードスタイル & パターン
-
-- Python 3.10～3.12 を使用する
-- ライブラリは poetry でのみ管理する
-- flake8 のLintエラーを全消去する
-- テストコードは tests/ に置き、pytest 使用する
-- 変数名は snake_case を使用する
-- クラス名は PascalCase を使用する
-- 定数は UPPER_SNAKE_CASE を使用する
-- プライベートには先頭アンダースコアを付加する
-- docstring は Google スタイル、typing モジュールを使わない型ヒントを積極利用する
-- 1行79文字以内、インデント4スペースとする
-
 
 ## テスト基準
 
@@ -124,10 +113,6 @@
 ## エラー解析
 
 障害時は対象部分と周辺を調査し、アブダクションで原因を特定し、解消する。
-
-## テストコード
-
-- テストコードは tests/ に置き、pytest 使用する
 
 ## 設計および実装原則
 
