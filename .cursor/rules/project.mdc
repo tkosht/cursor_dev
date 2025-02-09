@@ -21,10 +21,10 @@ globs: *
 - Git操作はコンテナ内で実施
 - 環境変数は.devcontainer経由で管理
 
-## Python 環境とルール
+## 開発言語固有のルール
 
 以下の内容に従う
-[python-development.mdc](mdc:.cursor/rules/python-development.mdc)
+[python.mdc](mdc:.cursor/rules/python.mdc)
 
 # ディレクトリ構成
 
