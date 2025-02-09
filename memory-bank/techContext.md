@@ -6,7 +6,7 @@
    - 作業ディレクトリ: ~/workspace
    - 公開ポート: 7860（Gradio用）
    - コンテナ設定は.devcontainerで管理
-   - 新規Dockerfile作成は禁止
+   - Dockerfileは不要であり、既に削除済み（新規Dockerfile作成は禁止）
 
 2. Python環境
    - バージョン: 3.10～3.12

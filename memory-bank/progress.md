@@ -5,6 +5,7 @@
    - VSCode Dev Container環境の構築
    - 作業ディレクトリの設定（~/workspace）
    - コンテナ設定の確認（.devcontainer）
+   - Dockerfileの不要確認および削除
    - Poetry環境の設定
 
 2. プロジェクト構造の確立
