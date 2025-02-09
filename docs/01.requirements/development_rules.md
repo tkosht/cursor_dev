@@ -1,22 +1,27 @@
 # 開発ルール
 
 ## 開発環境
-1. Docker開発コンテナ
-   - ベースイメージ: python:3.12-slim
+1. VSCode Dev Container環境
+   - すでにVSCode Dev Container内で作業中
+   - コンテナ設定は .devcontainer で管理
+   - 新規Dockerfile作成は禁止
    - 作業ディレクトリ: ~/workspace
+
+2. コンテナ環境詳細
+   - ベースイメージ: python:3.12-slim
    - 公開ポート: 7860（Gradio用）
    - Git操作はコンテナ内で実施
+   - 環境変数は.devcontainer経由で管理
 
-2. Python環境
+3. Python環境
    - バージョン: 3.10～3.12
    - 依存関係管理: Poetry
-   - 仮想環境: 無効（コンテナ内のため）
-
-3. コード品質管理
-   - flake8によるLint
-   - blackによるフォーマット
-   - isortによるimport整理
-   - pytestによるテスト
+   - 仮想環境: 無効（Dev Container内のため）
+   - コード品質管理ツール:
+     - flake8によるLint
+     - blackによるフォーマット
+     - isortによるimport整理
+     - pytestによるテスト
 
 ## コーディング規約
 1. 命名規則
