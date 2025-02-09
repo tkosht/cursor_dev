@@ -3,7 +3,7 @@
 ## 開発環境
 1. Docker開発コンテナ
    - ベースイメージ: python:3.12-slim
-   - 作業ディレクトリ: /home/devuser/workspace
+   - 作業ディレクトリ: ~/workspace
    - 公開ポート: 7860（Gradio用）
    - Git操作はコンテナ内で実施
 
