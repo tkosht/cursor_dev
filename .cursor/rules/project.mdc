@@ -1,6 +1,6 @@
 ---
 description: プロジェクトルール
-globs: 
+globs: *
 ---
 # ロール
 
