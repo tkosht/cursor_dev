@@ -1,9 +1,11 @@
 """UIのテスト"""
 
-from unittest.mock import AsyncMock, MagicMock
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import gradio as gr
 import pytest
+from bs4 import BeautifulSoup
 
 from app.llm_processor import LLMProcessorError
 from app.search_engine import SearchEngineError
@@ -133,4 +135,136 @@ def test_create_interface(ui):
     assert gr.Dropdown in component_types  # モデル選択
     assert gr.Button in component_types  # 検索ボタン
     assert gr.Markdown in component_types  # 回答表示
-    assert gr.HTML in component_types  # 結果表示 
+    assert gr.HTML in component_types  # 結果表示
+
+
+@pytest.mark.asyncio
+async def test_input_validation(ui):
+    """入力バリデーションのテスト"""
+    # 空のクエリ
+    response, results = await ui.search_and_respond("")
+    assert response == ""
+    assert "エラーが発生しました" in results
+    assert "クエリが空です" in results
+
+    # 長すぎるクエリ（1000文字）
+    long_query = "a" * 1000
+    response, results = await ui.search_and_respond(long_query)
+    assert response == ""
+    assert "エラーが発生しました" in results
+    assert "クエリが長すぎます" in results
+
+    # 無効なtop_k値
+    response, results = await ui.search_and_respond("test", top_k=0)
+    assert response == ""
+    assert "エラーが発生しました" in results
+    assert "結果数は1以上を指定してください" in results
+
+    # 無効なモデルタイプ
+    response, results = await ui.search_and_respond("test", model_type="invalid")
+    assert response == ""
+    assert "エラーが発生しました" in results
+    assert "サポートされていないモデルタイプです" in results
+
+
+@pytest.mark.asyncio
+async def test_event_handlers(ui):
+    """イベントハンドラのテスト"""
+    interface = ui.create_interface()
+
+    # 検索ボタンのクリックイベントを検証
+    search_button = None
+    for block in interface.blocks.values():
+        if isinstance(block, gr.Button) and block.value == "検索":
+            search_button = block
+            break
+    assert search_button is not None
+
+    # イベントハンドラの設定を検証
+    event_triggers = [fn.fn for fn in interface.fns]
+    assert ui.search_and_respond in event_triggers
+
+    # コンポーネントの接続を検証
+    for fn in interface.fns:
+        if fn.fn == ui.search_and_respond:
+            assert len(fn.inputs) == 3  # query, top_k, model_type
+            assert len(fn.outputs) == 2  # response, results
+            assert fn.show_progress == "full"
+            break
+
+
+@pytest.mark.asyncio
+async def test_component_state_changes(ui):
+    """コンポーネントの状態変更のテスト"""
+    interface = ui.create_interface()
+
+    # インターフェースの存在を確認
+    assert interface is not None
+    assert isinstance(interface, gr.Blocks)
+
+    # 検索中の状態変更をシミュレート
+    with patch('gradio.Button.update') as mock_update:
+        # 検索開始時
+        await ui.search_and_respond("test")
+        mock_update.assert_called_with(interactive=False)
+
+        # 検索完了時
+        mock_update.reset_mock()
+        await ui.search_and_respond("test")
+        mock_update.assert_called_with(interactive=True)
+
+    # エラー時の状態をシミュレート
+    ui.search_engine.search.side_effect = SearchEngineError("error")
+    with patch('gradio.Markdown.update') as mock_update:
+        await ui.search_and_respond("test")
+        mock_update.assert_called()
+
+
+def test_error_display_style(ui):
+    """エラー表示のスタイルテスト"""
+    # エラーメッセージのHTML生成
+    error = SearchEngineError("test error")
+    error_html = ui._format_error(error)
+
+    # HTMLの解析
+    soup = BeautifulSoup(error_html, 'html.parser')
+    error_div = soup.find('div', class_='error-message')
+    
+    # スタイルの検証
+    assert error_div is not None
+    assert 'error-message' in error_div['class']
+    assert error_div.find('h4') is not None
+    assert error_div.find('p') is not None
+    assert error_div.find('ul') is not None
+
+    # エラータイプに応じたスタイルの違いを検証
+    system_error = ValueError("system error")
+    system_error_html = ui._format_error(system_error)
+    soup = BeautifulSoup(system_error_html, 'html.parser')
+    assert 'システムエラー' in soup.find('h4').text
+
+
+@pytest.mark.asyncio
+async def test_async_cancellation(ui):
+    """非同期処理のキャンセルテスト"""
+    # 長時間実行される処理をシミュレート
+    async def slow_search(*args, **kwargs):
+        await asyncio.sleep(10)
+        return []
+    ui.search_engine.search = slow_search
+
+    # タスクの作成
+    task = asyncio.create_task(ui.search_and_respond("test"))
+    
+    # 少し待ってからキャンセル
+    await asyncio.sleep(0.1)
+    task.cancel()
+
+    # キャンセル時の動作を検証
+    try:
+        await task
+    except asyncio.CancelledError:
+        # キャンセルが正しく処理されることを確認
+        pass
+    else:
+        pytest.fail("タスクがキャンセルされませんでした") 
