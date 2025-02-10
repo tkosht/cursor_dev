@@ -24,6 +24,7 @@ pytest-mock = "*"
 black = "*"
 flake8 = "*"
 isort = "*"
+pytest-asyncio = "^0.25.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -44,4 +45,6 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --cov=app --cov-report=term-missing"
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
 
