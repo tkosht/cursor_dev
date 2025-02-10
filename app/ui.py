@@ -13,8 +13,18 @@ from .search_engine import SearchEngine, SearchEngineError
 from .twitter_client import TwitterClient, TwitterClientError
 
 
+class UIError(Exception):
+    """UI固有のエラー"""
+    pass
+
+
 class UI:
     """UI管理クラス"""
+
+    # 入力制限
+    MAX_QUERY_LENGTH = 500
+    MIN_TOP_K = 1
+    MAX_TOP_K = 10
 
     def __init__(
         self,
@@ -33,6 +43,49 @@ class UI:
         self.twitter_client = twitter_client
         self.search_engine = search_engine
         self.llm_processor = llm_processor
+
+    def _validate_query(self, query: str) -> None:
+        """
+        検索クエリのバリデーション
+
+        Args:
+            query: 検索クエリ
+
+        Raises:
+            UIError: クエリが無効な場合
+        """
+        if not query or query.isspace():
+            raise UIError("クエリが空です")
+        if len(query) > self.MAX_QUERY_LENGTH:
+            raise UIError(f"クエリが長すぎます（最大{self.MAX_QUERY_LENGTH}文字）")
+
+    def _validate_top_k(self, top_k: int) -> None:
+        """
+        結果数のバリデーション
+
+        Args:
+            top_k: 取得する結果の数
+
+        Raises:
+            UIError: 結果数が無効な場合
+        """
+        if not isinstance(top_k, (int, float)) or top_k < self.MIN_TOP_K:
+            raise UIError(f"結果数は{self.MIN_TOP_K}以上を指定してください")
+        if top_k > self.MAX_TOP_K:
+            raise UIError(f"結果数は{self.MAX_TOP_K}以下を指定してください")
+
+    def _validate_model_type(self, model_type: str) -> None:
+        """
+        モデルタイプのバリデーション
+
+        Args:
+            model_type: 使用するLLMの種類
+
+        Raises:
+            UIError: モデルタイプが無効な場合
+        """
+        if model_type not in self.llm_processor.SUPPORTED_MODELS:
+            raise UIError(f"サポートされていないモデルタイプです: {model_type}")
 
     def _format_tweet(self, tweet: Dict) -> str:
         """ツイートを表示用にフォーマット"""
@@ -54,7 +107,7 @@ class UI:
     def _format_error(self, error: Exception) -> str:
         """エラーメッセージをフォーマット"""
         error_type = type(error).__name__
-        if isinstance(error, (TwitterClientError, SearchEngineError, LLMProcessorError)):
+        if isinstance(error, (TwitterClientError, SearchEngineError, LLMProcessorError, UIError)):
             return f"""
             <div class="error-message">
                 <h4>エラーが発生しました</h4>
@@ -93,6 +146,11 @@ class UI:
             Tuple[str, str]: 生成された回答と検索結果のHTML
         """
         try:
+            # 入力のバリデーション
+            self._validate_query(query)
+            self._validate_top_k(top_k)
+            self._validate_model_type(model_type)
+
             # 検索実行
             results = self.search_engine.search(query, top_k=top_k)
             
@@ -103,6 +161,7 @@ class UI:
             results_html = "".join(self._format_tweet(tweet) for tweet in results)
             
             return response, results_html
+
         except Exception as e:
             error_html = self._format_error(e)
             return "", error_html
@@ -183,17 +242,19 @@ class UI:
                     query = gr.Textbox(
                         label="検索クエリ",
                         placeholder="検索したい内容を入力してください...",
-                        lines=3
+                        lines=3,
+                        max_lines=10,
+                        info=f"最大{UI.MAX_QUERY_LENGTH}文字"
                     )
                     top_k = gr.Slider(
-                        minimum=1,
-                        maximum=10,
+                        minimum=UI.MIN_TOP_K,
+                        maximum=UI.MAX_TOP_K,
                         value=5,
                         step=1,
                         label="取得する結果の数"
                     )
                     model_type = gr.Dropdown(
-                        choices=["gemini", "gpt", "claude", "ollama"],
+                        choices=list(LLMProcessor.SUPPORTED_MODELS.keys()),
                         value="gemini",
                         label="使用するLLM"
                     )
