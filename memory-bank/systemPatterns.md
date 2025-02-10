@@ -169,4 +169,82 @@ tests/
 1. ユニットテストの作成
 2. エッジケースのテスト
 3. ログ出力のテスト
-4. エラーハンドリングのテスト 
+4. エラーハンドリングのテスト
+
+## テストパターン
+
+### モックの設定パターン
+
+1. 外部APIのモック
+   ```python
+   # 正しいパターン
+   with patch('app.llm_processor.OpenAI', autospec=True) as mock_class:
+       mock_client = MagicMock()
+       mock_class.return_value = mock_client
+       # APIクライアントの階層的な設定
+       mock_client.models = MagicMock()
+       mock_client.models.list = MagicMock()
+   ```
+
+2. 非同期メソッドのモック
+   ```python
+   # 正しいパターン
+   mock_client.chat.completions.create = AsyncMock(return_value=mock_completion)
+   ```
+
+3. 複数回の呼び出しが必要な場合
+   ```python
+   # 正しいパターン
+   mock_validation_response = MagicMock()
+   mock_client.messages.create = AsyncMock(return_value=mock_validation_response)
+   mock_response = MagicMock()
+   mock_response.content = [MagicMock(text="テスト回答")]
+   mock_client.messages.create.return_value = mock_response
+   ```
+
+### エラーハンドリングパターン
+
+1. 例外の検証
+   ```python
+   with pytest.raises(LLMProcessorError) as exc_info:
+       await processor.generate_response("テスト", [])
+   assert "エラーメッセージ" in str(exc_info.value)
+   ```
+
+2. タイムアウトの検証
+   ```python
+   with pytest.raises(LLMProcessorError) as exc_info:
+       await processor.generate_response("テスト", context, timeout=1)
+   assert "タイムアウト" in str(exc_info.value)
+   ```
+
+### 非同期テストパターン
+
+1. 基本的な非同期テスト
+   ```python
+   @pytest.mark.asyncio
+   async def test_async_function():
+       result = await async_function()
+       assert result == expected
+   ```
+
+2. 並行処理のテスト
+   ```python
+   tasks = [async_function() for _ in range(5)]
+   results = await asyncio.gather(*tasks)
+   assert all(result == expected for result in results)
+   ```
+
+## アーキテクチャパターン
+
+### 依存性注入
+- テスト容易性を考慮したコンストラクタインジェクション
+- モックオブジェクトの差し替えが容易な設計
+
+### エラー階層
+- アプリケーション固有の例外クラス
+- 適切なエラーメッセージとコンテキスト情報
+
+### 非同期処理
+- asyncio/awaitパターンの一貫した使用
+- 適切なタイムアウト処理 
