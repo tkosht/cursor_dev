@@ -1,234 +1,172 @@
-# システムパターン（MVP版）
+# システムパターン
 
-## 1. アーキテクチャ概要
+## アーキテクチャパターン
 
-### 1.1 全体構造
-```mermaid
-flowchart TD
-    UI[ai-gradio UI] --> Main[Main Controller]
-    Main --> TC[TwitterClient]
-    Main --> SE[SearchEngine]
-    Main --> LLM[LLMProcessor]
-    
-    TC --> Twitter[Twitter API]
-    SE --> Faiss[Faiss Index]
-    LLM --> Gemini[Gemini 2.0]
+### 設定管理
+1. シングルトンパターン
+   - 一意のインスタンス
+   - 遅延初期化
+   - スレッドセーフ
+
+2. 設定の階層構造
+   - モジュール別の設定グループ
+   - ドット記法でのアクセス
+   - デフォルト値の定義
+
+3. 永続化
+   - JSONファイル形式
+   - ユーザーホームディレクトリ
+   - 自動バックアップ
+
+4. 実装パターン
+   ```python
+   settings = Settings()
+   value = settings.get("module.setting", default="value")
+   settings.set("module.setting", "new_value")
+   settings.reset("module.setting")
+   ```
+
+### ロギング戦略
+1. ログレベルの定義
+   - DEBUG: 開発時のデバッグ情報
+   - INFO: 通常の操作情報
+   - WARNING: 注意が必要な状況
+   - ERROR: エラー情報
+
+2. ログの構造化
+   - JSON形式での出力
+   - タイムスタンプ
+   - ログレベル
+   - モジュール名
+   - メッセージ
+   - コンテキスト情報
+
+3. ファイル管理
+   - ログレベル別のファイル分割
+   - ローテーション設定
+   - 最大ファイルサイズ: 10MB
+   - バックアップ数: 5
+
+4. 実装パターン
+   ```python
+   self.logger = CustomLogger(__name__)
+   self.logger.info("操作の説明", {"key": "value"})
+   try:
+       # 処理
+   except Exception as e:
+       self.logger.error(f"エラーの説明: {e}")
+       raise CustomError(str(e))
+   ```
+
+### エラーハンドリング
+1. カスタム例外の定義
+   - モジュール固有の例外クラス
+   - 明確なエラーメッセージ
+   - エラーコンテキストの保持
+
+2. エラー処理パターン
+   ```python
+   try:
+       # 危険な操作
+   except Exception as e:
+       error_msg = f"操作に失敗: {e}"
+       self.logger.error(error_msg)
+       raise CustomError(error_msg)
+   ```
+
+### UI設計
+1. コンポーネント構成
+   - メインウィンドウ
+   - 検索フレーム
+   - 結果表示エリア
+
+2. イベント処理
+   - ユーザー操作のログ記録
+   - エラー時のフィードバック
+   - 非同期処理の状態管理
+
+3. 実装パターン
+   ```python
+   def _on_action(self) -> None:
+       self.logger.info("アクションの開始")
+       try:
+           # 処理
+           self.logger.debug("処理の詳細")
+       except Exception as e:
+           self.logger.error(f"エラー: {e}")
+           messagebox.showerror("エラー", str(e))
+   ```
+
+## デザインパターン
+
+### Singleton
+- 設定管理
+- ログ設定
+- データベース接続
+
+### Factory
+- ログハンドラーの作成
+- UI要素の生成
+
+### Observer
+- イベント通知
+- UI更新
+- ログ監視
+
+## ファイル構造
+
+```
+app/
+├── __init__.py
+├── logger.py
+├── search_engine.py
+├── ui/
+│   ├── __init__.py
+│   ├── main_window.py
+│   └── components/
+└── config/
+    └── settings.py
+
+logs/
+├── debug/
+├── info/
+└── error/
+
+tests/
+├── __init__.py
+├── test_logger.py
+├── test_search_engine.py
+└── test_settings.py
 ```
 
-### 1.2 データフロー
-```mermaid
-flowchart LR
-    A[ブックマーク取得] --> B[データ保存]
-    B --> C[インデックス作成]
-    D[検索クエリ] --> E[ベクトル検索]
-    E --> F[LLM処理]
-    F --> G[結果表示]
-```
+## コーディング規約
 
-## 2. モジュール構成
+### 設定管理
+1. シングルトンパターンの使用
+2. 階層的な設定構造
+3. デフォルト値の提供
+4. 設定変更のログ記録
 
-### 2.1 TwitterClient
-- **責務:** ブックマークデータの取得
-- **パターン:** Adapter Pattern
-- **実装:**
-  ```python
-  class TwitterClient:
-      def __init__(self, auth_config: dict):
-          self.auth = OAuth2Handler(auth_config)
-          
-      async def get_bookmarks(self) -> List[Tweet]:
-          # 基本的なブックマーク取得
-          pass
-  ```
+### ロギング
+1. 各クラスで独立したロガーインスタンスを使用
+2. 適切なログレベルの選択
+3. 構造化されたコンテキスト情報の提供
+4. エラー時は必ずログを記録
 
-### 2.2 SearchEngine
-- **責務:** ベクトル検索の実行
-- **パターン:** Repository Pattern
-- **実装:**
-  ```python
-  class SearchEngine:
-      def __init__(self, index_path: str):
-          self.index = faiss.IndexFlatL2(...)
-          
-      def search(self, query: str) -> List[SearchResult]:
-          # 基本的な検索処理
-          pass
-  ```
+### エラーハンドリング
+1. カスタム例外の使用
+2. エラーの詳細な記録
+3. ユーザーフレンドリーなメッセージ
+4. 適切なエラー伝播
 
-### 2.3 LLMProcessor
-- **責務:** LLMによる回答生成
-- **パターン:** Strategy Pattern
-- **実装:**
-  ```python
-  class LLMProcessor:
-      def __init__(self, model_config: dict):
-          self.model = GeminiModel(model_config)
-          
-      async def generate_response(self, context: str) -> str:
-          # 基本的な回答生成
-          pass
-  ```
+### UI実装
+1. コンポーネントの適切な分割
+2. イベントハンドラーでのログ記録
+3. エラー時のユーザーフィードバック
+4. 非同期処理の適切な管理
 
-### 2.4 UI
-- **責務:** ユーザーインターフェース
-- **パターン:** Facade Pattern
-- **実装:**
-  ```python
-  class UI:
-      def __init__(self, controller: MainController):
-          self.controller = controller
-          
-      def build_interface(self):
-          # 基本的なUI構築
-          pass
-  ```
-
-## 3. デザインパターン
-
-### 3.1 採用パターン
-1. **Adapter Pattern**
-   - TwitterAPIとの連携
-   - LLM APIとの連携
-
-2. **Repository Pattern**
-   - 検索エンジンの実装
-   - データ永続化
-
-3. **Strategy Pattern**
-   - LLMの処理
-   - 検索ロジック
-
-4. **Facade Pattern**
-   - UIインターフェース
-   - メインコントローラー
-
-### 3.2 エラー処理
-```mermaid
-flowchart TD
-    A[エラー発生] --> B{エラー種別}
-    B -->|API| C[APIエラー処理]
-    B -->|検索| D[検索エラー処理]
-    B -->|LLM| E[LLMエラー処理]
-    C --> F[UI表示]
-    D --> F
-    E --> F
-```
-
-## 4. データ構造
-
-### 4.1 Tweet
-```python
-@dataclass
-class Tweet:
-    id: str
-    text: str
-    author: str
-    created_at: datetime
-    url: str
-```
-
-### 4.2 SearchResult
-```python
-@dataclass
-class SearchResult:
-    tweet: Tweet
-    score: float
-```
-
-### 4.3 LLMResponse
-```python
-@dataclass
-class LLMResponse:
-    text: str
-    context: List[Tweet]
-```
-
-## 5. 非同期処理
-
-### 5.1 基本フロー
-```mermaid
-sequenceDiagram
-    UI->>Main: 検索リクエスト
-    Main->>SearchEngine: 検索実行
-    SearchEngine-->>Main: 結果返却
-    Main->>LLM: 回答生成
-    LLM-->>Main: 回答返却
-    Main-->>UI: 結果表示
-```
-
-## 6. エラー処理戦略
-
-### 6.1 基本方針
-1. **エラーの種類**
-   - APIエラー
-   - 検索エラー
-   - LLMエラー
-   - UIエラー
-
-2. **エラーハンドリング**
-   - 基本的な例外捕捉
-   - ユーザーへのフィードバック
-   - ログ出力
-
-### 6.2 実装例
-```python
-try:
-    result = await process_request()
-except APIError as e:
-    log_error(e)
-    show_error_message(str(e))
-except SearchError as e:
-    log_error(e)
-    show_error_message(str(e))
-```
-
-## 7. テスト戦略
-
-### 7.1 単体テスト
-- 各モジュールの基本機能テスト
-- 主要メソッドのテスト
-- エラーケースのテスト
-
-### 7.2 統合テスト
-- モジュール間の連携テスト
-- 主要フローのテスト
-- エラー処理の確認
-
-## 8. 設定管理
-
-### 8.1 環境変数
-```python
-TWITTER_API_KEY=xxx
-TWITTER_API_SECRET=xxx
-GEMINI_API_KEY=xxx
-```
-
-### 8.2 設定ファイル
-```python
-config = {
-    'twitter': {
-        'max_bookmarks': 800,
-        'timeout': 30
-    },
-    'search': {
-        'top_k': 5,
-        'threshold': 0.5
-    },
-    'llm': {
-        'model': 'gemini-2.0-flash',
-        'max_tokens': 1000
-    }
-}
-```
-
-## 9. MVPの制約
-
-### 9.1 機能制約
-- 単一LLMのみ対応
-- 基本的な検索機能のみ
-- シンプルなUI
-
-### 9.2 性能制約
-- 同時1ユーザーのみ
-- 基本的なエラー処理
-- 最小限の最適化 
+### テスト
+1. ユニットテストの作成
+2. エッジケースのテスト
+3. ログ出力のテスト
+4. エラーハンドリングのテスト 
