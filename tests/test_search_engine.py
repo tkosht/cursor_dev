@@ -1,8 +1,11 @@
 """SearchEngineのテスト"""
 
 import os
+import time
+from unittest.mock import patch
 
 import pytest
+import torch
 
 from app.search_engine import SearchEngine, SearchEngineError
 
@@ -42,6 +45,28 @@ def sample_bookmarks():
             "created_at": "1234567892",
         },
     ]
+
+
+@pytest.fixture
+def large_sample_bookmarks():
+    """パフォーマンステスト用の大量サンプルデータ"""
+    base_texts = [
+        "Pythonプログラミング",
+        "機械学習",
+        "データサイエンス",
+        "ウェブ開発",
+        "クラウドコンピューティング"
+    ]
+    bookmarks = []
+    for i in range(1000):  # 1000件のブックマーク
+        text = f"{base_texts[i % len(base_texts)]}に関する投稿 {i}"
+        bookmarks.append({
+            "id": str(i),
+            "url": f"https://twitter.com/user/status/{i}",
+            "text": text,
+            "created_at": str(1234567890 + i)
+        })
+    return bookmarks
 
 
 def test_init_creates_empty_index(index_dir):
@@ -124,4 +149,104 @@ def test_invalid_index_dir():
     """無効なインデックスディレクトリでのエラーハンドリングを確認"""
     with pytest.raises(SearchEngineError) as exc_info:
         SearchEngine(index_dir="/invalid/directory/that/does/not/exist")
-    assert "SearchEngineの初期化に失敗" in str(exc_info.value) 
+    assert "SearchEngineの初期化に失敗" in str(exc_info.value)
+
+
+# GPU関連のテスト
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="GPUが利用できない環境")
+def test_gpu_initialization(index_dir):
+    """GPUが利用可能な場合のGPU初期化を確認"""
+    engine = SearchEngine(index_dir=index_dir, use_gpu=True)
+    assert engine.use_gpu is True
+    assert engine.model.device.type == 'cuda'
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="GPUが利用できない環境")
+def test_gpu_search(index_dir, sample_bookmarks):
+    """GPUでの検索が正常に動作することを確認"""
+    engine = SearchEngine(index_dir=index_dir, use_gpu=True)
+    engine.add_bookmarks(sample_bookmarks)
+    results = engine.search("Python")
+    assert len(results) > 0
+
+
+def test_gpu_fallback(index_dir):
+    """GPU指定時にGPUが利用できない場合のフォールバックを確認"""
+    with patch('torch.cuda.is_available', return_value=False):
+        engine = SearchEngine(index_dir=index_dir, use_gpu=True)
+        assert engine.use_gpu is False
+        assert engine.model.device.type == 'cpu'
+
+
+# エラーケースのテスト
+
+def test_add_empty_bookmarks(engine):
+    """空のブックマークリスト追加時の動作を確認"""
+    engine.add_bookmarks([])
+    assert engine.get_total_bookmarks() == 0
+
+
+def test_add_invalid_bookmarks(engine):
+    """無効なブックマークデータ追加時のエラーハンドリングを確認"""
+    invalid_bookmarks = [{"invalid": "data"}]
+    with pytest.raises(SearchEngineError) as exc_info:
+        engine.add_bookmarks(invalid_bookmarks)
+    assert "ブックマークの追加に失敗" in str(exc_info.value)
+
+
+def test_save_index_error(engine, sample_bookmarks):
+    """インデックス保存時のエラーハンドリングを確認"""
+    engine.add_bookmarks(sample_bookmarks)
+    with patch('faiss.write_index', side_effect=Exception("保存エラー")):
+        with pytest.raises(SearchEngineError) as exc_info:
+            engine._save_index()
+        assert "インデックスの保存に失敗" in str(exc_info.value)
+
+
+def test_search_error(engine, sample_bookmarks):
+    """検索時のエラーハンドリングを確認"""
+    engine.add_bookmarks(sample_bookmarks)
+    with patch.object(engine.index, 'search', side_effect=Exception("検索エラー")):
+        with pytest.raises(SearchEngineError) as exc_info:
+            engine.search("Python")
+        assert "検索に失敗" in str(exc_info.value)
+
+
+# パフォーマンステスト
+
+def test_search_performance(engine, large_sample_bookmarks):
+    """検索のパフォーマンスを確認"""
+    engine.add_bookmarks(large_sample_bookmarks)
+    
+    start_time = time.time()
+    results = engine.search("Python", top_k=10)
+    end_time = time.time()
+    
+    search_time = end_time - start_time
+    assert search_time < 1.0  # 検索は1秒以内に完了すべき
+    assert len(results) == 10
+
+
+def test_add_bookmarks_performance(engine, large_sample_bookmarks):
+    """大量のブックマーク追加時のパフォーマンスを確認"""
+    start_time = time.time()
+    engine.add_bookmarks(large_sample_bookmarks)
+    end_time = time.time()
+    
+    add_time = end_time - start_time
+    assert add_time < 30.0  # 1000件の追加は30秒以内に完了すべき
+    assert engine.get_total_bookmarks() == len(large_sample_bookmarks)
+
+
+def test_memory_usage(engine, large_sample_bookmarks):
+    """メモリ使用量を確認"""
+    import psutil
+    process = psutil.Process()
+    
+    initial_memory = process.memory_info().rss
+    engine.add_bookmarks(large_sample_bookmarks)
+    final_memory = process.memory_info().rss
+    
+    memory_increase = (final_memory - initial_memory) / (1024 * 1024)  # MB単位
+    assert memory_increase < 2000  # メモリ増加は2GB以内に抑えるべき 
