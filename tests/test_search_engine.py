@@ -250,3 +250,129 @@ def test_memory_usage(engine, large_sample_bookmarks):
     
     memory_increase = (final_memory - initial_memory) / (1024 * 1024)  # MB単位
     assert memory_increase < 2000  # メモリ増加は2GB以内に抑えるべき 
+
+
+def test_load_corrupted_index(index_dir, sample_bookmarks):
+    """破損したインデックスファイルの読み込み時のエラーハンドリングを確認"""
+    # 正常なインデックスを作成
+    engine = SearchEngine(index_dir=index_dir)
+    engine.add_bookmarks(sample_bookmarks)
+    
+    # インデックスファイルを破損させる
+    with open(os.path.join(index_dir, 'faiss.index'), 'w') as f:
+        f.write('corrupted data')
+    
+    # 破損したインデックスの読み込みを試行
+    with pytest.raises(SearchEngineError) as exc_info:
+        SearchEngine(index_dir=index_dir)
+    assert "SearchEngineの初期化に失敗" in str(exc_info.value)
+
+
+def test_load_corrupted_bookmarks(index_dir, sample_bookmarks):
+    """破損したブックマークファイルの読み込み時のエラーハンドリングを確認"""
+    # 正常なインデックスを作成
+    engine = SearchEngine(index_dir=index_dir)
+    engine.add_bookmarks(sample_bookmarks)
+    
+    # ブックマークファイルを破損させる
+    with open(os.path.join(index_dir, 'bookmarks.npy'), 'w') as f:
+        f.write('corrupted data')
+    
+    # 破損したブックマークの読み込みを試行
+    with pytest.raises(SearchEngineError) as exc_info:
+        SearchEngine(index_dir=index_dir)
+    assert "SearchEngineの初期化に失敗" in str(exc_info.value)
+
+
+def test_long_text_handling(engine):
+    """非常に長いテキストの処理を確認"""
+    long_text = "あ" * 10000  # 1万文字の長いテキスト
+    bookmarks = [{
+        "id": "1",
+        "url": "https://twitter.com/user/status/1",
+        "text": long_text,
+        "created_at": "1234567890"
+    }]
+    
+    engine.add_bookmarks(bookmarks)
+    results = engine.search(long_text[:100])  # 最初の100文字で検索
+    assert len(results) > 0
+    assert results[0][0]["text"] == long_text
+
+
+def test_special_characters(engine):
+    """特殊文字を含むテキストの処理を確認"""
+    special_chars = "!@#$%^&*()_+-=[]{}|;:'\",.<>?/~`"
+    bookmarks = [{
+        "id": "1",
+        "url": "https://twitter.com/user/status/1",
+        "text": f"特殊文字テスト {special_chars}",
+        "created_at": "1234567890"
+    }]
+    
+    engine.add_bookmarks(bookmarks)
+    results = engine.search(special_chars)
+    assert len(results) > 0
+    assert special_chars in results[0][0]["text"]
+
+
+def test_empty_text(engine):
+    """空のテキストの処理を確認"""
+    bookmarks = [{
+        "id": "1",
+        "url": "https://twitter.com/user/status/1",
+        "text": "",
+        "created_at": "1234567890"
+    }]
+    
+    engine.add_bookmarks(bookmarks)
+    results = engine.search("")
+    assert isinstance(results, list)
+
+
+def test_large_top_k(engine, sample_bookmarks):
+    """極端に大きなtop_k値の処理を確認"""
+    engine.add_bookmarks(sample_bookmarks)
+    results = engine.search("Python", top_k=1000)
+    assert len(results) == len(sample_bookmarks)  # 利用可能な全ブックマークが返される
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="GPUが利用できない環境")
+def test_gpu_memory_management(index_dir):
+    """GPUメモリ管理の確認"""
+    import gc
+
+    # 初期メモリ使用量を記録
+    torch.cuda.empty_cache()
+    gc.collect()
+    initial_memory = torch.cuda.memory_allocated()
+    
+    # GPUエンジンを作成して使用
+    engine = SearchEngine(index_dir=index_dir, use_gpu=True)
+    used_memory = torch.cuda.memory_allocated()
+    assert used_memory > initial_memory  # メモリ使用量が増加していることを確認
+    
+    # エンジンを削除してメモリをクリア
+    del engine
+    torch.cuda.empty_cache()
+    gc.collect()
+    final_memory = torch.cuda.memory_allocated()
+    assert final_memory < used_memory  # メモリが解放されていることを確認
+
+
+def test_gpu_cpu_switching(index_dir, sample_bookmarks):
+    """GPU/CPU切り替え時の動作を確認"""
+    # GPUエンジンを作成
+    engine_gpu = SearchEngine(index_dir=index_dir, use_gpu=True)
+    engine_gpu.add_bookmarks(sample_bookmarks)
+    gpu_results = engine_gpu.search("Python")
+    
+    # 同じインデックスをCPUで読み込み
+    engine_cpu = SearchEngine(index_dir=index_dir, use_gpu=False)
+    cpu_results = engine_cpu.search("Python")
+    
+    # 結果が一致することを確認（浮動小数点の誤差を考慮）
+    assert len(gpu_results) == len(cpu_results)
+    for (gpu_bookmark, gpu_score), (cpu_bookmark, cpu_score) in zip(gpu_results, cpu_results):
+        assert gpu_bookmark == cpu_bookmark
+        assert abs(gpu_score - cpu_score) < 1e-5  # 許容誤差 

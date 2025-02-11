@@ -27,6 +27,7 @@ globs: *.py
 - プライベートには先頭アンダースコアを付加する
 - docstring は Google スタイル、typing モジュールを使わない型ヒントを積極利用する
 - 1行79文字以内、インデント4スペースとする
+- 特に、VSCode 上の `blank line contains whitespace` という Lint エラーに必ず対応する
 
 
 ## テストコード
