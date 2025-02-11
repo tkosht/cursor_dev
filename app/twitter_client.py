@@ -4,12 +4,14 @@ Twitter APIクライアント
 ブックマークの取得と管理を行うモジュール（MVP版）
 """
 
+import asyncio
 import json
 import os
 import re
 from datetime import datetime
 from typing import Dict, List, Optional
 
+import aiohttp
 from bs4 import BeautifulSoup
 
 
@@ -23,14 +25,21 @@ class TwitterClient:
 
     # Twitterステータスの正規表現パターン
     TWITTER_STATUS_PATTERN = r'^https://twitter\.com/\w+/status/\d+$'
+    
+    # API関連の定数
+    API_BASE_URL = "https://api.twitter.com/2"
+    MAX_RETRIES = 3
+    RETRY_DELAY = 1  # seconds
 
-    def __init__(self, bookmarks_file: Optional[str] = None):
+    def __init__(self, bookmarks_file: Optional[str] = None, api_token: Optional[str] = None):
         """
         TwitterClientの初期化
 
         Args:
             bookmarks_file: ブックマークデータを保存するJSONファイルのパス
                           （デフォルト: ~/workspace/data/bookmarks.json）
+            api_token: Twitter APIのアクセストークン
+                     （デフォルト: 環境変数TWITTER_API_TOKENから取得）
 
         Raises:
             TwitterClientError: ブックマークファイルの初期化に失敗した場合
@@ -40,24 +49,15 @@ class TwitterClient:
         else:
             self.bookmarks_file = bookmarks_file
 
-        try:
-            # データディレクトリの作成を試みる
-            directory = os.path.dirname(self.bookmarks_file)
-            if not os.path.exists(directory):
-                try:
-                    os.makedirs(directory)
-                except OSError as e:
-                    raise TwitterClientError(f"ディレクトリの作成に失敗: {e}")
-
-            # 初期データの作成
-            if not os.path.exists(self.bookmarks_file):
-                self._save_bookmarks([])
-        except Exception as e:
-            raise TwitterClientError(f"ブックマークファイルの初期化に失敗: {e}")
+        self.api_token = api_token or os.getenv('TWITTER_API_TOKEN', 'test_token')
 
     def _load_bookmarks(self) -> List[Dict]:
         """保存されているブックマークを読み込む"""
         try:
+            # ファイルが存在しない場合は空のリストを返す
+            if not os.path.exists(self.bookmarks_file):
+                return []
+                
             with open(self.bookmarks_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except json.JSONDecodeError as e:
@@ -71,7 +71,10 @@ class TwitterClient:
             # ディレクトリが存在することを確認
             directory = os.path.dirname(self.bookmarks_file)
             if not os.path.exists(directory):
-                raise TwitterClientError(f"保存先ディレクトリが存在しません: {directory}")
+                try:
+                    os.makedirs(directory)
+                except OSError as e:
+                    raise TwitterClientError(f"保存先ディレクトリの作成に失敗: {e}")
 
             with open(self.bookmarks_file, 'w', encoding='utf-8') as f:
                 json.dump(bookmarks, f, ensure_ascii=False, indent=2)
@@ -206,4 +209,46 @@ class TwitterClient:
 
             return bookmark
         except Exception as e:
-            raise TwitterClientError(f"ブックマークの追加に失敗: {e}") 
+            raise TwitterClientError(f"ブックマークの追加に失敗: {e}")
+
+    async def fetch_bookmarks_api(self) -> List[Dict]:
+        """
+        Twitter APIを使用してブックマークを取得する
+
+        Returns:
+            List[Dict]: 取得したブックマークのリスト
+
+        Raises:
+            TwitterClientError: API呼び出しに失敗した場合
+        """
+        headers = {"Authorization": f"Bearer {self.api_token}"}
+        endpoint = f"{self.API_BASE_URL}/users/me/bookmarks"
+
+        for attempt in range(self.MAX_RETRIES):
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(endpoint, headers=headers) as response:
+                        if response.status == 200:
+                            data = await response.json()
+                            return data.get("data", [])
+                        elif response.status == 429:  # レート制限
+                            if attempt < self.MAX_RETRIES - 1:
+                                await asyncio.sleep(self.RETRY_DELAY * (attempt + 1))
+                                continue
+                            else:
+                                error_data = await response.json()
+                                raise TwitterClientError(
+                                    f"レート制限超過: {error_data.get('errors', [{}])[0].get('message', '')}"
+                                )
+                        else:
+                            error_data = await response.json()
+                            raise TwitterClientError(
+                                f"APIエラー: {error_data.get('errors', [{}])[0].get('message', '')}"
+                            )
+            except aiohttp.ClientError as e:
+                if attempt < self.MAX_RETRIES - 1:
+                    await asyncio.sleep(self.RETRY_DELAY * (attempt + 1))
+                    continue
+                raise TwitterClientError(f"API通信エラー: {e}")
+
+        raise TwitterClientError("リトライ回数超過") 
