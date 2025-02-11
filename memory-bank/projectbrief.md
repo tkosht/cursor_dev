@@ -18,11 +18,87 @@ X（旧Twitter）のブックマークを対象に、**リアルタイム検索*
 - **柔軟なLLM利用:** Gemini 2.0 Flashをデフォルトとしつつ、OpenAI GPTやClaude等、ユーザ環境に応じたLLMエンジンに切り替えて利用できるように設計し、利用コストやプライバシーのニーズに対応します。
 
 ## プロジェクトの概要
-本プロジェクトでは、X（Twitter）ブックマークのデータ収集から検索インデックス構築、LLM応答生成、UI提供までの一連のパイプラインを構築します。まず**ブックマーク取得**では、X公式APIまたは非公式手法でユーザのブックマーク一覧を取得します。公式のエンドポイントを用いる場合、認可済みユーザの最新800件まで取得可能（15分あたり180リクエスト制限）で、OAuth2認証と`bookmark.read`権限が必要です ([Bookmarks introduction | Docs | Twitter Developer Platform  ](https://developer.x.com/en/docs/x-api/tweets/bookmarks/introduction#:~:text=There%20is%20a%20per,your%20most%20recent%20Bookmarked%20Posts))。一方、公式APIに頼らない方法として、ブラウザのネットワーク呼び出しを模倣するGraphQLエンドポイントへのアクセスやヘッドレスブラウザを用いたスクレイピング等が考えられます ([A tool to organize your existing and new Twitter Bookmarks. Search, Folders, Tags, Export, Share, Annotate. : r/Twitter](https://www.reddit.com/r/Twitter/comments/q3g3hw/a_tool_to_organize_your_existing_and_new_twitter/#:~:text=Since%20Twitter%20doesn%27t%20have%20an,certain%20things%20you%20can%27t%20do))。後者を利用すれば800件を超える保存済みツイートも含め**全ブックマークを取得**し、以降は新規追加分のみ増分収集することが可能になります。
+本プロジェクトでは、X（Twitter）ブックマークのデータ収集から検索インデックス構築、LLM応答生成、UI提供までの一連のパイプラインを構築します。まず**ブックマーク取得**では、X公式APIまたは非公式手法でユーザのブックマーク一覧を取得します。公式のエンドポイントを用いる場合、認可済みユーザの最新800件まで取得可能（15分あたり180リクエスト制限）で、OAuth2認証と`bookmark.read`権限が必要です。一方、公式APIに頼らない方法として、ブラウザのネットワーク呼び出しを模倣するGraphQLエンドポイントへのアクセスやヘッドレスブラウザを用いたスクレイピング等が考えられます。後者を利用すれば800件を超える保存済みツイートも含め**全ブックマークを取得**し、以降は新規追加分のみ増分収集することが可能になります。
 
-取得したブックマークツイートは**検索インデックス**に登録します。具体的には各ツイート本文をベクトル埋め込み（Embedding）に変換し、ベクトルデータベース（例：FaissやPinecone等）に格納することで**ベクトル検索**を可能にします。これによりクエリの意味ベクトルと類似したツイートを高速に検索でき、キーワードの有無に左右されない**セマンティック検索**が実現できます ([A beginner's guide to Retrieval-Augmented Generation (RAG) — SitePoint](https://www.sitepoint.com/beginners-guide-to-retrieval-augmented-generation-rag/#:~:text=RAG%20allows%20us%20to%20take,sources%20based%20on%20the%20documents))。ユーザから問い合わせ（検索クエリ）があると、まずこのベクトルDBから関連性の高いブックマーク数件を検索で取得します。次にそれら関連ツイートを**文脈情報**としてLLMに与え、問い合わせへの回答や要約を生成します ([How to build your own AI assistant for bookmark searching? | Towards Data Science](https://towardsdatascience.com/how-to-build-your-own-ai-assistant-for-bookmark-searching-7e3dcc17e3fc/#:~:text=and%20combine%20them%20with%20the,called%20RAG%3A%20Retrieval%20Augmented%20Generation))。この一連の流れ（情報検索＋生成）は**RAG（Retrieval-Augmented Generation）**と呼ばれる手法であり、本プロジェクトの中核的アプローチです ([How to build your own AI assistant for bookmark searching? | Towards Data Science](https://towardsdatascience.com/how-to-build-your-own-ai-assistant-for-bookmark-searching-7e3dcc17e3fc/#:~:text=and%20combine%20them%20with%20the,called%20RAG%3A%20Retrieval%20Augmented%20Generation))。
+取得したブックマークツイートは**検索インデックス**に登録します。具体的には各ツイート本文をベクトル埋め込み（Embedding）に変換し、ベクトルデータベース（例：FaissやPinecone等）に格納することで**ベクトル検索**を可能にします。これによりクエリの意味ベクトルと類似したツイートを高速に検索でき、キーワードの有無に左右されない**セマンティック検索**が実現できます。ユーザから問い合わせ（検索クエリ）があると、まずこのベクトルDBから関連性の高いブックマーク数件を検索で取得します。次にそれら関連ツイートを**文脈情報**としてLLMに与え、問い合わせへの回答や要約を生成します。この一連の流れ（情報検索＋生成）は**RAG（Retrieval-Augmented Generation）**と呼ばれる手法であり、本プロジェクトの中核的アプローチです。
 
 システムはPythonで実装し、ユーザインターフェースには**Gradio**を採用します。Gradio上に検索用のテキスト入力欄と各種オプション（使用するLLMの切替、フィルタ条件の指定など）を用意し、実行ボタン操作で上記の検索～回答生成プロセスが走るように構成します。出力としては、関連度の高いブックマークの一覧（ツイート内容の抜粋やリンク等）を表示すると共に、必要に応じてLLMによる要約や回答文を提示します。例えばユーザが質問文形式で入力した場合は関連ツイート内容を引用しつつ回答を生成し、一方でキーワード検索的な入力であれば該当ツイートのリストアップを主に返す、といった柔軟な応答形式に対応します。また、検索結果の各ツイートに対してタグ情報の表示や、タグ・日時での絞り込みUIも提供し、ユーザが望む形で結果を吟味・操作できるよう設計します。
+
+## MVP戦略
+本プロジェクトでは、以下の主要な価値提案を実現する最小限の機能セットをMVPとして定義します：
+
+### 必須機能
+1. **ブックマーク検索機能**
+   - ベクトル検索による意味的な検索
+   - キーワードによる従来型検索
+   - フィルタリング機能
+
+2. **リアルタイム更新**
+   - 新規ブックマークの自動取得
+   - インデックスの即時更新
+   - 検索への即時反映
+
+3. **LLM統合**
+   - Gemini 2.0 Flashによる回答生成
+   - RAGによる関連情報の抽出
+   - コンテキストを考慮した応答
+
+4. **Gradio UI**
+   - 検索インターフェース
+   - 結果表示
+   - 設定管理
+
+5. **基本的なテスト**
+   - 単体テスト（100%カバレッジ）
+   - 統合テスト（100%カバレッジ）
+   - パフォーマンステスト
+
+### MVP後回し機能
+1. **CI/CD環境整備**
+   - パフォーマンステスト自動化
+   - メトリクス収集
+   - アラート通知
+
+2. **高度な監視**
+   - 自動メトリクス収集
+   - パフォーマンスモニタリング
+   - エラー追跡
+
+3. **追加ドキュメント**
+   - 詳細な技術仕様
+   - 運用マニュアル
+   - トラブルシューティングガイド
+
+### 成功指標
+1. **必須指標**
+   - 検索精度: 80%以上
+   - 検索応答時間: 1秒以内
+   - LLM応答時間: 5秒以内
+   - UI操作の完了率: 90%以上
+
+2. **サブ指標**
+   - ユーザー満足度
+   - 機能使用頻度
+   - エラー発生率
+   - フィードバック対応率
+
+### フィードバック収集計画
+1. **収集項目**
+   - 検索精度の評価
+   - UI使用性の評価
+   - LLM回答の品質評価
+   - 機能要望
+
+2. **収集方法**
+   - アプリ内フィードバックフォーム
+   - ユーザーインタビュー
+   - 使用状況の分析
+
+3. **改善サイクル**
+   - 週次フィードバック分析
+   - 優先度評価
+   - クイックウィン特定
+   - 迅速な改善実装
 
 ## プロジェクトの要件
 - **ブックマークデータ取得:** ユーザ自身のXアカウントからブックマークをプログラム的に取得する機能。公式API経由の場合はOAuth2認証と適切なスコープで最新800件を取得（必要ならページネーション対応） ([Bookmarks introduction | Docs | Twitter Developer Platform  ](https://developer.x.com/en/docs/x-api/tweets/bookmarks/introduction#:~:text=There%20is%20a%20per,your%20most%20recent%20Bookmarked%20Posts))。非公式手法では、ブラウザのGraphQLリクエストを再利用して全件取得し、以降の新規ブックマークも定期的に追加取得する。**リアルタイム性**を考慮し、一定間隔でのポーリングやイベント検知によって、新しいブックマークが追加されたら速やかに取り込み更新する。
