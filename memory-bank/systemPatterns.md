@@ -235,6 +235,181 @@ tests/
    assert all(result == expected for result in results)
    ```
 
+## 統合テストパターン
+
+### TwitterClient + SearchEngine
+1. データフロー
+   ```mermaid
+   flowchart LR
+       TC[TwitterClient] -->|ブックマーク取得| SE[SearchEngine]
+       SE -->|インデックス構築| IDX[Faissインデックス]
+       SE -->|検索実行| RES[検索結果]
+   ```
+
+2. テストシナリオ
+   ```python
+   # 基本フロー
+   twitter_client.fetch_bookmarks() -> bookmarks
+   search_engine.add_bookmarks(bookmarks)
+   search_engine.search(query) -> results
+
+   # エラーケース
+   - API制限時の動作
+   - ネットワークエラー時の動作
+   - 無効なデータ形式
+   ```
+
+3. 検証項目
+   - ブックマークの正確な取得
+   - インデックスへの正確な追加
+   - 検索結果の妥当性
+   - エラー伝播の確認
+   - パフォーマンス要件の充足
+
+### LLMProcessor + SearchEngine
+1. データフロー
+   ```mermaid
+   flowchart LR
+       SE[SearchEngine] -->|検索結果| LP[LLMProcessor]
+       LP -->|プロンプト生成| PR[Prompt]
+       PR -->|LLM呼び出し| RES[生成結果]
+   ```
+
+2. テストシナリオ
+   ```python
+   # 基本フロー
+   search_engine.search(query) -> results
+   llm_processor.generate_response(query, results) -> response
+
+   # エラーケース
+   - LLM APIエラー
+   - コンテキスト長超過
+   - 無効な検索結果
+   ```
+
+3. 検証項目
+   - 検索結果の適切な利用
+   - プロンプトの適切な生成
+   - 回答の品質
+   - エラー処理の適切性
+   - 応答時間の要件充足
+
+### UI + SearchEngine
+1. データフロー
+   ```mermaid
+   flowchart LR
+       UI[UI] -->|検索リクエスト| SE[SearchEngine]
+       SE -->|検索結果| UI
+       UI -->|結果表示| VW[View]
+   ```
+
+2. テストシナリオ
+   ```python
+   # 基本フロー
+   ui.search_and_respond(query) -> response, results
+   ui.display_results(results)
+
+   # エラーケース
+   - 検索エラー時のUI表示
+   - 無効なクエリ
+   - 結果表示エラー
+   ```
+
+3. 検証項目
+   - ユーザー入力の適切な処理
+   - 検索結果の正確な表示
+   - エラーメッセージの適切な表示
+   - UI応答性の確保
+   - ユーザビリティ要件の充足
+
+### テスト実装ガイドライン
+1. フィクスチャ設計
+   ```python
+   @pytest.fixture
+   def integrated_components():
+       """統合テスト用のコンポーネント群を初期化"""
+       twitter_client = TwitterClient()
+       search_engine = SearchEngine()
+       llm_processor = LLMProcessor()
+       return twitter_client, search_engine, llm_processor
+   ```
+
+2. モック戦略
+   ```python
+   # 外部APIのモック
+   @pytest.fixture
+   def mock_twitter_api():
+       with patch('tweepy.Client') as mock:
+           yield mock
+
+   # LLM APIのモック
+   @pytest.fixture
+   def mock_llm_api():
+       with patch('google.generativeai') as mock:
+           yield mock
+   ```
+
+3. 非同期処理
+   ```python
+   @pytest.mark.asyncio
+   async def test_async_integration():
+       """非同期処理を含む統合テスト"""
+       async with AsyncClient() as client:
+           # テストコード
+   ```
+
+4. パフォーマンス検証
+   ```python
+   def test_integration_performance():
+       """統合テストでのパフォーマンス検証"""
+       start_time = time.time()
+       # 処理実行
+       end_time = time.time()
+       assert end_time - start_time < TIMEOUT
+   ```
+
+### テストデータ管理
+1. テストデータの構造
+   ```python
+   @pytest.fixture
+   def test_bookmarks():
+       return [
+           {
+               "id": "1",
+               "text": "テストツイート1",
+               "created_at": "2024-01-01"
+           },
+           # ...
+       ]
+   ```
+
+2. データセットの規模
+   - 小規模（10件未満）: 基本機能テスト用
+   - 中規模（100件程度）: 結合動作確認用
+   - 大規模（1000件以上）: パフォーマンステスト用
+
+3. エッジケース
+   - 特殊文字を含むデータ
+   - 長文データ
+   - 空データ
+   - 重複データ
+
+### 品質基準
+1. カバレッジ要件
+   - 統合テスト全体で80%以上
+   - クリティカルパスは100%
+   - エラーハンドリングは100%
+
+2. パフォーマンス要件
+   - 検索応答時間: 1秒以内
+   - LLM応答時間: 5秒以内
+   - メモリ使用量: 2GB以内
+
+3. 信頼性要件
+   - エラー発生率: 0.1%以下
+   - データ整合性: 100%
+   - 回答品質: 90%以上
+
 ## アーキテクチャパターン
 
 ### 依存性注入
