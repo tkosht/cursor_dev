@@ -13,6 +13,7 @@ from ..logger import CustomLogger
 
 class MainWindowError(Exception):
     """MainWindow固有のエラー"""
+
     pass
 
 
@@ -20,9 +21,7 @@ class MainWindow:
     """メインウィンドウクラス"""
 
     def __init__(
-        self,
-        title: str = "ブックマーク検索",
-        geometry: str = "800x600"
+        self, title: str = "ブックマーク検索", geometry: str = "800x600"
     ):
         """
         MainWindowの初期化
@@ -32,10 +31,10 @@ class MainWindow:
             geometry: ウィンドウのサイズ（デフォルト: "800x600"）
         """
         self.logger = CustomLogger(__name__)
-        self.logger.info("メインウィンドウの初期化を開始", {
-            "title": title,
-            "geometry": geometry
-        })
+        self.logger.info(
+            "メインウィンドウの初期化を開始",
+            {"title": title, "geometry": geometry},
+        )
 
         try:
             self.root = tk.Tk()
@@ -61,17 +60,13 @@ class MainWindow:
             # 検索入力
             self.search_var = tk.StringVar()
             search_entry = ttk.Entry(
-                search_frame,
-                textvariable=self.search_var,
-                width=50
+                search_frame, textvariable=self.search_var, width=50
             )
             search_entry.pack(side=tk.LEFT, padx=(0, 10))
 
             # 検索ボタン
             search_button = ttk.Button(
-                search_frame,
-                text="検索",
-                command=self._on_search
+                search_frame, text="検索", command=self._on_search
             )
             search_button.pack(side=tk.LEFT)
 
@@ -83,7 +78,7 @@ class MainWindow:
             self.result_tree = ttk.Treeview(
                 result_frame,
                 columns=("title", "url", "score"),
-                show="headings"
+                show="headings",
             )
             self.result_tree.heading("title", text="タイトル")
             self.result_tree.heading("url", text="URL")
@@ -119,17 +114,16 @@ class MainWindow:
             self.logger.error(error_msg)
             messagebox.showerror("エラー", "検索中にエラーが発生しました")
 
-    def display_results(
-        self,
-        results: List[Dict]
-    ) -> None:
+    def display_results(self, results: List[Dict]) -> None:
         """
         検索結果を表示する
 
         Args:
             results: 検索結果のリスト
         """
-        self.logger.info("検索結果の表示を開始", {"results_count": len(results)})
+        self.logger.info(
+            "検索結果の表示を開始", {"results_count": len(results)}
+        )
         try:
             # 既存の結果をクリア
             for item in self.result_tree.get_children():
@@ -143,8 +137,8 @@ class MainWindow:
                     values=(
                         result.get("title", "不明"),
                         result.get("url", "不明"),
-                        f"{result.get('score', 0):.3f}"
-                    )
+                        f"{result.get('score', 0):.3f}",
+                    ),
                 )
 
             self.logger.debug("検索結果の表示が完了")
@@ -155,8 +149,7 @@ class MainWindow:
             raise MainWindowError(error_msg)
 
     def set_search_callback(
-        self,
-        callback: Callable[[str], List[Dict]]
+        self, callback: Callable[[str], List[Dict]]
     ) -> None:
         """
         検索コールバックを設定する

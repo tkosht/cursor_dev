@@ -27,8 +27,12 @@ class TestSettings(TestCase):
         os.makedirs(self.config_dir, exist_ok=True)
 
         # 元のパスを保存
-        self._original_config_dir = Settings._instance.config_dir if Settings._instance else None
-        self._original_config_file = Settings._instance.config_file if Settings._instance else None
+        self._original_config_dir = (
+            Settings._instance.config_dir if Settings._instance else None
+        )
+        self._original_config_file = (
+            Settings._instance.config_file if Settings._instance else None
+        )
 
         # テスト用のパスを設定
         Settings._instance = None
@@ -61,7 +65,7 @@ class TestSettings(TestCase):
         settings = Settings()
         self.assertEqual(
             settings.get("search_engine.model_name"),
-            "intfloat/multilingual-e5-large"
+            "intfloat/multilingual-e5-large",
         )
         self.assertTrue(settings.get("search_engine.use_gpu"))
         self.assertEqual(settings.get("search_engine.top_k"), 5)
@@ -71,8 +75,7 @@ class TestSettings(TestCase):
         settings = Settings()
         self.assertIsNone(settings.get("nonexistent.key"))
         self.assertEqual(
-            settings.get("nonexistent.key", default="default"),
-            "default"
+            settings.get("nonexistent.key", default="default"), "default"
         )
 
     def test_set_and_get_setting(self):
@@ -109,7 +112,7 @@ class TestSettings(TestCase):
         self.assertIsNone(settings.get("test.key"))
         self.assertEqual(
             settings.get("search_engine.model_name"),
-            "intfloat/multilingual-e5-large"
+            "intfloat/multilingual-e5-large",
         )
 
     def test_reset_specific_setting(self):
@@ -146,4 +149,4 @@ class TestSettings(TestCase):
 
 
 if __name__ == "__main__":
-    main() 
+    main()

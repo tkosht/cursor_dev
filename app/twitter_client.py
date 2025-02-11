@@ -17,6 +17,7 @@ from bs4 import BeautifulSoup
 
 class TwitterClientError(Exception):
     """TwitterClient固有のエラー"""
+
     pass
 
 
@@ -24,14 +25,18 @@ class TwitterClient:
     """Twitter APIクライアントクラス（MVP版）"""
 
     # Twitterステータスの正規表現パターン
-    TWITTER_STATUS_PATTERN = r'^https://twitter\.com/\w+/status/\d+$'
-    
+    TWITTER_STATUS_PATTERN = r"^https://twitter\.com/\w+/status/\d+$"
+
     # API関連の定数
     API_BASE_URL = "https://api.twitter.com/2"
     MAX_RETRIES = 3
     RETRY_DELAY = 1  # seconds
 
-    def __init__(self, bookmarks_file: Optional[str] = None, api_token: Optional[str] = None):
+    def __init__(
+        self,
+        bookmarks_file: Optional[str] = None,
+        api_token: Optional[str] = None,
+    ):
         """
         TwitterClientの初期化
 
@@ -45,11 +50,15 @@ class TwitterClient:
             TwitterClientError: ブックマークファイルの初期化に失敗した場合
         """
         if bookmarks_file is None:
-            self.bookmarks_file = os.path.expanduser('~/workspace/data/bookmarks.json')
+            self.bookmarks_file = os.path.expanduser(
+                "~/workspace/data/bookmarks.json"
+            )
         else:
             self.bookmarks_file = bookmarks_file
 
-        self.api_token = api_token or os.getenv('TWITTER_API_TOKEN', 'test_token')
+        self.api_token = api_token or os.getenv(
+            "TWITTER_API_TOKEN", "test_token"
+        )
 
     def _load_bookmarks(self) -> List[Dict]:
         """保存されているブックマークを読み込む"""
@@ -57,13 +66,15 @@ class TwitterClient:
             # ファイルが存在しない場合は空のリストを返す
             if not os.path.exists(self.bookmarks_file):
                 return []
-                
-            with open(self.bookmarks_file, 'r', encoding='utf-8') as f:
+
+            with open(self.bookmarks_file, "r", encoding="utf-8") as f:
                 return json.load(f)
         except json.JSONDecodeError as e:
             raise TwitterClientError(f"ブックマークファイルの解析に失敗: {e}")
         except IOError as e:
-            raise TwitterClientError(f"ブックマークファイルの読み込みに失敗: {e}")
+            raise TwitterClientError(
+                f"ブックマークファイルの読み込みに失敗: {e}"
+            )
 
     def _save_bookmarks(self, bookmarks: List[Dict]) -> None:
         """ブックマークを保存する"""
@@ -74,9 +85,11 @@ class TwitterClient:
                 try:
                     os.makedirs(directory)
                 except OSError as e:
-                    raise TwitterClientError(f"保存先ディレクトリの作成に失敗: {e}")
+                    raise TwitterClientError(
+                        f"保存先ディレクトリの作成に失敗: {e}"
+                    )
 
-            with open(self.bookmarks_file, 'w', encoding='utf-8') as f:
+            with open(self.bookmarks_file, "w", encoding="utf-8") as f:
                 json.dump(bookmarks, f, ensure_ascii=False, indent=2)
         except IOError as e:
             raise TwitterClientError(f"ブックマークファイルの保存に失敗: {e}")
@@ -88,7 +101,9 @@ class TwitterClient:
         if not url:
             raise TwitterClientError("無効なURL: URLが空です")
         if not re.match(self.TWITTER_STATUS_PATTERN, url):
-            raise TwitterClientError("無効なURL: TwitterのステータスURLではありません")
+            raise TwitterClientError(
+                "無効なURL: TwitterのステータスURLではありません"
+            )
 
     def _validate_text(self, text: str) -> None:
         """テキストの内容を検証する"""
@@ -109,25 +124,25 @@ class TwitterClient:
             TwitterClientError: HTMLファイルの読み込みや解析に失敗した場合
         """
         try:
-            with open(html_file, 'r', encoding='utf-8') as f:
+            with open(html_file, "r", encoding="utf-8") as f:
                 content = f.read()
 
-            soup = BeautifulSoup(content, 'html.parser')
-            if not soup.find_all('a'):  # リンクが1つも見つからない場合
+            soup = BeautifulSoup(content, "html.parser")
+            if not soup.find_all("a"):  # リンクが1つも見つからない場合
                 raise TwitterClientError("有効なブックマークが見つかりません")
 
             bookmarks = []
-            for link in soup.find_all('a'):
-                url = link.get('href', '')
+            for link in soup.find_all("a"):
+                url = link.get("href", "")
                 self._validate_url(url)  # URLの検証
                 text = link.get_text()
                 self._validate_text(text)  # テキストの検証
-                
+
                 bookmark = {
-                    'id': url.split('/')[-1],
-                    'url': url,
-                    'text': text,
-                    'created_at': link.get('add_date', ''),
+                    "id": url.split("/")[-1],
+                    "url": url,
+                    "text": text,
+                    "created_at": link.get("add_date", ""),
                 }
                 bookmarks.append(bookmark)
 
@@ -172,8 +187,9 @@ class TwitterClient:
             bookmarks = self._load_bookmarks()
             since_timestamp = since.timestamp()
             return [
-                b for b in bookmarks
-                if float(b.get('created_at', 0)) >= since_timestamp
+                b
+                for b in bookmarks
+                if float(b.get("created_at", 0)) >= since_timestamp
             ]
         except Exception as e:
             raise TwitterClientError(f"ブックマーク更新の取得に失敗: {e}")
@@ -197,10 +213,10 @@ class TwitterClient:
             self._validate_text(text)  # テキストの検証
 
             bookmark = {
-                'id': url.split('/')[-1],
-                'url': url,
-                'text': text,
-                'created_at': str(datetime.now().timestamp()),
+                "id": url.split("/")[-1],
+                "url": url,
+                "text": text,
+                "created_at": str(datetime.now().timestamp()),
             }
 
             bookmarks = self._load_bookmarks()
@@ -227,13 +243,17 @@ class TwitterClient:
         for attempt in range(self.MAX_RETRIES):
             try:
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(endpoint, headers=headers) as response:
+                    async with session.get(
+                        endpoint, headers=headers
+                    ) as response:
                         if response.status == 200:
                             data = await response.json()
                             return data.get("data", [])
                         elif response.status == 429:  # レート制限
                             if attempt < self.MAX_RETRIES - 1:
-                                await asyncio.sleep(self.RETRY_DELAY * (attempt + 1))
+                                await asyncio.sleep(
+                                    self.RETRY_DELAY * (attempt + 1)
+                                )
                                 continue
                             else:
                                 error_data = await response.json()
@@ -251,4 +271,4 @@ class TwitterClient:
                     continue
                 raise TwitterClientError(f"API通信エラー: {e}")
 
-        raise TwitterClientError("リトライ回数超過") 
+        raise TwitterClientError("リトライ回数超過")

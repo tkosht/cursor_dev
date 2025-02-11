@@ -423,3 +423,190 @@ tests/
 ### 非同期処理
 - asyncio/awaitパターンの一貫した使用
 - 適切なタイムアウト処理 
+
+## パフォーマンステストパターン
+
+### 大規模データセットテスト
+1. データ生成パターン
+   ```python
+   @pytest.fixture(scope="session")
+   def large_dataset():
+       """大規模テストデータの生成"""
+       return [
+           {
+               "id": str(i),
+               "url": f"https://twitter.com/user{i}/status/{i}",
+               "text": f"テストツイート {i} " * 10,
+               "created_at": str(1234567890 + i),
+               "author": f"user{i}",
+           }
+           for i in range(100000)
+       ]
+   ```
+
+2. メモリ使用量測定
+   ```python
+   def test_memory_usage():
+       """メモリ使用量の測定"""
+       process = psutil.Process()
+       initial_memory = process.memory_info().rss
+       
+       # 処理実行
+       
+       final_memory = process.memory_info().rss
+       memory_increase = (final_memory - initial_memory) / (1024 * 1024)  # MB
+       assert memory_increase < MEMORY_LIMIT
+   ```
+
+3. 処理時間測定
+   ```python
+   def test_processing_time():
+       """処理時間の測定"""
+       start_time = time.time()
+       
+       # 処理実行
+       
+       end_time = time.time()
+       processing_time = end_time - start_time
+       assert processing_time < TIME_LIMIT
+   ```
+
+### 同時リクエストテスト
+1. 同時実行パターン
+   ```python
+   async def test_concurrent_requests():
+       """同時リクエストの処理"""
+       tasks = [
+           asyncio.create_task(process_request(i))
+           for i in range(CONCURRENT_COUNT)
+       ]
+       results = await asyncio.gather(*tasks)
+       assert len(results) == CONCURRENT_COUNT
+   ```
+
+2. リソース競合検証
+   ```python
+   async def test_resource_contention():
+       """リソース競合の検証"""
+       shared_resource = SharedResource()
+       tasks = [
+           asyncio.create_task(shared_resource.process())
+           for _ in range(CONCURRENT_COUNT)
+       ]
+       results = await asyncio.gather(*tasks)
+       assert all(result.is_valid for result in results)
+   ```
+
+### 長期安定性テスト
+1. メモリリーク検出
+   ```python
+   def test_memory_leak():
+       """メモリリーク検出"""
+       process = psutil.Process()
+       initial_memory = process.memory_info().rss
+       
+       for _ in range(ITERATION_COUNT):
+           # 処理実行とクリーンアップ
+           
+       final_memory = process.memory_info().rss
+       memory_increase = (final_memory - initial_memory) / (1024 * 1024)
+       assert memory_increase < LEAK_THRESHOLD
+   ```
+
+2. 継続的操作
+   ```python
+   async def test_continuous_operation():
+       """継続的な操作テスト"""
+       start_time = time.time()
+       error_count = 0
+       operation_count = 0
+       
+       while time.time() - start_time < DURATION:
+           try:
+               # 処理実行
+               operation_count += 1
+           except Exception:
+               error_count += 1
+           
+           await asyncio.sleep(INTERVAL)
+       
+       error_rate = error_count / operation_count
+       assert error_rate < ERROR_THRESHOLD
+   ```
+
+### テスト設定
+1. マーカー定義
+   ```python
+   def pytest_configure(config):
+       """テストマーカーの登録"""
+       config.addinivalue_line(
+           "markers",
+           "performance: パフォーマンステスト"
+       )
+       config.addinivalue_line(
+           "markers",
+           "stability: 安定性テスト"
+       )
+   ```
+
+2. 共通フィクスチャ
+   ```python
+   @pytest.fixture(scope="session")
+   def test_data():
+       """テストデータの準備"""
+       return generate_test_data()
+   
+   @pytest.fixture(autouse=True)
+   def cleanup():
+       """テスト後のクリーンアップ"""
+       yield
+       cleanup_resources()
+   ```
+
+## パフォーマンス監視パターン
+
+### メトリクス収集
+1. 時間計測
+   ```python
+   class Timer:
+       def __enter__(self):
+           self.start = time.time()
+           return self
+       
+       def __exit__(self, *args):
+           self.end = time.time()
+           self.duration = self.end - self.start
+   ```
+
+2. メモリ監視
+   ```python
+   class MemoryMonitor:
+       def __init__(self):
+           self.process = psutil.Process()
+       
+       def get_memory_usage(self):
+           return self.process.memory_info().rss
+       
+       def check_increase(self, initial, final):
+           return (final - initial) / (1024 * 1024)  # MB
+   ```
+
+### レポート生成
+1. テスト結果フォーマット
+   ```python
+   def format_test_result(name, duration, memory_usage):
+       return {
+           "test_name": name,
+           "duration": duration,
+           "memory_usage": memory_usage,
+           "timestamp": time.time()
+       }
+   ```
+
+2. 結果保存
+   ```python
+   def save_test_results(results):
+       with open("test_results.json", "a") as f:
+           json.dump(results, f)
+           f.write("\n")
+   ``` 

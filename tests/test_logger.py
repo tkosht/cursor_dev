@@ -28,7 +28,7 @@ def logger(temp_log_dir):
 def test_logger_initialization(temp_log_dir):
     """ロガーの初期化テスト"""
     logger = CustomLogger("test_init", str(temp_log_dir))
-    
+
     # ログディレクトリの作成を確認
     for level in ["debug", "info", "error"]:
         assert (temp_log_dir / level).exists()
@@ -37,7 +37,9 @@ def test_logger_initialization(temp_log_dir):
     # ロガーの設定を確認
     assert logger.logger.name == "test_init"
     assert logger.logger.level == logging.DEBUG
-    assert len(logger.logger.handlers) == 4  # 3つのファイルハンドラ + 1つのコンソールハンドラ
+    assert (
+        len(logger.logger.handlers) == 4
+    )  # 3つのファイルハンドラ + 1つのコンソールハンドラ
 
 
 def test_log_file_creation(logger, temp_log_dir):
@@ -57,7 +59,7 @@ def test_log_content(logger, temp_log_dir):
     """ログ内容のテスト"""
     test_message = "テストメッセージ"
     test_details = {"key": "value"}
-    
+
     # 各レベルでログを出力
     logger.debug(test_message, test_details)
     logger.info(test_message, test_details)
@@ -80,10 +82,7 @@ def test_log_rotation(temp_log_dir):
     """ログローテーションのテスト"""
     # 小さいサイズでログローテーションを設定
     logger = CustomLogger(
-        "test_rotation",
-        str(temp_log_dir),
-        max_bytes=100,
-        backup_count=2
+        "test_rotation", str(temp_log_dir), max_bytes=100, backup_count=2
     )
 
     # ログローテーションが発生するまでログを出力
@@ -92,7 +91,7 @@ def test_log_rotation(temp_log_dir):
 
     debug_dir = temp_log_dir / "debug"
     log_files = list(debug_dir.glob("test_rotation.log*"))
-    
+
     # メインのログファイルと2つのバックアップファイルが存在することを確認
     assert len(log_files) == 3
     assert (debug_dir / "test_rotation.log").exists()
@@ -105,7 +104,7 @@ def test_log_levels(logger):
     assert LogLevel.DEBUG == 10
     assert LogLevel.INFO == 20
     assert LogLevel.WARNING == 30
-    assert LogLevel.ERROR == 40 
+    assert LogLevel.ERROR == 40
 
 
 def test_json_formatter():
@@ -118,7 +117,7 @@ def test_json_formatter():
         lineno=1,
         msg="テストメッセージ",
         args=(),
-        exc_info=None
+        exc_info=None,
     )
 
     # 基本的なフォーマット
@@ -140,13 +139,13 @@ def test_json_formatter():
         "nested": {"key": "value"},
         "list": [1, 2, 3],
         "unicode": "日本語",
-        "special": "\n\t\r"
+        "special": "\n\t\r",
     }
     record.msg = "詳細付きメッセージ"
     setattr(record, "details", complex_details)
     formatted = formatter.format(record)
     log_data = json.loads(formatted)
-    assert log_data["details"] == complex_details 
+    assert log_data["details"] == complex_details
 
 
 def test_log_level_filtering(logger, temp_log_dir):
@@ -185,4 +184,4 @@ def test_log_level_filtering(logger, temp_log_dir):
         assert debug_msg not in error_messages
         assert info_msg not in error_messages
         assert warning_msg not in error_messages
-        assert error_msg in error_messages 
+        assert error_msg in error_messages

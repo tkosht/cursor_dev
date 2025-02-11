@@ -14,10 +14,11 @@ from typing import Any, Dict, Optional
 
 class LogLevel:
     """ログレベルの定義"""
-    ERROR = 40    # エラーイベント（アプリケーション停止の可能性）
+
+    ERROR = 40  # エラーイベント（アプリケーション停止の可能性）
     WARNING = 30  # 警告イベント（問題の可能性）
-    INFO = 20     # 一般的な情報イベント
-    DEBUG = 10    # デバッグ用の詳細情報
+    INFO = 20  # 一般的な情報イベント
+    DEBUG = 10  # デバッグ用の詳細情報
 
 
 class JsonFormatter(logging.Formatter):
@@ -31,7 +32,7 @@ class JsonFormatter(logging.Formatter):
             "module": record.module,
             "function": record.funcName,
             "message": record.getMessage(),
-            "details": getattr(record, "details", {})
+            "details": getattr(record, "details", {}),
         }
         return json.dumps(log_data, ensure_ascii=False)
 
@@ -44,7 +45,7 @@ class CustomLogger:
         name: str,
         log_dir: str = "logs",
         max_bytes: int = 10_485_760,  # 10MB
-        backup_count: int = 5
+        backup_count: int = 5,
     ):
         """
         カスタムロガーの初期化
@@ -57,12 +58,12 @@ class CustomLogger:
         """
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.DEBUG)
-        
+
         # ログディレクトリの作成
         self.log_dir = Path(log_dir)
         for level in ["debug", "info", "error"]:
             (self.log_dir / level).mkdir(parents=True, exist_ok=True)
-        
+
         # 各レベルのハンドラを設定
         self._setup_handlers(max_bytes, backup_count)
 
@@ -75,7 +76,7 @@ class CustomLogger:
             self.log_dir / "debug" / f"{self.logger.name}.log",
             maxBytes=max_bytes,
             backupCount=backup_count,
-            encoding="utf-8"
+            encoding="utf-8",
         )
         debug_handler.setLevel(logging.DEBUG)
         debug_handler.setFormatter(formatter)
@@ -86,7 +87,7 @@ class CustomLogger:
             self.log_dir / "info" / f"{self.logger.name}.log",
             maxBytes=max_bytes,
             backupCount=backup_count,
-            encoding="utf-8"
+            encoding="utf-8",
         )
         info_handler.setLevel(logging.INFO)
         info_handler.setFormatter(formatter)
@@ -97,7 +98,7 @@ class CustomLogger:
             self.log_dir / "error" / f"{self.logger.name}.log",
             maxBytes=max_bytes,
             backupCount=backup_count,
-            encoding="utf-8"
+            encoding="utf-8",
         )
         error_handler.setLevel(logging.ERROR)
         error_handler.setFormatter(formatter)
@@ -113,7 +114,7 @@ class CustomLogger:
         self,
         level: int,
         message: str,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ) -> None:
         """ログ出力の共通処理"""
         if details is None:
@@ -121,18 +122,26 @@ class CustomLogger:
         extra = {"details": details}
         self.logger.log(level, message, extra=extra)
 
-    def debug(self, message: str, details: Optional[Dict[str, Any]] = None) -> None:
+    def debug(
+        self, message: str, details: Optional[Dict[str, Any]] = None
+    ) -> None:
         """デバッグログの出力"""
         self._log(LogLevel.DEBUG, message, details)
 
-    def info(self, message: str, details: Optional[Dict[str, Any]] = None) -> None:
+    def info(
+        self, message: str, details: Optional[Dict[str, Any]] = None
+    ) -> None:
         """情報ログの出力"""
         self._log(LogLevel.INFO, message, details)
 
-    def warning(self, message: str, details: Optional[Dict[str, Any]] = None) -> None:
+    def warning(
+        self, message: str, details: Optional[Dict[str, Any]] = None
+    ) -> None:
         """警告ログの出力"""
         self._log(LogLevel.WARNING, message, details)
 
-    def error(self, message: str, details: Optional[Dict[str, Any]] = None) -> None:
+    def error(
+        self, message: str, details: Optional[Dict[str, Any]] = None
+    ) -> None:
         """エラーログの出力"""
-        self._log(LogLevel.ERROR, message, details) 
+        self._log(LogLevel.ERROR, message, details)
