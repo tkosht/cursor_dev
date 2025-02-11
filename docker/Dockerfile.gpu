@@ -57,6 +57,7 @@ RUN useradd -s /bin/bash --uid $user_id \
     --gid $group_id -m $user_name
 ARG home_dir=/home/$user_name
 COPY rc $home_dir
+COPY . $home_dir
 
 RUN echo $user_name:$user_name | chpasswd
 RUN echo $user_name ALL=\(root\) NOPASSWD:ALL \
@@ -68,6 +69,9 @@ USER $user_name
 
 # Poetry
 RUN curl -sSL https://install.python-poetry.org | python3 -
+
+WORKDIR /$home_dir
+RUN sh bin/poetry_install.sh
 
 # Switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=dialog
