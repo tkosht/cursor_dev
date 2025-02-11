@@ -20,7 +20,11 @@ globs: *.py
 
 - Type Hint は必ず使用する
     - typing ライブラリ・モジュールの利用は、必要最小限とする
-- flake8 のLintエラーを全消去する
+- フォーマッターは、black を使う
+    - 実行コマンド: `black .`
+- リンターチェックは、flake8 を使う
+    - 実行コマンド: `flake8  --exclude .venv`
+    - flake8 のLintエラーを全消去する
 - 変数名は snake_case を使用する
 - クラス名は PascalCase を使用する
 - 定数は UPPER_SNAKE_CASE を使用する

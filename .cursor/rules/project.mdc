@@ -21,6 +21,11 @@ globs: *
 - Git操作はコンテナ内で実施
 - 環境変数は.devcontainer経由で管理
 
+## 開発ルール
+
+以下の内容に従う
+[development.mdc](mdc:.cursor/rules/development.mdc)
+
 ## 開発言語固有のルール
 
 以下の内容に従う

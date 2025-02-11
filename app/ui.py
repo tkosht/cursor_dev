@@ -15,6 +15,7 @@ from .twitter_client import TwitterClient, TwitterClientError
 
 class UIError(Exception):
     """UI固有のエラー"""
+
     pass
 
 
@@ -30,7 +31,7 @@ class UI:
         self,
         twitter_client: TwitterClient,
         search_engine: SearchEngine,
-        llm_processor: LLMProcessor
+        llm_processor: LLMProcessor,
     ):
         """
         UIの初期化
@@ -57,7 +58,9 @@ class UI:
         if not query or query.isspace():
             raise UIError("クエリが空です")
         if len(query) > self.MAX_QUERY_LENGTH:
-            raise UIError(f"クエリが長すぎます（最大{self.MAX_QUERY_LENGTH}文字）")
+            raise UIError(
+                f"クエリが長すぎます（最大{self.MAX_QUERY_LENGTH}文字）"
+            )
 
     def _validate_top_k(self, top_k: int) -> None:
         """
@@ -85,7 +88,9 @@ class UI:
             UIError: モデルタイプが無効な場合
         """
         if model_type not in self.llm_processor.SUPPORTED_MODELS:
-            raise UIError(f"サポートされていないモデルタイプです: {model_type}")
+            raise UIError(
+                f"サポートされていないモデルタイプです: {model_type}"
+            )
 
     def _format_tweet(self, tweet: Dict) -> str:
         """ツイートを表示用にフォーマット"""
@@ -107,7 +112,15 @@ class UI:
     def _format_error(self, error: Exception) -> str:
         """エラーメッセージをフォーマット"""
         error_type = type(error).__name__
-        if isinstance(error, (TwitterClientError, SearchEngineError, LLMProcessorError, UIError)):
+        if isinstance(
+            error,
+            (
+                TwitterClientError,
+                SearchEngineError,
+                LLMProcessorError,
+                UIError,
+            ),
+        ):
             return f"""
             <div class="error-message">
                 <h4>エラーが発生しました</h4>
@@ -129,10 +142,7 @@ class UI:
         """
 
     async def search_and_respond(
-        self,
-        query: str,
-        top_k: int = 5,
-        model_type: str = "gemini"
+        self, query: str, top_k: int = 5, model_type: str = "gemini"
     ) -> Tuple[str, str]:
         """
         検索と回答生成を実行
@@ -153,13 +163,17 @@ class UI:
 
             # 検索実行
             results = self.search_engine.search(query, top_k=top_k)
-            
+
             # LLMで回答生成
-            response = await self.llm_processor.generate_response(query, results)
-            
+            response = await self.llm_processor.generate_response(
+                query, results
+            )
+
             # 検索結果をHTML形式に整形
-            results_html = "".join(self._format_tweet(tweet) for tweet in results)
-            
+            results_html = "".join(
+                self._format_tweet(tweet) for tweet in results
+            )
+
             return response, results_html
 
         except Exception as e:
@@ -232,7 +246,7 @@ class UI:
                     margin: 8px 0;
                     background: white;
                 }
-            """
+            """,
         ) as interface:
             gr.Markdown("# X Bookmark RAG")
             gr.Markdown("Xのブックマークを検索し、AIが回答を生成します。")
@@ -244,19 +258,19 @@ class UI:
                         placeholder="検索したい内容を入力してください...",
                         lines=3,
                         max_lines=10,
-                        info=f"最大{UI.MAX_QUERY_LENGTH}文字"
+                        info=f"最大{UI.MAX_QUERY_LENGTH}文字",
                     )
                     top_k = gr.Slider(
                         minimum=UI.MIN_TOP_K,
                         maximum=UI.MAX_TOP_K,
                         value=5,
                         step=1,
-                        label="取得する結果の数"
+                        label="取得する結果の数",
                     )
                     model_type = gr.Dropdown(
                         choices=list(LLMProcessor.SUPPORTED_MODELS.keys()),
                         value="gemini",
-                        label="使用するLLM"
+                        label="使用するLLM",
                     )
                     search_button = gr.Button("検索", variant="primary")
 
@@ -264,7 +278,7 @@ class UI:
                     with gr.Group(elem_classes=["result-group"]):
                         gr.Markdown("### AI回答")
                         response = gr.Markdown()
-                    
+
                     with gr.Group(elem_classes=["result-group"]):
                         gr.Markdown("### 検索結果")
                         results = gr.HTML()
@@ -274,7 +288,7 @@ class UI:
                 inputs=[query, top_k, model_type],
                 outputs=[response, results],
                 api_name="search",
-                show_progress="full"
+                show_progress="full",
             )
 
         return interface
@@ -287,4 +301,4 @@ class UI:
             **kwargs: Gradio launchメソッドに渡す引数
         """
         interface = self.create_interface()
-        interface.launch(**kwargs) 
+        interface.launch(**kwargs)

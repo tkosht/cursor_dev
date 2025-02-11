@@ -14,6 +14,7 @@ from ..logger import CustomLogger
 
 class SettingsError(Exception):
     """Settings固有のエラー"""
+
     pass
 
 
@@ -34,7 +35,9 @@ class Settings:
             cls._config_dir = config_dir
         elif config_dir is not None and cls._config_dir != config_dir:
             cls._config_dir = config_dir
-            cls._initialized = False  # 設定ディレクトリが変更された場合は再初期化
+            cls._initialized = (
+                False  # 設定ディレクトリが変更された場合は再初期化
+            )
         return cls._instance
 
     def __init__(self, config_dir: Optional[Path] = None):
@@ -57,24 +60,28 @@ class Settings:
                 "search_engine": {
                     "model_name": "intfloat/multilingual-e5-large",
                     "use_gpu": True,
-                    "top_k": 5
+                    "top_k": 5,
                 },
                 "logging": {
                     "max_bytes": 10 * 1024 * 1024,  # 10MB
                     "backup_count": 5,
                     "debug_dir": "logs/debug",
                     "info_dir": "logs/info",
-                    "error_dir": "logs/error"
+                    "error_dir": "logs/error",
                 },
                 "ui": {
                     "title": "ブックマーク検索",
                     "geometry": "800x600",
-                    "theme": "default"
-                }
+                    "theme": "default",
+                },
             }
 
             # 設定ファイルのパス
-            self.config_dir = Settings._config_dir if Settings._config_dir is not None else Path.home() / ".bookmarksearch"
+            self.config_dir = (
+                Settings._config_dir
+                if Settings._config_dir is not None
+                else Path.home() / ".bookmarksearch"
+            )
             self.config_file = self.config_dir / "config.json"
 
             # 設定の読み込み
@@ -84,7 +91,9 @@ class Settings:
             self.logger.info("設定管理の初期化が完了")
 
         except Exception as e:
-            Settings._initialized = False  # 初期化に失敗した場合はフラグをリセット
+            Settings._initialized = (
+                False  # 初期化に失敗した場合はフラグをリセット
+            )
             error_msg = f"設定管理の初期化に失敗: {e}"
             self.logger.error(error_msg)
             raise SettingsError(error_msg)
@@ -104,7 +113,9 @@ class Settings:
                         user_settings = json.loads(content)
                         self.logger.info("既存の設定ファイルを読み込み")
                         # デフォルト設定とユーザー設定をマージ
-                        self._settings = self._merge_settings(self._defaults, user_settings)
+                        self._settings = self._merge_settings(
+                            self._defaults, user_settings
+                        )
                     except json.JSONDecodeError as e:
                         error_msg = f"設定ファイルの形式が不正: {e}"
                         self.logger.error(error_msg)
@@ -126,17 +137,21 @@ class Settings:
         try:
             # 設定ディレクトリが存在しない場合は作成
             os.makedirs(self.config_dir, exist_ok=True)
-            
+
             with open(self.config_file, "w", encoding="utf-8") as f:
                 json.dump(self._settings, f, indent=4, ensure_ascii=False)
-            self.logger.info("設定ファイルを保存", {"file": str(self.config_file)})
+            self.logger.info(
+                "設定ファイルを保存", {"file": str(self.config_file)}
+            )
 
         except Exception as e:
             error_msg = f"設定ファイルの保存に失敗: {e}"
             self.logger.error(error_msg)
             raise SettingsError(error_msg)
 
-    def _merge_settings(self, base: Dict[str, Any], update: Dict[str, Any]) -> Dict[str, Any]:
+    def _merge_settings(
+        self, base: Dict[str, Any], update: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         設定をマージする
         base: ベースとなる設定
@@ -144,7 +159,11 @@ class Settings:
         """
         result = base.copy()
         for key, value in update.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
                 result[key] = self._merge_settings(result[key], value)
             else:
                 result[key] = value
@@ -196,9 +215,9 @@ class Settings:
             default_value = self._defaults
             for k in keys:
                 default_value = default_value[k]
-            
+
             current = self._settings
             for k in keys[:-1]:
                 current = current[k]
             current[keys[-1]] = default_value
-        self._save_settings() 
+        self._save_settings()

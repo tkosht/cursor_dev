@@ -17,6 +17,7 @@ from openai import OpenAI
 
 class LLMProcessorError(Exception):
     """LLMProcessor固有のエラー"""
+
     pass
 
 
@@ -27,21 +28,23 @@ class LLMProcessor:
         "gemini": "gemini-pro",
         "gpt": "gpt-4-turbo-preview",
         "claude": "claude-3-sonnet-20240229",
-        "ollama": "mistral"
+        "ollama": "mistral",
     }
 
     # モデルごとのトークン制限
     MAX_TOKENS = {
         "gemini": 30720,  # Gemini Pro
-        "gpt": 128000,    # GPT-4 Turbo
+        "gpt": 128000,  # GPT-4 Turbo
         "claude": 200000,  # Claude 3 Sonnet
-        "ollama": 8192    # Mistral
+        "ollama": 8192,  # Mistral
     }
 
     # トークンあたりの平均文字数（日本語）
     CHARS_PER_TOKEN = 2
 
-    def __init__(self, model_type: str = "gemini", api_key: Optional[str] = None):
+    def __init__(
+        self, model_type: str = "gemini", api_key: Optional[str] = None
+    ):
         """
         LLMProcessorの初期化
 
@@ -53,7 +56,9 @@ class LLMProcessor:
             LLMProcessorError: サポートされていないモデルタイプが指定された場合
         """
         if model_type not in self.SUPPORTED_MODELS:
-            raise LLMProcessorError(f"サポートされていないモデルタイプです: {model_type}")
+            raise LLMProcessorError(
+                f"サポートされていないモデルタイプです: {model_type}"
+            )
 
         self.model_type = model_type
         self.api_key = api_key
@@ -71,13 +76,15 @@ class LLMProcessor:
                 "gemini": self._setup_gemini,
                 "gpt": self._setup_gpt,
                 "claude": self._setup_claude,
-                "ollama": self._setup_ollama
+                "ollama": self._setup_ollama,
             }
-            
+
             setup_method = setup_methods.get(self.model_type)
             if not setup_method:
-                raise LLMProcessorError(f"サポートされていないモデルタイプです: {self.model_type}")
-            
+                raise LLMProcessorError(
+                    f"サポートされていないモデルタイプです: {self.model_type}"
+                )
+
             setup_method()
         except ValueError as e:
             raise LLMProcessorError(str(e))
@@ -98,7 +105,9 @@ class LLMProcessor:
         """Geminiモデルのセットアップ"""
         if self.api_key:
             genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel(self.SUPPORTED_MODELS[self.model_type])
+        self.model = genai.GenerativeModel(
+            self.SUPPORTED_MODELS[self.model_type]
+        )
 
     def _setup_gpt(self) -> None:
         """GPTモデルのセットアップ"""
@@ -123,7 +132,7 @@ class LLMProcessor:
             self.client.messages.create(
                 model=self.SUPPORTED_MODELS[self.model_type],
                 max_tokens=1,
-                content="test"
+                content="test",
             )
         except AnthropicAPIError as e:
             if "invalid_api_key" in str(e):
@@ -144,10 +153,12 @@ class LLMProcessor:
         Returns:
             str: フォーマットされたコンテキスト
         """
-        return "\n\n".join([
-            f"Tweet: {bookmark['text']}\nURL: {bookmark.get('url', 'N/A')}"
-            for bookmark in context
-        ])
+        return "\n\n".join(
+            [
+                f"Tweet: {bookmark['text']}\nURL: {bookmark.get('url', 'N/A')}"
+                for bookmark in context
+            ]
+        )
 
     def _create_prompt(self, query: str, context: List[Dict]) -> str:
         """
@@ -198,9 +209,12 @@ class LLMProcessor:
         response = await self.client.chat.completions.create(
             model=self.SUPPORTED_MODELS[self.model_type],
             messages=[
-                {"role": "system", "content": "ブックマークされたツイートの情報を元に、ユーザーの質問に答えてください。"},
-                {"role": "user", "content": prompt}
-            ]
+                {
+                    "role": "system",
+                    "content": "ブックマークされたツイートの情報を元に、ユーザーの質問に答えてください。",
+                },
+                {"role": "user", "content": prompt},
+            ],
         )
         return response.choices[0].message.content
 
@@ -209,9 +223,7 @@ class LLMProcessor:
         response = await self.client.messages.create(
             model=self.SUPPORTED_MODELS[self.model_type],
             max_tokens=1000,
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
+            messages=[{"role": "user", "content": prompt}],
         )
         return response.content[0].text
 
@@ -220,11 +232,14 @@ class LLMProcessor:
         response = await self.client.chat(
             model=self.SUPPORTED_MODELS[self.model_type],
             messages=[
-                {"role": "system", "content": "ブックマークされたツイートの情報を元に、ユーザーの質問に答えてください。"},
-                {"role": "user", "content": prompt}
-            ]
+                {
+                    "role": "system",
+                    "content": "ブックマークされたツイートの情報を元に、ユーザーの質問に答えてください。",
+                },
+                {"role": "user", "content": prompt},
+            ],
         )
-        return response['message']['content']
+        return response["message"]["content"]
 
     async def _generate_model_response(self, prompt: str) -> str:
         """
@@ -243,20 +258,19 @@ class LLMProcessor:
             "gemini": self._generate_gemini_response,
             "gpt": self._generate_gpt_response,
             "claude": self._generate_claude_response,
-            "ollama": self._generate_ollama_response
+            "ollama": self._generate_ollama_response,
         }
 
         generator = model_generators.get(self.model_type)
         if not generator:
-            raise LLMProcessorError(f"サポートされていないモデルタイプです: {self.model_type}")
+            raise LLMProcessorError(
+                f"サポートされていないモデルタイプです: {self.model_type}"
+            )
 
         return await generator(prompt)
 
     async def generate_response(
-        self,
-        query: str,
-        context: List[Dict],
-        timeout: int = 30
+        self, query: str, context: List[Dict], timeout: int = 30
     ) -> str:
         """
         クエリと文脈から回答を生成する
@@ -278,17 +292,22 @@ class LLMProcessor:
         try:
             prompt = self._create_prompt(query, context)
             return await asyncio.wait_for(
-                self._generate_model_response(prompt),
-                timeout=timeout
+                self._generate_model_response(prompt), timeout=timeout
             )
 
         except asyncio.TimeoutError:
-            raise LLMProcessorError(f"回答生成がタイムアウトしました（制限時間: {timeout}秒）")
+            raise LLMProcessorError(
+                f"回答生成がタイムアウトしました（制限時間: {timeout}秒）"
+            )
         except (OpenAIAPIError, AnthropicAPIError) as e:
             if "rate limit" in str(e).lower():
-                raise LLMProcessorError("APIのレート制限に達しました。しばらく待ってから再試行してください。")
+                raise LLMProcessorError(
+                    "APIのレート制限に達しました。しばらく待ってから再試行してください。"
+                )
             elif "invalid api key" in str(e).lower():
-                raise LLMProcessorError("APIキーが無効です。設定を確認してください。")
+                raise LLMProcessorError(
+                    "APIキーが無効です。設定を確認してください。"
+                )
             raise LLMProcessorError(f"API呼び出しに失敗しました: {e}")
         except Exception as e:
-            raise LLMProcessorError(f"回答生成に失敗しました: {e}") 
+            raise LLMProcessorError(f"回答生成に失敗しました: {e}")

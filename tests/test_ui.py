@@ -28,7 +28,7 @@ def test_format_tweet(ui):
         "author": "test_user",
         "created_at": "2024-03-21",
         "text": "test tweet",
-        "url": "https://twitter.com/test"
+        "url": "https://twitter.com/test",
     }
     formatted = ui._format_tweet(tweet)
     assert "test_user" in formatted
@@ -62,7 +62,7 @@ async def test_search_and_respond_success(ui):
             "author": "test_user",
             "created_at": "2024-03-21",
             "text": "test tweet",
-            "url": "https://twitter.com/test"
+            "url": "https://twitter.com/test",
         }
     ]
     ui.llm_processor.generate_response.return_value = "test response"
@@ -101,10 +101,12 @@ async def test_search_and_respond_llm_error(ui):
             "author": "test_user",
             "created_at": "2024-03-21",
             "text": "test tweet",
-            "url": "https://twitter.com/test"
+            "url": "https://twitter.com/test",
         }
     ]
-    ui.llm_processor.generate_response.side_effect = LLMProcessorError("llm error")
+    ui.llm_processor.generate_response.side_effect = LLMProcessorError(
+        "llm error"
+    )
 
     # テスト実行
     response, results = await ui.search_and_respond("test query")
@@ -123,7 +125,9 @@ def test_create_interface(ui):
     # 検証
     assert isinstance(interface, gr.Blocks)
     # インターフェースの構造を検証
-    assert interface.title == "X Bookmark RAG"  # タイトルが設定されていることを確認
+    assert (
+        interface.title == "X Bookmark RAG"
+    )  # タイトルが設定されていることを確認
     assert interface.css is not None  # CSSが設定されていることを確認
     assert len(interface.blocks) > 0  # コンポーネントが存在することを確認
     assert len(interface.fns) > 0  # イベントハンドラが設定されていることを確認
@@ -161,7 +165,9 @@ async def test_input_validation(ui):
     assert "結果数は1以上を指定してください" in results
 
     # 無効なモデルタイプ
-    response, results = await ui.search_and_respond("test", model_type="invalid")
+    response, results = await ui.search_and_respond(
+        "test", model_type="invalid"
+    )
     assert response == ""
     assert "エラーが発生しました" in results
     assert "サポートされていないモデルタイプです" in results
@@ -203,7 +209,7 @@ async def test_component_state_changes(ui):
     assert isinstance(interface, gr.Blocks)
 
     # 検索中の状態変更をシミュレート
-    with patch('gradio.Button.update') as mock_update:
+    with patch("gradio.Button.update") as mock_update:
         # 検索開始時
         await ui.search_and_respond("test")
         mock_update.assert_called_with(interactive=False)
@@ -215,7 +221,7 @@ async def test_component_state_changes(ui):
 
     # エラー時の状態をシミュレート
     ui.search_engine.search.side_effect = SearchEngineError("error")
-    with patch('gradio.Markdown.update') as mock_update:
+    with patch("gradio.Markdown.update") as mock_update:
         await ui.search_and_respond("test")
         mock_update.assert_called()
 
@@ -227,35 +233,37 @@ def test_error_display_style(ui):
     error_html = ui._format_error(error)
 
     # HTMLの解析
-    soup = BeautifulSoup(error_html, 'html.parser')
-    error_div = soup.find('div', class_='error-message')
-    
+    soup = BeautifulSoup(error_html, "html.parser")
+    error_div = soup.find("div", class_="error-message")
+
     # スタイルの検証
     assert error_div is not None
-    assert 'error-message' in error_div['class']
-    assert error_div.find('h4') is not None
-    assert error_div.find('p') is not None
-    assert error_div.find('ul') is not None
+    assert "error-message" in error_div["class"]
+    assert error_div.find("h4") is not None
+    assert error_div.find("p") is not None
+    assert error_div.find("ul") is not None
 
     # エラータイプに応じたスタイルの違いを検証
     system_error = ValueError("system error")
     system_error_html = ui._format_error(system_error)
-    soup = BeautifulSoup(system_error_html, 'html.parser')
-    assert 'システムエラー' in soup.find('h4').text
+    soup = BeautifulSoup(system_error_html, "html.parser")
+    assert "システムエラー" in soup.find("h4").text
 
 
 @pytest.mark.asyncio
 async def test_async_cancellation(ui):
     """非同期処理のキャンセルテスト"""
+
     # 長時間実行される処理をシミュレート
     async def slow_search(*args, **kwargs):
         await asyncio.sleep(10)
         return []
+
     ui.search_engine.search = slow_search
 
     # タスクの作成
     task = asyncio.create_task(ui.search_and_respond("test"))
-    
+
     # 少し待ってからキャンセル
     await asyncio.sleep(0.1)
     task.cancel()
@@ -267,4 +275,4 @@ async def test_async_cancellation(ui):
         # キャンセルが正しく処理されることを確認
         pass
     else:
-        pytest.fail("タスクがキャンセルされませんでした") 
+        pytest.fail("タスクがキャンセルされませんでした")

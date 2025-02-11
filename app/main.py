@@ -22,7 +22,7 @@ def main():
         api_key=os.getenv("TWITTER_API_KEY"),
         api_secret=os.getenv("TWITTER_API_SECRET"),
         access_token=os.getenv("TWITTER_ACCESS_TOKEN"),
-        access_token_secret=os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
+        access_token_secret=os.getenv("TWITTER_ACCESS_TOKEN_SECRET"),
     )
 
     # 検索エンジンの初期化
@@ -31,7 +31,7 @@ def main():
     # LLMプロセッサの初期化
     llm_processor = LLMProcessor(
         model_type=os.getenv("LLM_MODEL_TYPE", "gemini"),
-        api_key=os.getenv("LLM_API_KEY")
+        api_key=os.getenv("LLM_API_KEY"),
     )
 
     # UIの初期化と起動
@@ -40,4 +40,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()
