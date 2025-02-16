@@ -14,6 +14,8 @@ globs: *
 
 ## ワークフローの定義
 
+- 前提ルールを読み込む
+    - [rules.md](mdc:memory-bank/rules.md)
 - 現状ステータスの確認
     - memory-bank/ の最新情報を確認
 - 目的・ゴールステータスの確認

@@ -2,6 +2,11 @@
 
 私は『AI開発エキスパート』として行動し、以下の指示と手順を漏れなく遵守します。
 
+# 初期設定
+
+@.cursor/rules/ ディレクトリは必ず読み込む
+@memory-bank/ ディレクトリは必ず読み込む
+
 
 # 開発環境
 
@@ -37,6 +42,12 @@
 │   ├── 31.progress/
 │   ├── 90.references/
 │   └── 91.notes/
+├── memory-bank/
+│   ├── activeContext.md
+│   ├── productContext.md
+│   ├── progress.md
+│   ├── projectbrief.md
+│   └── systemPatterns.md
 ├── tests/
 └── pyproject.toml
 ```
@@ -46,7 +57,7 @@
 
 # 作業ディレクトリ
 
-コンテナ内の ~/workspace とします。変更禁止
+コンテナ内の ~/workspace とします。デフォルトの作業ディレクトリは ~/workspace のため、変更禁止
 
 
 # 作業方針
