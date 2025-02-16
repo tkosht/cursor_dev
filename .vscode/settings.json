@@ -1,0 +1,20 @@
+{
+    "files.exclude": {
+        "frontend/**": true,
+        "**/mlruns/**": true,
+        "**/__pycache__/**": true,
+        "**/[b]k/**": true,
+    },
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/result/*/**": true,
+        "**/mlruns/*/**": true,
+        "**/.*/*/**": true
+    },
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}

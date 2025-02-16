@@ -1,0 +1,8 @@
+{
+	"name": "Cursor Development Project",
+	"dockerComposeFile": [
+		"../compose.yml"
+	],
+	"service": "app",
+	"workspaceFolder": "/home/devuser/workspace"
+}
