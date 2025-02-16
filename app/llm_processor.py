@@ -147,8 +147,8 @@ class LLMProcessor:
         """文脈を文字列にフォーマットする"""
         return "\n\n".join(
             [
-                f"Tweet: {bookmark_tuple[0]['text']}\nURL: {bookmark_tuple[0].get('url', 'N/A')}"
-                for bookmark_tuple in context
+                f"Tweet: {bookmark.get('text', 'N/A')}\nURL: {bookmark.get('url', 'N/A')}"
+                for bookmark in context if isinstance(bookmark, dict)
             ]
         )
 
@@ -300,6 +300,8 @@ class LLMProcessor:
                 raise LLMProcessorError(
                     "APIキーが無効です。設定を確認してください。"
                 )
+            self.logger.error(f"API呼び出しに失敗しました: {e}", details={"error": str(e)})
             raise LLMProcessorError(f"API呼び出しに失敗しました: {e}")
         except Exception as e:
+            self.logger.error(f"回答生成に失敗しました: {e}", details={"error": str(e)}, exc_info=True)
             raise LLMProcessorError(f"回答生成に失敗しました: {e}")

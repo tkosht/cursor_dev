@@ -106,7 +106,7 @@ class CustomLogger:
 
         # コンソール出力
         console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.INFO)
+        console_handler.setLevel(logging.DEBUG)
         console_handler.setFormatter(formatter)
         self.logger.addHandler(console_handler)
 

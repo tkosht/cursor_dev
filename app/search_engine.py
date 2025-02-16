@@ -4,6 +4,7 @@
 ブックマークの検索機能を提供するモジュール
 """
 
+import gc  # ガベージコレクションを手動で実行するため
 import os
 import threading
 from typing import Dict, List, Tuple
@@ -126,6 +127,34 @@ class SearchEngine:
             self.logger.error(error_msg)
             raise SearchEngineError(error_msg)
 
+    def __del__(self):
+        """デストラクタでリソースを解放する"""
+        self.logger.info("SearchEngineのデストラクタが呼ばれました")
+        try:
+            if self.use_gpu:
+                with self._gpu_lock:
+                    if hasattr(self, "index") and self.index:
+                        self.logger.debug("GPUインデックスをCPUに移動")
+                        self.index = faiss.index_gpu_to_cpu(self.index)
+                    if hasattr(self, "res") and self.res:
+                        del self.res
+            if hasattr(self, "model") and self.model:
+                if hasattr(self.model, "to"):  # toメソッドの存在確認
+                    self.model = self.model.to("cpu")
+                del self.model
+            if hasattr(self, "index") and self.index:
+                del self.index
+
+            # 明示的にガベージコレクションを実行
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                self.logger.debug("GPUキャッシュをクリア")
+
+            self.logger.info("SearchEngineのリソース解放が完了")
+        except Exception as e:
+            self.logger.error(f"SearchEngineのデストラクタでエラー発生: {e}")
+
     def _save_index(self) -> None:
         """インデックスを保存する"""
         self.logger.debug("インデックスの保存を開始")
@@ -173,7 +202,7 @@ class SearchEngine:
             )
             embeddings = self.model.encode(texts)
             self.logger.debug("インデックスへの追加を開始")
-            self.index.add(np.array(embeddings).astype("float32"))
+            self.index.add(embeddings.astype("float32"))
             self.bookmarks.extend(bookmarks)
             self._save_index()
             self.logger.info(
@@ -212,7 +241,7 @@ class SearchEngine:
 
             with self._gpu_lock:
                 distances, indices = self.index.search(
-                    np.array(query_embedding).astype("float32"),
+                    query_embedding.astype("float32"),
                     min(top_k, len(self.bookmarks)),
                 )
             self.logger.debug("検索が完了", {"results_count": len(indices[0])})
@@ -247,9 +276,30 @@ class SearchEngine:
         """インデックスをクリアする"""
         self.logger.info("インデックスのクリアを開始")
         try:
+            # 既存のインデックスとブックマークを解放
+            if self.use_gpu:
+                with self._gpu_lock:
+                    if hasattr(self, "index") and self.index:
+                        self.logger.debug("GPUインデックスをCPUに移動")
+                        cpu_index = faiss.index_gpu_to_cpu(self.index)
+                        del self.index
+                        self.index = cpu_index
+
+            # 新しいインデックスを作成
             self.index = faiss.IndexFlatL2(self.dimension)
+            if self.use_gpu:
+                with self._gpu_lock:
+                    self.index = faiss.index_cpu_to_gpu(self.res, 0, self.index)
+
+            # ブックマークをクリア
             self.bookmarks = []
             self._save_index()
+
+            # 明示的にガベージコレクションを実行
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
             self.logger.info("インデックスのクリアが完了")
         except Exception as e:
             error_msg = f"インデックスのクリアに失敗: {e}"
