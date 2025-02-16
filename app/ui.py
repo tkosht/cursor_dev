@@ -142,7 +142,7 @@ class UI:
         """
 
     async def search_and_respond(
-        self, query: str, top_k: int = 5, model_type: str = "gemini"
+        self, query: str, top_k: float = 5, model_type: str = "gemini"
     ) -> Tuple[str, str]:
         """
         検索と回答生成を実行
@@ -162,7 +162,7 @@ class UI:
             self._validate_model_type(model_type)
 
             # 検索実行
-            results = self.search_engine.search(query, top_k=top_k)
+            results = self.search_engine.search(query, top_k=int(top_k))
 
             # LLMで回答生成
             response = await self.llm_processor.generate_response(
@@ -177,6 +177,7 @@ class UI:
             return response, results_html
 
         except Exception as e:
+            self.llm_processor.logger.error(f"UIでエラーが発生しました: {e}", details={"error": str(e)}, exc_info=True)
             error_html = self._format_error(e)
             return "", error_html
 
@@ -282,6 +283,53 @@ class UI:
                     with gr.Group(elem_classes=["result-group"]):
                         gr.Markdown("### 検索結果")
                         results = gr.HTML()
+
+            with gr.Accordion("フィードバック", open=False):
+                rating_response = gr.Slider(
+                    minimum=1,
+                    maximum=5,
+                    value=5,
+                    step=1,
+                    label="回答の品質（5段階評価）",
+                )
+                rating_results = gr.Slider(
+                    minimum=1,
+                    maximum=5,
+                    value=5,
+                    step=1,
+                    label="検索結果の適切さ（5段階評価）",
+                )
+                comment = gr.Textbox(
+                    label="コメント",
+                    placeholder="ご意見・ご感想をお聞かせください...",
+                    lines=3,
+                    max_lines=10,
+                )
+                feedback_button = gr.Button("フィードバックを送信", variant="secondary")
+
+            def save_feedback(query: str, rating_response: float, rating_results: float, comment: str):
+                """フィードバックを保存する"""
+                import datetime
+                import json
+                import os
+                feedback_data = {
+                    "timestamp": datetime.datetime.now().isoformat(),
+                    "query": query,
+                    "rating_response": rating_response,
+                    "rating_results": rating_results,
+                    "comment": comment,
+                }
+                filepath = os.path.expanduser("~/workspace/data/feedback.jsonl")
+                os.makedirs(os.path.dirname(filepath), exist_ok=True)
+                with open(filepath, "a", encoding="utf-8") as f:
+                    f.write(json.dumps(feedback_data, ensure_ascii=False) + "\n")
+                return "フィードバックを送信しました。ご協力ありがとうございます！"
+
+            feedback_button.click(
+                fn=save_feedback,
+                inputs=[query, rating_response, rating_results, comment],
+                outputs=[gr.Markdown("フィードバックを送信しました。ご協力ありがとうございます！")],
+            )
 
             search_button.click(
                 fn=self.search_and_respond,

@@ -4,8 +4,13 @@
 
 # 初期設定
 
-@.cursor/rules/ ディレクトリは必ず読み込む
-@memory-bank/ ディレクトリは必ず読み込む
+- 以下をドキュメントを読み込む
+  - @.cursor/rules/*.md
+  - @requirements.md
+  - @basic_design.md
+  - @detail_design.md
+  - @memory-bank/rules.md
+  - @memory-bank/*.md
 
 
 # 開発環境

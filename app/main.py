@@ -19,10 +19,7 @@ def main():
 
     # Twitterクライアントの初期化
     twitter_client = TwitterClient(
-        api_key=os.getenv("TWITTER_API_KEY"),
-        api_secret=os.getenv("TWITTER_API_SECRET"),
-        access_token=os.getenv("TWITTER_ACCESS_TOKEN"),
-        access_token_secret=os.getenv("TWITTER_ACCESS_TOKEN_SECRET"),
+        api_token=os.getenv("TWITTER_API_TOKEN"),
     )
 
     # 検索エンジンの初期化
@@ -36,7 +33,7 @@ def main():
 
     # UIの初期化と起動
     ui = UI(twitter_client, search_engine, llm_processor)
-    ui.launch(server_name="0.0.0.0", server_port=7860)
+    ui.launch(server_name="0.0.0.0", share=True)
 
 
 if __name__ == "__main__":

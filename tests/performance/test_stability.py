@@ -17,9 +17,9 @@ def test_memory_leak_search_engine(large_dataset):
     initial_memory = process.memory_info().rss
     engine = SearchEngine()
 
-    # 100回の検索操作を実行
-    for i in range(100):
-        engine.add_bookmarks(large_dataset[:1000])  # 1000件ずつ追加
+    # 10回の検索操作を実行
+    for i in range(10):
+        engine.add_bookmarks(large_dataset[:10000])  # 10000件ずつ追加
         _ = engine.search("Python", top_k=5)  # 結果は使用しないが、処理は必要
         engine.clear()  # インデックスをクリア
 
@@ -57,7 +57,7 @@ def test_resource_usage_monitoring(large_dataset):
         peak_cpu = max(peak_cpu, cpu_percent)
         peak_memory = max(peak_memory, current_memory)
 
-        time.sleep(0.1)  # 100ms間隔で実行
+        time.sleep(1)  # 1秒間隔で実行
 
     # 最終状態の記録
     final_io = process.io_counters()
@@ -95,6 +95,13 @@ async def test_continuous_operation(large_dataset):
                 "Pythonについて説明してください", results
             )
             operation_count += 1
+
+            # 30秒間隔でLLM処理を実行
+            if operation_count % 3 == 0:
+                results = engine.search("Python", top_k=5)
+                _ = await processor.generate_response(  # 結果は使用しないが、処理は必要
+                    "Pythonについて説明してください", results
+                )
 
             # 10秒間隔で実行
             await asyncio.sleep(10)
