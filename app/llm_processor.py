@@ -144,19 +144,11 @@ class LLMProcessor:
         self.client = ollama
 
     def _format_context(self, context: List[Dict]) -> str:
-        """
-        コンテキストをプロンプト用にフォーマット
-
-        Args:
-            context: 関連するブックマークのリスト
-
-        Returns:
-            str: フォーマットされたコンテキスト
-        """
+        """文脈を文字列にフォーマットする"""
         return "\n\n".join(
             [
-                f"Tweet: {bookmark['text']}\nURL: {bookmark.get('url', 'N/A')}"
-                for bookmark in context
+                f"Tweet: {bookmark_tuple[0]['text']}\nURL: {bookmark_tuple[0].get('url', 'N/A')}"
+                for bookmark_tuple in context
             ]
         )
 

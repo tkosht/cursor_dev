@@ -3,6 +3,7 @@ name = "x-bookmark-rag"
 version = "0.1.0"
 description = "X（旧Twitter）のブックマークをリアルタイムで検索し、RAGを実現するPythonツール"
 authors = ["AI Developer <dev@example.com>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -16,6 +17,7 @@ anthropic = "^0.8.1"
 ollama = "^0.1.6"
 beautifulsoup4 = "^4.12.3"
 numpy = "<2.0.0"
+matplotlib = "^3.10.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
@@ -25,6 +27,7 @@ black = "*"
 flake8 = "*"
 isort = "*"
 pytest-asyncio = "^0.25.3"
+psutil = "^6.1.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

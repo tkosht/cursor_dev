@@ -5,6 +5,7 @@
 """
 
 import os
+import threading
 from typing import Dict, List, Tuple
 
 import faiss
@@ -24,6 +25,9 @@ class SearchEngineError(Exception):
 class SearchEngine:
     """検索エンジンクラス"""
 
+    # GPUリソースのロック
+    _gpu_lock = threading.Lock()
+
     def __init__(
         self,
         model_name: str = "intfloat/multilingual-e5-large",
@@ -38,6 +42,9 @@ class SearchEngine:
             index_dir: インデックスファイルを保存するディレクトリ
                       （デフォルト: ~/workspace/data/search_index）
             use_gpu: GPUを使用するかどうか（デフォルト: True）
+
+        Raises:
+            SearchEngineError: モデルのロードに失敗した場合
         """
         self.logger = CustomLogger(__name__)
         self.logger.info(
@@ -50,7 +57,12 @@ class SearchEngine:
         )
 
         try:
-            self.model = SentenceTransformer(model_name)
+            try:
+                self.model = SentenceTransformer(model_name)
+            except Exception as e:
+                self.logger.error(f"SearchEngineの初期化に失敗: {e}")
+                raise SearchEngineError(f"SearchEngineの初期化に失敗: {e}") from e
+
             if torch.cuda.is_available() and use_gpu:
                 self.model = self.model.to("cuda")
                 self.logger.info("モデルをGPUに移動")
@@ -82,9 +94,10 @@ class SearchEngine:
 
             # GPUが利用可能な場合、インデックスをGPUに移動
             if self.use_gpu:
-                self.logger.info("インデックスをGPUに移動")
-                res = faiss.StandardGpuResources()
-                self.index = faiss.index_cpu_to_gpu(res, 0, self.index)
+                with self._gpu_lock:
+                    self.logger.info("インデックスをGPUに移動")
+                    self.res = faiss.StandardGpuResources()
+                    self.index = faiss.index_cpu_to_gpu(self.res, 0, self.index)
 
             if os.path.exists(self.bookmarks_file):
                 self.logger.info(
@@ -197,10 +210,11 @@ class SearchEngine:
             query_embedding = self.model.encode([f"query: {query}"])
             self.logger.debug("クエリの埋め込みベクトルを生成")
 
-            distances, indices = self.index.search(
-                np.array(query_embedding).astype("float32"),
-                min(top_k, len(self.bookmarks)),
-            )
+            with self._gpu_lock:
+                distances, indices = self.index.search(
+                    np.array(query_embedding).astype("float32"),
+                    min(top_k, len(self.bookmarks)),
+                )
             self.logger.debug("検索が完了", {"results_count": len(indices[0])})
 
             results = []
