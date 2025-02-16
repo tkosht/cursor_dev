@@ -3,12 +3,13 @@
 import os
 import shutil
 import tempfile
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-import gradio as gr
 import pytest
 
+from app.llm_processor import LLMProcessor
 from app.search_engine import SearchEngine, SearchEngineError
+from app.twitter_client import TwitterClient
 from app.ui import UI
 
 
@@ -62,9 +63,59 @@ def search_engine(index_dir):
 
 
 @pytest.fixture
-def ui(search_engine):
+def twitter_client():
+    """TwitterClientのモックインスタンス"""
+    return Mock(spec=TwitterClient)
+
+
+@pytest.fixture
+def llm_processor():
+    """LLMProcessorのモックインスタンス"""
+    mock_processor = Mock(spec=LLMProcessor)
+    mock_processor.SUPPORTED_MODELS = {
+        "gemini": "gemini-pro",
+        "gpt": "gpt-4-turbo-preview",
+        "claude": "claude-3-sonnet-20240229",
+        "ollama": "mistral",
+    }
+    mock_processor.generate_response = AsyncMock()
+    return mock_processor
+
+
+@pytest.fixture
+def mock_gradio_components():
+    """Gradioコンポーネントのモック"""
+    with patch("gradio.Blocks") as mock_blocks, \
+         patch("gradio.Textbox") as mock_textbox, \
+         patch("gradio.Slider") as mock_slider, \
+         patch("gradio.Dropdown") as mock_dropdown, \
+         patch("gradio.Button") as mock_button, \
+         patch("gradio.Markdown") as mock_markdown, \
+         patch("gradio.HTML") as mock_html:
+        
+        mock_blocks.return_value.__enter__.return_value = mock_blocks
+        mock_blocks.return_value.__exit__.return_value = None
+        mock_blocks.blocks = {}
+
+        yield {
+            "blocks": mock_blocks,
+            "textbox": mock_textbox,
+            "slider": mock_slider,
+            "dropdown": mock_dropdown,
+            "button": mock_button,
+            "markdown": mock_markdown,
+            "html": mock_html,
+        }
+
+
+@pytest.fixture
+def ui(search_engine, twitter_client, llm_processor, mock_gradio_components):
     """UIインスタンス"""
-    return UI(search_engine=search_engine)
+    return UI(
+        twitter_client=twitter_client,
+        search_engine=search_engine,
+        llm_processor=llm_processor
+    )
 
 
 @pytest.mark.asyncio
@@ -73,21 +124,18 @@ async def test_basic_integration_flow(ui, search_engine, sample_bookmarks):
     # SearchEngineにブックマークを追加
     search_engine.add_bookmarks(sample_bookmarks)
 
-    # 検索と回答生成
-    with patch.object(
-        ui.llm_processor,
-        "generate_response",
-        new_callable=AsyncMock,
-        return_value="Pythonはプログラミング言語です。",
-    ):
-        response, results = await ui.search_and_respond("Python")
+    # LLMの応答をモック
+    ui.llm_processor.generate_response.return_value = "Pythonはプログラミング言語です。"
 
-        # 検証
-        assert isinstance(response, str)
-        assert "Python" in response
-        assert isinstance(results, str)
-        assert "user1" in results
-        assert "Pythonプログラミング" in results
+    # 検索と回答生成
+    response, results = await ui.search_and_respond("Python")
+
+    # 検証
+    assert isinstance(response, str)
+    assert "Python" in response
+    assert isinstance(results, str)
+    assert "user1" in results
+    assert "Pythonプログラミング" in results
 
 
 @pytest.mark.asyncio
@@ -142,56 +190,56 @@ async def test_invalid_model_type(ui):
 
 
 @pytest.mark.asyncio
-async def test_interface_creation(ui):
+async def test_interface_creation(ui, mock_gradio_components):
     """インターフェース作成の確認"""
     interface = ui.create_interface()
 
     # インターフェースの構造を検証
-    assert isinstance(interface, gr.Blocks)
+    assert isinstance(interface, mock_gradio_components["blocks"].__class__)
     assert interface.title == "X Bookmark RAG"
     assert interface.css is not None
 
     # コンポーネントの存在を確認
-    component_types = [type(comp) for comp in interface.blocks.values()]
-    assert gr.Textbox in component_types  # 検索入力欄
-    assert gr.Slider in component_types  # 結果数選択
-    assert gr.Dropdown in component_types  # モデル選択
-    assert gr.Button in component_types  # 検索ボタン
-    assert gr.Markdown in component_types  # 回答表示
-    assert gr.HTML in component_types  # 結果表示
+    assert mock_gradio_components["textbox"].called  # 検索入力欄
+    assert mock_gradio_components["slider"].called  # 結果数選択
+    assert mock_gradio_components["dropdown"].called  # モデル選択
+    assert mock_gradio_components["button"].called  # 検索ボタン
+    assert mock_gradio_components["markdown"].called  # 回答表示
+    assert mock_gradio_components["html"].called  # 結果表示
 
 
 @pytest.mark.asyncio
-async def test_component_state_changes(ui, search_engine, sample_bookmarks):
+async def test_component_state_changes(ui, search_engine, sample_bookmarks, mock_gradio_components):
     """コンポーネントの状態変更の確認"""
     search_engine.add_bookmarks(sample_bookmarks)
 
-    # 検索ボタンの状態変更をシミュレート
-    with patch("gradio.Button.update") as mock_update:
-        # 検索開始時
-        with patch.object(
-            ui.llm_processor,
-            "generate_response",
-            new_callable=AsyncMock,
-            return_value="テスト回答",
-        ):
-            await ui.search_and_respond("Python")
-            mock_update.assert_called_with(interactive=False)
+    # LLMの応答をモック
+    ui.llm_processor.generate_response.return_value = "テスト回答"
 
-            # 検索完了時
-            mock_update.reset_mock()
-            await ui.search_and_respond("Python")
-            mock_update.assert_called_with(interactive=True)
+    # 検索ボタンの状態変更をシミュレート
+    mock_button = mock_gradio_components["button"].return_value
+    mock_button.update = Mock()
+
+    # 検索開始時
+    await ui.search_and_respond("Python")
+    mock_button.update.assert_called_with(interactive=False)
+
+    # 検索完了時
+    mock_button.update.reset_mock()
+    await ui.search_and_respond("Python")
+    mock_button.update.assert_called_with(interactive=True)
 
 
 @pytest.mark.asyncio
-async def test_error_display(ui):
+async def test_error_display(ui, mock_gradio_components):
     """エラー表示の確認"""
     # エラーメッセージの表示をシミュレート
-    with patch("gradio.Markdown.update") as mock_update:
-        response, results = await ui.search_and_respond("")
-        mock_update.assert_called()
-        assert "エラーが発生しました" in results
+    mock_markdown = mock_gradio_components["markdown"].return_value
+    mock_markdown.update = Mock()
+
+    response, results = await ui.search_and_respond("")
+    mock_markdown.update.assert_called()
+    assert "エラーが発生しました" in results
 
 
 @pytest.mark.asyncio
@@ -201,19 +249,12 @@ async def test_concurrent_searches(ui, search_engine, sample_bookmarks):
 
     search_engine.add_bookmarks(sample_bookmarks)
 
-    # 複数の並行検索をシミュレート
-    async def make_search(query: str):
-        with patch.object(
-            ui.llm_processor,
-            "generate_response",
-            new_callable=AsyncMock,
-            return_value=f"回答: {query}",
-        ):
-            return await ui.search_and_respond(query)
+    # LLMの応答をモック
+    ui.llm_processor.generate_response.side_effect = lambda query, *args: f"回答: {query}"
 
     # 5つの並行検索を実行
     queries = ["Python", "機械学習", "データ分析", "プログラミング", "AI"]
-    tasks = [make_search(query) for query in queries]
+    tasks = [ui.search_and_respond(query) for query in queries]
     results = await asyncio.gather(*tasks)
 
     # 結果を検証
@@ -246,13 +287,8 @@ async def test_memory_usage(ui, search_engine):
 
     # 検索と回答生成
     search_engine.add_bookmarks(large_bookmarks)
-    with patch.object(
-        ui.llm_processor,
-        "generate_response",
-        new_callable=AsyncMock,
-        return_value="テスト回答",
-    ):
-        await ui.search_and_respond("テスト")
+    ui.llm_processor.generate_response.return_value = "テスト回答"
+    await ui.search_and_respond("テスト")
 
     final_memory = process.memory_info().rss
     memory_increase = (final_memory - initial_memory) / (1024 * 1024)  # MB単位
@@ -265,20 +301,17 @@ async def test_response_format(ui, search_engine, sample_bookmarks):
     """レスポンス形式の確認"""
     search_engine.add_bookmarks(sample_bookmarks)
 
-    with patch.object(
-        ui.llm_processor,
-        "generate_response",
-        new_callable=AsyncMock,
-        return_value="テスト回答",
-    ):
-        response, results = await ui.search_and_respond("Python")
+    # LLMの応答をモック
+    ui.llm_processor.generate_response.return_value = "テスト回答"
 
-        # 回答形式の検証
-        assert isinstance(response, str)
-        assert response == "テスト回答"
+    response, results = await ui.search_and_respond("Python")
 
-        # 結果表示形式の検証
-        assert isinstance(results, str)
-        assert "user1" in results
-        assert "Python" in results
-        assert "https://twitter.com" in results
+    # 回答形式の検証
+    assert isinstance(response, str)
+    assert response == "テスト回答"
+
+    # 結果表示形式の検証
+    assert isinstance(results, str)
+    assert "user1" in results
+    assert "Python" in results
+    assert "https://twitter.com" in results

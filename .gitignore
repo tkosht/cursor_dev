@@ -17,11 +17,9 @@ bkup/
 .chroma/
 .*.swp
 ?.sh
-.env
+.env*
 
 # Ignore other dot files/directories
-.*
-.*/
 
 *logs/
 

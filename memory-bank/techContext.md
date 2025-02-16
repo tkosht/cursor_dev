@@ -3,7 +3,7 @@
 ## 開発環境
 - Python 3.10～3.12
 - VSCode Dev Container
-- poetry による依存関係管理
+- poetry による依存関係管理（pipは使用禁止）
 - GitHub Actions による CI/CD
 
 ## 主要ライブラリ
@@ -134,18 +134,19 @@
    - IPフィルタリング
    - ユーザー認証
 
-## 依存関係
-1. 必須パッケージ
+## 依存関係（poetry管理）
+1. 必須パッケージ（poetry add）
    - google-cloud-aiplatform
    - faiss-cpu
    - gradio
    - python-dotenv
 
-2. 開発用パッケージ
+2. 開発用パッケージ（poetry add --group dev）
    - flake8
    - black
    - isort
    - pytest
+   - psutil
 
 3. CI/CD
    - GitHub Actions

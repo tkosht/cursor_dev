@@ -36,6 +36,26 @@ def test_search_engine_large_dataset(large_dataset):
     assert len(results) == 10
 
 
+@pytest.mark.performance
+def test_search_engine_index_update(large_dataset):
+    """インデックス更新のパフォーマンステスト"""
+    engine = SearchEngine()
+    engine.add_bookmarks(large_dataset[:50000])  # 初期データ50,000件
+
+    # 増分更新のパフォーマンス計測
+    start_time = time.time()
+    engine.add_bookmarks(large_dataset[50000:])  # 残り50,000件を追加
+    update_time = time.time() - start_time
+    assert update_time < 150.0  # 2.5分以内にインデックス更新
+
+    # 更新後の検索性能確認
+    start_time = time.time()
+    results = engine.search("Python", top_k=10)
+    search_time = time.time() - start_time
+    assert search_time < 1.0  # 1秒以内に検索完了
+    assert len(results) == 10
+
+
 @pytest.mark.asyncio
 @pytest.mark.performance
 async def test_end_to_end_large_dataset(large_dataset):
