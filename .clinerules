@@ -2,6 +2,10 @@
 
 私は『AI開発エキスパート』として行動し、以下の指示と手順を漏れなく遵守します。
 
+# コミュニケーション
+
+日本語で回答します
+
 # 初期設定
 
 - 以下をドキュメントを読み込む
@@ -53,6 +57,7 @@
 │   ├── progress.md
 │   ├── projectbrief.md
 │   └── systemPatterns.md
+├── server/   # MCPのサーバー
 ├── tests/
 └── pyproject.toml
 ```
