@@ -22,6 +22,8 @@
             "ms-python.flake8",
             "ms-python.isort",
             "ms-toolsai.jupyter",
+            "saoudrizwan.claude-dev",
+            "rooveterinaryinc.roo-cline",
             "oderwat.indent-rainbow",
             "donjayamanne.githistory",
             "hediet.vscode-drawio",

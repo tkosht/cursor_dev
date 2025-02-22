@@ -79,7 +79,7 @@ clean-poetry:
 	rm -rf .venv poetry.lock
 
 clean-logs:
-	rm -rf log/*.log
+	rm -rf logs/*.log
 
 clean-container:
 	docker compose down --rmi all
