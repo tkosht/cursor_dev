@@ -56,6 +56,7 @@ load:
 # docker compose aliases
 up:
 	docker compose up -d
+	docker compose exec app sudo service docker start
 
 active:
 	docker compose up

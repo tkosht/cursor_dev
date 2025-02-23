@@ -23,6 +23,17 @@ RUN apt-get install -y --fix-missing --no-install-recommends \
 RUN ln -s /usr/bin/python3.10 /usr/bin/python \
     && ln -s /usr/bin/pdb3 /usr/bin/pdb
 
+
+# DinD
+# # c.f https://hub.docker.com/r/billyteves/ubuntu-dind/dockerfile
+# # Install Docker and wrapdocker
+RUN curl -sSL https://get.docker.com/ | sh
+RUN curl -sSL https://raw.githubusercontent.com/billyteves/ubuntu-dind/master/wrapdocker -o /usr/local/bin/wrapdocker
+RUN chmod +x /usr/local/bin/wrapdocker
+VOLUME /var/lib/docker
+ENTRYPOINT ["/usr/local/bin/wrapdocker"]
+
+
 ENV LANG="ja_JP.UTF-8" \
     LANGUAGE="ja_JP:ja" \
     LC_ALL="ja_JP.UTF-8" \
@@ -55,6 +66,7 @@ ARG group_name
 RUN groupadd --gid $group_id $group_name
 RUN useradd -s /bin/bash --uid $user_id \
     --gid $group_id -m $user_name
+RUN usermod $user_name -G docker,sudo,$group_name
 ARG home_dir=/home/$user_name
 COPY rc $home_dir
 
