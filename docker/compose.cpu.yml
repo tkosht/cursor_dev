@@ -8,6 +8,7 @@ services:
         group_name: $group_name
     image: $pj_name.app
     container_name: $pj_name.app
+    privileged: true
     tty: true
     volumes:
       - .:/home/$user_name/workspace
@@ -17,5 +18,5 @@ services:
     #   - net.core.somaxconn=$somaxconn
     #   - net.ipv4.tcp_syncookies=0
     # ports:
-    #   - "8502:8501"   # streamlit
+    #   - "8502:8501    # streamlit
 
