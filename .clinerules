@@ -57,7 +57,7 @@
 │   ├── progress.md
 │   ├── projectbrief.md
 │   └── systemPatterns.md
-├── server/   # MCPのサーバー
+├── server/   # MCPのサーバーインストールはこのディレクトリ配下 で行う
 ├── tests/
 └── pyproject.toml
 ```
