@@ -131,25 +131,61 @@ class SearchEngine:
         """デストラクタでリソースを解放する"""
         self.logger.info("SearchEngineのデストラクタが呼ばれました")
         try:
+            # bookmarks属性の解放を追加
+            if hasattr(self, "bookmarks") and self.bookmarks:
+                self.logger.debug("bookmarksを解放")
+                self.bookmarks.clear()
+                del self.bookmarks
+
             if self.use_gpu:
                 with self._gpu_lock:
                     if hasattr(self, "index") and self.index:
                         self.logger.debug("GPUインデックスをCPUに移動")
-                        self.index = faiss.index_gpu_to_cpu(self.index)
+                        try:
+                            self.index = faiss.index_gpu_to_cpu(self.index)
+                        except Exception as e:
+                            self.logger.error(f"GPUインデックスのCPU移動に失敗: {e}")
+                    
+                    # GPUリソースの解放を確実に
                     if hasattr(self, "res") and self.res:
-                        del self.res
+                        self.logger.debug("GPUリソースを解放")
+                        try:
+                            del self.res
+                            self.res = None
+                        except Exception as e:
+                            self.logger.error(f"GPUリソース解放に失敗: {e}")
+
+            # モデルの解放
             if hasattr(self, "model") and self.model:
+                self.logger.debug("モデルを解放")
                 if hasattr(self.model, "to"):  # toメソッドの存在確認
-                    self.model = self.model.to("cpu")
-                del self.model
+                    try:
+                        self.model = self.model.to("cpu")
+                    except Exception as e:
+                        self.logger.error(f"モデルのCPU移動に失敗: {e}")
+                try:
+                    del self.model
+                    self.model = None
+                except Exception as e:
+                    self.logger.error(f"モデル解放に失敗: {e}")
+
+            # インデックスの解放
             if hasattr(self, "index") and self.index:
-                del self.index
+                self.logger.debug("インデックスを解放")
+                try:
+                    del self.index
+                    self.index = None
+                except Exception as e:
+                    self.logger.error(f"インデックス解放に失敗: {e}")
 
             # 明示的にガベージコレクションを実行
             gc.collect()
             if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-                self.logger.debug("GPUキャッシュをクリア")
+                try:
+                    torch.cuda.empty_cache()
+                    self.logger.debug("GPUキャッシュをクリア")
+                except Exception as e:
+                    self.logger.error(f"GPUキャッシュクリアに失敗: {e}")
 
             self.logger.info("SearchEngineのリソース解放が完了")
         except Exception as e:
@@ -200,11 +236,44 @@ class SearchEngine:
             self.logger.debug(
                 "埋め込みベクトルの生成を開始", {"texts_count": len(texts)}
             )
-            embeddings = self.model.encode(texts)
-            self.logger.debug("インデックスへの追加を開始")
-            self.index.add(embeddings.astype("float32"))
-            self.bookmarks.extend(bookmarks)
+            
+            # バッチサイズを設定して大量データの処理を最適化
+            batch_size = 1000
+            total_batches = (len(texts) + batch_size - 1) // batch_size
+            
+            for i in range(total_batches):
+                start_idx = i * batch_size
+                end_idx = min((i + 1) * batch_size, len(texts))
+                batch_texts = texts[start_idx:end_idx]
+                
+                # バッチ処理で埋め込みベクトルを生成
+                batch_embeddings = self.model.encode(batch_texts)
+                self.logger.debug(f"バッチ {i+1}/{total_batches} の埋め込みベクトル生成完了")
+                
+                # インデックスに追加
+                self.logger.debug(f"バッチ {i+1}/{total_batches} のインデックスへの追加を開始")
+                self.index.add(batch_embeddings.astype("float32"))
+                
+                # バッチ処理したブックマークを追加
+                self.bookmarks.extend(bookmarks[start_idx:end_idx])
+                
+                # 明示的にメモリを解放
+                del batch_embeddings
+                del batch_texts
+                if i % 2 == 1:  # 2バッチごとにガベージコレクション実行
+                    gc.collect()
+                    if torch.cuda.is_available() and self.use_gpu:
+                        torch.cuda.empty_cache()
+            
+            # 処理完了後に保存
             self._save_index()
+            
+            # 最終的なメモリ解放
+            del texts
+            gc.collect()
+            if torch.cuda.is_available() and self.use_gpu:
+                torch.cuda.empty_cache()
+                
             self.logger.info(
                 "ブックマークの追加が完了",
                 {
@@ -281,24 +350,53 @@ class SearchEngine:
                 with self._gpu_lock:
                     if hasattr(self, "index") and self.index:
                         self.logger.debug("GPUインデックスをCPUに移動")
-                        cpu_index = faiss.index_gpu_to_cpu(self.index)
-                        del self.index
-                        self.index = cpu_index
+                        try:
+                            cpu_index = faiss.index_gpu_to_cpu(self.index)
+                            del self.index
+                            self.index = cpu_index
+                        except Exception as e:
+                            self.logger.error(f"GPUインデックスのCPU移動に失敗: {e}")
+                            # エラーが発生した場合でも処理を続行
+                            del self.index
+                            self.index = faiss.IndexFlatL2(self.dimension)
+
+            else:
+                # CPU版の場合は単純に削除
+                if hasattr(self, "index") and self.index:
+                    del self.index
 
             # 新しいインデックスを作成
             self.index = faiss.IndexFlatL2(self.dimension)
+            
+            # GPUに移動
             if self.use_gpu:
                 with self._gpu_lock:
-                    self.index = faiss.index_cpu_to_gpu(self.res, 0, self.index)
+                    try:
+                        self.index = faiss.index_cpu_to_gpu(self.res, 0, self.index)
+                    except Exception as e:
+                        self.logger.error(f"インデックスのGPU移動に失敗: {e}")
+                        # GPUリソースを再作成
+                        if hasattr(self, "res"):
+                            del self.res
+                        self.res = faiss.StandardGpuResources()
+                        self.index = faiss.index_cpu_to_gpu(self.res, 0, self.index)
 
             # ブックマークをクリア
-            self.bookmarks = []
+            if hasattr(self, "bookmarks") and self.bookmarks:
+                self.bookmarks.clear()  # リストをクリア
+            else:
+                self.bookmarks = []
+                
             self._save_index()
 
             # 明示的にガベージコレクションを実行
             gc.collect()
             if torch.cuda.is_available():
-                torch.cuda.empty_cache()
+                try:
+                    torch.cuda.empty_cache()
+                    self.logger.debug("GPUキャッシュをクリア")
+                except Exception as e:
+                    self.logger.error(f"GPUキャッシュクリアに失敗: {e}")
 
             self.logger.info("インデックスのクリアが完了")
         except Exception as e:
