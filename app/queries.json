@@ -1,0 +1,28 @@
+{
+    "queries": [
+        {
+            "name": "tech_news",
+            "description": "テクノロジー業界のニュース要約",
+            "query": "今日のテクノロジー業界における重要なニュースを3つ、簡潔にまとめてください。",
+            "channel": "tech-news"
+        },
+        {
+            "name": "ai_trends",
+            "description": "AI業界の最新トレンド",
+            "query": "AIの最新トレンドについて、主要な3つのポイントを説明してください。",
+            "channel": "ai-updates"
+        },
+        {
+            "name": "programming_trends",
+            "description": "プログラミング言語の動向",
+            "query": "今週のプログラミング言語の人気動向を分析してください。",
+            "channel": "dev-trends"
+        },
+        {
+            "name": "test_query",
+            "description": "テストクエリ",
+            "query": "テストクエリの内容",
+            "channel": "test-channel"
+        }
+    ]
+} 

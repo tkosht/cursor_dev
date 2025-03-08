@@ -1,6 +1,7 @@
 ---
 description: ワークフローの定義
 globs: *
+alwaysApply: true
 ---
 
 # ワークフロー
@@ -10,12 +11,12 @@ globs: *
 以下の内容に従う
 
 - [project.mdc](mdc:.cursor/rules/project.mdc)
-- [python-development.mdc](mdc:.cursor/rules/python-development.mdc)
+- [python.mdc](mdc:.cursor/rules/python.mdc)
 
 ## ワークフローの定義
 
 - 前提ルールを読み込む
-    - [rules.md](mdc:memory-bank/rules.md)
+    - [rules.mdc](mdc:.cursor/rules/rules.mdc)
 - ドキュメントを読み込む (無ければスキップ)
     - [requirements.md](mdc:docs/01.requirements/requirements.md)
     - [basic_design.md](mdc:docs/02.basic_design/basic_design.md)

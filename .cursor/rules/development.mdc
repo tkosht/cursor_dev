@@ -1,6 +1,7 @@
 ---
-description: 開発ルールw
+description: 開発ルール
 globs: *
+alwaysApply: true
 ---
 
 # 開発ルール
