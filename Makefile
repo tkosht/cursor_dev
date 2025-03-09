@@ -86,3 +86,5 @@ clean-container:
 	docker compose down --rmi all
 	rm -rf app/__pycache__
 
+clean-repository: clean-poetry clean-logs
+	rm -rf app/* tests/* data/*
