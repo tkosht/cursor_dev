@@ -1,49 +1,73 @@
-# 進捗状況
+# Progress Report
 
-## 完了した項目
-1. 基本機能の実装
-   - クエリ設定の読み込み
-   - Dify API連携
-   - Slack通知機能
-   - エラー通知機能
+## What Works
 
-2. テスト実装
-   - 単体テストの作成
-   - テストカバレッジ80%達成
-   - テスト仕様書の作成
+### Testing Infrastructure
+- ✅ pytest-asyncio integration
+- ✅ Async context manager mocking
+- ✅ Event loop management
+- ✅ Error scenario testing
+- ✅ Multiple notification verification
+- ✅ High test coverage (95%)
 
-3. エラーハンドリング
-   - カスタム例外の実装
-   - レート制限対応
-   - ログ出力の改善
+### Configuration
+- ✅ pytest.ini setup
+- ✅ Warning management
+- ✅ Test organization
+- ✅ Fixture dependencies
 
-## 進行中の項目
-1. テストの拡充
-   - エッジケースのテスト追加
-   - パフォーマンステストの追加
-   - 統合テストの追加
+## What's Left to Build
 
-2. ドキュメント整備
-   - API仕様書の作成
-   - 運用マニュアルの作成
-   - トラブルシューティングガイドの作成
+### Coverage Improvements
+- [ ] Investigate uncovered lines (254-259, 269, 307-308)
+- [ ] Add edge case tests
+- [ ] Document coverage exceptions
 
-## 未着手の項目
-1. パフォーマンス最適化
-   - 並列処理の検討
-   - キャッシュ機能の追加
-   - リソース使用量の最適化
+### Warning Resolution
+- [ ] Review remaining RuntimeWarnings
+- [ ] Implement additional warning filters
+- [ ] Update warning documentation
 
-2. 監視機能の強化
-   - メトリクス収集
-   - アラート設定
-   - ダッシュボード作成
+### Test Maintenance
+- [ ] Set up regular test pattern review
+- [ ] Create mock implementation guidelines
+- [ ] Establish update procedure for pytest-asyncio
 
-## 既知の問題
-1. テストカバレッジ
-   - 一部のエッジケースが未カバー
-   - パフォーマンステストの不足
+## Current Status
 
-2. エラーハンドリング
-   - 一部のエラーケースの処理が不十分
-   - リトライ処理の最適化が必要
+### Test Coverage
+```
+Name                   Stmts   Miss  Cover   Missing
+----------------------------------------------------
+app/query_monitor.py     102      5    95%   254-259, 269, 307-308
+----------------------------------------------------
+TOTAL                    102      5    95%
+```
+
+### Known Issues
+1. RuntimeWarnings in async mock calls
+2. Deprecated event loop fixture warnings
+3. Unset loop scope configuration warnings
+
+### Recent Achievements
+- Improved async context manager implementation
+- Enhanced error notification testing
+- Streamlined test configuration
+- Established clear mock patterns
+
+## Next Actions
+
+1. Coverage
+   - Review uncovered lines
+   - Add missing test cases
+   - Document coverage decisions
+
+2. Warnings
+   - Analyze remaining warnings
+   - Implement fixes
+   - Update documentation
+
+3. Maintenance
+   - Create test review schedule
+   - Document mock patterns
+   - Monitor framework updates

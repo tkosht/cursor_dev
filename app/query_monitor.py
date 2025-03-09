@@ -5,9 +5,7 @@ import time
 from logging.handlers import RotatingFileHandler
 from typing import Any, Dict, Optional
 
-import requests
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+import aiohttp
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
@@ -53,7 +51,7 @@ class QueryMonitor:
         slack_token: str,
         slack_channel: str,
         slack_client: Optional[WebClient] = None,
-        session: Optional[requests.Session] = None
+        session: Optional[aiohttp.ClientSession] = None
     ) -> None:
         """
         初期化
@@ -63,7 +61,7 @@ class QueryMonitor:
             slack_token (str): Slackトークン
             slack_channel (str): Slackチャンネル
             slack_client (Optional[WebClient], optional): Slackクライアント. Defaults to None.
-            session (Optional[requests.Session], optional): セッション. Defaults to None.
+            session (Optional[aiohttp.ClientSession], optional): セッション. Defaults to None.
 
         Raises:
             ValueError: 必要なパラメータが不足している場合
@@ -74,19 +72,28 @@ class QueryMonitor:
         self.dify_api_key = dify_api_key
         self.slack_channel = slack_channel
         self.slack_client = slack_client or WebClient(token=slack_token)
-        self.session = session or requests.Session()
-
-        # リトライ設定
-        retry_strategy = Retry(
-            total=3,
-            backoff_factor=1,
-            status_forcelist=[429, 500, 502, 503, 504],
-        )
-        adapter = HTTPAdapter(max_retries=retry_strategy)
-        self.session.mount("https://", adapter)
-
+        self._session = session
+        self.queries = []
+        
         # クエリ設定の読み込み
         self._load_queries()
+
+    @property
+    def session(self) -> aiohttp.ClientSession:
+        """セッションを取得"""
+        if self._session is None:
+            self._session = aiohttp.ClientSession()
+        return self._session
+
+    async def __aenter__(self):
+        """非同期コンテキストマネージャーのエントリーポイント"""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """非同期コンテキストマネージャーの終了処理"""
+        if self._session:
+            await self._session.close()
+            self._session = None
 
     def _load_queries(self) -> None:
         """
@@ -121,20 +128,21 @@ class QueryMonitor:
         """
         try:
             start_time = time.time()
-            response = await self.session.post(
+            async with self.session.post(
                 "https://api.dify.ai/v1/completion-messages",
                 headers={
                     "Authorization": f"Bearer {self.dify_api_key}",
                     "Content-Type": "application/json"
                 },
                 json={"query": query},
-                timeout=30
-            )
-            response.raise_for_status()
-            execution_time = time.time() - start_time
-            logger.info("Query executed successfully in %.2f seconds", execution_time)
-            return response.json()
-        except requests.exceptions.RequestException as e:
+                timeout=aiohttp.ClientTimeout(total=30)
+            ) as response:
+                response.raise_for_status()
+                result = await response.json()
+                execution_time = time.time() - start_time
+                logger.info("Query executed successfully in %.2f seconds", execution_time)
+                return result
+        except aiohttp.ClientError as e:
             logger.error("Query execution failed: %s", e)
             await self._send_error_notification("クエリ実行エラー", str(e))
             raise QueryExecutionError(f"Failed to execute query: {e}")
@@ -257,28 +265,10 @@ class QueryMonitor:
                 "success"
             )
 
-        except requests.exceptions.Timeout:
+        except aiohttp.ClientError as e:
             await self.send_slack_notification(
                 channel,
-                "タイムアウトが発生しました",
-                "error"
-            )
-        except requests.exceptions.ConnectionError:
-            await self.send_slack_notification(
-                channel,
-                "接続エラーが発生しました",
-                "error"
-            )
-        except requests.exceptions.HTTPError as e:
-            await self.send_slack_notification(
-                channel,
-                f"HTTPエラーが発生しました: {str(e)}",
-                "error"
-            )
-        except ValueError:
-            await self.send_slack_notification(
-                channel,
-                "JSONの解析に失敗しました",
+                f"クライアントエラーが発生しました: {str(e)}",
                 "error"
             )
         except Exception as e:
@@ -302,12 +292,11 @@ async def main() -> None:
         if not all([dify_api_key, slack_token, slack_channel]):
             raise ValueError("Required environment variables are not set")
 
-        # モニターの初期化
-        monitor = QueryMonitor(dify_api_key, slack_token, slack_channel)
-
-        # 全クエリの実行
-        for query in monitor.queries:
-            await monitor.process_query(query["query"], query["channel"])
+        # モニターの初期化と実行
+        async with QueryMonitor(dify_api_key, slack_token, slack_channel) as monitor:
+            # 全クエリの実行
+            for query in monitor.queries:
+                await monitor.process_query(query["query"], query["channel"])
 
     except Exception as e:
         logger.error("Application error: %s", e)

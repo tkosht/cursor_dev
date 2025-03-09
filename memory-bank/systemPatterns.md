@@ -44,3 +44,116 @@
 2. フィクスチャパターン
    - テストデータの管理
    - テスト環境の設定
+
+## Testing Patterns
+
+### Async Testing Architecture
+
+```mermaid
+graph TD
+    A[Test Case] --> B[Event Loop Policy]
+    B --> C[Async Fixtures]
+    C --> D[Mock Objects]
+    D --> E[Test Execution]
+    
+    subgraph "Fixture Layer"
+        C
+        F[Response Mock]
+        G[Session Mock]
+        H[Client Mock]
+    end
+    
+    subgraph "Mock Layer"
+        D
+        I[Async Context Manager]
+        J[Response Methods]
+        K[Error Scenarios]
+    end
+```
+
+### Mock Implementation Patterns
+
+1. Response Mocking
+```python
+@pytest_asyncio.fixture
+async def mock_response():
+    response = AsyncMock()
+    response.status = 200
+    response.json.return_value = {"answer": "テスト結果"}
+    response.raise_for_status = AsyncMock()
+    return response
+```
+
+2. Session Mocking
+```python
+@pytest_asyncio.fixture
+async def mock_session(mock_response):
+    session = AsyncMock(spec=aiohttp.ClientSession)
+    cm = AsyncMock()
+    cm.__aenter__.return_value = mock_response
+    cm.__aexit__.return_value = None
+    session.post.return_value = cm
+    return session
+```
+
+### Error Handling Patterns
+
+1. API Error Pattern
+```python
+mock_session.post.side_effect = aiohttp.ClientError("APIエラー")
+```
+
+2. Multiple Notification Pattern
+```python
+assert mock_slack_client.chat_postMessage.call_count == 2
+calls = mock_slack_client.chat_postMessage.call_args_list
+assert calls[0].kwargs["channel"] == "errors"
+assert calls[1].kwargs["channel"] == "test_channel"
+```
+
+## Test Configuration Patterns
+
+### pytest.ini Structure
+```ini
+[pytest]
+# テスト設定
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+
+# 非同期設定
+asyncio_mode = strict
+asyncio_default_fixture_loop_scope = function
+
+# 警告設定
+filterwarnings =
+    ignore::RuntimeWarning:app.query_monitor
+```
+
+### Fixture Dependencies
+
+```mermaid
+graph TD
+    A[event_loop_policy] --> B[mock_response]
+    B --> C[mock_session]
+    C --> D[monitor]
+    E[mock_slack_client] --> D
+    F[mock_queries] --> D
+```
+
+## Best Practices
+
+1. Fixture Organization
+   - Separate concerns (response, session, client)
+   - Clear dependency chain
+   - Proper scope management
+
+2. Error Testing
+   - Test both success and failure paths
+   - Verify error notifications
+   - Check message content and order
+
+3. Configuration Management
+   - Centralized pytest.ini
+   - Explicit warning handling
+   - Clear test organization

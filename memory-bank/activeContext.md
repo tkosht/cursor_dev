@@ -1,45 +1,65 @@
-# アクティブコンテキスト
+# Active Context
 
-## 現在の作業状況
-1. テスト実装の完了
-   - 単体テストの実装
-   - テストカバレッジ80%達成
-   - テスト仕様書の作成
+## Current Focus
 
-2. エラーハンドリングの改善
-   - Slack APIのレート制限対応
-   - エラー通知の実装
-   - ログ出力の強化
+### Testing Infrastructure Improvements
 
-## 最近の変更
-1. テストコードの改善
-   - モックオブジェクトの適切な設定
-   - エラーケースの追加
-   - テストケースの整理
+1. Async Testing Framework
+   - pytest-asyncio configuration optimized
+   - Event loop management improved
+   - Warning handling streamlined
 
-2. エラーハンドリングの強化
-   - カスタム例外の追加
-   - エラーメッセージの改善
-   - リトライ処理の実装
+2. Mock Implementation
+   - Async context manager patterns established
+   - Error scenario handling improved
+   - Multiple notification testing implemented
 
-## 次のステップ
-1. テストカバレッジの向上
-   - エッジケースのテスト追加
-   - パフォーマンステストの追加
-   - 統合テストの追加
+3. Test Coverage
+   - Current coverage: 95%
+   - Missing coverage: 254-259, 269, 307-308 in app/query_monitor.py
 
-2. ドキュメントの整備
-   - API仕様書の作成
-   - 運用マニュアルの作成
-   - トラブルシューティングガイドの作成
+## Recent Changes
 
-## アクティブな決定事項
-1. テスト戦略
-   - 単体テストの優先
-   - モックの活用
-   - カバレッジ目標の設定
+### Testing Framework
+- Replaced custom event loop with event_loop_policy
+- Implemented proper async context manager mocking
+- Added explicit test configuration in pytest.ini
 
-2. エラー処理方針
-   - エラーの階層化
-   - ログ出力の標準化
-   - 通知ルールの確立
+### Error Handling
+- Improved error notification testing
+- Added multiple message verification
+- Enhanced error scenario coverage
+
+## Next Steps
+
+1. Coverage Improvements
+   - Investigate uncovered lines in query_monitor.py
+   - Add tests for edge cases
+   - Document coverage exceptions
+
+2. Warning Resolution
+   - Review remaining RuntimeWarnings
+   - Consider additional warning filters
+   - Update documentation for known warnings
+
+3. Test Maintenance
+   - Regular review of test patterns
+   - Update mock implementations as needed
+   - Monitor pytest-asyncio updates
+
+## Active Decisions
+
+1. Testing Strategy
+   - Use pytest-asyncio for all async tests
+   - Maintain high coverage requirements
+   - Document all test patterns
+
+2. Mock Implementation
+   - Prefer AsyncMock over custom implementations
+   - Use explicit context manager setup
+   - Maintain clear fixture dependencies
+
+3. Configuration Management
+   - Centralize test configuration in pytest.ini
+   - Document all warning suppressions
+   - Keep test organization consistent
