@@ -117,9 +117,19 @@ alwaysApply: true
 
 ## エラー解析
 
-障害時は対象部分と周辺を調査し、アブダクションで原因を特定し、解消する。
+障害時は対象部分と周辺を調査し、アブダクションで原因を特定し、解消する
 詳細は、[error_analysis.md](mdc:memory-bank/error_analysis.md) に従う
 
 ## 設計および実装原則
 
 [design_principles.md](mdc:memory-bank/design_principles.md) に従う
+
+
+## リポジトリの初期化/クリーンアップ
+
+本プロジェクトリポジトリを空にする場合は、以下コマンドを実行することでのみ行う
+
+```bash
+make clean-repository
+```
+

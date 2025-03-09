@@ -13,10 +13,32 @@ alwaysApply: true
 - [project.mdc](mdc:.cursor/rules/project.mdc)
 - [python.mdc](mdc:.cursor/rules/python.mdc)
 
+
 ## ワークフローの定義
 
-- 前提ルールを読み込む
-    - [rules.mdc](mdc:.cursor/rules/rules.mdc)
+### 1. ルール読み込み（必須）
+1. コアルール読み込み
+    - .cursor/rules/*.mdc をすべて読み込む
+
+2. 詳細ルール読み込み
+    - memory-bank/*.md を関連するものすべて読み込む
+    - 特に以下は必須：
+        - documentation_strategy.md
+        - test_strategy.md
+        - error_analysis.md
+        - design_principles.md
+        - rules.md
+
+3. 実装ルール読み込み
+    - docs/*/*.md から関連するものを読み込む
+    - 特に以下は重要：
+        - requirements.md
+        - basic_design.md
+        - detail_design.md
+
+
+### 2. 現状ステータスの確認
+
 - ドキュメントを読み込む (無ければスキップ)
     - [requirements.md](mdc:docs/01.requirements/requirements.md)
     - [basic_design.md](mdc:docs/02.basic_design/basic_design.md)
@@ -36,9 +58,11 @@ alwaysApply: true
 - memory-bank/ の内容をコミット
     - 実行したタスクに関して、git commit & push
 
+
 ## キャンセル発生時のワークフロー
 
 ユーザがキャンセルした場合は、もう一度実行するか、次の処理・タスクを実行すべきかユーザの判断を仰ぐ
+
 
 ## 変更内容の確認
 
