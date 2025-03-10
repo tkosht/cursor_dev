@@ -170,7 +170,6 @@ Always respond in 日本語
 
 詳細は、[rules.md](mdc:memory-bank/rules.md) に従う
 
-
 # ルール階層構造
 
 ## 1. コアルール（.cursor/rules/*.mdc）
@@ -197,6 +196,4 @@ Always respond in 日本語
 - コアルール（.mdc）更新時は、関連する詳細ルール（.md）も必ず確認
 - 詳細ルール更新時は、影響を受けるコアルールを明示
 - 実装ルールの更新は、上位ルールとの整合性を確認
-
-// ... existing code ...
 
