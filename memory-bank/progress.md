@@ -1,25 +1,35 @@
 # 進捗状況
 
 ## 完了した機能
-- Difyホスト設定の柔軟化
-  - カスタムホストのサポート
-  - 環境変数による設定
-  - テストカバレッジ追加
+- エラーハンドリングの改善
+  - QueryExecutionErrorの実装
+  - エラー伝播の改善
+  - テストケースの強化
+- コードフォーマットの修正
+  - blackによる自動フォーマット
+  - 空白行の整理
 
 ## 動作確認済み機能
-- 標準Difyホストでの動作
-- カスタムホストでの動作
 - エラーハンドリング
-- Slack通知
+  - クライアントエラーの処理
+  - タイムアウトの処理
+  - 接続エラーの処理
+- テストケース
+  - 全20テストがパス
+  - エラーケースのカバレッジ
+  - 例外処理の検証
 
 ## 既知の問題
 - なし（すべてのテストがパス）
 
 ## 次のタスク
-1. ドキュメント更新
-   - 環境変数の説明追加
-   - カスタムホスト設定のガイド
-2. ユーザーガイドの更新
+1. カバレッジ改善
+   - 未カバーの行の調査
+   - エッジケースのテスト追加
+   - カバレッジ例外の文書化
+2. ドキュメント更新
+   - エラーハンドリングの説明追加
+   - テストケースの文書化
 
 ## What Works
 
@@ -29,18 +39,19 @@
 - ✅ Event loop management
 - ✅ Error scenario testing
 - ✅ Multiple notification verification
-- ✅ High test coverage (95%)
+- ✅ High test coverage (92%)
 
-### Configuration
-- ✅ pytest.ini setup
-- ✅ Warning management
-- ✅ Test organization
-- ✅ Fixture dependencies
+### Error Handling
+- ✅ QueryExecutionError implementation
+- ✅ Error propagation
+- ✅ Client error handling
+- ✅ Timeout handling
+- ✅ Connection error handling
 
 ## What's Left to Build
 
 ### Coverage Improvements
-- [ ] Investigate uncovered lines (254-259, 269, 307-308)
+- [ ] Investigate uncovered lines (252-255, 263-266, 297-299, 307-309)
 - [ ] Add edge case tests
 - [ ] Document coverage exceptions
 
@@ -60,9 +71,9 @@
 ```
 Name                   Stmts   Miss  Cover   Missing
 ----------------------------------------------------
-app/query_monitor.py     102      5    95%   254-259, 269, 307-308
+app/query_monitor.py     111      9    92%   252-255, 263-266, 297-299, 307-309
 ----------------------------------------------------
-TOTAL                    102      5    95%
+TOTAL                    111      9    92%
 ```
 
 ### Known Issues
@@ -71,10 +82,11 @@ TOTAL                    102      5    95%
 3. Unset loop scope configuration warnings
 
 ### Recent Achievements
-- Improved async context manager implementation
+- Improved error handling with QueryExecutionError
 - Enhanced error notification testing
 - Streamlined test configuration
 - Established clear mock patterns
+- Code formatting improvements
 
 ## Next Actions
 

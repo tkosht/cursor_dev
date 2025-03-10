@@ -15,8 +15,8 @@
    - Multiple notification testing implemented
 
 3. Test Coverage
-   - Current coverage: 95%
-   - Missing coverage: 254-259, 269, 307-308 in app/query_monitor.py
+   - Current coverage: 92%
+   - Missing coverage: 252-255, 263-266, 297-299, 307-309 in app/query_monitor.py
 
 ## Recent Changes
 
@@ -29,14 +29,19 @@
 - Improved error notification testing
 - Added multiple message verification
 - Enhanced error scenario coverage
+- Implemented QueryExecutionError for better error handling
+- Updated error propagation in main function
 
-### 2024-03-10: Difyホスト設定の柔軟化
-- カスタムDifyホストの設定をサポート
-  - 環境変数 `DIFY_HOST` による設定が可能
-  - デフォルト値: https://api.dify.ai
-- テストカバレッジの追加
-  - カスタムホスト設定のテストケース追加
-  - 既存テストへの影響なし
+### 2024-03-10: エラーハンドリングの改善
+- QueryExecutionErrorの追加と実装
+  - クライアントエラーの適切な処理
+  - エラー伝播の改善
+- テストケースの強化
+  - エラーケースのテスト改善
+  - 例外処理のテストケース追加
+- コードフォーマットの修正
+  - blackによる自動フォーマット
+  - 空白行の整理
 
 ## Next Steps
 
@@ -73,10 +78,10 @@
    - Keep test organization consistent
 
 ## Current Work Status
-- Difyホスト設定の柔軟化が完了
+- エラーハンドリングの改善が完了
 - すべてのテストが正常にパス（20テスト）
-- コードカバレッジ95%を維持
+- コードカバレッジ92%を維持
 
 ## Next Steps
-- 環境変数のドキュメント更新
-- カスタムホスト設定のユーザーガイド追加
+- 未カバーの行の調査とテスト追加
+- エラーハンドリングのドキュメント更新
