@@ -77,15 +77,18 @@ class QueryMonitor:
         if not all([dify_api_key, slack_token, slack_channel]):
             raise ValueError("All parameters are required")
 
-        # 環境変数の読み込み
-        load_environment()
-
         self.dify_api_key = dify_api_key
         self.slack_channel = slack_channel
         self.slack_client = slack_client or WebClient(token=slack_token)
         self._session = session
         self.queries = []
-        self.dify_host = os.getenv("DIFY_HOST", "https://api.dify.ai")
+        
+        # Dify APIのエンドポイントを設定
+        dify_host = os.getenv("DIFY_HOST")
+        if not dify_host:
+            dify_host = "http://192.168.1.11"
+        self.dify_host = f"{dify_host}/v1/chat-messages"
+        logger.info("Using Dify API endpoint: %s", self.dify_host)
 
         # クエリ設定の読み込み
         self._load_queries()
@@ -94,7 +97,17 @@ class QueryMonitor:
     def session(self) -> aiohttp.ClientSession:
         """セッションを取得"""
         if self._session is None:
-            self._session = aiohttp.ClientSession()
+            timeout = aiohttp.ClientTimeout(total=60)
+            connector = aiohttp.TCPConnector(
+                limit=10,
+                ttl_dns_cache=300,
+                force_close=True,
+                enable_cleanup_closed=True
+            )
+            self._session = aiohttp.ClientSession(
+                timeout=timeout,
+                connector=connector
+            )
         return self._session
 
     async def __aenter__(self):
@@ -138,29 +151,57 @@ class QueryMonitor:
         Raises:
             QueryExecutionError: クエリ実行に失敗した場合
         """
-        try:
-            start_time = time.time()
-            async with self.session.post(
-                f"{self.dify_host}/v1/completion-messages",
-                headers={
-                    "Authorization": f"Bearer {self.dify_api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={"query": query},
-                timeout=aiohttp.ClientTimeout(total=30),
-            ) as response:
-                response.raise_for_status()
-                result = await response.json()
-                execution_time = time.time() - start_time
-                logger.info(
-                    "Query executed successfully in %.2f seconds",
-                    execution_time,
-                )
-                return result
-        except aiohttp.ClientError as e:
-            logger.error("Query execution failed: %s", e)
-            await self._send_error_notification("クエリ実行エラー", str(e))
-            raise QueryExecutionError(f"Failed to execute query: {e}")
+        max_retries = 3
+        retry_delay = 1
+
+        for attempt in range(max_retries):
+            try:
+                start_time = time.time()
+                timeout = aiohttp.ClientTimeout(total=60)
+                async with self.session.post(
+                    self.dify_host,
+                    headers={
+                        "Authorization": f"Bearer {self.dify_api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "inputs": {},
+                        "query": query,
+                        "response_mode": "blocking",
+                        "conversation_id": "",
+                        "user": "query_monitor"
+                    },
+                    timeout=timeout,
+                ) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        logger.error("Query execution failed: %s, %s", response.status, error_text)
+                        await self._send_error_notification("クエリ実行エラー", f"ステータス: {response.status}\nエラー: {error_text}")
+                        raise QueryExecutionError(f"Failed to execute query: {response.status}, {error_text}")
+                    
+                    try:
+                        result = await response.json()
+                    except aiohttp.ContentTypeError as e:
+                        error_text = await response.text()
+                        logger.error("Failed to parse JSON response: %s, %s", e, error_text)
+                        await self._send_error_notification("JSON解析エラー", f"エラー: {str(e)}\nレスポンス: {error_text}")
+                        raise QueryExecutionError(f"Failed to parse JSON response: {e}")
+                    
+                    execution_time = time.time() - start_time
+                    logger.info(
+                        "Query executed successfully in %.2f seconds",
+                        execution_time,
+                    )
+                    return result
+            except (asyncio.TimeoutError, aiohttp.ClientError) as e:
+                if attempt < max_retries - 1:
+                    logger.warning("Attempt %d failed: %s, retrying in %d seconds...", attempt + 1, e, retry_delay)
+                    await asyncio.sleep(retry_delay)
+                    retry_delay *= 2  # 指数バックオフ
+                    continue
+                logger.error("Query execution failed after %d attempts: %s", max_retries, e)
+                await self._send_error_notification("クエリ実行エラー", f"クエリの実行が失敗しました: {str(e)}")
+                raise QueryExecutionError(f"Failed to execute query after {max_retries} attempts: {e}")
 
     async def _send_error_notification(
         self, title: str, error_message: str
@@ -196,8 +237,8 @@ class QueryMonitor:
                 },
             ]
 
-            await self.slack_client.chat_postMessage(
-                channel="errors", text=f"エラー: {title}", blocks=blocks
+            self.slack_client.chat_postMessage(
+                channel=self.slack_channel, text=f"エラー: {title}", blocks=blocks
             )
             logger.info("Error notification sent: %s", title)
         except SlackApiError as e:
@@ -205,8 +246,41 @@ class QueryMonitor:
                 "Failed to send error notification: %s", e.response["error"]
             )
 
+    async def process_query(self, query: str, channel: str) -> None:
+        """クエリを実行し、結果をSlackに通知する"""
+        try:
+            # クエリの説明を取得
+            query_info = next((q for q in self.queries if q["query"] == query), None)
+            title = query_info.get("description", "クエリ実行結果") if query_info else "クエリ実行結果"
+
+            # クエリを実行
+            result = await self.execute_query(query)
+
+            # 結果の検証
+            if not result.get("answer"):
+                await self.send_slack_notification(
+                    channel, "結果が空です", "warning", title
+                )
+                return
+
+            # 結果をSlackに通知
+            await self.send_slack_notification(
+                channel, result["answer"], "success", title
+            )
+
+        except aiohttp.ClientError as e:
+            await self.send_slack_notification(
+                channel, f"クライアントエラーが発生しました: {str(e)}", "error", title
+            )
+            raise QueryExecutionError(f"Failed to execute query: {e}")
+        except Exception as e:
+            await self.send_slack_notification(
+                channel, f"予期せぬエラーが発生しました: {str(e)}", "error", title
+            )
+            raise
+
     async def send_slack_notification(
-        self, channel: str, message: str, status: str = "info"
+        self, channel: str, message: str, status: str = "info", title: str = "クエリ実行結果"
     ) -> None:
         """
         クエリ結果をSlackに通知
@@ -215,6 +289,7 @@ class QueryMonitor:
             channel: 通知先のSlackチャンネル
             message: 通知メッセージ
             status: 通知の状態（success, warning, error, info）
+            title: 通知のタイトル
 
         Raises:
             SlackNotificationError: Slack通知に失敗した場合
@@ -223,7 +298,7 @@ class QueryMonitor:
             blocks = [
                 {
                     "type": "header",
-                    "text": {"type": "plain_text", "text": "クエリ実行結果"},
+                    "text": {"type": "plain_text", "text": title},
                 },
                 {
                     "type": "section",
@@ -238,7 +313,7 @@ class QueryMonitor:
                 {"type": "divider"},
             ]
 
-            await self.slack_client.chat_postMessage(
+            self.slack_client.chat_postMessage(
                 channel=channel, blocks=blocks, text=message
             )
 
@@ -250,47 +325,25 @@ class QueryMonitor:
                 f"Failed to send notification: {e.response['error']}"
             )
 
-    async def process_query(self, query: str, channel: str) -> None:
-        """クエリを実行し、結果をSlackに通知する"""
-        try:
-            # クエリを実行
-            result = await self.execute_query(query)
-
-            # 結果の検証
-            if not result.get("answer"):
-                await self.send_slack_notification(
-                    channel, "結果が空です", "warning"
-                )
-                return
-
-            # 結果をSlackに通知
-            await self.send_slack_notification(
-                channel, result["answer"], "success"
-            )
-
-        except aiohttp.ClientError as e:
-            await self.send_slack_notification(
-                channel, f"クライアントエラーが発生しました: {str(e)}", "error"
-            )
-            raise QueryExecutionError(f"Failed to execute query: {e}")
-        except Exception as e:
-            await self.send_slack_notification(
-                channel, f"予期せぬエラーが発生しました: {str(e)}", "error"
-            )
-            raise
-
 
 async def main() -> None:
     """
     メイン実行関数
     """
     try:
+        # 環境変数の読み込み
+        load_environment()
+
         # 環境変数の検証
         dify_api_key = os.getenv("DIFY_API_KEY")
         slack_token = os.getenv("SLACK_TOKEN")
+        dify_host = os.getenv("DIFY_HOST")
 
         if not all([dify_api_key, slack_token]):
             raise ValueError("Required environment variables are not set")
+
+        logger.info("Environment variables loaded successfully")
+        logger.info("DIFY_HOST: %s", dify_host)
 
         # モニターの初期化と実行
         async with QueryMonitor(dify_api_key, slack_token, "dummy") as monitor:
