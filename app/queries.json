@@ -17,12 +17,6 @@
             "description": "プログラミング言語の動向",
             "query": "今週のプログラミング言語の人気動向を分析してください。",
             "channel": "dev-trends"
-        },
-        {
-            "name": "test_query",
-            "description": "テストクエリ",
-            "query": "テストクエリの内容",
-            "channel": "test-channel"
         }
     ]
 } 

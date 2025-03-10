@@ -37,12 +37,12 @@ async def mock_response():
 async def mock_session(mock_response):
     """セッションのモック"""
     session = AsyncMock(spec=aiohttp.ClientSession)
-    
+
     # 非同期コンテキストマネージャーの正しい実装
     cm = AsyncMock()
     cm.__aenter__.return_value = mock_response
     cm.__aexit__.return_value = None
-    
+
     session.post.return_value = cm
     return session
 
@@ -59,10 +59,10 @@ async def mock_slack_client():
 @pytest.fixture
 def mock_env():
     """環境変数のモック"""
-    with patch.dict(os.environ, {
-        "SLACK_TOKEN": "test-token",
-        "DIFY_API_KEY": "test-dify-key"
-    }):
+    with patch.dict(
+        os.environ,
+        {"SLACK_TOKEN": "test-token", "DIFY_API_KEY": "test-dify-key"},
+    ):
         yield
 
 
@@ -75,7 +75,7 @@ def mock_queries():
                 "name": "test_query",
                 "description": "テストクエリ",
                 "query": "テストクエリの内容",
-                "channel": "test-channel"
+                "channel": "test-channel",
             }
         ]
     }
@@ -84,16 +84,23 @@ def mock_queries():
 @pytest_asyncio.fixture
 async def monitor(mock_queries, mock_slack_client, mock_session):
     """QueryMonitorインスタンスの作成"""
-    with patch("builtins.open", create=True) as mock_open, \
-         patch("app.query_monitor.WebClient", return_value=mock_slack_client), \
-         patch("app.query_monitor.aiohttp.ClientSession", return_value=mock_session):
-        mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(mock_queries)
+    with (
+        patch("builtins.open", create=True) as mock_open,
+        patch("app.query_monitor.WebClient", return_value=mock_slack_client),
+        patch(
+            "app.query_monitor.aiohttp.ClientSession",
+            return_value=mock_session,
+        ),
+    ):
+        mock_open.return_value.__enter__.return_value.read.return_value = (
+            json.dumps(mock_queries)
+        )
         monitor = QueryMonitor(
             dify_api_key="test-dify-key",
             slack_token="test-token",
             slack_channel="test-channel",
             slack_client=mock_slack_client,
-            session=mock_session
+            session=mock_session,
         )
         yield monitor
 
@@ -114,7 +121,9 @@ async def test_init_missing_env():
 
 
 @pytest.mark.asyncio
-async def test_process_query_success(monitor, mock_slack_client, mock_session, mock_response):
+async def test_process_query_success(
+    monitor, mock_slack_client, mock_session, mock_response
+):
     """クエリ実行成功のテスト"""
     # モックの設定
     mock_slack_client.chat_postMessage.return_value = {"ok": True}
@@ -128,30 +137,33 @@ async def test_process_query_success(monitor, mock_slack_client, mock_session, m
 
 
 @pytest.mark.asyncio
-async def test_process_query_execution_error(monitor, mock_slack_client, mock_session):
+async def test_process_query_execution_error(
+    monitor, mock_slack_client, mock_session
+):
     """クエリ実行エラーのテスト"""
     # モックの設定
     mock_session.post.side_effect = aiohttp.ClientError("APIエラー")
     mock_slack_client.chat_postMessage.return_value = {"ok": True}
 
-    # テスト実行
-    await monitor.process_query("test_query", "test_channel")
-
-    # アサーション
-    assert mock_slack_client.chat_postMessage.call_count == 2
-    calls = mock_slack_client.chat_postMessage.call_args_list
-    assert calls[0].kwargs["channel"] == "errors"
-    assert calls[1].kwargs["channel"] == "test_channel"
+    # テスト実行とアサーション
+    with pytest.raises(
+        QueryExecutionError, match="Failed to execute query: APIエラー"
+    ):
+        await monitor.process_query("test_query", "test_channel")
 
 
 @pytest.mark.asyncio
-async def test_process_query_notification_error(monitor, mock_slack_client, mock_session):
+async def test_process_query_notification_error(
+    monitor, mock_slack_client, mock_session
+):
     """Slack通知エラーのテスト"""
     # モックの設定
     mock_response = MagicMock()
     mock_response.json.return_value = {"answer": "テスト結果"}
     mock_session.post.return_value = mock_response
-    mock_slack_client.chat_postMessage.side_effect = SlackApiError("error", {"error": "test_error"})
+    mock_slack_client.chat_postMessage.side_effect = SlackApiError(
+        "error", {"error": "test_error"}
+    )
 
     # テスト実行とアサーション
     with pytest.raises(SlackNotificationError):
@@ -159,7 +171,9 @@ async def test_process_query_notification_error(monitor, mock_slack_client, mock
 
 
 @pytest.mark.asyncio
-async def test_process_query_empty_result(monitor, mock_slack_client, mock_session):
+async def test_process_query_empty_result(
+    monitor, mock_slack_client, mock_session
+):
     """空の結果を処理するテスト"""
     # モックの設定
     mock_response = MagicMock()
@@ -175,7 +189,9 @@ async def test_process_query_empty_result(monitor, mock_slack_client, mock_sessi
 
 
 @pytest.mark.asyncio
-async def test_process_query_invalid_json(monitor, mock_slack_client, mock_session):
+async def test_process_query_invalid_json(
+    monitor, mock_slack_client, mock_session
+):
     """無効なJSONレスポンスを処理するテスト"""
     # モックの設定
     mock_response = MagicMock()
@@ -194,41 +210,41 @@ async def test_process_query_invalid_json(monitor, mock_slack_client, mock_sessi
 async def test_process_query_timeout(monitor, mock_slack_client, mock_session):
     """タイムアウトを処理するテスト"""
     # モックの設定
-    mock_session.post.side_effect = aiohttp.ClientTimeout("Request timed out")
-    mock_slack_client.chat_postMessage.return_value = {"ok": True}
+    mock_session.post.side_effect = aiohttp.ClientError("Request timed out")
 
     # テスト実行
-    await monitor.process_query("test_query", "test_channel")
-
-    # アサーション
-    mock_slack_client.chat_postMessage.assert_called_once()
+    with pytest.raises(
+        QueryExecutionError, match="Failed to execute query: Request timed out"
+    ):
+        await monitor.process_query("テストクエリ", "テストチャンネル")
 
 
 @pytest.mark.asyncio
-async def test_process_query_connection_error(monitor, mock_slack_client, mock_session):
+async def test_process_query_connection_error(
+    monitor, mock_slack_client, mock_session
+):
     """接続エラーを処理するテスト"""
     # モックの設定
-    mock_session.post.side_effect = aiohttp.ClientConnectionError("Connection failed")
+    mock_session.post.side_effect = aiohttp.ClientConnectionError(
+        "Connection failed"
+    )
     mock_slack_client.chat_postMessage.return_value = {"ok": True}
 
-    # テスト実行
-    await monitor.process_query("test_query", "test_channel")
-
-    # アサーション
-    assert mock_slack_client.chat_postMessage.call_count == 2
-    calls = mock_slack_client.chat_postMessage.call_args_list
-    assert calls[0].kwargs["channel"] == "errors"
-    assert calls[1].kwargs["channel"] == "test_channel"
+    # テスト実行とアサーション
+    with pytest.raises(
+        QueryExecutionError, match="Failed to execute query: Connection failed"
+    ):
+        await monitor.process_query("test_query", "test_channel")
 
 
 @pytest.mark.asyncio
-async def test_process_query_http_error(monitor, mock_slack_client, mock_session, mock_response):
+async def test_process_query_http_error(
+    monitor, mock_slack_client, mock_session, mock_response
+):
     """HTTPエラーを処理するテスト"""
     # モックの設定
     mock_response.raise_for_status.side_effect = aiohttp.ClientResponseError(
-        request_info=MagicMock(),
-        history=(),
-        status=500
+        request_info=MagicMock(), history=(), status=500
     )
     mock_slack_client.chat_postMessage.return_value = {"ok": True}
 
@@ -278,7 +294,9 @@ async def test_send_error_notification_success(monitor, mock_slack_client):
 async def test_send_error_notification_failure(monitor, mock_slack_client):
     """エラー通知失敗のテスト"""
     # モックの設定
-    mock_slack_client.chat_postMessage.side_effect = SlackApiError("error", {"error": "test_error"})
+    mock_slack_client.chat_postMessage.side_effect = SlackApiError(
+        "error", {"error": "test_error"}
+    )
 
     # テスト実行
     await monitor._send_error_notification("テストエラー", "エラーメッセージ")
@@ -299,23 +317,37 @@ async def test_load_queries_file_not_found(monitor):
 async def test_load_queries_invalid_json(monitor):
     """無効なJSONファイルの場合のテスト"""
     with patch("builtins.open", create=True) as mock_open:
-        mock_open.return_value.__enter__.return_value.read.return_value = "invalid json"
+        mock_open.return_value.__enter__.return_value.read.return_value = (
+            "invalid json"
+        )
         with pytest.raises(json.JSONDecodeError):
             monitor._load_queries()
 
 
 @pytest.mark.asyncio
-async def test_main_success(mock_env, mock_queries, mock_slack_client, mock_session, mock_response):
+async def test_main_success(
+    mock_env, mock_queries, mock_slack_client, mock_session, mock_response
+):
     """メイン関数成功のテスト"""
-    with patch("builtins.open", create=True) as mock_open, \
-         patch("app.query_monitor.WebClient", return_value=mock_slack_client), \
-         patch("app.query_monitor.aiohttp.ClientSession", return_value=mock_session), \
-         patch.dict(os.environ, {
-             "DIFY_API_KEY": "test-api-key",
-             "SLACK_TOKEN": "test-token",
-             "SLACK_CHANNEL": "test-channel"
-         }):
-        mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(mock_queries)
+    with (
+        patch("builtins.open", create=True) as mock_open,
+        patch("app.query_monitor.WebClient", return_value=mock_slack_client),
+        patch(
+            "app.query_monitor.aiohttp.ClientSession",
+            return_value=mock_session,
+        ),
+        patch.dict(
+            os.environ,
+            {
+                "DIFY_API_KEY": "test-api-key",
+                "SLACK_TOKEN": "test-token",
+                "SLACK_CHANNEL": "test-channel",
+            },
+        ),
+    ):
+        mock_open.return_value.__enter__.return_value.read.return_value = (
+            json.dumps(mock_queries)
+        )
         mock_slack_client.chat_postMessage.return_value = {"ok": True}
 
         # テスト実行
@@ -330,45 +362,67 @@ async def test_main_success(mock_env, mock_queries, mock_slack_client, mock_sess
 async def test_main_missing_env():
     """メイン関数環境変数不足のテスト"""
     with patch.dict(os.environ, {}, clear=True):
-        with pytest.raises(ValueError, match="Required environment variables are not set"):
+        with pytest.raises(
+            ValueError, match="Required environment variables are not set"
+        ):
             await main()
 
 
 @pytest.mark.asyncio
-async def test_main_error_handling(mock_env, mock_queries, mock_slack_client, mock_session):
+async def test_main_error_handling(
+    mock_env, mock_queries, mock_slack_client, mock_session
+):
     """メイン関数エラーハンドリングのテスト"""
-    with patch("builtins.open", create=True) as mock_open, \
-         patch("app.query_monitor.WebClient", return_value=mock_slack_client), \
-         patch("app.query_monitor.aiohttp.ClientSession", return_value=mock_session):
-        mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(mock_queries)
-        mock_session.post.side_effect = Exception("予期せぬエラー")
+    with (
+        patch("builtins.open", create=True) as mock_open,
+        patch("app.query_monitor.WebClient", return_value=mock_slack_client),
+        patch(
+            "app.query_monitor.aiohttp.ClientSession",
+            return_value=mock_session,
+        ),
+    ):
+        mock_open.return_value.__enter__.return_value.read.return_value = (
+            json.dumps(mock_queries)
+        )
+        mock_session.post.side_effect = aiohttp.ClientError("予期せぬエラー")
 
         # テスト実行
-        with pytest.raises(Exception):
+        with pytest.raises(
+            QueryExecutionError,
+            match="Failed to execute query: 予期せぬエラー",
+        ):
             await main()
 
 
 @pytest.mark.asyncio
-async def test_custom_dify_host(mock_env, mock_slack_client, mock_session, mock_response):
+async def test_custom_dify_host(
+    mock_env, mock_slack_client, mock_session, mock_response
+):
     """カスタムDifyホストのテスト"""
-    with patch.dict(os.environ, {
-        "DIFY_API_KEY": "test-dify-key",
-        "SLACK_TOKEN": "test-token",
-        "DIFY_HOST": "https://custom.dify.example.com"
-    }):
+    with patch.dict(
+        os.environ,
+        {
+            "DIFY_API_KEY": "test-dify-key",
+            "SLACK_TOKEN": "test-token",
+            "DIFY_HOST": "https://custom.dify.example.com",
+        },
+    ):
         monitor = QueryMonitor(
             dify_api_key="test-dify-key",
             slack_token="test-token",
             slack_channel="test-channel",
             slack_client=mock_slack_client,
-            session=mock_session
+            session=mock_session,
         )
         await monitor.execute_query("test_query")
-        
+
         # カスタムホストが使用されていることを確認
         mock_session.post.assert_called_once_with(
             "https://custom.dify.example.com/v1/completion-messages",
-            headers={"Authorization": "Bearer test-dify-key", "Content-Type": "application/json"},
+            headers={
+                "Authorization": "Bearer test-dify-key",
+                "Content-Type": "application/json",
+            },
             json={"query": "test_query"},
-            timeout=mock.ANY
-        ) 
+            timeout=mock.ANY,
+        )

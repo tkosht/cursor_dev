@@ -27,6 +27,7 @@ poetry install
 ```
 SLACK_TOKEN=xoxb-your-slack-token
 DIFY_API_KEY=your-dify-api-key
+DIFY_HOST=https://api.dify.ai  # オプション：デフォルト値
 ```
 
 3. クエリ設定:
@@ -38,7 +39,7 @@ DIFY_API_KEY=your-dify-api-key
             "name": "tech_news",
             "description": "テクノロジー業界のニュース要約",
             "query": "今日のテクノロジー業界における重要なニュースを3つ、簡潔にまとめてください。",
-            "channel": "tech-news"
+            "channel": "tech-news"  # 通知先のSlackチャンネル
         }
     ]
 }
