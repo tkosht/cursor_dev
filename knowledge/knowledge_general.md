@@ -132,6 +132,48 @@ with patch.dict(os.environ, {}, clear=True):
     assert client.host == "https://api.example.com"
 ```
 
+3. 非同期テストのパターン
+```python
+# 非同期コンテキストマネージャーのモック
+@pytest_asyncio.fixture
+async def mock_async_context():
+    mock = AsyncMock()
+    mock.__aenter__.return_value = mock
+    mock.__aexit__.return_value = None
+    return mock
+
+# 非同期操作のテスト
+@pytest.mark.asyncio
+async def test_async_operation(mock_async_context):
+    # Given（準備）
+    mock_async_context.json.return_value = {"result": "success"}
+    
+    # When（実行）
+    async with mock_async_context as ctx:
+        result = await ctx.json()
+    
+    # Then（検証）
+    assert result == {"result": "success"}
+    mock_async_context.__aenter__.assert_called_once()
+    mock_async_context.__aexit__.assert_called_once()
+```
+
+### 非同期テストのベストプラクティス
+1. モックの設定
+- AsyncMockを使用
+- コンテキストマネージャーメソッドの実装
+- 戻り値の適切な設定
+
+2. テストの構造
+- Given-When-Thenパターンの使用
+- 非同期コンテキストの適切な処理
+- アサーションの明確化
+
+3. エラーハンドリング
+- 例外の適切なモック
+- エラーケースのテスト
+- エラーメッセージの検証
+
 ### 注意点
 1. セキュリティ
 - HTTPS使用の推奨
@@ -147,3 +189,8 @@ with patch.dict(os.environ, {}, clear=True):
 - 設定の一元管理
 - ドキュメントの更新
 - テストカバレッジの維持
+
+4. 非同期テスト
+- イベントループの適切な管理
+- 非同期コンテキストの正しい実装
+- テストの安定性確保

@@ -13,10 +13,13 @@
    - Async context manager patterns established
    - Error scenario handling improved
    - Multiple notification testing implemented
+   - Success notification testing added
+   - Unexpected error testing added
+   - Application error testing added
 
 3. Test Coverage
-   - Current coverage: 92%
-   - Missing coverage: 252-255, 263-266, 297-299, 307-309 in app/query_monitor.py
+   - Current coverage: 96%
+   - Missing coverage: 263-266, 307-309 in app/query_monitor.py
 
 ## Recent Changes
 
@@ -24,6 +27,8 @@
 - Replaced custom event loop with event_loop_policy
 - Implemented proper async context manager mocking
 - Added explicit test configuration in pytest.ini
+- Fixed async context manager mock setup
+- Added comprehensive test cases for notifications
 
 ### Error Handling
 - Improved error notification testing
@@ -31,22 +36,25 @@
 - Enhanced error scenario coverage
 - Implemented QueryExecutionError for better error handling
 - Updated error propagation in main function
+- Added tests for unexpected errors
+- Added tests for application errors
 
-### 2024-03-10: エラーハンドリングの改善
-- QueryExecutionErrorの追加と実装
-  - クライアントエラーの適切な処理
-  - エラー伝播の改善
+### 2024-03-10: テストの改善
+- テストカバレッジの向上
+  - カバレッジを92%から96%に改善
+  - 未カバー行を9行から4行に削減
 - テストケースの強化
-  - エラーケースのテスト改善
-  - 例外処理のテストケース追加
-- コードフォーマットの修正
-  - blackによる自動フォーマット
-  - 空白行の整理
+  - 成功時の通知テスト追加
+  - 予期せぬエラーのテスト追加
+  - アプリケーションエラーのテスト追加
+- 非同期テストの改善
+  - 非同期コンテキストマネージャーのモック設定を修正
+  - テストの安定性向上
 
 ## Next Steps
 
 1. Coverage Improvements
-   - Investigate uncovered lines in query_monitor.py
+   - Investigate remaining uncovered lines (263-266, 307-309)
    - Add tests for edge cases
    - Document coverage exceptions
 
@@ -78,13 +86,13 @@
    - Keep test organization consistent
 
 ## Current Work Status
-- エラーハンドリングの改善が完了
-- すべてのテストが正常にパス（20テスト）
-- コードカバレッジ92%を維持
+- テストの改善が完了
+- すべてのテストが正常にパス（24テスト）
+- コードカバレッジ96%を達成
 
 ## Next Steps
-- 未カバーの行の調査とテスト追加
-- エラーハンドリングのドキュメント更新
+- 残りの未カバー行の調査とテスト追加
+- テストドキュメントの更新
 
 ## 今後の改善ポイント
 

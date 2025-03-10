@@ -49,14 +49,46 @@ def test_機能名_条件_期待結果():
 - 外部依存がある場合
 - 実行時間が長い処理
 - 非決定的な処理
+- 非同期コンテキストマネージャーの場合
+  - AsyncMockを使用
+  - __aenter__と__aexit__を適切に実装
+  - コンテキストマネージャーの戻り値を設定
+
+### 非同期テストパターン
+```python
+@pytest_asyncio.fixture
+async def mock_async_context():
+    """非同期コンテキストマネージャーのモック"""
+    mock = AsyncMock()
+    mock.__aenter__.return_value = mock
+    mock.__aexit__.return_value = None
+    return mock
+
+@pytest.mark.asyncio
+async def test_async_operation(mock_async_context):
+    """非同期操作のテスト"""
+    # Given（準備）
+    mock_async_context.json.return_value = {"result": "success"}
+    
+    # When（実行）
+    async with mock_async_context as ctx:
+        result = await ctx.json()
+    
+    # Then（検証）
+    assert result == {"result": "success"}
+    mock_async_context.__aenter__.assert_called_once()
+    mock_async_context.__aexit__.assert_called_once()
+```
 
 ## 5. 監視と改善
 ### メトリクス
 - テストカバレッジ（行/分岐）
 - テスト成功率
 - テスト実行時間
+- 非同期テストの安定性
 
 ### 定期メンテナンス
 - テストの有効性確認
 - 不要なテストの削除
 - 実行時間の最適化
+- 非同期テストパターンの更新
