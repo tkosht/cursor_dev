@@ -1,5 +1,41 @@
 # 技術コンテキスト
 
+## 使用技術
+1. Python 3.x
+   - aiohttp: 非同期HTTP通信
+   - python-dotenv: 環境変数管理
+   - slack-sdk: Slack API連携
+
+2. 外部サービス
+   - Dify API
+   - Slack API
+   - ログシステム
+
+## 開発環境
+1. 依存関係
+   ```
+   aiohttp>=3.8.0
+   python-dotenv>=0.19.0
+   slack-sdk>=3.0.0
+   ```
+
+2. 環境変数
+   ```
+   DIFY_API_KEY: Dify APIの認証キー
+   SLACK_TOKEN: Slack APIの認証トークン
+   DIFY_HOST: Dify APIのホストURL
+   ```
+
+## 技術的制約
+1. タイムアウト
+   - HTTPリクエスト: 60秒
+   - リトライ間隔: 指数バックオフ
+
+2. エラーハンドリング
+   - 最大リトライ回数: 3回
+   - エラーログの保持期間: 5世代
+   - ログファイルサイズ: 10MB
+
 ## 開発環境
 1. Python環境
    - Python 3.10以上
