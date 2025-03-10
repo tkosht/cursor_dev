@@ -6,6 +6,7 @@ from logging.handlers import RotatingFileHandler
 from typing import Any, Dict, Optional
 
 import aiohttp
+from dotenv import load_dotenv
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
@@ -30,6 +31,11 @@ logging.basicConfig(
     ],
 )
 logger = logging.getLogger(__name__)
+
+
+def load_environment() -> None:
+    """環境変数を読み込む"""
+    load_dotenv()
 
 
 class QueryExecutionError(Exception):
@@ -70,6 +76,9 @@ class QueryMonitor:
         """
         if not all([dify_api_key, slack_token, slack_channel]):
             raise ValueError("All parameters are required")
+
+        # 環境変数の読み込み
+        load_environment()
 
         self.dify_api_key = dify_api_key
         self.slack_channel = slack_channel

@@ -527,3 +527,29 @@ async def test_main_application_error(
     # テスト実行とアサーション
     with pytest.raises(SlackNotificationError, match="Failed to send notification: invalid_auth"):
         await main()
+
+
+@pytest.mark.asyncio
+async def test_load_dotenv_success(mock_env, mock_queries, mock_slack_client, mock_session):
+    """load_dotenvを使用した環境変数の読み込みテスト"""
+    with (
+        patch("builtins.open", create=True) as mock_open,
+        patch("app.query_monitor.WebClient", return_value=mock_slack_client),
+        patch("app.query_monitor.aiohttp.ClientSession", return_value=mock_session),
+        patch("app.query_monitor.load_environment") as mock_load_environment,
+    ):
+        mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(mock_queries)
+        mock_load_environment.return_value = None
+
+        monitor = QueryMonitor(
+            dify_api_key="test-dify-key",
+            slack_token="test-token",
+            slack_channel="test-channel",
+            slack_client=mock_slack_client,
+            session=mock_session,
+        )
+
+        assert monitor.dify_api_key == "test-dify-key"
+        assert monitor.slack_channel == "test-channel"
+        assert len(monitor.queries) == 1
+        mock_load_environment.assert_called_once()
