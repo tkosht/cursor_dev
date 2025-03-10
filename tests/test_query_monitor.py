@@ -426,3 +426,104 @@ async def test_custom_dify_host(
             json={"query": "test_query"},
             timeout=mock.ANY,
         )
+
+
+@pytest.mark.asyncio
+async def test_process_query_empty_result_warning(
+    monitor, mock_slack_client, mock_session
+):
+    """空の結果に対する警告通知のテスト"""
+    # モックの設定
+    mock_response = AsyncMock()
+    mock_response.json.return_value = {"answer": None}
+    mock_response.__aenter__.return_value = mock_response
+    mock_session.post.return_value = mock_response
+    mock_slack_client.chat_postMessage.return_value = {"ok": True}
+
+    # テスト実行
+    await monitor.process_query("test_query", "test_channel")
+
+    # アサーション
+    mock_slack_client.chat_postMessage.assert_called_once_with(
+        channel="test_channel",
+        text="結果が空です",
+        blocks=[
+            {
+                "type": "header",
+                "text": {"type": "plain_text", "text": "クエリ実行結果"},
+            },
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "結果が空です"},
+            },
+            {
+                "type": "context",
+                "elements": [{"type": "mrkdwn", "text": "ステータス: warning"}],
+            },
+            {"type": "divider"},
+        ],
+    )
+
+
+@pytest.mark.asyncio
+async def test_process_query_success_notification(
+    monitor, mock_slack_client, mock_session, mock_response
+):
+    """成功時の通知テスト"""
+    # モックの設定
+    mock_response.json.return_value = {"answer": "テスト成功"}
+    mock_slack_client.chat_postMessage.return_value = {"ok": True}
+
+    # テスト実行
+    await monitor.process_query("test_query", "test_channel")
+
+    # アサーション
+    mock_slack_client.chat_postMessage.assert_called_once_with(
+        channel="test_channel",
+        text="テスト成功",
+        blocks=[
+            {
+                "type": "header",
+                "text": {"type": "plain_text", "text": "クエリ実行結果"},
+            },
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "テスト成功"},
+            },
+            {
+                "type": "context",
+                "elements": [{"type": "mrkdwn", "text": "ステータス: success"}],
+            },
+            {"type": "divider"},
+        ],
+    )
+
+
+@pytest.mark.asyncio
+async def test_process_query_unexpected_error(
+    monitor, mock_slack_client, mock_session
+):
+    """予期せぬエラーのテスト"""
+    # モックの設定
+    mock_session.post.side_effect = ValueError("予期せぬエラー")
+    mock_slack_client.chat_postMessage.return_value = {"ok": True}
+
+    # テスト実行とアサーション
+    with pytest.raises(ValueError, match="予期せぬエラー"):
+        await monitor.process_query("test_query", "test_channel")
+
+
+@pytest.mark.asyncio
+async def test_main_application_error(
+    mock_env, mock_queries, mock_slack_client, mock_session
+):
+    """アプリケーションエラーのテスト"""
+    # モックの設定
+    mock_session.post.side_effect = Exception("アプリケーションエラー")
+    mock_slack_client.chat_postMessage.side_effect = SlackApiError(
+        "error", {"error": "invalid_auth"}
+    )
+
+    # テスト実行とアサーション
+    with pytest.raises(SlackNotificationError, match="Failed to send notification: invalid_auth"):
+        await main()
