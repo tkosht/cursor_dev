@@ -172,20 +172,49 @@ async def test_process_query_notification_error(
 
 @pytest.mark.asyncio
 async def test_process_query_empty_result(
-    monitor, mock_slack_client, mock_session
+    mock_env, mock_queries, mock_slack_client, mock_session
 ):
     """空の結果を処理するテスト"""
-    # モックの設定
-    mock_response = MagicMock()
-    mock_response.json.return_value = {"answer": ""}
-    mock_session.post.return_value = mock_response
-    mock_slack_client.chat_postMessage.return_value = {"ok": True}
+    with (
+        patch("builtins.open", create=True) as mock_open,
+        patch("app.query_monitor.WebClient", return_value=mock_slack_client),
+        patch("app.query_monitor.aiohttp.ClientSession", return_value=mock_session),
+        patch("app.query_monitor.load_environment") as mock_load_environment,
+    ):
+        mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(mock_queries)
+        mock_load_environment.return_value = None
 
-    # テスト実行
-    await monitor.process_query("test_query", "test_channel")
+        # 空の結果を返すようにモックを設定
+        mock_session.post.return_value.__aenter__.return_value.json.return_value = {"answer": ""}
 
-    # アサーション
-    mock_slack_client.chat_postMessage.assert_called_once()
+        monitor = QueryMonitor(
+            dify_api_key="test-dify-key",
+            slack_token="test-token",
+            slack_channel="test-channel",
+            slack_client=mock_slack_client,
+            session=mock_session,
+        )
+
+        await monitor.process_query("test query", "test-channel")
+        mock_slack_client.chat_postMessage.assert_called_once_with(
+            channel="test-channel",
+            text="結果が空です",
+            blocks=[
+                {
+                    "type": "header",
+                    "text": {"type": "plain_text", "text": "クエリ実行結果"},
+                },
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": "結果が空です"},
+                },
+                {
+                    "type": "context",
+                    "elements": [{"type": "mrkdwn", "text": "ステータス: warning"}],
+                },
+                {"type": "divider"},
+            ],
+        )
 
 
 @pytest.mark.asyncio
@@ -553,3 +582,32 @@ async def test_load_dotenv_success(mock_env, mock_queries, mock_slack_client, mo
         assert monitor.slack_channel == "test-channel"
         assert len(monitor.queries) == 1
         mock_load_environment.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_main_unexpected_error(
+    mock_env, mock_queries, mock_slack_client, mock_session
+):
+    """予期せぬエラーのテスト"""
+    with (
+        patch("builtins.open", create=True) as mock_open,
+        patch("app.query_monitor.WebClient", return_value=mock_slack_client),
+        patch("app.query_monitor.aiohttp.ClientSession", return_value=mock_session),
+        patch("app.query_monitor.load_environment") as mock_load_environment,
+    ):
+        mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(mock_queries)
+        mock_load_environment.return_value = None
+
+        # 予期せぬエラーを発生させる
+        mock_session.post.side_effect = Exception("Unexpected error")
+
+        monitor = QueryMonitor(
+            dify_api_key="test-dify-key",
+            slack_token="test-token",
+            slack_channel="test-channel",
+            slack_client=mock_slack_client,
+            session=mock_session,
+        )
+
+        with pytest.raises(Exception, match="Unexpected error"):
+            await monitor.process_query("test query", "test-channel")
