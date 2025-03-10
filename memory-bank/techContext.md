@@ -31,6 +31,8 @@
 1. 環境変数
    - SLACK_TOKEN
    - DIFY_API_KEY
+   - SLACK_CHANNEL
+   - DIFY_HOST
 
 2. 設定ファイル
    - queries.json

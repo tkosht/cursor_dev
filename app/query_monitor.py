@@ -74,6 +74,7 @@ class QueryMonitor:
         self.slack_client = slack_client or WebClient(token=slack_token)
         self._session = session
         self.queries = []
+        self.dify_host = os.getenv("DIFY_HOST", "https://api.dify.ai")
         
         # クエリ設定の読み込み
         self._load_queries()
@@ -129,7 +130,7 @@ class QueryMonitor:
         try:
             start_time = time.time()
             async with self.session.post(
-                "https://api.dify.ai/v1/completion-messages",
+                f"{self.dify_host}/v1/completion-messages",
                 headers={
                     "Authorization": f"Bearer {self.dify_api_key}",
                     "Content-Type": "application/json"

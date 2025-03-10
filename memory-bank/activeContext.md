@@ -30,6 +30,14 @@
 - Added multiple message verification
 - Enhanced error scenario coverage
 
+### 2024-03-10: Difyホスト設定の柔軟化
+- カスタムDifyホストの設定をサポート
+  - 環境変数 `DIFY_HOST` による設定が可能
+  - デフォルト値: https://api.dify.ai
+- テストカバレッジの追加
+  - カスタムホスト設定のテストケース追加
+  - 既存テストへの影響なし
+
 ## Next Steps
 
 1. Coverage Improvements
@@ -63,3 +71,12 @@
    - Centralize test configuration in pytest.ini
    - Document all warning suppressions
    - Keep test organization consistent
+
+## Current Work Status
+- Difyホスト設定の柔軟化が完了
+- すべてのテストが正常にパス（20テスト）
+- コードカバレッジ95%を維持
+
+## Next Steps
+- 環境変数のドキュメント更新
+- カスタムホスト設定のユーザーガイド追加

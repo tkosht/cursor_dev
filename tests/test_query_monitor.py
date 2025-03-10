@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+from unittest import mock
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
@@ -344,4 +345,30 @@ async def test_main_error_handling(mock_env, mock_queries, mock_slack_client, mo
 
         # テスト実行
         with pytest.raises(Exception):
-            await main() 
+            await main()
+
+
+@pytest.mark.asyncio
+async def test_custom_dify_host(mock_env, mock_slack_client, mock_session, mock_response):
+    """カスタムDifyホストのテスト"""
+    with patch.dict(os.environ, {
+        "DIFY_API_KEY": "test-dify-key",
+        "SLACK_TOKEN": "test-token",
+        "DIFY_HOST": "https://custom.dify.example.com"
+    }):
+        monitor = QueryMonitor(
+            dify_api_key="test-dify-key",
+            slack_token="test-token",
+            slack_channel="test-channel",
+            slack_client=mock_slack_client,
+            session=mock_session
+        )
+        await monitor.execute_query("test_query")
+        
+        # カスタムホストが使用されていることを確認
+        mock_session.post.assert_called_once_with(
+            "https://custom.dify.example.com/v1/completion-messages",
+            headers={"Authorization": "Bearer test-dify-key", "Content-Type": "application/json"},
+            json={"query": "test_query"},
+            timeout=mock.ANY
+        ) 
