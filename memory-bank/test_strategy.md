@@ -92,3 +92,46 @@ async def test_async_operation(mock_async_context):
 - 不要なテストの削除
 - 実行時間の最適化
 - 非同期テストパターンの更新
+
+## 非同期テスト戦略
+
+### イベントループ管理
+```python
+@pytest.fixture(scope="function")
+def event_loop():
+    """Create and cleanup event loop for each test"""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    yield loop
+    loop.close()
+```
+
+### モックの実装
+```python
+@pytest_asyncio.fixture
+async def mock_session(mock_response):
+    """セッションのモック"""
+    session = AsyncMock(spec=aiohttp.ClientSession)
+    cm = AsyncMock()
+    cm.__aenter__.return_value = mock_response
+    cm.__aexit__.return_value = None
+    session.post.return_value = cm
+    session.closed = False
+    return session
+```
+
+### テストケース設計
+1. 正常系テスト
+   - 基本的な機能の確認
+   - 期待される結果の検証
+   - 境界値のテスト
+
+2. 異常系テスト
+   - エラー発生時の挙動確認
+   - リトライロジックの検証
+   - タイムアウト処理の確認
+
+3. エッジケース
+   - 空の結果の処理
+   - 無効なJSONレスポンス
+   - 接続エラーの処理
