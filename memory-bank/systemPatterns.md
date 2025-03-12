@@ -232,3 +232,87 @@ graph TD
    - ベースURLを環境変数で設定可能
    - デフォルト値を提供（標準的なエンドポイント）
    - パスは定数として管理
+
+## コード複雑性の低減パターン
+
+### 関数分割パターン
+```mermaid
+graph TD
+    A[複雑な関数] --> B[入力処理]
+    A --> C[主処理]
+    A --> D[エラー処理]
+    A --> E[結果処理]
+```
+
+1. 責務ごとの分離
+   - 設定読み込み専用関数: `load_config()`
+   - 実行ループ専用関数: `execute_all_queries()`
+   - エラーハンドリング専用関数: `handle_error()`
+
+2. メイン関数のシンプル化
+   - 概要レベルの処理フローのみを記述
+   - 詳細ロジックは専用関数に委譲
+   - エラーハンドリングの集約
+
+3. 実装例
+```python
+# 改善前：複雑なメイン関数
+async def main():
+    # 環境変数の読み込み
+    load_dotenv()
+    api_key = os.getenv("API_KEY")
+    token = os.getenv("TOKEN")
+    
+    # バリデーション
+    if not all([api_key, token]):
+        raise ValueError("Required vars not set")
+    
+    # 処理実行
+    async with Client(api_key, token) as client:
+        for item in items:
+            try:
+                await client.process(item)
+            except Error as e:
+                handle_error(e)
+```
+
+```python
+# 改善後：シンプルなメイン関数と分割された処理
+def load_config():
+    """設定の読み込みと検証"""
+    load_dotenv()
+    api_key = os.getenv("API_KEY")
+    token = os.getenv("TOKEN")
+    
+    if not all([api_key, token]):
+        raise ValueError("Required vars not set")
+    
+    return api_key, token
+
+async def execute_all_items(client, items):
+    """全アイテムの処理"""
+    for item in items:
+        try:
+            await client.process(item)
+        except Error as e:
+            handle_error(e)
+
+async def main():
+    try:
+        # 設定読み込み
+        api_key, token = load_config()
+        
+        # 処理実行
+        async with Client(api_key, token) as client:
+            await execute_all_items(client, items)
+    except ValueError as e:
+        logger.error("Config error: %s", e)
+    except Exception as e:
+        logger.error("Unexpected error: %s", e)
+```
+
+### 主な利点
+1. 可読性向上: 各関数が単一の責務を持つ
+2. テスト容易性: 小さな関数は個別テストが容易
+3. 再利用性: 共通処理を複数箇所から呼び出し可能
+4. 保守性: 変更影響範囲が限定的になる

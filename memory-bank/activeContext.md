@@ -18,8 +18,15 @@
    - Application error testing added
 
 3. Test Coverage
-   - Current coverage: 96%
-   - Missing coverage: 263-266, 307-309 in app/query_monitor.py
+   - Current coverage: 88%
+   - Missing coverage: 181-183, 245-246, 273-277, 330-335, 367-369, 394-396, 400 in app/query_monitor.py
+   - テスト数: 32件
+
+4. コードリファクタリング
+   - main関数の複雑性を低減
+   - 機能の分割：
+     - `load_config()`: 環境変数設定の読み込み
+     - `execute_all_queries()`: クエリ実行ループの処理
 
 ## Recent Changes
 

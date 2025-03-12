@@ -70,6 +70,30 @@ value = os.getenv("KEY", "default_value")
 - 明示的なデフォルト値
 - 設定忘れ防止
 
+### 設定読み込みの分離パターン
+設定読み込みを専用関数に分離することで、再利用性と保守性が向上します。
+
+```python
+def load_config():
+    """環境変数の設定を読み込む"""
+    load_dotenv()  # .env ファイルを読み込む
+    
+    api_key = os.getenv("API_KEY")
+    token = os.getenv("TOKEN")
+    host = os.getenv("HOST")
+    
+    # 必須パラメータのバリデーション
+    if not all([api_key, token]):
+        raise ValueError("Required environment variables are not set")
+    
+    return api_key, token, host
+```
+
+利点:
+- 設定読み込みロジックの一元管理
+- バリデーションの統一
+- メイン処理の簡素化
+
 2. 設定の階層化
 - 必須設定: 未設定時にエラー
 - オプション設定: デフォルト値を提供

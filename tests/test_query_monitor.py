@@ -1,20 +1,18 @@
 import asyncio
 import json
 import os
-from unittest import mock
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest
 import pytest_asyncio
 from slack_sdk.errors import SlackApiError
-from slack_sdk.web import WebClient
 
 from app.query_monitor import (
     QueryExecutionError,
     QueryMonitor,
-    SlackNotificationError,
-    load_environment,
+    execute_all_queries,
+    load_config,
     main,
 )
 
@@ -597,6 +595,72 @@ async def test_process_query_unexpected_error(
 
 
 @pytest.mark.asyncio
+async def test_load_config_success(mock_env):
+    """load_config関数のテスト"""
+    with (
+        patch("app.query_monitor.load_environment") as mock_load_env,
+        patch.dict(
+            os.environ,
+            {
+                "DIFY_API_KEY": "test-api-key",
+                "SLACK_TOKEN": "test-token",
+                "DIFY_HOST": "http://test-host",
+            },
+        ),
+    ):
+        mock_load_env.return_value = None
+
+        # load_config関数を実行
+        dify_api_key, slack_token, dify_host = load_config()
+
+        # 戻り値の確認
+        assert dify_api_key == "test-api-key"
+        assert slack_token == "test-token"
+        assert dify_host == "http://test-host"
+
+        # load_environmentが呼び出されたことを確認
+        mock_load_env.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_load_config_missing_env():
+    """load_config関数の必須環境変数不足のテスト"""
+    with (
+        patch("app.query_monitor.load_environment"),
+        patch.dict(os.environ, {}, clear=True),
+    ):
+        with pytest.raises(ValueError, match="Required environment variables are not set"):
+            load_config()
+
+
+@pytest.mark.asyncio
+async def test_execute_all_queries_success(monitor, mock_slack_client, mock_session, mock_response):
+    """execute_all_queries関数の成功テスト"""
+    # モックの設定
+    mock_response.json.return_value = {"answer": "テスト結果"}
+    mock_slack_client.chat_postMessage.return_value = {"ok": True}
+
+    # テスト実行
+    await execute_all_queries(monitor)
+
+    # アサーション
+    mock_session.post.assert_called()
+    mock_slack_client.chat_postMessage.assert_called()
+
+
+@pytest.mark.asyncio
+async def test_execute_all_queries_error(monitor, mock_slack_client, mock_session):
+    """execute_all_queries関数のエラーテスト"""
+    mock_session.post.side_effect = aiohttp.ClientError("APIエラー")
+    
+    with pytest.raises(
+        QueryExecutionError,
+        match="Failed to execute query after 3 attempts: APIエラー"
+    ):
+        await execute_all_queries(monitor)
+
+
+@pytest.mark.asyncio
 async def test_load_dotenv_success(mock_env, mock_queries, mock_slack_client, mock_session):
     """load_dotenvを使用した環境変数の読み込みテスト"""
     with (
@@ -614,6 +678,41 @@ async def test_load_dotenv_success(mock_env, mock_queries, mock_slack_client, mo
 
         # load_dotenvが呼び出されたことを確認
         mock_load_dotenv.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_session_property(mock_session):
+    """sessionプロパティの初期化テスト"""
+    # 一度モニターを作成して_sessionをNoneに設定
+    monitor = QueryMonitor(
+        dify_api_key="test-key",
+        slack_token="test-token",
+        slack_channel="test-channel"
+    )
+    
+    # _sessionをNoneに設定して新しいセッションが生成されるか確認
+    monitor._session = None
+    
+    with (
+        patch("aiohttp.ClientSession") as mock_client_session,
+        patch("aiohttp.TCPConnector") as mock_connector,
+        patch("aiohttp.ClientTimeout") as mock_timeout
+    ):
+        mock_connector.return_value = "mock_connector"
+        mock_timeout.return_value = "mock_timeout"
+        mock_client_session.return_value = mock_session
+        
+        # sessionプロパティを呼び出し
+        session = monitor.session
+        
+        # セッションが新しく作成されたことを確認
+        mock_timeout.assert_called_once_with(total=60)
+        mock_connector.assert_called_once()
+        mock_client_session.assert_called_once_with(
+            timeout="mock_timeout",
+            connector="mock_connector"
+        )
+        assert session == mock_session
 
 
 @pytest.mark.asyncio

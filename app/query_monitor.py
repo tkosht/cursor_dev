@@ -337,21 +337,43 @@ class QueryMonitor:
             )
 
 
+def load_config():
+    """環境変数の設定を読み込む"""
+    load_environment()
+
+    dify_api_key = os.getenv("DIFY_API_KEY")
+    slack_token = os.getenv("SLACK_TOKEN")
+    dify_host = os.getenv("DIFY_HOST")
+
+    if not all([dify_api_key, slack_token]):
+        raise ValueError("Required environment variables are not set")
+
+    logger.info("Environment variables loaded successfully")
+    logger.info("DIFY_HOST: %s", dify_host)
+    
+    return dify_api_key, slack_token, dify_host
+
+
+async def execute_all_queries(monitor):
+    """すべてのクエリを実行する"""
+    for query in monitor.queries:
+        try:
+            await monitor.process_query(
+                query["query"], query["channel"]
+            )
+        except (QueryExecutionError, SlackNotificationError) as e:
+            logger.error("Query execution error: %s", e)
+            raise
+        except Exception as e:
+            logger.error("Unexpected error: %s", e)
+            raise
+
+
 async def main():
     """メイン関数"""
     try:
         # 環境変数の読み込み
-        load_environment()
-
-        dify_api_key = os.getenv("DIFY_API_KEY")
-        slack_token = os.getenv("SLACK_TOKEN")
-        dify_host = os.getenv("DIFY_HOST")
-
-        if not all([dify_api_key, slack_token]):
-            raise ValueError("Required environment variables are not set")
-
-        logger.info("Environment variables loaded successfully")
-        logger.info("DIFY_HOST: %s", dify_host)
+        dify_api_key, slack_token, dify_host = load_config()
 
         # モニターの初期化と実行
         async with QueryMonitor(
@@ -361,17 +383,7 @@ async def main():
             dify_host=dify_host,
         ) as monitor:
             # 全クエリの実行
-            for query in monitor.queries:
-                try:
-                    await monitor.process_query(
-                        query["query"], query["channel"]
-                    )
-                except (QueryExecutionError, SlackNotificationError) as e:
-                    logger.error("Query execution error: %s", e)
-                    raise
-                except Exception as e:
-                    logger.error("Unexpected error: %s", e)
-                    raise
+            await execute_all_queries(monitor)
 
     except ValueError as e:
         logger.error("Environment error: %s", e)
