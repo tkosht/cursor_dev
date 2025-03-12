@@ -605,18 +605,20 @@ async def test_load_config_success(mock_env):
                 "DIFY_API_KEY": "test-api-key",
                 "SLACK_TOKEN": "test-token",
                 "DIFY_HOST": "http://test-host",
+                "REQUEST_TIMEOUT": "120",
             },
         ),
     ):
         mock_load_env.return_value = None
 
         # load_config関数を実行
-        dify_api_key, slack_token, dify_host = load_config()
+        dify_api_key, slack_token, dify_host, request_timeout = load_config()
 
         # 戻り値の確認
         assert dify_api_key == "test-api-key"
         assert slack_token == "test-token"
         assert dify_host == "http://test-host"
+        assert request_timeout == 120
 
         # load_environmentが呼び出されたことを確認
         mock_load_env.assert_called_once()
@@ -684,10 +686,12 @@ async def test_load_dotenv_success(mock_env, mock_queries, mock_slack_client, mo
 async def test_session_property(mock_session):
     """sessionプロパティの初期化テスト"""
     # 一度モニターを作成して_sessionをNoneに設定
+    request_timeout = 120
     monitor = QueryMonitor(
         dify_api_key="test-key",
         slack_token="test-token",
-        slack_channel="test-channel"
+        slack_channel="test-channel",
+        request_timeout=request_timeout
     )
     
     # _sessionをNoneに設定して新しいセッションが生成されるか確認
@@ -706,7 +710,7 @@ async def test_session_property(mock_session):
         session = monitor.session
         
         # セッションが新しく作成されたことを確認
-        mock_timeout.assert_called_once_with(total=60)
+        mock_timeout.assert_called_once_with(total=request_timeout)
         mock_connector.assert_called_once()
         mock_client_session.assert_called_once_with(
             timeout="mock_timeout",

@@ -62,6 +62,7 @@ class QueryMonitor:
         dify_host: Optional[str] = None,
         slack_client: Optional[WebClient] = None,
         session: Optional[aiohttp.ClientSession] = None,
+        request_timeout: int = 60,
     ) -> None:
         """
         QueryMonitorの初期化
@@ -73,6 +74,7 @@ class QueryMonitor:
             dify_host (Optional[str], optional): Dify APIホスト. Defaults to None.
             slack_client (Optional[WebClient], optional): Slackクライアント. Defaults to None.
             session (Optional[aiohttp.ClientSession], optional): aiohttpセッション. Defaults to None.
+            request_timeout (int, optional): リクエストのタイムアウト秒数. Defaults to 60.
 
         Raises:
             ValueError: 必要なパラメータが不足している場合
@@ -85,8 +87,10 @@ class QueryMonitor:
         self.slack_channel = slack_channel
         self.dify_host = dify_host or os.getenv("DIFY_HOST", "http://localhost:5001")
         self.slack_client = slack_client or WebClient(token=slack_token)
+        self.request_timeout = request_timeout
+        
         self._session = session or aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=60),
+            timeout=aiohttp.ClientTimeout(total=self.request_timeout),
             connector=aiohttp.TCPConnector(ssl=False)
         )
         self.queries = []
@@ -100,7 +104,7 @@ class QueryMonitor:
     def session(self) -> aiohttp.ClientSession:
         """セッションを取得"""
         if self._session is None:
-            timeout = aiohttp.ClientTimeout(total=60)
+            timeout = aiohttp.ClientTimeout(total=self.request_timeout)
             connector = aiohttp.TCPConnector(
                 limit=10,
                 ttl_dns_cache=300,
@@ -161,7 +165,7 @@ class QueryMonitor:
         for attempt in range(max_retries):
             try:
                 start_time = time.time()
-                timeout = aiohttp.ClientTimeout(total=60)
+                timeout = aiohttp.ClientTimeout(total=self.request_timeout)
                 async with self.session.post(
                     f"{self.dify_host}/v1/chat-messages",
                     headers={
@@ -344,14 +348,23 @@ def load_config():
     dify_api_key = os.getenv("DIFY_API_KEY")
     slack_token = os.getenv("SLACK_TOKEN")
     dify_host = os.getenv("DIFY_HOST")
+    
+    # タイムアウト設定を環境変数から読み込む
+    timeout_str = os.getenv("REQUEST_TIMEOUT", "60")
+    try:
+        request_timeout = int(timeout_str)
+    except ValueError:
+        logger.warning("Invalid REQUEST_TIMEOUT value: %s, using default 60 seconds", timeout_str)
+        request_timeout = 60
 
     if not all([dify_api_key, slack_token]):
         raise ValueError("Required environment variables are not set")
 
     logger.info("Environment variables loaded successfully")
     logger.info("DIFY_HOST: %s", dify_host)
+    logger.info("REQUEST_TIMEOUT: %d seconds", request_timeout)
     
-    return dify_api_key, slack_token, dify_host
+    return dify_api_key, slack_token, dify_host, request_timeout
 
 
 async def execute_all_queries(monitor):
@@ -373,7 +386,7 @@ async def main():
     """メイン関数"""
     try:
         # 環境変数の読み込み
-        dify_api_key, slack_token, dify_host = load_config()
+        dify_api_key, slack_token, dify_host, request_timeout = load_config()
 
         # モニターの初期化と実行
         async with QueryMonitor(
@@ -381,6 +394,7 @@ async def main():
             slack_token=slack_token,
             slack_channel="dummy",  # チャンネルはqueries.jsonから取得
             dify_host=dify_host,
+            request_timeout=request_timeout,
         ) as monitor:
             # 全クエリの実行
             await execute_all_queries(monitor)
