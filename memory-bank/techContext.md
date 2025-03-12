@@ -8,6 +8,9 @@
 
 2. 外部サービス
    - Dify API
+     - エンドポイント: /v1/chat-messages
+     - 認証: Bearer token
+     - レスポンスモード: blocking/streaming
    - Slack API
    - ログシステム
 
@@ -23,7 +26,7 @@
    ```
    DIFY_API_KEY: Dify APIの認証キー
    SLACK_TOKEN: Slack APIの認証トークン
-   DIFY_HOST: Dify APIのホストURL
+   DIFY_HOST: Dify APIのホストURL（例: http://192.168.1.11）
    ```
 
 ## 技術的制約
@@ -74,15 +77,30 @@
    - queries.json
    - ログ設定
 
-## テスト環境
-1. テストフレームワーク
-   - pytest
-   - unittest.mock
-   - MagicMock
+## テストインフラストラクチャ
 
-2. テストカバレッジ
-   - 現在: 80%
-   - 目標: 90%以上
+## テストフレームワーク
+- pytest: メインのテストフレームワーク
+- pytest-asyncio: 非同期テスト用
+- pytest-cov: カバレッジレポート用
+
+## テスト設定
+```ini
+[pytest]
+asyncio_mode = strict
+asyncio_default_fixture_loop_scope = function
+addopts = --cov=app --cov-report=term-missing
+```
+
+## テストカバレッジ状況
+- 現在のカバレッジ: 86%
+- 未カバー箇所:
+  - app/query_monitor.py: 103-110, 181-183, 245-246, 273-277, 330-335, 372-374, 382-384, 388
+
+## テスト環境
+- 非同期テスト対応
+- モック機能完備
+- カバレッジレポート自動生成
 
 ## デプロイメント
 1. 実行環境

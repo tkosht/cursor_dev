@@ -118,79 +118,132 @@ endpoint = f"{self.dify_host}/v1/completion-messages"
 - エンドポイントの動的構築
 
 ### テストパターン
-1. カスタム設定のテスト
-```python
-with patch.dict(os.environ, {"API_HOST": "https://custom.example.com"}):
-    client = APIClient()
-    assert client.host == "https://custom.example.com"
+
+## 非同期テスト設定
+
+### pytest.ini の設定
+```ini
+[pytest]
+asyncio_mode = strict
+asyncio_default_fixture_loop_scope = function
+
+filterwarnings =
+    ignore::RuntimeWarning:app.query_monitor
+    ignore::DeprecationWarning:pytest_asyncio.plugin
 ```
 
-2. デフォルト値のテスト
+### イベントループの設定
 ```python
-with patch.dict(os.environ, {}, clear=True):
-    client = APIClient()
-    assert client.host == "https://api.example.com"
+@pytest.fixture(scope="session")
+def event_loop_policy():
+    """イベントループポリシーの設定"""
+    return asyncio.get_event_loop_policy()
 ```
 
-3. 非同期テストのパターン
+### 非同期モックの設定
 ```python
-# 非同期コンテキストマネージャーのモック
-@pytest_asyncio.fixture
-async def mock_async_context():
+@pytest.fixture
+def mock_response():
+    """APIレスポンスのモック"""
     mock = AsyncMock()
-    mock.__aenter__.return_value = mock
-    mock.__aexit__.return_value = None
+    mock.status = 200
+    mock.json.return_value = {"answer": "テスト結果"}
     return mock
 
-# 非同期操作のテスト
-@pytest.mark.asyncio
-async def test_async_operation(mock_async_context):
-    # Given（準備）
-    mock_async_context.json.return_value = {"result": "success"}
-    
-    # When（実行）
-    async with mock_async_context as ctx:
-        result = await ctx.json()
-    
-    # Then（検証）
-    assert result == {"result": "success"}
-    mock_async_context.__aenter__.assert_called_once()
-    mock_async_context.__aexit__.assert_called_once()
+@pytest.fixture
+def mock_session(mock_response):
+    """セッションのモック"""
+    session = AsyncMock(spec=aiohttp.ClientSession)
+    cm = AsyncMock()
+    cm.__aenter__.return_value = mock_response
+    cm.__aexit__.return_value = None
+    session.post.return_value = cm
+    return session
 ```
 
-### 非同期テストのベストプラクティス
-1. モックの設定
-- AsyncMockを使用
-- コンテキストマネージャーメソッドの実装
-- 戻り値の適切な設定
+### テストケースの実装
+```python
+@pytest.mark.asyncio
+async def test_async_function():
+    """非同期関数のテスト"""
+    # Given
+    mock_response = AsyncMock()
+    mock_response.json.return_value = {"result": "success"}
+    
+    # When
+    async with mock_response as response:
+        result = await response.json()
+    
+    # Then
+    assert result == {"result": "success"}
+    mock_response.__aenter__.assert_called_once()
+    mock_response.__aexit__.assert_called_once()
+```
 
-2. テストの構造
-- Given-When-Thenパターンの使用
-- 非同期コンテキストの適切な処理
-- アサーションの明確化
+## テストカバレッジ管理
 
-3. エラーハンドリング
-- 例外の適切なモック
-- エラーケースのテスト
-- エラーメッセージの検証
+### カバレッジ設定
+```ini
+[pytest]
+addopts = --cov=app --cov-report=term-missing
+```
 
-### 注意点
-1. セキュリティ
-- HTTPS使用の推奨
-- 認証情報の分離
-- URLエスケープ処理
+### カバレッジ目標
+- 最低限: 80%
+- 目標: 90%以上
+- 重要なモジュール: 95%以上
 
-2. 可用性
-- デフォルト値の適切な選択
-- エラー処理の実装
-- ログ記録の充実
+### カバレッジレポートの読み方
+```
+Name                   Stmts   Miss  Cover   Missing
+----------------------------------------------------
+app/module.py           100    10     90%    45-50,60-65
+```
+- Stmts: 総行数
+- Miss: カバーされていない行数
+- Cover: カバレッジ率
+- Missing: カバーされていない行番号
 
-3. メンテナンス性
-- 設定の一元管理
-- ドキュメントの更新
-- テストカバレッジの維持
+### カバレッジ改善戦略
+1. 未カバー行の特定
+2. テストケースの追加
+3. エッジケースのテスト
+4. 例外パスのテスト
 
-4. 非同期テスト
-- イベントループの適切な管理
-- 非同期コンテキストの正しい実装
-- テストの安定性確保
+# API利用パターン
+
+## Dify API
+1. エンドポイント選択
+```python
+# チャットメッセージ用
+endpoint = f"{host}/v1/chat-messages"
+
+# レスポンスモード
+response_mode = "blocking"  # または "streaming"
+```
+
+2. リクエスト構造
+```python
+payload = {
+    "inputs": {},
+    "query": "クエリ文字列",
+    "response_mode": "blocking",
+    "conversation_id": "",
+    "user": "user_id"
+}
+```
+
+3. 認証
+```python
+headers = {
+    "Authorization": f"Bearer {api_key}",
+    "Content-Type": "application/json"
+}
+```
+
+4. エラーハンドリング
+```python
+if response.status != 200:
+    error_text = await response.text()
+    raise APIError(f"Status: {response.status}, Error: {error_text}")
+```

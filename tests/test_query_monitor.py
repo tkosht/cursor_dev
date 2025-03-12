@@ -19,6 +19,12 @@ from app.query_monitor import (
 )
 
 
+@pytest.fixture(scope="session")
+def event_loop_policy():
+    """イベントループポリシーの設定"""
+    return asyncio.get_event_loop_policy()
+
+
 @pytest.fixture(scope="function")
 def event_loop():
     """Create and cleanup event loop for each test"""
@@ -28,25 +34,23 @@ def event_loop():
     loop.close()
 
 
-@pytest_asyncio.fixture
-async def mock_response():
-    """レスポンスのモック"""
-    response = AsyncMock()
-    response.status = 200
-    response.json.return_value = {"answer": "テスト結果"}
-    response.raise_for_status = AsyncMock()
-    return response
+@pytest.fixture
+def mock_response():
+    """APIレスポンスのモック"""
+    mock = AsyncMock()
+    mock.status = 200
+    mock.json.return_value = {"answer": "テスト結果"}
+    return mock
 
 
-@pytest_asyncio.fixture
-async def mock_session(mock_response):
+@pytest.fixture
+def mock_session(mock_response):
     """セッションのモック"""
     session = AsyncMock(spec=aiohttp.ClientSession)
     cm = AsyncMock()
     cm.__aenter__.return_value = mock_response
     cm.__aexit__.return_value = None
     session.post.return_value = cm
-    session.closed = False
     return session
 
 
@@ -272,7 +276,49 @@ async def test_execute_query_success(monitor, mock_session, mock_response):
 
     # アサーション
     assert result == {"answer": "テスト結果"}
-    mock_session.post.assert_called_once()
+    mock_session.post.assert_called_once_with(
+        f"{monitor.dify_host}/v1/chat-messages",
+        headers={
+            "Authorization": "Bearer test-dify-key",
+            "Content-Type": "application/json"
+        },
+        json={
+            "inputs": {},
+            "query": "test_query",
+            "response_mode": "blocking",
+            "conversation_id": "",
+            "user": "query_monitor"
+        },
+        timeout=ANY
+    )
+
+
+@pytest.mark.asyncio
+async def test_execute_query_streaming(monitor, mock_session, mock_response):
+    """ストリーミングモードでのクエリ実行テスト"""
+    # モックの設定
+    mock_response.json.return_value = {"answer": "ストリーミング結果"}
+    
+    # テスト実行
+    result = await monitor.execute_query("test_query", response_mode="streaming")
+
+    # アサーション
+    assert result == {"answer": "ストリーミング結果"}
+    mock_session.post.assert_called_once_with(
+        f"{monitor.dify_host}/v1/chat-messages",
+        headers={
+            "Authorization": "Bearer test-dify-key",
+            "Content-Type": "application/json"
+        },
+        json={
+            "inputs": {},
+            "query": "test_query",
+            "response_mode": "streaming",
+            "conversation_id": "",
+            "user": "query_monitor"
+        },
+        timeout=ANY
+    )
 
 
 @pytest.mark.asyncio
@@ -468,7 +514,7 @@ async def test_custom_dify_host(mock_session, mock_slack_client):
     await monitor.process_query("test_query", "test_channel")
     
     mock_session.post.assert_called_once_with(
-        f"{custom_host}/v1/completion-messages",
+        f"{custom_host}/v1/chat-messages",
         headers={
             "Authorization": "Bearer test-dify-key",
             "Content-Type": "application/json"
@@ -557,23 +603,17 @@ async def test_load_dotenv_success(mock_env, mock_queries, mock_slack_client, mo
         patch("builtins.open", create=True) as mock_open,
         patch("app.query_monitor.WebClient", return_value=mock_slack_client),
         patch("app.query_monitor.aiohttp.ClientSession", return_value=mock_session),
-        patch("app.query_monitor.load_environment") as mock_load_environment,
+        patch("app.query_monitor.load_dotenv") as mock_load_dotenv,
     ):
         mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(mock_queries)
-        mock_load_environment.return_value = None
+        mock_load_dotenv.return_value = None
 
-        monitor = QueryMonitor(
-            dify_api_key="test-dify-key",
-            slack_token="test-token",
-            slack_channel="test-channel",
-            slack_client=mock_slack_client,
-            session=mock_session,
-        )
+        # メイン関数を実行
+        with patch.dict(os.environ, {"DIFY_API_KEY": "test-api-key", "SLACK_TOKEN": "test-token"}):
+            await main()
 
-        assert monitor.dify_api_key == "test-dify-key"
-        assert monitor.slack_channel == "test-channel"
-        assert len(monitor.queries) == 1
-        mock_load_environment.assert_called_once()
+        # load_dotenvが呼び出されたことを確認
+        mock_load_dotenv.assert_called_once()
 
 
 @pytest.mark.asyncio

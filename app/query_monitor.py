@@ -80,8 +80,6 @@ class QueryMonitor:
         if not all([dify_api_key, slack_token, slack_channel]):
             raise ValueError("All parameters are required")
         
-        load_environment()
-        
         self.dify_api_key = dify_api_key
         self.slack_token = slack_token
         self.slack_channel = slack_channel
@@ -143,12 +141,13 @@ class QueryMonitor:
             logger.error("Failed to parse queries.json: %s", e)
             raise
 
-    async def execute_query(self, query: str) -> Dict[str, Any]:
+    async def execute_query(self, query: str, response_mode: str = "blocking") -> Dict[str, Any]:
         """
         Dify APIを使用してクエリを実行
 
         Args:
             query: 実行するクエリ文字列
+            response_mode: レスポンスモード ("blocking" または "streaming")
 
         Returns:
             Dict[str, Any]: クエリ実行結果
@@ -164,7 +163,7 @@ class QueryMonitor:
                 start_time = time.time()
                 timeout = aiohttp.ClientTimeout(total=60)
                 async with self.session.post(
-                    f"{self.dify_host}/v1/completion-messages",
+                    f"{self.dify_host}/v1/chat-messages",
                     headers={
                         "Authorization": f"Bearer {self.dify_api_key}",
                         "Content-Type": "application/json",
@@ -172,7 +171,7 @@ class QueryMonitor:
                     json={
                         "inputs": {},
                         "query": query,
-                        "response_mode": "blocking",
+                        "response_mode": response_mode,
                         "conversation_id": "",
                         "user": "query_monitor"
                     },
