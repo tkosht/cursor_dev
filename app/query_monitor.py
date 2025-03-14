@@ -302,6 +302,7 @@ class QueryMonitor:
             SlackNotificationError: Slack通知に失敗した場合
         """
         try:
+            # ステータスに応じてタイトルを設定
             if status == "warning":
                 title = f"⚠️ 警告: {title}"
             elif status == "error":
@@ -309,27 +310,85 @@ class QueryMonitor:
             elif status == "success":
                 title = f"✅ {title}"
 
-            blocks = [
-                {
-                    "type": "header",
-                    "text": {"type": "plain_text", "text": title},
-                },
-                {
-                    "type": "section",
-                    "text": {"type": "mrkdwn", "text": message},
-                },
-                {
+            # メッセージを2000文字以内のチャンクに分割（Slack制限に余裕を持たせる）
+            MAX_LENGTH = 1900
+            message_chunks = [message[i:i + MAX_LENGTH] for i in range(0, len(message), MAX_LENGTH)]
+
+            for i, chunk in enumerate(message_chunks):
+                # チャンク番号を付加（複数チャンクの場合）
+                chunk_title = title
+                if len(message_chunks) > 1:
+                    chunk_title = f"{title} ({i+1}/{len(message_chunks)})"
+
+                # メッセージブロックの作成
+                blocks = [
+                    {
+                        "type": "header",
+                        "text": {
+                            "type": "plain_text",
+                            "text": chunk_title[:75],
+                            "emoji": True
+                        }
+                    }
+                ]
+
+                # メッセージ本文を追加（長い場合はコードブロックではなくプレーンテキストとして処理）
+                formatted_chunk = chunk.strip()
+                if formatted_chunk:
+                    # テキストの長さが3000バイトを超える場合は通常テキストとして送信
+                    # (Slackのmrkdwnには約3000バイトの制限がある)
+                    if len(formatted_chunk.encode('utf-8')) > 3000:
+                        blocks.append({
+                            "type": "section",
+                            "text": {
+                                "type": "plain_text",
+                                "text": formatted_chunk[:3000],
+                                "emoji": False
+                            }
+                        })
+                        # 長すぎる場合は残りの部分を省略することを示す
+                        if len(formatted_chunk) > 3000:
+                            blocks.append({
+                                "type": "context",
+                                "elements": [
+                                    {
+                                        "type": "plain_text",
+                                        "text": "メッセージが長すぎるため一部省略されました...",
+                                        "emoji": True
+                                    }
+                                ]
+                            })
+                    else:
+                        # 3000バイト以下の場合はコードブロックとして表示
+                        blocks.append({
+                            "type": "section",
+                            "text": {
+                                "type": "mrkdwn",
+                                "text": f"```{formatted_chunk}```"
+                            }
+                        })
+
+                # ステータス情報を追加
+                blocks.append({
                     "type": "context",
                     "elements": [
-                        {"type": "mrkdwn", "text": f"ステータス: {status}"}
-                    ],
-                },
-                {"type": "divider"},
-            ]
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*ステータス:* {status}"
+                        }
+                    ]
+                })
 
-            self.slack_client.chat_postMessage(
-                channel=channel, blocks=blocks, text=message
-            )
+                # 最後のチャンクの場合のみ区切り線を追加
+                if i == len(message_chunks) - 1:
+                    blocks.append({"type": "divider"})
+
+                # Slack APIを呼び出し
+                self.slack_client.chat_postMessage(
+                    channel=channel,
+                    blocks=blocks,
+                    text=f"{chunk_title}\n{formatted_chunk}"  # フォールバックテキスト
+                )
 
         except SlackApiError as e:
             error = e.response["error"]
