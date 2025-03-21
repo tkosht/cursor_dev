@@ -326,13 +326,12 @@ class QueryMonitor:
                         "type": "header",
                         "text": {
                             "type": "plain_text",
-                            "text": chunk_title[:75],
-                            "emoji": True
+                            "text": chunk_title[:75]
                         }
                     }
                 ]
 
-                # メッセージ本文を追加（長い場合はコードブロックではなくプレーンテキストとして処理）
+                # メッセージ本文を追加
                 formatted_chunk = chunk.strip()
                 if formatted_chunk:
                     # テキストの長さが3000バイトを超える場合は通常テキストとして送信
@@ -359,12 +358,12 @@ class QueryMonitor:
                                 ]
                             })
                     else:
-                        # 3000バイト以下の場合はコードブロックとして表示
+                        # 3000バイト以下の場合は通常テキストとして表示
                         blocks.append({
                             "type": "section",
                             "text": {
                                 "type": "mrkdwn",
-                                "text": f"```{formatted_chunk}```"
+                                "text": formatted_chunk
                             }
                         })
 
@@ -374,7 +373,7 @@ class QueryMonitor:
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": f"*ステータス:* {status}"
+                            "text": f"ステータス: {status}"
                         }
                     ]
                 })
@@ -387,7 +386,7 @@ class QueryMonitor:
                 self.slack_client.chat_postMessage(
                     channel=channel,
                     blocks=blocks,
-                    text=f"{chunk_title}\n{formatted_chunk}"  # フォールバックテキスト
+                    text=formatted_chunk  # フォールバックテキスト
                 )
 
         except SlackApiError as e:
