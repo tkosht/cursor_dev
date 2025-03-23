@@ -165,7 +165,7 @@ Analysis of current state:
 +         mock_load_dotenv.return_value = True
 + 
 +         monitor = QueryMonitor(
-+             dify_api_key="test-dify-key",
++             dify_[API_KEY_REDACTED]",
 +             slack_token="test-token",
 +             slack_channel="test-channel",
 +             slack_client=mock_slack_client,
@@ -288,7 +288,7 @@ mock_session = <AsyncMock spec='ClientSession' id='128357220973392'>
             mock_load_dotenv.return_value = True
     
             monitor = QueryMonitor(
-                dify_api_key="test-dify-key",
+                dify_[API_KEY_REDACTED]",
                 slack_token="test-token",
                 slack_channel="test-channel",
                 slack_client=mock_slack_client,
@@ -335,7 +335,7 @@ devuser@35e25dacbbcd:~/workspace$
 +         importlib.reload(app.query_monitor)
 + 
 +         monitor = app.query_monitor.QueryMonitor(
-              dify_api_key="test-dify-key",
+              dify_[API_KEY_REDACTED]",
               slack_token="test-token",
 ```
 
@@ -433,7 +433,7 @@ mock_session = <AsyncMock spec='ClientSession' id='138159725742304'>
             importlib.reload(app.query_monitor)
     
             monitor = app.query_monitor.QueryMonitor(
-                dify_api_key="test-dify-key",
+                dify_[API_KEY_REDACTED]",
                 slack_token="test-token",
                 slack_channel="test-channel",
                 slack_client=mock_slack_client,
@@ -596,7 +596,7 @@ mock_session = <AsyncMock spec='ClientSession' id='127462937855936'>
             import app.query_monitor
     
             monitor = app.query_monitor.QueryMonitor(
-                dify_api_key="test-dify-key",
+                dify_[API_KEY_REDACTED]",
                 slack_token="test-token",
                 slack_channel="test-channel",
                 slack_client=mock_slack_client,
@@ -750,7 +750,7 @@ mock_session = <AsyncMock spec='ClientSession' id='134140502440736'>
             import app.query_monitor
     
             monitor = app.query_monitor.QueryMonitor(
-                dify_api_key="test-dify-key",
+                dify_[API_KEY_REDACTED]",
                 slack_token="test-token",
                 slack_channel="test-channel",
                 slack_client=mock_slack_client,
@@ -874,7 +874,7 @@ _**Assistant**_
   
 -         monitor = app.query_monitor.QueryMonitor(
 +         monitor = QueryMonitor(
-              dify_api_key="test-dify-key",
+              dify_[API_KEY_REDACTED]",
               slack_token="test-token",
           assert monitor.slack_channel == "test-channel"
           assert len(monitor.queries) == 1

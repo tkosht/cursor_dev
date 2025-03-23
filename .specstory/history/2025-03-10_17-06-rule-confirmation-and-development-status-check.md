@@ -2866,13 +2866,13 @@ mock_response = <AsyncMock name='mock.post().__aenter__()' id='128934320364112'>
         with patch.dict(
             os.environ,
             {
-                "DIFY_API_KEY": "test-dify-key",
+                "DIFY_[API_KEY_REDACTED]",
                 "SLACK_TOKEN": "test-token",
                 "DIFY_HOST": "https://custom.dify.example.com",
             },
         ):
             monitor = QueryMonitor(
-                dify_api_key="test-dify-key",
+                dify_[API_KEY_REDACTED]",
                 slack_token="test-token",
                 slack_channel="test-channel",
                 slack_client=mock_slack_client,
@@ -3263,7 +3263,7 @@ mock_session = <AsyncMock spec='ClientSession' id='128934321879024'>
             mock_load_environment.return_value = None
     
             monitor = QueryMonitor(
-                dify_api_key="test-dify-key",
+                dify_[API_KEY_REDACTED]",
                 slack_token="test-token",
                 slack_channel="test-channel",
                 slack_client=mock_slack_client,
@@ -3370,7 +3370,7 @@ mock_session = <AsyncMock spec='ClientSession' id='128934324238944'>
             mock_session.post.side_effect = Exception("Unexpected error")
     
             monitor = QueryMonitor(
-                dify_api_key="test-dify-key",
+                dify_[API_KEY_REDACTED]",
                 slack_token="test-token",
                 slack_channel="test-channel",
                 slack_client=mock_slack_client,
@@ -3477,7 +3477,7 @@ mock_session = <AsyncMock spec='ClientSession' id='128934324238944'>
             mock_session.post.side_effect = Exception("Unexpected error")
     
             monitor = QueryMonitor(
-                dify_api_key="test-dify-key",
+                dify_[API_KEY_REDACTED]",
                 slack_token="test-token",
                 slack_channel="test-channel",
                 slack_client=mock_slack_client,
@@ -4190,13 +4190,13 @@ ANALYSIS:
 -     with patch.dict(
 -         os.environ,
 -         {
--             "DIFY_API_KEY": "test-dify-key",
+-             "DIFY_[API_KEY_REDACTED]",
 -             "SLACK_TOKEN": "test-token",
 -             "DIFY_HOST": "https://custom.dify.example.com",
 -         },
 -     ):
 -         monitor = QueryMonitor(
--             dify_api_key="test-dify-key",
+-             dify_[API_KEY_REDACTED]",
 -             slack_token="test-token",
 -             slack_channel="test-channel",
 -             slack_client=mock_slack_client,
@@ -4216,7 +4216,7 @@ ANALYSIS:
 -         )
 +     custom_host = "https://custom.dify.example.com"
 +     monitor = QueryMonitor(
-+         dify_api_key="test-dify-key",
++         dify_[API_KEY_REDACTED]",
 +         slack_token="test-token",
 +         slack_channel="test-channel",
 +         dify_host=custom_host
@@ -5093,7 +5093,7 @@ ANALYSIS:
 +     mock_slack_client.chat_postMessage.return_value = {"ok": True}
       
       monitor = QueryMonitor(
-          dify_api_key="test-dify-key",
+          dify_[API_KEY_REDACTED]",
 -             slack_token="test-token",
 +         slack_token="test-slack-token",
           slack_channel="test-channel",
@@ -5138,7 +5138,7 @@ ANALYSIS:
       """カスタムDifyホストのテスト"""
       custom_host = "https://custom.dify.example.com"
       monitor = QueryMonitor(
-          dify_api_key="test-dify-key",
+          dify_[API_KEY_REDACTED]",
 -         slack_token="test-token",
 +         slack_token="test-slack-token",
           slack_channel="test-channel",
@@ -7946,7 +7946,7 @@ devuser@35e25dacbbcd:~/workspace$
 +         patch.dict(
 +             os.environ,
 +             {
-+                 "DIFY_API_KEY": "test-api-key",
++                 "DIFY_[API_KEY_REDACTED]",
 +                 "SLACK_TOKEN": "test-token",
 +                 "SLACK_CHANNEL": "test-channel",
 +             },
@@ -7971,7 +7971,7 @@ devuser@35e25dacbbcd:~/workspace$
 +         patch.dict(
 +             os.environ,
 +             {
-+                 "DIFY_API_KEY": "test-api-key",
++                 "DIFY_[API_KEY_REDACTED]",
 +                 "SLACK_TOKEN": "test-token",
 +                 "SLACK_CHANNEL": "test-channel",
 +             },
@@ -8097,17 +8097,17 @@ Action Required:
 ---
 
 ```diff
-                  "DIFY_API_KEY": "test-api-key",
+                  "DIFY_[API_KEY_REDACTED]",
                   "SLACK_TOKEN": "test-token",
 -                 "SLACK_CHANNEL": "test-channel",
               },
           ),
-                  "DIFY_API_KEY": "test-api-key",
+                  "DIFY_[API_KEY_REDACTED]",
                   "SLACK_TOKEN": "test-token",
 -                 "SLACK_CHANNEL": "test-channel",
               },
           ),
-                  "DIFY_API_KEY": "test-api-key",
+                  "DIFY_[API_KEY_REDACTED]",
                   "SLACK_TOKEN": "test-token",
 -                 "SLACK_CHANNEL": "test-channel",
               },
