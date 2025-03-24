@@ -4,6 +4,7 @@
 - 非同期処理を活用したクエリ実行システム
 - 環境変数による設定管理
 - ログベースの監視とデバッグ
+- セキュリティファーストの設計思想
 
 ## 技術的決定事項
 1. 非同期処理
@@ -13,13 +14,18 @@
 
 2. エラーハンドリング
    - カスタム例外クラスの使用
-   - 詳細なエラーログ
+   - 詳細なエラーログ（機密情報の除外）
    - Slack通知によるエラー報告
 
 3. 設定管理
    - 環境変数による設定
    - デフォルト値の提供
    - 設定値の検証
+
+4. セキュリティ管理
+   - 機密情報の自動検出
+   - マスク処理の自動化
+   - Git履歴の保護
 
 ## コンポーネント関係
 1. QueryMonitor
@@ -242,6 +248,7 @@ graph TD
     A --> C[主処理]
     A --> D[エラー処理]
     A --> E[結果処理]
+    A --> F[セキュリティ処理]
 ```
 
 1. 責務ごとの分離
@@ -325,3 +332,46 @@ async def main():
 ### 非同期処理パターン
 - aiohttp ClientSessionによる非同期HTTP通信
 - 長時間実行に対する適切なタイムアウト設定
+
+## セキュリティパターン
+
+### 機密情報保護
+```mermaid
+graph TD
+    A[コード変更] --> B{セキュリティチェック}
+    B -->|検出| C[マスク処理]
+    B -->|クリーン| D[コミット]
+    C --> E{再検証}
+    E -->|OK| D
+    E -->|NG| C
+    D --> F{プッシュ}
+    F -->|成功| G[完了]
+    F -->|違反| H[履歴クリーンアップ]
+    H --> F
+```
+
+### 実装パターン
+1. 検出システム
+   ```python
+   class SecurityChecker:
+       PATTERNS = [
+           ("APIキー", r'(?i)(api[_-]?key|apikey)'),
+           ("トークン", r'(?i)(token|secret)'),
+           # ... 他のパターン
+       ]
+   ```
+
+2. マスク処理
+   ```python
+   def mask_sensitive_info(content):
+       for pattern_name, pattern, mask in PATTERNS:
+           content = re.sub(pattern, mask, content)
+       return content
+   ```
+
+3. Git保護
+   ```bash
+   git filter-branch --force --index-filter \
+       "git rm --cached --ignore-unmatch FILE" \
+       --prune-empty --tag-name-filter cat -- --all
+   ```

@@ -5,8 +5,14 @@
    - aiohttp: 非同期HTTP通信
    - python-dotenv: 環境変数管理
    - slack-sdk: Slack API連携
+   - re: 正規表現によるセキュリティチェック
 
-2. 外部サービス
+2. セキュリティツール
+   - security_check.py: 機密情報検出・マスク
+   - Git pre-commit hooks: 自動セキュリティチェック
+   - GitHub Security: プッシュ保護
+
+3. 外部サービス
    - Dify API
      - エンドポイント: /v1/chat-messages
      - 認証: Bearer token
@@ -24,10 +30,35 @@
 
 2. 環境変数
    ```
-   DIFY_API_KEY: Dify APIの認証キー
-   SLACK_TOKEN: Slack APIの認証トークン
-   DIFY_HOST: Dify APIのホストURL（例: http://192.168.1.11）
+   DIFY_API_KEY: Dify APIの認証キー（要マスク）
+   SLACK_TOKEN: Slack APIの認証トークン（要マスク）
+   DIFY_HOST: Dify APIのホストURL
    ```
+
+## セキュリティ設定
+
+### 機密情報検出
+1. 検出パターン
+   ```python
+   PATTERNS = [
+       ("APIキー", r'(?i)(api[_-]?key|apikey|api[_-]?token)'),
+       ("OpenAI APIキー", r'(?i)sk-[\w-]{32,}'),
+       ("アクセストークン", r'(?i)(access[_-]?token|auth[_-]?token)'),
+       ("GitHubトークン", r'(?i)gh[ps]_[\w-]{36,}'),
+       ("Slackトークン", r'(?i)xox[baprs]-[\w-]{32,}'),
+       ("その他の機密情報", r'(?i)(password|secret|key)')
+   ]
+   ```
+
+2. 自動化設定
+   - pre-commit hook: `.git/hooks/pre-commit`
+   - 自動マスク: `bin/security_check.py --auto-mask`
+   - GitHub保護: プッシュ時のセキュリティチェック
+
+3. エラー対応
+   - 検出時の即時中断
+   - マスク処理の自動適用
+   - Git履歴のクリーンアップ
 
 ## 技術的制約
 1. タイムアウト
@@ -250,3 +281,26 @@ def event_loop_policy():
 ### 接続設定
 - Difyサーバー接続タイムアウトの考慮が重要
 - レスポンスタイムは環境により200秒程度かかる可能性あり
+
+### セキュリティテスト
+1. パターンテスト
+   ```python
+   def test_security_patterns():
+       checker = SecurityChecker()
+       test_cases = [
+           ("[API_KEY_REDACTED]'", True),
+           ("normal_text", False)
+       ]
+       for text, expected in test_cases:
+           assert checker.has_sensitive_info(text) == expected
+   ```
+
+2. マスクテスト
+   ```python
+   def test_masking():
+       checker = SecurityChecker()
+       text = "[API_KEY_REDACTED]'"
+       masked = checker.mask_sensitive_info(text)
+       assert "secret" not in masked
+       assert "[API_KEY_REDACTED]" in masked
+   ```
