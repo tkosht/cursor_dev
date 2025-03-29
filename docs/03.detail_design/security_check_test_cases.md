@@ -46,9 +46,9 @@
 def test_api_key_detection(self, security_checker, temp_file):
     test_cases = [
         # APIキー形式（検出すべき）
-        ("api_key = 'abcd1234efgh5678'", True),
+        ("api_key = '[API_KEY_REDACTED]'", True),
         # APIトークン形式（検出すべき）
-        ("api_token = 'xyzw9876abcd5432'", True),
+        ("api_token = '[API_KEY_REDACTED]'", True),
         # 通常の変数（検出すべきでない）
         ("normal_var = 'test_value'", False),
     ]
@@ -80,9 +80,9 @@ def test_openai_key_detection(self, security_checker, temp_file):
 def test_access_token_detection(self, security_checker, temp_file):
     test_cases = [
         # アクセストークン形式（検出すべき）
-        ("access_token = 'abcd1234-efgh-5678-ijkl-mnopqrstuvwx'", True),
+        ("access_token = '[TOKEN_REDACTED]'", True),
         # 認証トークン形式（検出すべき）
-        ("auth_token = 'xyz98765-abcd-4321-efgh-ijklmnopqrst'", True),
+        ("auth_token = '[TOKEN_REDACTED]'", True),
         # 通常の変数（検出すべきでない）
         ("token_name = 'my_token'", False),
     ]
@@ -130,9 +130,9 @@ def test_slack_token_detection(self, security_checker, temp_file):
 def test_other_sensitive_info_detection(self, security_checker, temp_file):
     test_cases = [
         # パスワード形式（検出すべき）
-        ("password = 'securepassword123'", True),
+        ("password = '[SENSITIVE_INFO_REDACTED]'", True),
         # シークレット形式（検出すべき）
-        ("secret = 'topsecretvalue'", True),
+        ("secret = '[SENSITIVE_INFO_REDACTED]'", True),
         # 通常の変数（検出すべきでない）
         ("username = 'john_doe'", False),
     ]
@@ -150,11 +150,11 @@ def test_edge_cases(self, security_checker, temp_file):
         # 空ファイル
         ("", False),
         # コメント行内の機密情報
-        ("# api_key = 'abcd1234efgh5678'", True),
+        ("# api_key = '[API_KEY_REDACTED]'", True),
         # 複数行の機密情報
         ("api_key = 'abcd'\n'1234efgh5678'", True),
         # Unicode文字を含む
-        ("password = 'パスワード123'", True),
+        ("password = '[SENSITIVE_INFO_REDACTED]'", True),
     ]
     
     # ... テスト処理 ...
@@ -167,7 +167,7 @@ def test_edge_cases(self, security_checker, temp_file):
 ```python
 def test_mask_file(self, security_checker, temp_file):
     # APIキーを含むコンテンツ
-    content = 'api_key = "abcd1234efgh5678"'
+    content = 'api_key = "[API_KEY_REDACTED]"'
     
     with open(temp_file, 'w') as f:
         f.write(content)
@@ -197,10 +197,10 @@ def test_check_directory_with_auto_mask(self, tmpdir):
     
     # 機密情報を含むファイルを作成
     sensitive_file1 = test_dir.join("sensitive1.md")
-    sensitive_file1.write('api_key = "test1234key5678"')
+    sensitive_file1.write('api_key = "[API_KEY_REDACTED]"')
     
     sensitive_file2 = test_dir.join("sensitive2.md")
-    sensitive_file2.write('password = "supersecret123"')
+    sensitive_file2.write('password = "[SENSITIVE_INFO_REDACTED]"')
     
     # 機密情報を含まないファイルも作成
     normal_file = test_dir.join("normal.md")
@@ -216,7 +216,7 @@ def test_check_directory_with_auto_mask(self, tmpdir):
     assert found_before, "機密情報が検出されませんでした"
     
     # ファイル内容が変更されていないことを確認
-    assert 'api_key = "test1234key5678"' == sensitive_file1.read()
+    assert 'api_key = "[API_KEY_REDACTED]"' == sensitive_file1.read()
     
     # auto_mask=Trueでチェック（検出とマスク）
     found_after = checker.check_directory(auto_mask=True)
@@ -250,7 +250,7 @@ def test_main_function_with_auto_mask(self, tmpdir, monkeypatch):
     
     # 機密情報を含むファイルを作成
     sensitive_file = test_dir.join("sensitive.md")
-    sensitive_file.write('api_key = "commandtest1234"')
+    sensitive_file.write('api_key = "[API_KEY_REDACTED]"')
     
     # 環境をモンキーパッチしてテスト
     monkeypatch.setattr(sys, 'argv', ['security_check.py', '--auto-mask'])

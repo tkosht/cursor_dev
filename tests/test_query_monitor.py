@@ -66,7 +66,7 @@ def mock_env():
     """環境変数のモック"""
     with patch.dict(
         os.environ,
-        {"SLACK_TOKEN": "test-token", "DIFY_API_KEY": "test-dify-key"},
+        {"SLACK_TOKEN": "test-token", "DIFY_API_KEY": "[API_KEY_REDACTED]"},
     ):
         yield
 
@@ -101,7 +101,7 @@ async def monitor(mock_queries, mock_slack_client, mock_session):
             json.dumps(mock_queries)
         )
         monitor = QueryMonitor(
-            dify_api_key="test-dify-key",
+            dify_api_key="[API_KEY_REDACTED]",
             slack_token="test-token",
             slack_channel="test-channel",
             slack_client=mock_slack_client,
@@ -187,7 +187,7 @@ async def test_process_query_empty_result(mock_session, mock_slack_client):
     mock_slack_client.chat_postMessage.return_value = {"ok": True}
     
     monitor = QueryMonitor(
-        dify_api_key="test-dify-key",
+        dify_api_key="[API_KEY_REDACTED]",
         slack_token="test-slack-token",
         slack_channel="test-channel",
         session=mock_session,
@@ -392,7 +392,7 @@ async def test_main_success(
         patch.dict(
             os.environ,
             {
-                "DIFY_API_KEY": "test-api-key",
+                "DIFY_API_KEY": "[API_KEY_REDACTED]",
                 "SLACK_TOKEN": "test-token",
             },
         ),
@@ -438,7 +438,7 @@ async def test_main_error_handling(
         patch.dict(
             os.environ,
             {
-                "DIFY_API_KEY": "test-api-key",
+                "DIFY_API_KEY": "[API_KEY_REDACTED]",
                 "SLACK_TOKEN": "test-token",
             },
         ),
@@ -471,7 +471,7 @@ async def test_main_application_error(
         patch.dict(
             os.environ,
             {
-                "DIFY_API_KEY": "test-api-key",
+                "DIFY_API_KEY": "[API_KEY_REDACTED]",
                 "SLACK_TOKEN": "test-token",
             },
         ),
@@ -496,7 +496,7 @@ async def test_custom_dify_host(mock_session, mock_slack_client):
     """カスタムDifyホストのテスト"""
     custom_host = "https://custom.dify.example.com"
     monitor = QueryMonitor(
-        dify_api_key="test-dify-key",
+        dify_api_key="[API_KEY_REDACTED]",
         slack_token="test-slack-token",
         slack_channel="test-channel",
         dify_host=custom_host,
@@ -602,7 +602,7 @@ async def test_load_config_success(mock_env):
         patch.dict(
             os.environ,
             {
-                "DIFY_API_KEY": "test-api-key",
+                "DIFY_API_KEY": "[API_KEY_REDACTED]",
                 "SLACK_TOKEN": "test-token",
                 "DIFY_HOST": "http://test-host",
                 "REQUEST_TIMEOUT": "120",
@@ -675,7 +675,7 @@ async def test_load_dotenv_success(mock_env, mock_queries, mock_slack_client, mo
         mock_load_dotenv.return_value = None
 
         # メイン関数を実行
-        with patch.dict(os.environ, {"DIFY_API_KEY": "test-api-key", "SLACK_TOKEN": "test-token"}):
+        with patch.dict(os.environ, {"DIFY_API_KEY": "[API_KEY_REDACTED]", "SLACK_TOKEN": "test-token"}):
             await main()
 
         # load_dotenvが呼び出されたことを確認
@@ -688,7 +688,7 @@ async def test_session_property(mock_session):
     # 一度モニターを作成して_sessionをNoneに設定
     request_timeout = 120
     monitor = QueryMonitor(
-        dify_api_key="test-key",
+        dify_api_key="[API_KEY_REDACTED]",
         slack_token="test-token",
         slack_channel="test-channel",
         request_timeout=request_timeout
@@ -737,7 +737,7 @@ async def test_main_unexpected_error(
         mock_session.post.side_effect = Exception("Unexpected error")
 
         monitor = QueryMonitor(
-            dify_api_key="test-dify-key",
+            dify_api_key="[API_KEY_REDACTED]",
             slack_token="test-token",
             slack_channel="test-channel",
             slack_client=mock_slack_client,

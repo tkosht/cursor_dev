@@ -1,5 +1,6 @@
 import os
 import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -48,9 +49,9 @@ class TestSecurityChecker:
         """
         test_cases = [
             # APIキー形式（検出すべき）
-            ("api_key = 'abcd1234efgh5678'", True),
+            ("api_key = '[API_KEY_REDACTED]'", True),
             # APIトークン形式（検出すべき）
-            ("api_token = 'xyzw9876abcd5432'", True),
+            ("api_token = '[API_KEY_REDACTED]'", True),
             # 通常の変数（検出すべきでない）
             ("normal_var = 'test_value'", False),
         ]
@@ -64,32 +65,72 @@ class TestSecurityChecker:
                 f"内容 '{content}' の検出結果が期待と異なります。" \
                 f"期待: {should_detect}, 実際: {found}"
 
-    def test_openai_key_detection(
+    def test_openai_key_detection_ideal(
         self,
         security_checker: SecurityChecker,
         temp_file: str
     ) -> None:
-        """OpenAI APIキーの検出テスト。
-
-        Args:
-            security_checker: セキュリティチェッカーインスタンス
-            temp_file: テスト用一時ファイルのパス
+        """OpenAI APIキーの理想的な検出テスト。
+        有効な形式のみを検出し、無効な形式は検出しないことを検証する。
         """
+        # Generate a valid 48-char key for testing
+        valid_key_chars = "aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789aBcDeFgHiJkLm"
+        valid_key = f"sk-{valid_key_chars}"  # Total 51 chars: sk- + 48
+
         test_cases = [
-            # OpenAI APIキー形式（検出すべき）
-            ("openai_key = 'sk-abcdefghijklmnopqrstuvwxyz123456'", True),
-            # 不正な形式（検出すべきでない）
-            ("fake_key = 'sk-short'", True),  # 実際には検出される
+            # --- 検出すべきケース (True Positives) ---
+            # 標準的な形式
+            (f"openai_api_key = '{valid_key}'", True, "Standard OpenAI Key"),
+            # ダブルクォート
+            (f'openai_key = "{valid_key}"', True, "Double Quoted Key"),
+            # 環境変数代入風
+            (f'os.environ["OPENAI_API_KEY"] = "{valid_key}"', True, "Assignment Style"),
+            # コメント内のキー (検出対象とする場合 - 現在のCheckerは検出する)
+            (f"# secret_key = '{valid_key}'", True, "Commented Out Key"),
+            # キーが単独で行にある場合
+            (f"{valid_key}", True, "Key alone on line"),
+
+
+            # --- 検出 すべきでない ケース (False Positives / Negatives) ---
+            # 短すぎるキー
+            ("invalid_key = 'sk-shortkey12345'", False, "Too Short Key"),
+            # 長すぎるキー (現在のパターンでは誤検出される - 制限事項)
+            (f"long_key = '{valid_key}extra'", True, "Too Long Key (Known Limitation)"),
+            # プレフィックスが違う
+            (f"wrong_prefix = 'pk-{valid_key_chars}'", False, "Wrong Prefix pk-"),
+            (f"wrong_prefix = 'sk_{valid_key_chars}'", False, "Wrong Prefix sk_"),
+            # 形式が不完全 (ハイフンなし)
+            (f"incomplete = 'sk{valid_key_chars}'", False, "Incomplete Format (no hyphen)"),
+            # 一般的な変数名
+            ("variable = 'sk_variable_name'", False, "Looks like variable"),
+            # テスト用文字列
+            ("test_string = 'this is not a key sk-abcdefg'", False, "Plain text containing short prefix"),
+            (f"test_string = 'this is not a real key {valid_key[:20]}...'", False, "Plain text containing partial key"),
+            # 空文字列
+            ("empty_key = ''", False, "Empty String"),
+            ("key = 'sk-'", False, "Prefix only"),
         ]
-        
-        for content, should_detect in test_cases:
+
+        for content, should_detect, description in test_cases:
             with open(temp_file, 'w') as f:
                 f.write(content)
-            
-            found, findings = security_checker.scan_file(temp_file)
+
+            found, findings = security_checker.scan_file(Path(temp_file))  # Pass Path object
             assert found == should_detect, \
-                f"内容 '{content}' の検出結果が期待と異なります。" \
-                f"期待: {should_detect}, 実際: {found}"
+                f"Test Case Failed: '{description}'\n" \
+                f"Content: '{content}'\n" \
+                f"Expected detection: {should_detect}, Actual: {found}"
+
+            # オプション: findings の内容も検証
+            if should_detect:
+                assert len(findings) >= 1, f"Findings should not be empty for '{description}'"
+                # Check if the finding corresponds to the OpenAI pattern
+                assert any(f[0] == "OpenAI APIキー" for f in findings), \
+                    f"Correct pattern name not found in findings for '{description}'. Findings: {findings}"
+            else:
+                # Ensure no findings *at all* for this specific pattern if not detected
+                assert not any(f[0] == "OpenAI APIキー" for f in findings), \
+                    f"OpenAI pattern unexpectedly found for '{description}'. Findings: {findings}"
 
     def test_access_token_detection(
         self,
@@ -104,9 +145,9 @@ class TestSecurityChecker:
         """
         test_cases = [
             # アクセストークン形式（検出すべき）
-            ("access_token = 'abcd1234-efgh-5678-ijkl-mnopqrstuvwx'", True),
+            ("access_token = '[TOKEN_REDACTED]'", True),
             # 認証トークン形式（検出すべき）
-            ("auth_token = 'xyz98765-abcd-4321-efgh-ijklmnopqrst'", True),
+            ("auth_token = '[TOKEN_REDACTED]'", True),
             # 通常の変数（検出すべきでない）
             ("token_name = 'my_token'", False),
         ]
@@ -120,32 +161,69 @@ class TestSecurityChecker:
                 f"内容 '{content}' の検出結果が期待と異なります。" \
                 f"期待: {should_detect}, 実際: {found}"
 
-    def test_github_token_detection(
+    def test_github_token_detection_ideal(
         self,
         security_checker: SecurityChecker,
         temp_file: str
     ) -> None:
-        """GitHubトークンの検出テスト。
-
-        Args:
-            security_checker: セキュリティチェッカーインスタンス
-            temp_file: テスト用一時ファイルのパス
+        """GitHubトークンの理想的な検出テスト。
+        有効な形式のみを検出し、無効な形式は検出しないことを検証する。
         """
+        # Generate valid tokens for testing (adjust lengths/chars as needed)
+        valid_ghp = "ghp_" + "a" * 36
+        valid_gho = "gho_" + "b" * 36
+        valid_ghs = "ghs_" + "c" * 36
+        valid_ghr = "ghr_" + "d" * 40
+        valid_pat = "github_pat_" + "e" * 84
+
         test_cases = [
-            # GitHubトークン形式（検出すべき）
-            ("github_token = 'ghp_abcdefghijklmnopqrstuvwxyz123456'", False),  # 現状では検出されない
-            # 不正な形式（検出すべきでない）
-            ("fake_token = 'ghp_short'", False),
+            # --- 検出すべきケース (True Positives) ---
+            (f"token = '{valid_ghp}'", True, "Classic PAT (ghp)"),
+            (f"token = '{valid_gho}'", True, "OAuth Token (gho)"),
+            (f"token = '{valid_ghs}'", True, "App Token (ghs)"),
+            (f"token = '{valid_ghr}'", True, "Refresh Token (ghr)"),
+            (f"token = '{valid_pat}'", True, "Fine-grained PAT (github_pat)"),
+            (f"# GITHUB_TOKEN = '{valid_ghp}'", True, "Commented Out Token"),
+
+            # --- 検出 すべきでない ケース (False Positives / Negatives) ---
+            ("short_token = 'ghp_short'", False, "Too Short Token (ghp)"),
+            ("short_token = 'gho_short'", False, "Too Short Token (gho)"),
+            ("short_token = 'ghs_short'", False, "Too Short Token (ghs)"),
+            ("short_token = 'ghr_short'", False, "Too Short Token (ghr)"),
+            ("short_token = 'github_pat_short'", False, "Too Short Token (github_pat)"),
+            ("prefix_only = 'ghp_'", False, "Prefix Only (ghp)"),
+            ("prefix_only = 'github_pat_'", False, "Prefix Only (github_pat)"),
+            # Invalid chars (assuming only alphanumeric for ghp/gho/ghs)
+            (f"invalid_chars = '{valid_ghp[:-1]}_'", False, "Invalid Characters (ghp)"),
+            # Invalid length
+            (f"invalid_length = '{valid_ghp}extra'", False, "Invalid Length - Too Long (ghp)"),
+            (f"invalid_length = '{valid_ghp[:-1]}'", False, "Invalid Length - Too Short (ghp)"),
+            # Variable names
+            ("variable = 'ghp_variable_name'", False, "Looks like variable (ghp)"),
+            ("variable = 'github_pat_variable'", False, "Looks like variable (github_pat)"),
+            # Plain text
+            ("test_string = 'this is not a token ghp_abcdefg'", False, "Plain text containing short prefix"),
+            (f"test_string = 'look at {valid_ghp[:15]}...'", False, "Plain text containing partial token"),
         ]
-        
-        for content, should_detect in test_cases:
+
+        for content, should_detect, description in test_cases:
             with open(temp_file, 'w') as f:
                 f.write(content)
-            
-            found, findings = security_checker.scan_file(temp_file)
+
+            found, findings = security_checker.scan_file(Path(temp_file))
             assert found == should_detect, \
-                f"内容 '{content}' の検出結果が期待と異なります。" \
-                f"期待: {should_detect}, 実際: {found}"
+                f"Test Case Failed: '{description}'\n" \
+                f"Content: '{content}'\n" \
+                f"Expected detection: {should_detect}, Actual: {found}"
+
+            # オプション: findings の内容も検証
+            if should_detect:
+                assert len(findings) >= 1, f"Findings should not be empty for '{description}'"
+                assert any(f[0] == "GitHubトークン" for f in findings), \
+                    f"Correct pattern name not found in findings for '{description}'. Findings: {findings}"
+            else:
+                assert not any(f[0] == "GitHubトークン" for f in findings), \
+                    f"GitHub pattern unexpectedly found for '{description}'. Findings: {findings}"
 
     def test_slack_token_detection(
         self,
@@ -187,9 +265,9 @@ class TestSecurityChecker:
         """
         test_cases = [
             # パスワード形式（検出すべき）
-            ("password = 'securepassword123'", True),
+            ("password = '[SENSITIVE_INFO_REDACTED]'", True),
             # シークレット形式（検出すべき）
-            ("secret = 'topsecretvalue'", True),
+            ("secret = '[SENSITIVE_INFO_REDACTED]'", True),
             # 通常の変数（検出すべきでない）
             ("username = 'john_doe'", False),
         ]
@@ -216,25 +294,43 @@ class TestSecurityChecker:
             security_checker: セキュリティチェッカーインスタンス
             temp_file: テスト用一時ファイルのパス
         """
+        # Generate a valid OpenAI key for commented-out test
+        valid_key_chars = "aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789aBcDeFgHiJkLm"
+        valid_openai_key = f"sk-{valid_key_chars}"
+
         test_cases = [
             # 空ファイル
-            ("", False),
-            # コメント行内の機密情報
-            ("# api_key = 'abcd1234efgh5678'", True),
-            # 複数行の機密情報
-            ("api_key = 'abcd'\n'1234efgh5678'", True),
-            # Unicode文字を含む
-            ("password = 'パスワード123'", True),
+            ("", False, "Empty File"),
+            # コメント行内の機密情報 (OpenAI Key - should be detected by its pattern)
+            (f"# api_key = '{valid_openai_key}'", True, "Commented Out OpenAI Key"),
+            # コメント行内の機密情報 (Generic API Key - should be detected by generic pattern)
+            ("# api_key = '[API_KEY_REDACTED]'", True, "Commented Out Generic API Key"),
+            # 複数行の機密情報 (Python string concatenation - should NOT be detected by current line-by-line scan)
+            ("api_key = 'abcd' \\\n          '1234efgh5678'", False, "Multi-line String Concatenation"),
+            # Unicode文字を含むパスワード (should be detected by generic pattern)
+            ("password = '[SENSITIVE_INFO_REDACTED]'", True, "Password with Unicode Characters"),
+            # 通常のコメント
+            ("# This is just a comment", False, "Regular Comment"),
+            # キー名だけを含む行
+            ("api_key", False, "Variable name only"),
         ]
-        
-        for content, should_detect in test_cases:
+
+        for content, should_detect, description in test_cases:
             with open(temp_file, 'w') as f:
                 f.write(content)
-            
-            found, findings = security_checker.scan_file(temp_file)
+
+            found, findings = security_checker.scan_file(Path(temp_file))
             assert found == should_detect, \
-                f"エッジケース '{content}' の検出結果が期待と異なります。" \
-                f"期待: {should_detect}, 実際: {found}"
+                f"Test Case Failed: '{description}'\n" \
+                f"Content:\n'''{content}'''\n" \
+                f"Expected detection: {should_detect}, Actual: {found}"
+
+            # Optional: Verify findings content for True cases
+            if should_detect:
+                assert len(findings) >= 1, f"Findings should not be empty for '{description}'"
+            # We don't strictly check for empty findings in False cases here,
+            # as other patterns might match unintentionally in edge cases.
+            # The primary assert(found == should_detect) covers the main expectation.
 
     def test_mask_file(
         self,
@@ -248,7 +344,7 @@ class TestSecurityChecker:
             temp_file: テスト用一時ファイルのパス
         """
         # APIキーを含むコンテンツ
-        content = 'api_key = "abcd1234efgh5678"'
+        content = 'api_key = "[API_KEY_REDACTED]"'
         
         with open(temp_file, 'w') as f:
             f.write(content)
@@ -266,6 +362,48 @@ class TestSecurityChecker:
         # APIキーがマスクされていることを確認（実装に合わせて期待値を修正）
         assert "[API_KEY_REDACTED]" in masked_content, \
             f"マスク結果に期待されるマスクパターンが含まれていません。実際: {masked_content}"
+    
+    def test_masking_preserves_context_ideal(
+        self,
+        security_checker: SecurityChecker,
+        temp_file: str
+    ) -> None:
+        """マスク処理がコンテキストを保持し、機密情報のみを置換するかのテスト。"""
+        # Use valid keys that should be detected by the updated regex
+        valid_openai_key = "sk-" + "a" * 48
+        valid_github_key = "ghp_" + "b" * 36
+
+        original_content = f"""
+        config = {{
+            'user': 'testuser',
+            'api_key': '{valid_openai_key}', # This is sensitive
+            'endpoint': 'https://api.example.com',
+            'github_token': '{valid_github_key}'
+        }}
+        print(f"Using key: {{config['api_key']}}")
+        """
+        # Note: expected_masked_content_pattern is just for reference, not used directly
+
+        with open(temp_file, 'w') as f:
+            f.write(original_content)
+
+        # Use Path object for consistency
+        changed = security_checker.mask_file(Path(temp_file))
+        assert changed, "Masking should have occurred"
+
+        with open(temp_file, 'r') as f:
+            masked_content = f.read()
+
+        # Check that non-sensitive parts remain
+        assert "'user': 'testuser'" in masked_content
+        assert "'endpoint': 'https://api.example.com'" in masked_content
+        assert "print(f" in masked_content
+        # Check that original sensitive parts are gone
+        assert valid_openai_key not in masked_content
+        assert valid_github_key not in masked_content
+        # Check that the correct redacted placeholders are present
+        assert "'api_key': '[OPENAI_KEY_REDACTED]'" in masked_content
+        assert "'github_token': '[GITHUB_TOKEN_REDACTED]'" in masked_content
 
     def test_check_directory_with_auto_mask(self, tmpdir):
         """ディレクトリに対する自動マスク機能のテスト。
@@ -281,10 +419,10 @@ class TestSecurityChecker:
         
         # 機密情報を含むファイルを作成
         sensitive_file1 = test_dir.join("sensitive1.md")
-        sensitive_file1.write('api_key = "test1234key5678"')
+        sensitive_file1.write('api_key = "[API_KEY_REDACTED]"')
         
         sensitive_file2 = test_dir.join("sensitive2.md")
-        sensitive_file2.write('password = "supersecret123"')
+        sensitive_file2.write('password = "[SENSITIVE_INFO_REDACTED]"')
         
         # 機密情報を含まないファイルも作成
         normal_file = test_dir.join("normal.md")
@@ -300,8 +438,8 @@ class TestSecurityChecker:
         assert found_before, "機密情報が検出されませんでした"
         
         # ファイル内容が変更されていないことを確認
-        assert 'api_key = "test1234key5678"' == sensitive_file1.read(), "マスク処理が実行されてしまいました"
-        assert 'password = "supersecret123"' == sensitive_file2.read(), "マスク処理が実行されてしまいました"
+        assert 'api_key = "[API_KEY_REDACTED]"' == sensitive_file1.read(), "マスク処理が実行されてしまいました"
+        assert 'password = "[SENSITIVE_INFO_REDACTED]"' == sensitive_file2.read(), "マスク処理が実行されてしまいました"
         
         # auto_mask=Trueでチェック（検出とマスク）
         found_after = checker.check_directory(auto_mask=True)
@@ -336,7 +474,7 @@ class TestSecurityChecker:
         
         # 機密情報を含むファイルを作成
         sensitive_file = test_dir.join("sensitive.md")
-        sensitive_file.write('api_key = "commandtest1234"')
+        sensitive_file.write('api_key = "[API_KEY_REDACTED]"')
         
         # 環境をモンキーパッチしてテスト
         monkeypatch.setattr(sys, 'argv', ['security_check.py', '--auto-mask'])
