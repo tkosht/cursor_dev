@@ -1,3 +1,22 @@
+# General Knowledge Base
+
+This file stores general technical knowledge, facts, or patterns learned during the project that are not specific enough for other memory-bank files but useful for the AI assistant's understanding.
+
+## Format
+
+Use markdown sections for different topics. Include source (e.g., official documentation URL, specific code file, conversation date) if possible.
+
+## Example Entry
+
+### Python `asyncio` Best Practices (Source: Python Docs, 2025-03-20)
+*   Avoid blocking calls within async functions.
+*   Use `asyncio.gather` for concurrent execution of multiple awaitables.
+*   Handle exceptions appropriately in async tasks.
+
+---
+
+*(Add new knowledge entries below)*
+
 # LLM Knowledge Management
 
 ## 基本方針

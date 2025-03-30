@@ -1,0 +1,124 @@
+# ルール・ドキュメント体系概要
+
+このファイルは、`.cursor/rules/*.mdc` (コアルール) と `memory-bank/*.md` (詳細ルール・コンテキスト) を中心としたプロジェクトのドキュメント構造と依存関係を Mermaid 形式で示します。
+
+ファイル構成やルール間の参照関係に変更があった場合は、この図も更新してください ([documentation_strategy.md](mdc:memory-bank/documentation_strategy.md), [rules.md](mdc:memory-bank/rules.md) 参照)。
+
+```mermaid
+graph TD
+    subgraph Core Rules (.cursor/rules)
+        direction LR
+        G["global.mdc"]
+        D["development.mdc"]
+        P["project.mdc"]
+        Py["python.mdc"]
+        R["rules.mdc"]
+        W["workflow.mdc"]
+        O["overview.mdc (This File)"]
+    end
+
+    subgraph Memory Bank Core (memory-bank)
+        direction TB
+        MB_PB["projectbrief.md"]
+        MB_PC["productContext.md"]
+        MB_SP["systemPatterns.md"]
+        MB_TC["techContext.md"]
+        MB_AC["activeContext.md"]
+        MB_Pr["progress.md"]
+
+        MB_PB --> MB_PC
+        MB_PB --> MB_SP
+        MB_PB --> MB_TC
+        MB_PC --> MB_AC
+        MB_SP --> MB_AC
+        MB_TC --> MB_AC
+        MB_AC --> MB_Pr
+    end
+
+    subgraph Memory Bank Strategies (memory-bank)
+        direction LR
+        MB_DS["documentation_strategy.md"]
+        MB_TS["test_strategy.md"]
+        MB_EA["error_analysis.md"]
+        MB_DP["design_principles.md"]
+        MB_Ru["rules.md"]
+    end
+
+    subgraph Knowledge Base (knowledge)
+        KB_G["knowledge_general.md"]
+    end
+
+    subgraph Docs (Placeholders/Templates)
+        Docs_Req["docs/01.requirements/..."]
+        Docs_Basic["docs/02.basic_design/..."]
+        Docs_Detail["docs/03.detail_design/..."]
+        Docs_ADR["docs/adr/template.md"]
+    end
+
+    %% Core Rule Dependencies
+    G --> O -- "参照:構造把握" --> O
+    G --> KB_G -- "参照:知識格納" --> KB_G
+    P --> D -- "参照:開発プロセス" --> D
+    P --> Py -- "参照:Pythonルール" --> Py
+    P --> MB_DS -- "参照:文書戦略" --> MB_DS
+    P --> MB_TS -- "参照:テスト戦略" --> MB_TS
+    P --> MB_EA -- "参照:エラー解析" --> MB_EA
+    P --> MB_DP -- "参照:設計原則" --> MB_DP
+    Py --> MB_TS -- "参照:テストツール" --> MB_TS
+    R --> MB_Ru -- "参照:更新手順" --> MB_Ru
+    R --> MB_PB -- "定義:MB階層" --> MB_PB
+    W --> P -- "前提" --> P
+    W --> Py -- "前提" --> Py
+    W --> MB_DS -- "読込必須" --> MB_DS
+    W --> MB_TS -- "読込必須" --> MB_TS
+    W --> MB_EA -- "読込必須" --> MB_EA
+    W --> MB_DP -- "読込必須" --> MB_DP
+    W --> MB_Ru -- "読込必須" --> MB_Ru
+    W --> Docs_Req -- "読込(任意)" --> Docs_Req
+    W --> Docs_Basic -- "読込(任意)" --> Docs_Basic
+    W --> Docs_Detail -- "読込(任意)" --> Docs_Detail
+    W --> MB_AC -- "読込/更新" --> MB_AC
+    W --> MB_Pr -- "読込/更新" --> MB_Pr
+    W --> D -- "実行プロセス" --> D
+
+    %% Strategy Dependencies
+    MB_DS --> P -- "参照元" --> P
+    MB_DS --> R -- "参照元" --> R
+    MB_DS --> G -- "参照元" --> G
+    MB_TS --> P -- "参照元" --> P
+    MB_TS --> Py -- "参照元" --> Py
+    MB_TS --> D -- "参照元" --> D
+    MB_TS --> MB_EA -- "参照元" --> MB_EA
+    MB_EA --> P -- "参照元" --> P
+    MB_DP --> P -- "参照元" --> P
+    MB_DP --> Py -- "参照元" --> Py
+    MB_Ru --> R -- "参照元" --> R
+
+    style G fill:#f9f,stroke:#333,stroke-width:2px
+    style D fill:#f9f,stroke:#333,stroke-width:2px
+    style P fill:#f9f,stroke:#333,stroke-width:2px
+    style Py fill:#f9f,stroke:#333,stroke-width:2px
+    style R fill:#f9f,stroke:#333,stroke-width:2px
+    style W fill:#f9f,stroke:#333,stroke-width:2px
+    style O fill:#f9f,stroke:#333,stroke-width:2px
+
+    style MB_PB fill:#ccf,stroke:#333,stroke-width:2px
+    style MB_PC fill:#ccf,stroke:#333,stroke-width:2px
+    style MB_SP fill:#ccf,stroke:#333,stroke-width:2px
+    style MB_TC fill:#ccf,stroke:#333,stroke-width:2px
+    style MB_AC fill:#ccf,stroke:#333,stroke-width:2px
+    style MB_Pr fill:#ccf,stroke:#333,stroke-width:2px
+
+    style MB_DS fill:#9cf,stroke:#333,stroke-width:2px
+    style MB_TS fill:#9cf,stroke:#333,stroke-width:2px
+    style MB_EA fill:#9cf,stroke:#333,stroke-width:2px
+    style MB_DP fill:#9cf,stroke:#333,stroke-width:2px
+    style MB_Ru fill:#9cf,stroke:#333,stroke-width:2px
+
+    style KB_G fill:#ff9,stroke:#333,stroke-width:2px
+
+    style Docs_Req fill:#eee,stroke:#333,stroke-width:1px
+    style Docs_Basic fill:#eee,stroke:#333,stroke-width:1px
+    style Docs_Detail fill:#eee,stroke:#333,stroke-width:1px
+    style Docs_ADR fill:#eee,stroke:#333,stroke-width:1px
+``` 

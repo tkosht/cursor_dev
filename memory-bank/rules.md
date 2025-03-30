@@ -159,3 +159,36 @@
 - チーム間連携プロセス
 - タスク優先順位付けの詳細基準
 - 複数チーム開発ガイドライン 
+
+# ルール更新手順
+
+## 基本方針
+*   Memory Bank ([rules.mdc](mdc:.cursor/rules/rules.mdc)) および `.cursor/rules/*.mdc` は、プロジェクトの進行や学習を通じて継続的に改善・更新されるべき「生きたドキュメント」である。
+
+## 更新トリガー
+*   [rules.mdc](mdc:.cursor/rules/rules.mdc) に記載の通り、以下のタイミングで更新を検討する。
+    1.  新しい開発パターン、ワークフロー、技術的知見などを発見・学習した時。
+    2.  プロジェクトの要件、設計、技術スタックなどに重要な変更があった後。
+    3.  ユーザーから `update memory bank` の指示があった時（全ファイルレビュー必須）。
+    4.  既存のルールやドキュメントに曖昧さがあり、明確化が必要な時。
+
+## 更新プロセス
+*   [rules.mdc](mdc:.cursor/rules/rules.mdc) に記載の更新プロセスに従う。
+    1.  **全ファイルレビュー:**
+        *   `update memory bank` トリガーの場合は、`memory-bank/` および `.cursor/rules/` 配下の **すべての** ファイルを確認する。
+        *   その他のトリガーの場合は、関連するファイルを中心に確認するが、依存関係のあるファイルも考慮する。
+        *   特に `activeContext.md` と `progress.md` は現状を反映しているか重点的に確認する。
+    2.  **現状の文書化:**
+        *   変更点、決定事項、学習内容などを、適切なファイル (`activeContext.md`, `systemPatterns.md`, `knowledge/`, etc.) に記録する。
+    3.  **次のステップの明確化:**
+        *   更新によって影響を受ける作業や、次に行うべきタスクを `activeContext.md` に記載する。
+    4.  **.cursor/rules の更新:**
+        *   学習したパターンや決定事項が、汎用的なルールとして `.cursor/rules/*.mdc` に反映できる場合は更新する。
+        *   更新時はルール階層 ([rules.mdc](mdc:.cursor/rules/rules.mdc) 参照) と整合性を保つ。
+            *   `.mdc` 更新時は、関連する `memory-bank/*.md` も確認・更新する。
+            *   `memory-bank/*.md` 更新時は、影響を受ける `.mdc` があれば明示的にリンクする。
+
+## コミット
+*   ルールの更新は、他のコード変更とは分けてコミットすることを推奨する。
+*   コミットメッセージは、どのようなルールがなぜ更新されたかを明確に記述する (例: `docs(rules): Update workflow definition based on new process`)。
+*   **`overview.mdc` の Mermaid 図を更新した場合も、その旨をコミットメッセージに含める (例: `docs(rules): Update overview diagram reflecting new strategy file`)。**

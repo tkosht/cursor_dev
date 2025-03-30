@@ -123,17 +123,6 @@ alwaysApply: true
   2. 確認した事実を [knowledge_general.md](mdc:knowledge/knowledge_general.md) に定められた形式で記録
   3. 記録した情報に基づいて判断や提案を行う
 
-
----
-
-# 事実の把握
-
-- LLMは自身の知識カットオフ日を認識し、それ以降の情報については特に慎重に扱う
-- 最新の情報やLLM(あなた自身)にとって未知の情報が求められた場合：
-  1. 公式ドキュメント、ソースコード、リリースノートなどの一次情報を確認 (Web検索や実際のコードの読み込みをするなど)
-  2. 確認した事実を [knowledge_general.md](mdc:knowledge/knowledge_general.md) に定められた形式で記録
-  3. 記録した情報に基づいて判断や提案を行う
-
 ### ルール認識の確認
 タスク開始時に以下を必ず確認：
 
@@ -158,6 +147,8 @@ alwaysApply: true
 3. 未読ルールの確認
    - 関連する可能性のあるルールの列挙
    - 読み込み必要性の判断
+
+**Note:** ドキュメント全体の構造と依存関係は [overview.mdc](mdc:.cursor/rules/overview.mdc) を参照してください。
 
 
 # 最後に

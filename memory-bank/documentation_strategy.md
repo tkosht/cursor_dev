@@ -1,4 +1,29 @@
-# ドキュメント管理戦略
+# ドキュメンテーション戦略
+
+## 全体方針
+*   [project.mdc](mdc:.cursor/rules/project.mdc) の「ドキュメント要件」に従い、機能変更時には関連ドキュメント (`/docs` 内) と `README.md` を更新する。
+*   Memory Bank ([rules.mdc](mdc:.cursor/rules/rules.mdc) 参照) を常に最新の状態に保つ。
+*   主要なアーキテクチャ変更や技術決定は ADR ([project.mdc](mdc:.cursor/rules/project.mdc) 参照) として記録する。
+
+## 各ドキュメントの目的
+*   **README.md:** プロジェクト概要、セットアップ手順、主要な利用方法。
+*   **memory-bank/\*.md:** AIアシスタントのコンテキスト維持、プロジェクトの進行管理、学習記録。
+*   **docs/01.requirements/:** 要件定義。
+*   **docs/02.basic_design/:** 基本設計（外部設計）。
+*   **docs/03.detail_design/:** 詳細設計（内部設計）、API仕様、データモデルなど。
+*   **docs/adr/:** アーキテクチャ決定記録。
+*   **docs/11.errors/, docs/12.fixes/:** エラー情報と修正記録。
+*   **docs/31.progress/:** (より詳細な)進捗記録 (任意)。
+*   **docs/90.references/:** 参考資料。
+*   **docs/91.notes/:** メモ、議事録など。
+*   **knowledge/:** AIアシスタントが学習した汎用的な知識 ([global.mdc](mdc:.cursor/rules/global.mdc) 参照)。
+
+## 更新タイミング
+*   機能追加・変更・削除時
+*   設計変更時
+*   Memory Bank の更新ルール ([rules.mdc](mdc:.cursor/rules/rules.mdc)) に従うタイミング
+*   ADR 作成が必要な変更時
+*   **ファイル構成やルール間の参照関係に変更があった場合は、 `.cursor/rules/overview.mdc` の Mermaid 図を更新する。**
 
 ## 1. ドキュメント階層構造
 

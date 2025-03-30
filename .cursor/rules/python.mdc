@@ -37,4 +37,4 @@ alwaysApply: true
 
 ## テストコード
 
-- テストコードは tests/ に置き、pytest 使用する
+- テストコードは tests/ に置き、pytest を使用する ([test_strategy.md](mdc:memory-bank/test_strategy.md) 参照)

@@ -17,10 +17,10 @@ alwaysApply: true
 - 作業ディレクトリ: ~/workspace
 
 ## コンテナ環境詳細
-- ベースイメージ: python:3.12-slim
-- 公開ポート: 7860（Gradio用）
+- ベースイメージ: python:3.12-slim （詳細は techContext.md 参照）
+- 公開ポート: 7860（Gradio用）（詳細は techContext.md 参照）
 - Git操作はコンテナ内で実施
-- 環境変数は.devcontainer経由で管理
+- 環境変数は.devcontainer経由で管理（詳細は techContext.md 参照）
 
 ## 開発ルール
 
@@ -68,9 +68,9 @@ alwaysApply: true
 
 # 作業方針
 
-- memory-bank の構造・更新ルールに従って、１作業・１タスクが終わるたびに適切にファイル群を選定し更新
+- memory-bank の構造・更新ルールに従って、１作業・１タスクが終わるたびに適切にファイル群を選定し更新 ([rules.mdc](mdc:.cursor/rules/rules.mdc) 参照)
 - memory-bank の最新情報に従って、次のタスクを計画し作業を進める
-- git で変更内容を確認し、コミット＆プッシュ（コンテナ内で実施）
+- git で変更内容を確認し、コミット＆プッシュ（コンテナ内で実施） ([workflow.mdc](mdc:.cursor/rules/workflow.mdc) 参照)
 
 
 # セキュリティ
@@ -87,7 +87,7 @@ alwaysApply: true
 ## セキュリティ対策
 
 - 機密ファイルをコミットしない  
-- シークレット情報には環境変数を使用する  
+- シークレット情報には環境変数を使用する ([techContext.md](mdc:memory-bank/techContext.md) 参照)  
 - 認証情報をログや出力に含めない  
 - コンテナ内での機密情報は環境変数経由で管理
 

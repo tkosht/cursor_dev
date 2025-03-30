@@ -37,24 +37,24 @@ alwaysApply: true
         - detail_design.md
 
 
-### 2. 現状ステータスの確認
+### 2. 現状ステータスの確認とタスク実行
 
 - ドキュメントを読み込む (無ければスキップ)
     - [requirements.md](mdc:docs/01.requirements/requirements.md)
     - [basic_design.md](mdc:docs/02.basic_design/basic_design.md)
     - [detail_design.md](mdc:docs/03.detail_design/detail_design.md)
 - 現状ステータスの確認
-    - memory-bank/ の最新情報を確認
+    - memory-bank/ の最新情報を確認 ([activeContext.md](mdc:memory-bank/activeContext.md), [progress.md](mdc:memory-bank/progress.md) を含む)
 - 目的・ゴールステータスの確認
-    - 目的を改めて明示的に確認
+    - 目的を改めて明示的に確認 ([projectbrief.md](mdc:memory-bank/projectbrief.md) 参照)
 - タスク計画
     - 次に実行すべきタスクを計画
 - タスク実行
-    - 計画したタスクを実行
+    - 計画したタスクを実行 ([development.mdc](mdc:.cursor/rules/development.mdc) の工程に従う)
 - タスクのコミット
     - 実行したタスクに関して、git commit & push
 - 現状ステータスの更新
-    - memory-bank/ に最新の状態を更新
+    - memory-bank/ に最新の状態を更新 ([activeContext.md](mdc:memory-bank/activeContext.md), [progress.md](mdc:memory-bank/progress.md) を含む)
 - memory-bank/ の内容をコミット
     - 実行したタスクに関して、git commit & push
 
