@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "x-bookmark-rag"
+name = "cursor_dev"
 version = "0.1.0"
 description = "X（旧Twitter）のブックマークをリアルタイムで検索し、RAGを実現するPythonツール"
 authors = ["AI Developer <dev@example.com>"]
