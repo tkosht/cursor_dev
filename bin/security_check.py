@@ -216,12 +216,14 @@ class SecurityChecker:
 def get_staged_files() -> List[Path]:
     """Gitからステージングされたファイルリストを取得します。"""
     try:
+        # Explicitly set cwd to ensure git diff runs in the correct directory
         result = subprocess.run(
             ['git', 'diff', '--cached', '--name-only', '--diff-filter=ACM'],
             capture_output=True,
             text=True,
             check=True,
-            encoding='utf-8'
+            encoding='utf-8',
+            cwd="."  # Run git diff in the current directory
         )
         staged_files_raw = result.stdout.splitlines()
         return [Path(f) for f in staged_files_raw]
@@ -239,9 +241,13 @@ def get_staged_files() -> List[Path]:
 
 def filter_files_to_check(files: List[Path]) -> List[Path]:
     """チェック対象のファイルをフィルタリングします。"""
+    # Compare relative paths directly
+    test_file_rel_path = Path("tests/test_security_check.py")
     return [
         f for f in files
-        if f.suffix in SecurityChecker.TARGET_EXTENSIONS and f.exists()
+        if f.suffix in SecurityChecker.TARGET_EXTENSIONS
+        and f.exists()
+        and f != test_file_rel_path  # Exclude the test file itself using relative path
     ]
 
 
