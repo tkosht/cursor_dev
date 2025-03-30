@@ -15,9 +15,6 @@ bash:
 poetry:
 	docker compose exec app bash -i -c 'SHELL=/usr/bin/bash poetry shell'
 
-demo:
-	docker compose exec app bash -i -c 'SHELL=/usr/bin/bash poetry run bash bin/run_demo.sh'
-
 python: up
 	docker compose exec app python
 
@@ -29,28 +26,6 @@ cpu gpu:
 mode:
 	@echo $$(ls -l compose.yml | awk -F. '{print $$(NF-1)}')
 
-
-# ==========
-# general tasks
-pip: _pip commit
-
-_pip:
-	docker compose exec app python -m pip install -r requirements.txt         # too slow
-
-commit:
-	@echo "$$(date +'%Y/%m/%d %T') - Start $@"
-	docker commit experiment.app experiment.app:latest
-	@echo "$$(date +'%Y/%m/%d %T') - End $@"
-
-save: commit
-	@echo "$$(date +'%Y/%m/%d %T') - Start $@"
-	docker save experiment.app:latest | gzip > data/experiment.app.tar.gz
-	@echo "$$(date +'%Y/%m/%d %T') - End $@"
-
-load:
-	@echo "$$(date +'%Y/%m/%d %T') - Start $@"
-	docker load < data/experiment.app.tar.gz
-	@echo "$$(date +'%Y/%m/%d %T') - End $@"
 
 # ==========
 # docker compose aliases
