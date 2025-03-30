@@ -1,0 +1,14 @@
+# 1時間ごとのクエリ実行
+0 * * * * cd /app && /usr/local/bin/python app/query_monitor.py --query tech_news
+
+# 2時間ごとのクエリ実行
+0 */2 * * * cd /app && /usr/local/bin/python app/query_monitor.py --query ai_trends
+
+# 1日1回のクエリ実行
+0 0 * * * cd /app && /usr/local/bin/python app/query_monitor.py --query programming_trends
+
+# 毎日の情報サマリー（朝9時）
+0 9 * * * cd /app && /usr/local/bin/python app/query_monitor.py --group daily_summary
+
+# 週次分析（月曜日午前0時）
+0 0 * * 1 cd /app && /usr/local/bin/python app/query_monitor.py --group weekly_analysis 

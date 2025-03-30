@@ -68,7 +68,7 @@ RUN useradd -s /bin/bash --uid $user_id \
     --gid $group_id -m $user_name
 RUN usermod $user_name -G docker,sudo,$group_name
 ARG home_dir=/home/$user_name
-COPY rc $home_dir
+COPY docker/rc $home_dir
 
 RUN echo $user_name:$user_name | chpasswd
 RUN echo $user_name ALL=\(root\) NOPASSWD:ALL \

@@ -1,6 +1,7 @@
 ---
 description: Python 開発に関するルール
-globs: *.py
+globs: *.py *.ipynb
+alwaysApply: true
 ---
 # Python 開発ルール
 
