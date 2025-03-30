@@ -6,9 +6,10 @@
 """
 
 import re
+import subprocess
 import sys
 from pathlib import Path
-from typing import List, Pattern, Tuple
+from typing import List, Optional, Pattern, Tuple
 
 
 class SecurityChecker:
@@ -89,12 +90,15 @@ class SecurityChecker:
     # チェック対象のファイル拡張子
     TARGET_EXTENSIONS = [".md", ".py", ".txt"]
 
-    def __init__(self, target_dirs: List[str]):
+    def __init__(self, target_dirs: Optional[List[str]] = None):
         """
         Args:
-            target_dirs (List[str]): チェック対象のディレクトリリスト
+            target_dirs (Optional[List[str]]): チェック対象のディレクトリリスト (現在は未使用)
         """
-        self.target_dirs = [Path(d) for d in target_dirs]
+        if target_dirs:
+            self.target_dirs = [Path(d) for d in target_dirs]
+        else:
+            self.target_dirs = []
 
     def scan_file(self, file_path: Path) -> Tuple[bool, List[Tuple[str, int]]]:
         """ファイルをスキャンし、機密情報を検出します。
@@ -208,36 +212,53 @@ class SecurityChecker:
         
         return False
 
-    def check_directory(self, auto_mask: bool = False) -> bool:
-        """ディレクトリ内のファイルをチェックします。
 
-        Args:
-            auto_mask (bool): 機密情報を自動的にマスクするかどうか
+def get_staged_files() -> List[Path]:
+    """Gitからステージングされたファイルリストを取得します。"""
+    try:
+        result = subprocess.run(
+            ['git', 'diff', '--cached', '--name-only', '--diff-filter=ACM'],
+            capture_output=True,
+            text=True,
+            check=True,
+            encoding='utf-8'
+        )
+        staged_files_raw = result.stdout.splitlines()
+        return [Path(f) for f in staged_files_raw]
+    except FileNotFoundError:
+        print("エラー: git コマンドが見つかりません。gitがインストールされ、PATHに含まれていることを確認してください。")
+        sys.exit(2)
+    except subprocess.CalledProcessError as e:
+        print(f"エラー: ステージングされたファイルの取得に失敗しました: {e}")
+        print(f"stderr: {e.stderr}")
+        sys.exit(2)
+    except Exception as e:
+        print(f"予期せぬエラー: ステージングされたファイルの取得中にエラーが発生しました: {e}")
+        sys.exit(2)
 
-        Returns:
-            bool: 機密情報が見つかったかどうか
-        """
-        found_secrets = False
 
-        for target_dir in self.target_dirs:
-            if not target_dir.exists():
-                print(f"警告: ディレクトリが存在しません: {target_dir}")
-                continue
+def filter_files_to_check(files: List[Path]) -> List[Path]:
+    """チェック対象のファイルをフィルタリングします。"""
+    return [
+        f for f in files
+        if f.suffix in SecurityChecker.TARGET_EXTENSIONS and f.exists()
+    ]
 
-            # 各対象拡張子に対してチェック
-            for ext in self.TARGET_EXTENSIONS:
-                for file_path in target_dir.glob(f"**/*{ext}"):
-                    if self.process_file(file_path, auto_mask):
-                        found_secrets = True
 
-        return found_secrets
+def process_files(checker: SecurityChecker, files: List[Path], auto_mask: bool) -> bool:
+    """指定されたファイルリストを処理し、機密情報が見つかったかどうかを返します。"""
+    found_secrets = False
+    for file_path in files:
+        if checker.process_file(file_path, auto_mask=auto_mask):
+            found_secrets = True
+    return found_secrets
 
 
 def main():
     """メイン関数"""
     import argparse
 
-    parser = argparse.ArgumentParser(description="機密情報検出・マスクツール")
+    parser = argparse.ArgumentParser(description="機密情報検出・マスクツール (ステージングされたファイルのみ対象)")
     parser.add_argument(
         "--auto-mask",
         action="store_true",
@@ -245,22 +266,29 @@ def main():
     )
     args = parser.parse_args()
 
-    # チェック対象ディレクトリを拡大
-    target_dirs = [".specstory/history", "memory-bank", "docs", "tests"]
-    checker = SecurityChecker(target_dirs)
+    print("ステージングされたファイルのセキュリティチェックを開始します...")
 
-    print("セキュリティチェックを開始します...")
-    found_secrets = checker.check_directory(auto_mask=args.auto_mask)
+    staged_files = get_staged_files()
+    files_to_check = filter_files_to_check(staged_files)
+
+    if not files_to_check:
+        print("\n✓ チェック対象のステージングされたファイルはありません。")
+        sys.exit(0)
+
+    print(f"\nチェック対象ファイル ({len(files_to_check)} 件):")
+    for f in files_to_check:
+        print(f"  - {f}")
+
+    checker = SecurityChecker()
+    found_secrets = process_files(checker, files_to_check, args.auto_mask)
 
     if found_secrets:
         if not args.auto_mask:
             print("\n警告: 機密情報が見つかりました。")
-            print("以下のオプションで対応してください：")
-            print("1. 機密情報を手動で修正")
-            print("2. python3 bin/security_check.py --auto-mask を実行")
+            print("コミットを続けるには、手動で修正するか、再度コミットする際に --no-verify を使用してください。")
         sys.exit(1)
     else:
-        print("\n✓ 機密情報は見つかりませんでした。")
+        print("\n✓ ステージングされたファイルに機密情報は見つかりませんでした。")
         sys.exit(0)
 
 
