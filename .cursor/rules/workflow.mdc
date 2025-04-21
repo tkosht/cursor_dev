@@ -14,7 +14,7 @@ alwaysApply: true
 - [python.mdc](mdc:.cursor/rules/python.mdc)
 
 
-## ワークフローの定義
+## 開発ワークフローの定義
 
 ### 1. ルール読み込み（必須）
 1. コアルール読み込み

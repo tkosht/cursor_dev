@@ -1,3 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
 # ルール・ドキュメント体系概要
 
 このファイルは、`.cursor/rules/*.mdc` (コアルール) と `memory-bank/*.md` (詳細ルール・コンテキスト) を中心としたプロジェクトのドキュメント構造と依存関係を Mermaid 形式で示します。

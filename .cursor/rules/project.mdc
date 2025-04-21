@@ -1,7 +1,7 @@
 ---
-description: プロジェクトルール
-globs: *
-alwaysApply: true
+description: 
+globs: 
+alwaysApply: false
 ---
 # ロール
 
@@ -25,7 +25,7 @@ alwaysApply: true
 ## 開発ルール
 
 以下の内容に従う
-[development.mdc](mdc:.cursor/rules/development.mdc)
+[workflow.mdc](mdc:.cursor/rules/workflow.mdc) で定義された開発工程
 
 ## 開発言語固有のルール
 
@@ -128,6 +128,11 @@ alwaysApply: true
 ## リポジトリの初期化/クリーンアップ
 
 本プロジェクトリポジトリを空にする場合は、以下コマンドを実行することでのみ行う
+
+```bash
+make clean-repository
+```
+
 
 ```bash
 make clean-repository
