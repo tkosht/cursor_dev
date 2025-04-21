@@ -210,9 +210,8 @@ graph TD
 
 認識済のルールファイル：
 - global.mdc
-- development.mdc
-- project.mdc
 - workflow.mdc
+- project.mdc
 - rules.mdc 
 
 ## 既知の問題と対策

@@ -1,7 +1,7 @@
 ---
-description: Python 開発に関するルール
+description: 
 globs: *.py *.ipynb
-alwaysApply: true
+alwaysApply: false
 ---
 # Python 開発ルール
 
