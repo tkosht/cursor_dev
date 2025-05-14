@@ -1,12 +1,12 @@
 ---
-description: プロジェクト固有ルール
+description: 
 globs: 
 alwaysApply: true
 ---
 # プロジェクト固有ルール
 
 このファイルは、本プロジェクト特有の環境設定、技術スタック、ディレクトリ構成、Python開発ルール、セキュリティガイドラインなどを定義します。
-`core.md` に定義された普遍的なルールを前提とし、それを補完・具体化します。
+`core.mdc` に定義された普遍的なルールを前提とし、それを補完・具体化します。
 
 ## 1. 開発環境
 
@@ -29,110 +29,93 @@ alwaysApply: true
     - Python 3.10～3.12 を使用する
     - 実装も、3.10以上を前提とする
         - 3.9等下位バージョンへの互換性考慮は不要
-- 依存関係管理: Poetry
-    - ライブラリは Poetry でのみ管理する
-- 仮想環境: /.venv（Poetry により管理）
-- flake8, black, isort, pytest を使用
+- 依存パッケージ管理: Poetry ([poetry.lock](mdc:poetry.lock), [pyproject.toml](mdc:pyproject.toml))
+    - `poetry add <package>` で追加
+    - `poetry install` で環境構築
+    - 依存関係は極力具体的にバージョン指定
 
-### 2.2 コードスタイル & パターン
-- Type Hint は必ず使用する
-    - typing ライブラリ・モジュールの利用は、必要最小限とする
-- フォーマッターは、black を使う
-    - 実行コマンド: `black .`
-- リンターチェックは、flake8 を使う
-    - 実行コマンド: `flake8  --exclude .venv`
-    - flake8 のLintエラーを全消去する
-- 変数名は snake_case を使用する
-- クラス名は PascalCase を使用する
-- 定数は UPPER_SNAKE_CASE を使用する
-- プライベートには先頭アンダースコアを付加する
-- docstring は Google スタイル、typing モジュールを使わない型ヒントを積極利用する
-- 1行79文字以内、インデント4スペースとする
-- 特に、VSCode 上の `blank line contains whitespace` という Lint エラーに必ず対応する
+### 2.2 プロジェクト名
+- `pyproject.toml` 内の `name` は `cursor_dev` とする。
 
-### 2.3 テストコード
-- テストコードは tests/ に置き、pytest を使用する ([test_strategy.md](mdc:memory-bank/test_strategy.md) 参照)
-
-## 3. ディレクトリ構成
-
-下記構成を厳守し、新ディレクトリ追加時はREADME.mdを作成・説明を追記します。
+## 3. ディレクトリ構成 (抜粋・主要部分)
 
 ```
 ./
-├── LICENSE
-├── Makefile
-├── README.md
-├── app/
-├── bin/
-├── docs/
+├── .devcontainer/      # Dev Container 設定
+├── .vscode/            # VSCode 設定
+├── docs/               # ドキュメント (設計書、要件定義書など)
 │   ├── 01.requirements/
 │   ├── 02.basic_design/
-│   ├── 03.detail_design/
-│   ├── 11.errors/
-│   ├── 12.fixes/
-│   ├── 31.progress/
-│   ├── 90.references/
-│   └── 91.notes/
-├── knowledge/
-├── memory-bank/
-├── tests/
-└── pyproject.toml
+│   └── 03.detail_design/
+├── memory-bank/        # AIの記憶領域 (プロジェクトコンテキスト)
+├── src/                # ソースコード (Pythonパッケージ)
+│   └── cursor_dev/     # メインのPythonパッケージ
+│       ├── __init__.py
+│       └── ... (機能ごとのモジュール)
+├── tests/              # テストコード
+├── .cursor/            # Cursor AI 設定
+│   └── rules/          # ルールファイル (*.mdc)
+├── pyproject.toml      # Poetry 設定ファイル
+└── README.md
 ```
 
-上記以外のフォルダ構成、ファイル構成は禁止
+- 詳細: [systemPatterns.md](mdc:memory-bank/systemPatterns.md) も参照。
 
-## 4. 作業ディレクトリ
+## 4. コーディング規約
 
-コンテナ内の ~/workspace とします。変更禁止
+- **フォーマッタ:** Black (設定は [pyproject.toml](mdc:pyproject.toml) の `[tool.black]` セクション参照)
+  - コミット前に `black .` を実行
+- **リンター:** Flake8 (設定は [.flake8](mdc:.flake8) 参照)
+  - `flake8 .` で警告ゼロを目指す
+- **型チェック:** MyPy (設定は [pyproject.toml](mdc:pyproject.toml) の `[tool.mypy]` セクション参照)
+  - `mypy src` でエラーゼロを目指す
+- **命名規則:**
+  - 変数・関数: スネークケース (`variable_name`, `function_name`)
+  - クラス: パスカルケース (`ClassName`)
+  - モジュール: スネークケース (`module_name.py`)
+  - 定数: アッパーケーススネーク (`CONSTANT_NAME`)
+- コメント: Docstring は Google スタイルを推奨
 
-## 5. セキュリティ
+## 5. Git とバージョン管理
 
-### 5.1 機密ファイル
+### 5.1 コミットメッセージ規約
+- Conventional Commits 形式を推奨 (例: `feat: 新機能の追加`, `fix: バグ修正`, `docs: ドキュメント更新`)
+- 詳細は [commit_guideline.md](mdc:docs/development_rules/commit_guideline.md) 参照 (存在する場合)
 
-以下のファイルを **読んだり変更したりしない** こと：
+### 5.2 ブランチ戦略
+- `main` (または `master`): 本番リリース用。直接コミット禁止。
+- `develop`: 開発用メインブランチ。ここからフィーチャーブランチを切る。
+- `feature/<issue_id>-<description>`: 機能開発用ブランチ。
+- `fix/<issue_id>-<description>`: バグ修正用ブランチ。
+- Pull Request ベースで `develop` へマージ。
 
-- .env ファイル
-- \*_/config/secrets._  
-- \*_/_.pem  
-- APIキー、トークン、または認証情報を含むファイル全般  
+### 5.3 git push --force の禁止
+- 原則として `git push --force` および `git push --force-with-lease` は使用しない。
+- どうしても必要な場合は、影響範囲を最小限にし、チームに連絡・確認の上で実行する。
 
-### 5.2 セキュリティ対策
+## 6. セキュリティ
 
-- 機密ファイルをコミットしない  
-- シークレット情報には環境変数を使用する ([techContext.md](mdc:memory-bank/techContext.md) 参照)  
-- 認証情報をログや出力に含めない  
-- コンテナ内での機密情報は環境変数経由で管理
+### 6.1 機密情報の扱い
+- APIキー、パスワード等の機密情報はコードに直接記述しない。
+- 環境変数や `.env` ファイル (Git管理外) を使用する。
+- `.env` ファイルは `.gitignore` に追加する。
 
-## 6. プロジェクトガイドライン
+### 6.2 依存関係の脆弱性
+- 定期的に `poetry show --outdated` やセキュリティスキャンツール (例: Snyk, Trivy) で依存関係の脆弱性を確認する。
 
-### 6.1 ドキュメント要件
-- 機能を変更する際は、/docs 内の関連ドキュメントを更新する  
-- README.md を新しい機能に合わせて更新する  
-- 具体的には、[documentation_strategy.md](mdc:memory-bank/documentation_strategy.md) に従う
+### 6.3 入力値の検証
+- ユーザー入力や外部からのデータは必ずバリデーションとサニタイズを行う。
 
-### 6.2 アーキテクチャの決定記録（ADR）
-以下の変更を行う際は /docs/adr にADRを作成する：
-- 主要な依存関係の変更  
-- アーキテクチャパターンの変更  
-- 新しい統合パターンの導入  
-- データベーススキーマの変更  
-    /docs/adr/template.md のテンプレートに従うこと  
+### 6.4 エラーメッセージ
+- 詳細なエラー情報をユーザーに表示しない（ログには記録）。
 
-### 6.3 テスト
-テストドリブンで開発する (i.e. テストを仕様とする)
-詳細は、[test_strategy.md](mdc:memory-bank/test_strategy.md) に従う
+### 6.5 外部ライブラリの選定
+- 信頼性、メンテナンス状況、セキュリティ脆弱性の有無を確認する。
 
-### 6.4 エラー解析
-障害時は対象部分と周辺を調査し、アブダクションで原因を特定し、解消する
-詳細は、[error_analysis.md](mdc:memory-bank/error_analysis.md) に従う
+### 6.6 git リポジトリの公開範囲
+- 本リポジトリは機密情報を含まない前提で、公開範囲は開発チーム内とする。 (もし public ならその旨を記載し、機密情報混入により一層注意)
 
-### 6.5 設計および実装原則
-[design_principles.md](mdc:memory-bank/design_principles.md) に従う
+## 7. その他
 
-## 7. リポジトリの初期化/クリーンアップ
-
-本プロジェクトリポジトリを空にする場合は、以下コマンドを実行することでのみ行う
-
-```bash
-make clean-repository
-``` 
+- 既存コードのスタイルやパターンを尊重する。
+- 不明な点は自己判断せず、チームに確認する。

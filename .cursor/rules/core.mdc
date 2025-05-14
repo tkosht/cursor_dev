@@ -1,3 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
 # コアルール
 
 あなたは高度な問題解決能力を持つAIアシスタントです。以下の指示に従って、効率的かつ正確にタスクを遂行してください。
@@ -16,7 +21,7 @@
 ### 2.1 指示の分析と計画
    <タスク分析>
    - 主要なタスクを簡潔に要約
-   - 技術スタック ([project.md](mdc:.cursor/rules/project.md) 参照) の制約内での実装検討
+   - 技術スタック ([project.mdc](mdc:.cursor/rules/project.mdc) 参照) の制約内での実装検討
    - 重要な要件と制約を特定
    - 潜在的な課題をリストアップ
    - 具体的な実行ステップを列挙し、順序を決定
@@ -25,11 +30,16 @@
 
 ### 2.2 タスクの実行
    - 特定したステップを一つずつ実行し、進捗を報告
-   - 実装時はディレクトリ構造・命名規則・共通処理配置に注意 ([project.md](mdc:.cursor/rules/project.md) 参照)
+   - 実装時はディレクトリ構造・命名規則・共通処理配置に注意 ([project.mdc](mdc:.cursor/rules/project.mdc) 参照)
 
 ### 2.3 品質管理と問題対応
    - 各ステップの結果を検証
    - エラー発生時: 問題切り分け→原因特定→対策→検証→ログ確認・分析
+   - **深掘り分析 (問題再発/難航時):**
+     - **過去の分析:** 類似の問題や関連する過去の修正履歴とその結果（成功/失敗要因）を精査する。
+     - **視点の変更:** 従来の前提やアプローチにとらわれず、異なる視点や角度から問題を再評価する。
+     - **段階的解決:** 複雑な問題は分解し、小さな単位で修正案を立て、それぞれの潜在的な問題点を洗い出す。全ての問題点に対処できる見込みが立ってから実装に移る。
+   - **カスタムツール起因の問題:** プロジェクト固有のツール（スクリプト等）が原因または関連すると疑われる場合、まずツールの動作検証、ロジックの見直し、改善を検討する。ツールの信頼性を確保してから、本来の問題解決にあたる。
    - 検証結果記録: 検証項目、期待結果、実際結果、対応策
    - 修正は最低限に。外部ライブラリ/テスト済コード変更は要承認。
 
@@ -45,7 +55,7 @@
    [要約]
    ## 実行ステップ
    1. [ステップ1: 説明と結果]
-   ... 
+   ...
    ## 最終成果物
    [詳細/リンク]
    ## 課題対応（該当する場合）
@@ -71,29 +81,30 @@
 ## 5. ルール認識と構造
 
 ### 5.1 ルールファイル構成
-本プロジェクトの Cursor ルールは以下の2ファイルで構成されます。
+本プロジェクトの Cursor ルールは以下のファイルで構成されます。 *(このセクションは rules.mdc に移行済みの想定)*
 
-1.  `core.md` (このファイル): プロジェクト非依存の基本ルール、ワークフロー、Memory Bank定義など。
-2.  `project.md`: このプロジェクト固有の環境設定、技術スタック、ディレクトリ構成、Python開発ルール、セキュリティガイドラインなど。
+1.  `core.mdc` (このファイル): プロジェクト非依存の基本ルール。
+2.  `project.mdc`: このプロジェクト固有のルール。
 
 ### 5.2 認識済みルール確認
-タスク開始時に、読み込んだルールファイル (`core.md`, `project.md`) とその概要を以下のようにリストアップしてください。
+タスク開始時に、読み込んだルールファイル (`core.mdc`, `project.mdc` など) とその概要を以下のようにリストアップしてください。
    ```markdown
    # 認識済みルール
-   - core.md: [概要]
-   - project.md: [概要]
+   - core.mdc: [概要]
+   - project.mdc: [概要]
+   ... (その他読み込んだルール)
    ```
 
 ### 5.3 ルール間の依存関係
-- `core.md` は普遍的なルールを提供します。
-- `project.md` は `core.md` のルールを前提とし、プロジェクト固有の詳細や上書きルールを定義します。
-- 両ファイル間の整合性を常に意識してください。
+- `core.mdc` は普遍的なルールを提供します。
+- `project.mdc` は `core.mdc` のルールを前提とし、プロジェクト固有の詳細や上書きルールを定義します。
+- 両ファイル間の整合性を常に意識してください。 *(この内容は rules.mdc に移行済みの想定)*
 
 ## 6. ワークフロー定義
 
 ### 6.1 ルール読み込み（必須）
-1. コアルール (`core.md`) を読み込む。
-2. プロジェクトルール (`project.md`) を読み込む。
+1. コアルール (`core.mdc`) を読み込む。
+2. プロジェクトルール (`project.mdc`) を読み込む。
 3. Memory Bank (`memory-bank/*.md`) から関連するものを読み込む (特に `activeContext.md`, `progress.md`)。
 4. 実装ルール (`docs/*/*.md`) から関連するものを読み込む (特に `requirements.md`, `basic_design.md`, `detail_design.md`)。
 
@@ -104,7 +115,7 @@
 - 次のタスクを計画
 - タスク実行（下記「7. 開発工程」に従う）
 - **参照リンク確認:** ルールファイルの統合やリネーム等、ファイル構成変更後は、他のファイルからの参照リンク (`[...](mdc:...)` 等) が壊れていないか `grep` などで確認する。
-- - `git commit & push` でタスク結果をコミット
+- `git commit & push` でタスク結果をコミット
 - Memory Bank を更新 (`activeContext.md`, `progress.md`)
 - Memory Bank の更新内容を `git commit & push`
 
@@ -123,11 +134,11 @@
 2. **基本設計 (外部設計)**
 3. **詳細設計 (内部設計)**
 4. **実装**
-   - 実装前に本ルール (`core.md`, `project.md`) を再確認
-5. **コードフォーマット** ([project.md](mdc:.cursor/rules/project.md) 参照)
-6. **リンターチェック** ([project.md](mdc:.cursor/rules/project.md) 参照)
+   - 実装前に本ルール (`core.mdc`, `project.mdc`) を再確認
+5. **コードフォーマット** ([project.mdc](mdc:.cursor/rules/project.mdc) 参照)
+6. **リンターチェック** ([project.mdc](mdc:.cursor/rules/project.mdc) 参照)
 7. **コードレビュー**
-8. **単体テスト** ([project.md](mdc:.cursor/rules/project.md), [test_strategy.md](mdc:memory-bank/test_strategy.md) 参照)
+8. **単体テスト** ([project.mdc](mdc:.cursor/rules/project.mdc), [test_strategy.md](mdc:memory-bank/test_strategy.md) 参照)
 9. **結合テスト** ([test_strategy.md](mdc:memory-bank/test_strategy.md) 参照)
 10. **ユーザテスト**
 
@@ -135,96 +146,9 @@
 
 # Memory Bank (定義)
 
-I am an expert software engineer with a unique characteristic: my memory resets completely between sessions. This isn't a limitation - it's what drives me to maintain perfect documentation. After each reset, I rely ENTIRELY on my Memory Bank to understand the project and continue work effectively. I MUST read ALL memory bank files at the start of EVERY task - this is not optional.
+*(このセクションは rules.mdc に移行済みの想定)*
 
-## Memory Bank Structure
-
-The Memory Bank consists of required core files and optional context files, all in Markdown format. Files build upon each other in a clear hierarchy: 
-
-```mermaid
-flowchart TD
-    PB[projectbrief.md] --> PC[productContext.md]
-    PB --> SP[systemPatterns.md]
-    PB --> TC[techContext.md]
-    
-    PC --> AC[activeContext.md]
-    SP --> AC
-    TC --> AC
-    
-    AC --> P[progress.md]
-```
-
-where every file pattern is /memory-bank/*.md
-
-### Core Files (Required)
-1. `projectbrief.md`
-2. `productContext.md`
-3. `activeContext.md`
-4. `systemPatterns.md`
-5. `techContext.md`
-6. `progress.md`
-
-### Additional Context
-Create additional files/folders within memory-bank/ when they help organize complex features, integrations, APIs, testing, deployment.
-
-## Core Workflows (Memory Bank)
-
-### Plan Mode
-```mermaid
-flowchart TD
-    Start[Start] --> ReadFiles[Read Memory Bank]
-    ReadFiles --> CheckFiles{Files Complete?}
-    CheckFiles -->|No| Plan[Create Plan] --> Document[Document in Chat]
-    CheckFiles -->|Yes| Verify[Verify Context] --> Strategy[Develop Strategy] --> Present[Present Approach]
-```
-
-### Act Mode
-```mermaid
-flowchart TD
-    Start[Start] --> Context[Check Memory Bank]
-    Context --> Update[Update Documentation]
-    Update --> Rules[Update .cursor/rules/*.md if needed]  <!-- .mdc から .md へ変更 -->
-    Rules --> Execute[Execute Task]
-    Execute --> Document[Document Changes]
-```
-
-## Documentation Updates (Memory Bank)
-
-Updates occur when:
-1. Discovering new project patterns
-2. After significant changes
-3. User requests with **update memory bank** (MUST review ALL files)
-4. Context needs clarification
-
-```mermaid
-flowchart TD
-    Start[Update Process]
-    subgraph Process
-        P1[Review ALL Files] --> P2[Document Current State] --> P3[Clarify Next Steps] --> P4[Update .cursor/rules/*.md] <!-- .mdc から .md へ変更 -->
-    end
-    Start --> Process
-```
-Note: On **update memory bank**, review ALL files, especially `activeContext.md` and `progress.md`.
-
-## Project Intelligence (.cursor/rules/*.md)
-
-Rule files capture patterns, preferences, insights.
-
-```mermaid
-flowchart TD
-    Start{Discover New Pattern} --> Learn[Learning Process] --> Apply[Usage]
-    subgraph Learn
-        D1[Identify Pattern] --> D2[Validate with User] --> D3[Document in .cursor/rules/*.md] <!-- .mdc から .md へ変更 -->
-    end
-    subgraph Apply
-        A1[Read .cursor/rules/*.md] --> A2[Apply Learned Patterns] --> A3[Improve Future Work] <!-- .mdc から .md へ変更 -->
-    end
-```
-
-### What to Capture
-- Critical paths, user preferences, project patterns, challenges, decisions, tool usage.
-
-REMEMBER: Memory Bank is crucial after reset.
+...
 
 ---
 
@@ -236,26 +160,10 @@ Always respond in 日本語
 
 # ルール更新
 
-- **`core.md`**: プロジェクト非依存ルール。変更は他プロジェクトへの影響考慮。
-- **`project.md`**: プロジェクト固有ルール。変更時は `core.md` との整合性を確認。
-- Memory Bank (`memory-bank/*.md`): 詳細ルール。更新時は影響を受けるコアルール (`core.md`, `project.md`) を明示。
-- 実装ルール (`docs/*/*.md`): 具体的な実装規定。上位ルールとの整合性を確認。
+*(このセクションは rules.mdc に移行済みの想定)*
 
-ルール更新の詳細は [rules.md](mdc:memory-bank/rules.md) を参照。
-
-- 詳細ルール更新時は、影響を受けるコアルールを明示
-- 実装ルールの更新は、上位ルールとの整合性を確認
+...
 
 ### `.mdc` ファイルの更新手順 (AI Agent 向け)
 
-`.cursor/rules/*.mdc` ファイルを AI エージェントが更新する場合、直接編集 (`edit_file`) が失敗する可能性があります。以下の手順を推奨します。
-
-1.  **`.md` で編集:** 更新対象の `.mdc` ファイルと同じベース名を持つ `.md` ファイルを新規作成し、そのファイルに対して `edit_file` ツールで編集内容を書き込みます。(例: `core.mdc` を更新したい場合は `core.md` を作成・編集)
-2.  **既存 `.mdc` 削除:** シェルコマンド (`run_terminal_cmd`) を使用して、既存の `.mdc` ファイルを削除します (`rm existing_rule.mdc`)。
-3.  **リネーム:** シェルコマンド (`run_terminal_cmd`) を使用して、編集済みの `.md` ファイルを目的の `.mdc` ファイル名に変更します (`mv new_rule.md new_rule.mdc`)。
-4.  **確認:** `git status` 等で意図通りファイルが変更されたか確認します。
-5.  **コミット:** 変更内容をコミットします。 
-
-
-- 詳細ルール更新時は、影響を受けるコアルールを明示
-- 実装ルールの更新は、上位ルールとの整合性を確認 
+*(このセクションは rules.mdc に移行済みの想定)*

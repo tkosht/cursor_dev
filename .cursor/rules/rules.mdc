@@ -1,3 +1,9 @@
+---
+description: "ルール体系とMemory Bank構造の定義"
+globs: 
+alwaysApply: true
+---
+
 # ルール体系定義 (rules.mdc)
 
 このファイルは、プロジェクト全体のルール体系、特に Memory Bank と `.cursorrules` (`*.mdc`) の構造と目的を定義します。
