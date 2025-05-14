@@ -1,0 +1,99 @@
+---
+title: workflow
+description: プロジェクトの標準ワークフロー定義
+globs: *
+alwaysApply: true
+---
+
+# ワークフロー
+
+## 前提
+
+以下の内容に従う
+
+- [project.mdc](mdc:.cursor/rules/project.mdc)
+- [python.mdc](mdc:.cursor/rules/python.mdc)
+
+
+## ワークフローの定義
+
+### 1. ルール読み込み（必須）
+1. コアルール読み込み
+    - .cursor/rules/*.mdc をすべて読み込む
+
+2. 詳細ルール読み込み
+    - memory-bank/*.md を関連するものすべて読み込む
+    - 特に以下は必須：
+        - documentation_strategy.md
+        - test_strategy.md
+        - error_analysis.md
+        - design_principles.md
+        - rules.md
+
+3. 実装ルール読み込み
+    - docs/*/*.md から関連するものを読み込む
+    - 特に以下は重要：
+        - requirements.md
+        - basic_design.md
+        - detail_design.md
+
+
+### 2. 現状ステータスの確認とタスク実行
+
+- ドキュメントを読み込む (無ければスキップ)
+    - [requirements.md](mdc:docs/01.requirements/requirements.md)
+    - [basic_design.md](mdc:docs/02.basic_design/basic_design.md)
+    - [detail_design.md](mdc:docs/03.detail_design/detail_design.md)
+- 現状ステータスの確認
+    - memory-bank/ の最新情報を確認 ([activeContext.md](mdc:memory-bank/activeContext.md), [progress.md](mdc:memory-bank/progress.md) を含む)
+- 目的・ゴールステータスの確認
+    - 目的を改めて明示的に確認 ([projectbrief.md](mdc:memory-bank/projectbrief.md) 参照)
+- タスク計画
+    - 次に実行すべきタスクを計画
+- **タスク実行** ─ 上記「3. 開発工程（統合）」の手順に従う
+- タスクのコミット
+    - 実行したタスクに関して、git commit & push
+- 現状ステータスの更新
+    - memory-bank/ に最新の状態を更新 ([activeContext.md](mdc:memory-bank/activeContext.md), [progress.md](mdc:memory-bank/progress.md) を含む)
+- memory-bank/ の内容をコミット
+    - 実行したタスクに関して、git commit & push
+
+
+## キャンセル発生時のワークフロー
+
+ユーザがキャンセルした場合は、もう一度実行するか、次の処理・タスクを実行すべきかユーザの判断を仰ぐ
+
+
+## 変更内容の確認
+
+- 自分の記憶・コンテキストに頼ることなく、必ず `git status | cat` および `git diff | cat` で 客観的に変更内容を漏れなく確認
+- 変更内容をコミットするために、 `git add .` ですべての非ステージング対象をステージングすること
+    - ステージングすべきでないファイルがある場合は、ユーザの判断を仰ぐ
+
+
+## 3. 開発工程（統合）
+
+以下の開発工程を 1 タスク毎に本ワークフローのサイクルで実行する。
+
+1. **要件定義**
+2. **基本設計 (外部設計)**
+3. **詳細設計 (内部設計)**
+4. **実装**
+   - 実装前に本ルールセット(`workflow.mdc` 及び `rules.mdc`)を再確認すること
+5. **コードフォーマット**
+   - 実装・改修後に `black` などでフォーマットを適用
+6. **リンターチェック**
+   - `flake8` 等で警告・エラーを全て解消
+7. **コードレビュー**
+   - レビュー指摘に応じて修正し再テスト
+8. **単体テスト**
+   - テストコード作成 → 実行 → エラー解析 → 必要に応じ実装へ戻る
+9. **結合テスト**
+   - 仕様書作成 → コード作成 → 実行 → エラー解析 → 必要に応じ実装へ戻る
+10. **ユーザテスト**
+    - 必要に応じてユーザへテストを依頼しフィードバック対応
+
+
+- 自分の記憶・コンテキストに頼ることなく、必ず `git status | cat` および `git diff | cat` で 客観的に変更内容を漏れなく確認
+- 変更内容をコミットするために、 `git add .` ですべての非ステージング対象をステージングすること
+    - ステージングすべきでないファイルがある場合は、ユーザの判断を仰ぐ
