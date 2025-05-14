@@ -1,0 +1,93 @@
+# ルール体系定義 (rules.mdc)
+
+このファイルは、プロジェクト全体のルール体系、特に Memory Bank と `.cursorrules` (`*.mdc`) の構造と目的を定義します。
+
+## 1. ルールファイルの階層と目的
+
+`.cursorrules` (`*.mdc`) ファイルは、AI アシスタントがプロジェクトを理解し、一貫した方法で作業するための指示を提供します。以下の階層構造を基本とします。
+
+1.  **`core.mdc` (必須):**
+    *   **目的:** プロジェクトの種類や技術スタックに依存しない、普遍的な開発原則、ベストプラクティス、思考法、AI アシスタントとの基本的な対話ルールなどを定義します。
+    *   **スコープ:** ソフトウェア開発全般に適用可能な汎用ルール。
+    *   **編集:** 汎用的なルールが確立・発見された場合に更新します。
+
+2.  **`project.mdc` (必須):**
+    *   **目的:** 特定のプロジェクトに固有のルール、設定、ワークフロー、技術選択、運用手順などを定義します。`core.mdc` のルールを前提とし、それを具体化・上書き・補足します。
+    *   **スコープ:** 現在のプロジェクトにのみ適用されるルール。
+    *   **編集:** プロジェクト固有の決定事項、環境設定、依存関係、運用ルールなどが変更・追加された場合に更新します。
+
+3.  **その他の `.mdc` ファイル (原則非推奨):**
+    *   **目的:** ルール体系の複雑化を避けるため、原則として `core.mdc` と `project.mdc` の2つでルールを管理します。
+    *   **例外:** 特定の技術領域（例: Python 固有の詳細ルール）や側面（例: 複雑なテスト戦略）について、分離することが保守性向上に明確に寄与し、かつチーム内で合意が得られた場合に限り、追加の `.mdc` ファイル作成を検討できます。
+    *   **スコープ:** ファイル名が示す特定の領域（作成する場合）。
+    *   **編集:** 対応する領域のルールが変更・追加された場合に更新します（作成する場合）。
+
+### 1.4 ルールファイルの依存関係図
+
+```mermaid
+graph LR
+    subgraph ".cursor/rules/"
+        RulesMDC["rules.mdc (ルール体系の定義)"]
+
+        CoreMDC["core.mdc (汎用ルール)"]
+        ProjectMDC["project.mdc (プロジェクト固有ルール)"]
+
+        PythonMDC["python.mdc (Python特化ルール, 任意)"]
+        WorkflowMDC["workflow.mdc (ワークフロー特化ルール, 任意)"]
+        OtherMDC["... (その他特化ルール, 任意)"]
+
+        RulesMDC --> CoreMDC
+        RulesMDC --> ProjectMDC
+        RulesMDC --> PythonMDC
+        RulesMDC --> WorkflowMDC
+        RulesMDC --> OtherMDC
+
+        CoreMDC --> ProjectMDC
+        CoreMDC --> PythonMDC
+        CoreMDC --> WorkflowMDC
+        CoreMDC --> OtherMDC
+
+        ProjectMDC --> PythonMDC
+        ProjectMDC --> WorkflowMDC
+    end
+
+    classDef mdc fill:#eee,stroke:#333,stroke-width:2px;
+    class RulesMDC,CoreMDC,ProjectMDC,PythonMDC,WorkflowMDC,OtherMDC mdc
+```
+
+## 2. Memory Bank 構造 (`/memory-bank/*.md`)
+
+Memory Bank は、AI アシスタントがプロジェクトのコンテキストを理解し、作業を引き継ぐための知識ベースです。以下のコアファイルを含みます。
+
+```mermaid
+flowchart TD
+    PB[projectbrief.md] --> PC[productContext.md]
+    PB --> SP[systemPatterns.md]
+    PB --> TC[techContext.md]
+
+    PC --> AC[activeContext.md]
+    SP --> AC
+    TC --> AC
+
+    AC --> P[progress.md]
+```
+
+### コアファイル (必須)
+
+1.  `projectbrief.md`: プロジェクトの根本的な目的、目標、スコープ。
+2.  `productContext.md`: プロジェクトが存在する理由、解決する問題、ユーザー体験。
+3.  `systemPatterns.md`: システムアーキテクチャ、主要な技術決定、デザインパターン。
+4.  `techContext.md`: 使用技術、開発セットアップ、技術的制約、依存関係。
+5.  `activeContext.md`: 現在の作業焦点、最近の変更、次のステップ、アクティブな決定事項。
+6.  `progress.md`: 実装済みの機能、残りのタスク、現在の状態、既知の問題。
+
+### 追加コンテキスト
+
+必要に応じて `/memory-bank/` 内にサブディレクトリや追加の `.md` ファイルを作成し、複雑な機能、API仕様、テスト戦略などを文書化します。
+
+## 3. `.mdc` ファイルの編集ワークフロー
+
+*(ここに、ユーザー指定の `.md` 経由での編集ワークフローを記述)*
+*(例: "`.mdc` ファイルを更新する際は、まず対応する `/docs/rules_drafts/` 内の `.md` ファイルを編集し、レビュー後に `make update-rules` コマンドを実行して `.mdc` に反映させる。"など)*
+
+*(現時点ではワークフロー不明のためプレースホルダ)* 
