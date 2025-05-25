@@ -2,14 +2,17 @@
 A2A Base Agent
 
 全A2Aエージェントの基底クラス
-python-a2aライブラリを使用したA2A準拠の実装
+Google公式a2a-sdkライブラリを使用したA2A準拠の実装
 """
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import Dict, List
 
-from python_a2a import A2AServer, AgentCard, AgentSkill, TaskState, run_server
+from a2a.server import A2AStarletteApplication, AgentExecutor, RequestContext
+from a2a.server.events import EventQueue
+from a2a.types import AgentCard, AgentSkill, TaskState
+from a2a.utils import new_agent_text_message
 
 from ..utils.config import AgentConfig
 
@@ -18,8 +21,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class BaseA2AAgent(A2AServer, ABC):
-    """A2Aエージェントの基底クラス"""
+class BaseA2AAgent(AgentExecutor, ABC):
+    """A2Aエージェントの基底クラス（Google公式SDK使用）"""
 
     def __init__(self, config: AgentConfig):
         """
@@ -32,7 +35,7 @@ class BaseA2AAgent(A2AServer, ABC):
         self.logger = logging.getLogger(f"{__name__}.{config.name}")
 
         # エージェントカードを作成
-        agent_card = AgentCard(
+        self.agent_card = AgentCard(
             name=config.name,
             description=config.description,
             url=config.url,
@@ -42,13 +45,10 @@ class BaseA2AAgent(A2AServer, ABC):
                 "pushNotifications": False,
                 "stateTransitionHistory": False,
             },
-            default_input_modes=["text"],
-            default_output_modes=["text"],
+            defaultInputModes=["text"],
+            defaultOutputModes=["text"],
             skills=self.get_skills(),
         )
-
-        # A2Aサーバーの初期化
-        super().__init__(agent_card=agent_card)
 
         self.logger.info(f"Initializing {config.name} at {config.url}")
 
@@ -62,97 +62,101 @@ class BaseA2AAgent(A2AServer, ABC):
         """
         pass
 
-    def handle_task(self, task) -> Any:
+    async def execute(self, context: RequestContext, event_queue: EventQueue):
         """
-        タスクを処理する（A2AServerのメソッドをオーバーライド）
+        タスクを実行する（A2A公式SDKのメソッド）
 
         Args:
-            task: 処理するタスク
-
-        Returns:
-            処理結果
+            context: リクエストコンテキスト
+            event_queue: イベントキュー
         """
         try:
-            # タスクからテキストを抽出
-            text = self.extract_text_from_task(task)
+            # ユーザーメッセージからテキストを抽出
+            user_input = context.get_user_input()
 
-            if not text:
-                task.status = TaskState.INPUT_REQUIRED
-                return task
+            if not user_input:
+                # 入力が必要な状態に設定
+                task = context.current_task
+                task.status.state = TaskState.input_required
+                await event_queue.enqueue_event(task)
+                return
 
             # 具体的な処理は子クラスで実装
-            return self.process_task_text(task, text)
+            response_text = await self.process_user_input(user_input)
+
+            # エージェントの応答メッセージを作成
+            agent_message = new_agent_text_message(response_text)
+
+            # タスクを完了状態に設定
+            task = context.current_task
+            task.status.state = TaskState.completed
+            task.history.append(agent_message)
+
+            await event_queue.enqueue_event(task)
 
         except Exception as e:
-            self.logger.error(f"Task processing failed: {e}")
-            task.status = TaskState.FAILED
-            return task
+            self.logger.error(f"Task execution failed: {e}")
+            # タスクを失敗状態に設定
+            task = context.current_task
+            task.status.state = TaskState.failed
+            await event_queue.enqueue_event(task)
 
-    @abstractmethod
-    def process_task_text(self, task, text: str) -> Any:
+    async def cancel(self, context: RequestContext, event_queue: EventQueue):
         """
-        テキストを使ったタスク処理（子クラスで実装）
+        タスクをキャンセルする
 
         Args:
-            task: 処理するタスク
-            text: 抽出されたテキスト
+            context: リクエストコンテキスト
+            event_queue: イベントキュー
+        """
+        try:
+            task = context.current_task
+            task.status.state = TaskState.canceled
+            await event_queue.enqueue_event(task)
+            self.logger.info(f"Task {context.task_id} cancelled")
+        except Exception as e:
+            self.logger.error(f"Task cancellation failed: {e}")
+
+    @abstractmethod
+    async def process_user_input(self, user_input: str) -> str:
+        """
+        ユーザー入力を処理（子クラスで実装）
+
+        Args:
+            user_input: ユーザーからの入力テキスト
 
         Returns:
-            処理されたタスク
+            エージェントの応答テキスト
         """
         pass
 
-    def extract_text_from_task(self, task) -> str:
-        """タスクからテキストを抽出"""
-        try:
-            if not (hasattr(task, "message") and task.message):
-                return ""
+    def create_app(self) -> A2AStarletteApplication:
+        """
+        A2A Starletteアプリケーションを作成
 
-            # content形式をチェック
-            content_text = self._extract_from_content(task.message)
-            if content_text:
-                return content_text
+        Returns:
+            設定済みのA2AStarletteApplication
+        """
+        app = A2AStarletteApplication(
+            agent_card=self.agent_card,
+            agent_executor=self
+        )
+        return app
 
-            # parts形式をチェック
-            return self._extract_from_parts(task.message)
-
-        except Exception as e:
-            self.logger.warning(f"Failed to extract text from task: {e}")
-            return ""
-
-    def _extract_from_content(self, message) -> str:
-        """メッセージのcontentからテキストを抽出"""
-        if not hasattr(message, "content"):
-            return ""
-
-        if isinstance(message.content, str):
-            return message.content
-        elif hasattr(message.content, "text"):
-            return message.content.text
-
-        return ""
-
-    def _extract_from_parts(self, message) -> str:
-        """メッセージのpartsからテキストを抽出"""
-        if not (hasattr(message, "parts") and message.parts):
-            return ""
-
-        text_parts = []
-        for part in message.parts:
-            if hasattr(part, "text"):
-                text_parts.append(part.text)
-            elif isinstance(part, dict) and "text" in part:
-                text_parts.append(part["text"])
-
-        return " ".join(text_parts)
-
-    def run_agent(self):
+    def run_agent(self, host: str = "0.0.0.0", port: int = None):
         """エージェントを起動"""
+        if port is None:
+            port = self.config.port
+
         self.logger.info(
-            f"Starting {self.config.name} on port {self.config.port}"
+            f"Starting {self.config.name} on port {port}"
         )
         try:
-            run_server(self, port=self.config.port, host=self.config.host)
+            app = self.create_app()
+            starlette_app = app.build()
+
+            import uvicorn
+            uvicorn.run(starlette_app, host=host, port=port)
         except Exception as e:
             self.logger.error(f"Failed to start agent: {e}")
             raise

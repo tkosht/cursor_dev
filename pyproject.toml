@@ -15,12 +15,13 @@ python-dotenv = "^1.0.1"
 requests = "^2.32.3"
 ipykernel = "^6.29.5"
 # A2A prototype dependencies
-fastapi = "^0.104.0"
+fastapi = "^0.115.12"
 uvicorn = "^0.24.0"
 httpx = "^0.28.1"
 pydantic = "^2.4.0"
 python-multipart = "^0.0.6"
-python-a2a = "^0.5.6"
+starlette = "^0.46.2"
+a2a-sdk = "^0.2.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
