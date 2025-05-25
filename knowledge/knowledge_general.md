@@ -148,13 +148,13 @@ if not validate_url(host):
 - エラーメッセージの明確化
 
 ### 実装例
-1. Difyホスト設定
+1. APIホスト設定
 ```python
 # 設定例
-self.dify_host = os.getenv("DIFY_HOST", "https://api.dify.ai")
+self.api_host = os.getenv("API_HOST", "https://api.example.com")
 
 # 使用例
-endpoint = f"{self.dify_host}/v1/completion-messages"
+endpoint = f"{self.api_host}/v1/messages"
 ```
 - 完全なURLを使用
 - デフォルト値の提供
