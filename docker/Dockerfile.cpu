@@ -5,13 +5,17 @@ LABEL maintainer="tkosht <takehito.oshita.business@gmail.com>"
 ENV TZ=Asia/Tokyo
 ENV DEBIAN_FRONTEND=noninteractive
 
+
 RUN apt-get update -y && apt-get upgrade -y \
     && apt-get install --fix-missing -y sudo build-essential autoconf cmake \
         vim tmux tzdata locales dialog git openssh-server bash-completion \
-        jq sqlite3 curl nodejs npm default-jre chromium-browser \
+        jq sqlite3 curl default-jre chromium-browser \
         libgeos-dev libsnappy-dev fontconfig fonts-ipaexfont fonts-ipafont \
         libmecab-dev mecab mecab-ipadic-utf8 mecab-utils file \
     && localedef -f UTF-8 -i ja_JP ja_JP.UTF-8
+
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - \
+    && apt install --fix-missing -y nodejs npm 
 
 RUN apt-get install -y --fix-missing --no-install-recommends \
         python3.10 \
