@@ -40,9 +40,17 @@ python app/a2a_prototype/simple_test.py
 ```
 ✅ A2A SDK imports successful
 ✅ AgentCard created successfully
-✅ TaskState values (submitted, working, etc.)
-✅ EventQueue created and managed successfully
+✅ TaskState values (A2Aプロトコルで定義された全ての状態):
+   - failed: 'failed' (失敗（※エラーではなく正常な状態の一つ）)
+✅ EventQueue created successfully
+   Queue closed: False (作成直後 - まだ開いている)
+   Queue closed after close(): True (正常にクローズされました)
+🎉 Basic tests completed successfully!
 ```
+
+**注意**: 
+- `failed`の表示: TaskStateの正常な状態の一つで、エラーではありません
+- `Queue closed: False/True`: EventQueueのライフサイクルテストで、正常な動作です
 
 ### 2. エージェント機能テスト
 

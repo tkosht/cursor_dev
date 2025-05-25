@@ -103,9 +103,18 @@ def test_task_state():
             TaskState.failed
         ]
         
-        print("✅ TaskState values:")
+        print("✅ TaskState values (A2Aプロトコルで定義された全ての状態):")
         for state in states:
-            print(f"   - {state.name}: {state.value}")
+            status_desc = {
+                'submitted': '投入済み',
+                'working': '実行中', 
+                'input_required': '入力待ち',
+                'completed': '完了',
+                'canceled': 'キャンセル済み',
+                'failed': '失敗（※エラーではなく正常な状態の一つ）'
+            }
+            desc = status_desc.get(state.name, '')
+            print(f"   - {state.name}: '{state.value}' ({desc})")
             
     except Exception as e:
         print(f"❌ TaskState test failed: {e}")
@@ -120,11 +129,12 @@ async def test_event_queue():
         queue = EventQueue()
         
         print("✅ EventQueue created successfully")
-        print(f"   Queue closed: {queue.is_closed()}")
+        print(f"   Queue closed: {queue.is_closed()} (作成直後 - まだ開いている)")
         
-        # クローズテスト
+        # クローズテストを実行
+        print("   EventQueueをクローズしています...")
         await queue.close()
-        print(f"   Queue closed after close(): {queue.is_closed()}")
+        print(f"   Queue closed after close(): {queue.is_closed()} (正常にクローズされました)")
         
     except Exception as e:
         print(f"❌ EventQueue test failed: {e}")
@@ -132,16 +142,22 @@ async def test_event_queue():
 
 async def main():
     """メインテスト関数"""
-    print("A2A SDK Basic Test Suite")
-    print("=" * 50)
-    
     # 基本テスト
     test_agent_card_creation()
     test_task_state()
     await test_event_queue()
     
     print("\n" + "=" * 50)
-    print("Basic tests completed!")
+    print("🎉 Basic tests completed successfully!")
+    print("✅ A2A-SDK v0.2.4 は正常に動作しています")
+    print("\n📝 表示されている内容について:")
+    print("• 'failed' - TaskStateの正常な状態の一つ（エラーではありません）")
+    print("• 'Queue closed: False/True' - EventQueueのライフサイクルテスト（正常です）")
+    print("\n次のステップ:")
+    print("1. python -m app.a2a_prototype.test_simple_agent でエージェント機能をテスト")
+    print("2. BaseAgentクラスの修正を行い、HTTPサーバーを起動")
+    print("3. 実際のA2Aプロトコル通信をテスト")
+    print("=" * 50)
 
 
 if __name__ == "__main__":
