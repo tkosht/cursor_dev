@@ -11,7 +11,7 @@ import sys
 # パスを追加してインポートを可能にする
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 
-from app.a2a_prototype.agents.weather_agent import WeatherAgent
+from app.a2a_prototype.agents.weather_agent import WeatherAgent  # noqa: E402
 
 
 def main():
@@ -19,26 +19,30 @@ def main():
     print("=" * 50)
     print("🌤️  Weather Agent Starting...")
     print("=" * 50)
-    
+
     try:
         agent = WeatherAgent()
         print(f"Agent URL: {agent.config.url}")
-        print(f"Agent Card available at: {agent.config.url}/.well-known/agent.json")
+        print(
+            f"Agent Card available at: {agent.config.url}/.well-known/agent.json"
+        )
         print()
-        print("エージェントが起動しました。停止するには Ctrl+C を押してください。")
+        print(
+            "エージェントが起動しました。停止するには Ctrl+C を押してください。"
+        )
         print()
-        
+
         # エージェント起動
         agent.run_agent()
-        
+
     except KeyboardInterrupt:
         print("\n👋 Weather Agent を停止しています...")
     except Exception as e:
         print(f"❌ エラーが発生しました: {e}")
         return 1
-    
+
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main()) 
+    sys.exit(main())
