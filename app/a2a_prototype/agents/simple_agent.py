@@ -24,49 +24,16 @@ class SimpleTestAgent(BaseA2AAgent):
         """エージェントのスキル一覧を取得"""
         return [
             AgentSkill(
+                id="echo",
                 name="echo",
                 description="Echo back the user's message",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "message": {
-                            "type": "string",
-                            "description": "Message to echo"
-                        }
-                    },
-                    "required": ["message"]
-                },
-                outputSchema={
-                    "type": "object", 
-                    "properties": {
-                        "response": {
-                            "type": "string",
-                            "description": "Echoed message"
-                        }
-                    }
-                }
+                tags=["text", "utility"]
             ),
             AgentSkill(
-                name="greet",
+                id="greet",
+                name="greet", 
                 description="Greet the user",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                            "description": "User's name"
-                        }
-                    }
-                },
-                outputSchema={
-                    "type": "object",
-                    "properties": {
-                        "greeting": {
-                            "type": "string",
-                            "description": "Greeting message"
-                        }
-                    }
-                }
+                tags=["conversation", "social"]
             )
         ]
 
