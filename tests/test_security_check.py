@@ -190,17 +190,13 @@ class TestSecurityChecker:
                     len(findings) >= 1
                 ), f"Findings should not be empty for '{description}'"
                 # Check if the finding corresponds to the OpenAI pattern
-                assert any(
-                    f[0] == "OpenAI APIキー" for f in findings
-                ), (
+                assert any(f[0] == "OpenAI APIキー" for f in findings), (
                     f"Correct pattern name not found in findings for "
                     f"'{description}'. Findings: {findings}"
                 )
             else:
                 # Ensure no findings *at all* for this specific pattern if not detected
-                assert not any(
-                    f[0] == "OpenAI APIキー" for f in findings
-                ), (
+                assert not any(f[0] == "OpenAI APIキー" for f in findings), (
                     f"OpenAI pattern unexpectedly found for '{description}'. "
                     f"Findings: {findings}"
                 )
@@ -323,16 +319,12 @@ class TestSecurityChecker:
                 assert (
                     len(findings) >= 1
                 ), f"Findings should not be empty for '{description}'"
-                assert any(
-                    f[0] == "GitHubトークン" for f in findings
-                ), (
+                assert any(f[0] == "GitHubトークン" for f in findings), (
                     f"Correct pattern name not found in findings for "
                     f"'{description}'. Findings: {findings}"
                 )
             else:
-                assert not any(
-                    f[0] == "GitHubトークン" for f in findings
-                ), (
+                assert not any(f[0] == "GitHubトークン" for f in findings), (
                     f"GitHub pattern unexpectedly found for '{description}'. "
                     f"Findings: {findings}"
                 )

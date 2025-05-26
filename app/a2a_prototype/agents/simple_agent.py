@@ -52,17 +52,13 @@ class SimpleTestAgent(BaseA2AAgent):
 
         if input_lower.startswith("hello") or input_lower.startswith("hi"):
             return (
-                f"Hello! I'm {self.config.name}. "
-                "How can I help you today?"
+                f"Hello! I'm {self.config.name}. " "How can I help you today?"
             )
 
         elif input_lower.startswith("echo"):
             # "echo "を除去してそのまま返す
             message = user_input[5:].strip() if len(user_input) > 5 else ""
-            return (
-                f"Echo: {message}" if message
-                else "Echo: (empty message)"
-            )
+            return f"Echo: {message}" if message else "Echo: (empty message)"
 
         elif input_lower.startswith("status"):
             return (

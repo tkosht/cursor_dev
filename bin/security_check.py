@@ -22,31 +22,31 @@ class SecurityChecker:
         (
             "OpenAI APIキー",
             # Capture group 1: The key itself (Compromise: Detects keys slightly longer than 48 chars)
-            re.compile(r'(sk-[a-zA-Z0-9]{48})'),
+            re.compile(r"(sk-[a-zA-Z0-9]{48})"),
             "[OPENAI_KEY_REDACTED]",
-            1
+            1,
         ),
         (
             "GitHubトークン",
             # Capture group 1: The token itself (already defined by outer parens)
             re.compile(
-                r'\b('
-                r'ghp_[a-zA-Z0-9]{36}|'  # Classic PAT
-                r'gho_[a-zA-Z0-9]{36}|'  # OAuth
-                r'ghs_[a-zA-Z0-9]{36}|'  # App Installation
-                r'ghr_[a-zA-Z0-9_]{40,}|'  # Refresh Token
-                r'github_pat_[a-zA-Z0-9_]{80,}'  # Fine-grained PAT
-                r')\b'
+                r"\b("
+                r"ghp_[a-zA-Z0-9]{36}|"  # Classic PAT
+                r"gho_[a-zA-Z0-9]{36}|"  # OAuth
+                r"ghs_[a-zA-Z0-9]{36}|"  # App Installation
+                r"ghr_[a-zA-Z0-9_]{40,}|"  # Refresh Token
+                r"github_pat_[a-zA-Z0-9_]{80,}"  # Fine-grained PAT
+                r")\b"
             ),
             "[GITHUB_TOKEN_REDACTED]",
-            1
+            1,
         ),
         (
             "Slackトークン",
             # Capture group 1: The token itself (moved (?i) to the start)
-            re.compile(r'(?i)(xox[baprs]-\d+-\d+-[a-zA-Z0-9]+)'),
+            re.compile(r"(?i)(xox[baprs]-\d+-\d+-[a-zA-Z0-9]+)"),
             "[SLACK_TOKEN_REDACTED]",
-            1
+            1,
         ),
         # --- Generic Patterns (Require closing quote on the same line) ---
         (
@@ -55,11 +55,11 @@ class SecurityChecker:
             re.compile(
                 r'(?i)(api[_-]?key|apikey|api[_-]?token)["\']?\s*[:=]\s*["\']'
                 # Require at least 6 characters for the value
-                r'((?!sk-|ghp_|gho_|ghs_|ghr_|github_pat_|xox[baprs]-)[\w-]{6,})'
+                r"((?!sk-|ghp_|gho_|ghs_|ghr_|github_pat_|xox[baprs]-)[\w-]{6,})"
                 r'["\']'
             ),
             "[API_KEY_REDACTED]",
-            2  # Note: Capture group index is 2 here
+            2,  # Note: Capture group index is 2 here
         ),
         (
             "アクセストークン",
@@ -67,11 +67,11 @@ class SecurityChecker:
             re.compile(
                 r'(?i)(access[_-]?token|auth[_-]?token)["\']?\s*[:=]\s*["\']'
                 # Require at least 6 characters for the value
-                r'((?!sk-|ghp_|gho_|ghs_|ghr_|github_pat_|xox[baprs]-)[\w-]{6,})'
+                r"((?!sk-|ghp_|gho_|ghs_|ghr_|github_pat_|xox[baprs]-)[\w-]{6,})"
                 r'["\']'
             ),
             "[TOKEN_REDACTED]",
-            2  # Note: Capture group index is 2 here
+            2,  # Note: Capture group index is 2 here
         ),
         (
             "その他の機密情報",
@@ -79,11 +79,11 @@ class SecurityChecker:
             re.compile(
                 r'(?i)(password|secret|key)["\']?\s*[:=]\s*["\']'
                 # Require at least 6 characters for the value
-                r'((?!sk-|ghp_|gho_|ghs_|ghr_|github_pat_|xox[baprs]-)[\w-]{6,})'
+                r"((?!sk-|ghp_|gho_|ghs_|ghr_|github_pat_|xox[baprs]-)[\w-]{6,})"
                 r'["\']'
             ),
             "[SENSITIVE_INFO_REDACTED]",
-            2  # Note: Capture group index is 2 here
+            2,  # Note: Capture group index is 2 here
         ),
     ]
 
@@ -114,7 +114,7 @@ class SecurityChecker:
         found = False
         findings = []
 
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             for i, line in enumerate(f, 1):
                 # Unpack including the capture group index (now unused here)
                 for pattern_name, pattern, _, _ in self.PATTERNS:
@@ -133,7 +133,7 @@ class SecurityChecker:
         Returns:
             bool: 変更が行われたかどうか
         """
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Remove unused variable: original_content = content
@@ -156,7 +156,9 @@ class SecurityChecker:
                     # Append content before the key + the mask + content after the key but within the match
                     new_masked_content += modified_content[last_end:key_start]
                     new_masked_content += mask
-                    new_masked_content += modified_content[key_end:match_end]  # Add back the part after the key
+                    new_masked_content += modified_content[
+                        key_end:match_end
+                    ]  # Add back the part after the key
 
                     last_end = match_end  # Use the end of the *entire* match for the next slice start
                     changed = True
@@ -167,17 +169,21 @@ class SecurityChecker:
                         f"Warning: Capture group {capture_group_index} not found for "
                         f"pattern {pattern.pattern} in {file_path}"
                     )
-                    new_masked_content += modified_content[last_end:match.end()]
+                    new_masked_content += modified_content[
+                        last_end : match.end()
+                    ]
                     last_end = match.end()
 
             # Append the rest of the content after the last match
             new_masked_content += modified_content[last_end:]
             # Update content for the next pattern iteration
-            modified_content = new_masked_content  # Add two spaces before comment
+            modified_content = (
+                new_masked_content  # Add two spaces before comment
+            )
 
         # Remove extra blank lines
         if changed:
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 # Use the correct variable name
                 f.write(modified_content)
             return True
@@ -206,10 +212,14 @@ class SecurityChecker:
                         print(f"  → 機密情報をマスクしました: {file_path}")
                 return True
         except UnicodeDecodeError:
-            print(f"警告: ファイルの読み込みに失敗しました（エンコーディング問題）: {file_path}")
+            print(
+                f"警告: ファイルの読み込みに失敗しました（エンコーディング問題）: {file_path}"
+            )
         except Exception as e:
-            print(f"警告: ファイルの処理中にエラーが発生しました: {file_path} - {str(e)}")
-        
+            print(
+                f"警告: ファイルの処理中にエラーが発生しました: {file_path} - {str(e)}"
+            )
+
         return False
 
 
@@ -218,24 +228,28 @@ def get_staged_files() -> List[Path]:
     try:
         # Explicitly set cwd to ensure git diff runs in the correct directory
         result = subprocess.run(
-            ['git', 'diff', '--cached', '--name-only', '--diff-filter=ACM'],
+            ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
             capture_output=True,
             text=True,
             check=True,
-            encoding='utf-8',
-            cwd="."  # Run git diff in the current directory
+            encoding="utf-8",
+            cwd=".",  # Run git diff in the current directory
         )
         staged_files_raw = result.stdout.splitlines()
         return [Path(f) for f in staged_files_raw]
     except FileNotFoundError:
-        print("エラー: git コマンドが見つかりません。gitがインストールされ、PATHに含まれていることを確認してください。")
+        print(
+            "エラー: git コマンドが見つかりません。gitがインストールされ、PATHに含まれていることを確認してください。"
+        )
         sys.exit(2)
     except subprocess.CalledProcessError as e:
         print(f"エラー: ステージングされたファイルの取得に失敗しました: {e}")
         print(f"stderr: {e.stderr}")
         sys.exit(2)
     except Exception as e:
-        print(f"予期せぬエラー: ステージングされたファイルの取得中にエラーが発生しました: {e}")
+        print(
+            f"予期せぬエラー: ステージングされたファイルの取得中にエラーが発生しました: {e}"
+        )
         sys.exit(2)
 
 
@@ -244,14 +258,18 @@ def filter_files_to_check(files: List[Path]) -> List[Path]:
     # Compare relative paths directly
     test_file_rel_path = Path("tests/test_security_check.py")
     return [
-        f for f in files
+        f
+        for f in files
         if f.suffix in SecurityChecker.TARGET_EXTENSIONS
         and f.exists()
-        and f != test_file_rel_path  # Exclude the test file itself using relative path
+        and f
+        != test_file_rel_path  # Exclude the test file itself using relative path
     ]
 
 
-def process_files(checker: SecurityChecker, files: List[Path], auto_mask: bool) -> bool:
+def process_files(
+    checker: SecurityChecker, files: List[Path], auto_mask: bool
+) -> bool:
     """指定されたファイルリストを処理し、機密情報が見つかったかどうかを返します。"""
     found_secrets = False
     for file_path in files:
@@ -264,11 +282,13 @@ def main():
     """メイン関数"""
     import argparse
 
-    parser = argparse.ArgumentParser(description="機密情報検出・マスクツール (ステージングされたファイルのみ対象)")
+    parser = argparse.ArgumentParser(
+        description="機密情報検出・マスクツール (ステージングされたファイルのみ対象)"
+    )
     parser.add_argument(
         "--auto-mask",
         action="store_true",
-        help="検出された機密情報を自動的にマスクする"
+        help="検出された機密情報を自動的にマスクする",
     )
     args = parser.parse_args()
 
@@ -291,12 +311,16 @@ def main():
     if found_secrets:
         if not args.auto_mask:
             print("\n警告: 機密情報が見つかりました。")
-            print("コミットを続けるには、手動で修正するか、再度コミットする際に --no-verify を使用してください。")
+            print(
+                "コミットを続けるには、手動で修正するか、再度コミットする際に --no-verify を使用してください。"
+            )
         sys.exit(1)
     else:
-        print("\n✓ ステージングされたファイルに機密情報は見つかりませんでした。")
+        print(
+            "\n✓ ステージングされたファイルに機密情報は見つかりませんでした。"
+        )
         sys.exit(0)
 
 
 if __name__ == "__main__":
-    main() 
+    main()
