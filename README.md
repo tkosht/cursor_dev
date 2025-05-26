@@ -140,11 +140,12 @@ Gemini: "先ほどのpathlibについて、より詳細に説明します..." (�
 - **[memory-bank/activeContext.md](memory-bank/activeContext.md)**: プロジェクト完了状況
 
 ### 技術実装ドキュメント
+- **[docs/technical_analysis_a2a_protocol_effectiveness.md](docs/technical_analysis_a2a_protocol_effectiveness.md)**: **A2Aプロトコル技術的効果分析** ⭐ **NEW**
 - **[docs/a2a_implementation_guide.md](docs/a2a_implementation_guide.md)**: A2A実装ガイド
-- **[docs/gemini_a2a_agent_specification.md](docs/gemini_a2a_agent_specification.md)**: Gemini A2A Agent詳細仕様書 🧠 **NEW**
+- **[docs/gemini_a2a_agent_specification.md](docs/gemini_a2a_agent_specification.md)**: Gemini A2A Agent詳細仕様書 🧠 
 - **[memory-bank/a2a_implementation_lessons_learned.md](memory-bank/a2a_implementation_lessons_learned.md)**: 実装教訓集
 - **[app/a2a_prototype/](app/a2a_prototype/)**: 実装サンプルコード - **詳細な動作説明追加** ⭐
-- **[scripts/run_gemini_agent.py](scripts/run_gemini_agent.py)**: Gemini Agent実行スクリプト 🧠 **NEW**
+- **[scripts/run_gemini_agent.py](scripts/run_gemini_agent.py)**: Gemini Agent実行スクリプト 🧠
 
 ### セットアップドキュメント
 - **[docs/setup/api_key_configuration.md](docs/setup/api_key_configuration.md)**: APIキー設定の詳細ガイド
