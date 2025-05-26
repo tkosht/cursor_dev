@@ -28,7 +28,7 @@ except ImportError:
 @pytest.fixture
 def test_agent_instance(sample_agent_config):
     """テスト用のBaseA2AAgentインスタンスを生成するフィクスチャ"""
-    
+
     class ConcreteTestAgent(BaseA2AAgent):
         def get_skills(self):
             return [
@@ -44,14 +44,14 @@ def test_agent_instance(sample_agent_config):
             if user_input == "error":
                 raise ValueError("Test error")
             return f"Processed: {user_input}"
-            
+
     return ConcreteTestAgent(sample_agent_config)
 
 
 # TestBaseA2AAgentクラスは不要になったため削除
 # class TestBaseA2AAgent(BaseA2AAgent):
 #     """テスト用のBaseA2AAgent具象実装"""
-# 
+#
 #     def get_skills(self):
 #         """テスト用スキル"""
 #         return [
@@ -62,7 +62,7 @@ def test_agent_instance(sample_agent_config):
 #                 tags=["test"],
 #             )
 #         ]
-# 
+#
 #     async def process_user_input(self, user_input: str) -> str:
 #         """テスト用の処理"""
 #         if user_input == "error":
