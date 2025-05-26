@@ -116,11 +116,11 @@ class TestAgentSkillValidation:
     
     @pytest.mark.parametrize("invalid_id", [
         None,           # None値
-        "",             # 空文字
         123,            # 数値
         [],             # リスト
         {},             # 辞書
         True,           # ブール値
+        # 注意: ""（空文字）は実際のAPI仕様では有効とみなされるため除外
     ])
     def test_create_with_invalid_id_types_raises_validation_error(self, invalid_id):
         """パラメータ化テスト: 無効なidの型でValidationError"""
@@ -191,6 +191,25 @@ class TestAgentSkillValidation:
         # Then: 正常に作成され、単一tagが設定される
         assert skill.tags == ["single"]
         assert len(skill.tags) == 1
+    
+    def test_create_with_empty_string_id_is_valid(self):
+        """境界値ケース: 空文字列のidは有効（API仕様確認済み）"""
+        # Given: 空文字列のidを含むデータ
+        skill_data = {
+            "id": "",
+            "name": "Test Skill",
+            "description": "Test skill with empty string id",
+            "tags": ["test"]
+        }
+        
+        # When: AgentSkillを作成
+        skill = AgentSkill(**skill_data)
+        
+        # Then: 正常に作成され、空文字列のidが設定される
+        assert skill.id == ""
+        assert skill.name == "Test Skill"
+        assert skill.description == "Test skill with empty string id"
+        assert skill.tags == ["test"]
 
 
 @pytest.mark.unit

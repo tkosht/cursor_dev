@@ -46,12 +46,44 @@ profile = "black"
 line_length = 79
 multi_line_output = 3
 
-[tool.pytest]
+
+
+[tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --cov=app --cov-report=term-missing"
+markers = [
+    "unit: 単体テスト（高速・独立）",
+    "integration: 統合テスト（中速・依存あり）",
+    "e2e: E2Eテスト（低速・完全シナリオ）",
+    "slow: 実行時間の長いテスト",
+]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--cov=app",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-fail-under=90",
+]
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
 
