@@ -63,11 +63,15 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+pythonpath = ["."]
 markers = [
     "unit: 単体テスト（高速・独立）",
     "integration: 統合テスト（中速・依存あり）",
     "e2e: E2Eテスト（低速・完全シナリオ）",
     "slow: 実行時間の長いテスト",
+    "security: セキュリティ関連テスト",
+    "asyncio: mark the test as a coroutine, it will be run using an asyncio event loop",
+    "timeout: mark a test as having a timeout (seconds)",
 ]
 addopts = [
     "-v",
@@ -79,6 +83,12 @@ addopts = [
 ]
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+    "ignore:cannot collect test class .*TestBaseA2AAgent.* because it has a __init__ constructor:pytest.PytestCollectionWarning",
+    "ignore::RuntimeWarning:app.query_monitor",
+]
 
 [tool.coverage.run]
 source = ["app"]
