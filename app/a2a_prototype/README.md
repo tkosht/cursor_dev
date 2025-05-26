@@ -1,226 +1,153 @@
-# A2A Prototype - Google公式a2a-sdk実装サンプル
+# A2A Protocol Investigation - Prototype
 
-このディレクトリには、Google公式a2a-sdk v0.2.4を使用したA2A（Agent-to-Agent）プロトコルのプロトタイプ実装が含まれています。
+このディレクトリには、Google公式a2a-sdk v0.2.4を使用したA2A（Agent-to-Agent）プロトコルの実機調査・検証用プロトタイプが含まれています。
 
-## 🎯 概要
-
-- **目的**: A2Aプロトコルの技術的実現性の検証
-- **使用ライブラリ**: Google公式 `a2a-sdk` v0.2.4
-- **実装レベル**: 本格的なHTTPサーバー起動が可能
-
-## 📁 ディレクトリ構成
+## 📁 プロジェクト構造
 
 ```
-app/a2a_prototype/
-├── agents/                 # A2Aエージェント実装
-│   ├── base_agent.py      # ベースエージェントクラス
-│   ├── simple_agent.py    # シンプルなテストエージェント
-│   └── __init__.py
-├── utils/                  # ユーティリティ
-│   ├── config.py          # エージェント設定管理
-│   └── __init__.py
-├── simple_test.py         # 基本動作確認テスト
-├── test_simple_agent.py   # エージェント機能テスト
-└── README.md              # このファイル
+./
+├── examples/                        # 🆕 動作確認・デモ用スクリプト
+│   ├── a2a_basic_check.py              # A2A SDK基本動作確認
+│   └── simple_agent_demo.py            # SimpleTestAgentデモ
+├── tests/                           # 🆕 TDD準拠のpytestテスト
+│   ├── conftest.py                     # pytest共通設定・フィクスチャ
+│   ├── unit/                           # 単体テスト（高速・独立）
+│   │   ├── test_types/                 # a2a.types テスト
+│   │   │   └── test_agent_skill.py     # AgentSkill TDDテスト
+│   │   └── test_agents/                # エージェント単体テスト
+│   │       └── test_simple_agent.py    # SimpleTestAgent TDDテスト
+│   ├── integration/                    # 統合テスト（中速・依存あり）
+│   └── e2e/                           # E2Eテスト（低速・完全シナリオ）
+├── app/a2a_prototype/               # アプリケーションコード
+│   ├── agents/                         # エージェント実装
+│   │   ├── base_agent.py               # 基底エージェントクラス
+│   │   └── simple_agent.py             # SimpleTestAgent実装
+│   └── utils/                          # ユーティリティ
+│       └── config.py                   # エージェント設定管理
+└── docs/                            # ドキュメント
+    ├── a2a_implementation_guide.md     # 技術実装ガイド
+    └── development_rules/              # 開発ルール・ガイドライン
+        └── tdd_implementation_guide.md # TDD実践ガイド
 ```
+
+## 🔄 ファイル名整理について
+
+### 整理前（問題があった構造）
+
+```
+❌ app/a2a_prototype/simple_test.py     # 動作確認だがpytestっぽい名前
+❌ app/a2a_prototype/test_simple_agent.py # pytestテストだが配置場所が不適切
+```
+
+**問題点**:
+- pytest標準の命名規則に非準拠
+- 動作確認スクリプトとpytestテストが混在
+- TDD実践になっていない甘いテスト
+- アプリケーションディレクトリにテストファイルが配置
+
+### 整理後（適切な構造）
+
+```
+✅ examples/a2a_basic_check.py          # 明確に動作確認用
+✅ examples/simple_agent_demo.py        # 明確にデモ用
+✅ tests/unit/test_types/test_agent_skill.py     # TDD準拠のpytestテスト
+✅ tests/unit/test_agents/test_simple_agent.py   # TDD準拠のpytestテスト
+```
+
+**改善点**:
+- 役割が明確な命名・配置
+- pytest標準ディレクトリ構造準拠
+- TDD（Test Driven Development）実践
+- 単体・統合・E2Eテストの階層化
 
 ## 🚀 クイックスタート
 
-### 1. 基本動作確認
-
-まず、a2a-sdkの基本的な動作を確認：
+### 1. 基本動作確認（手動テスト）
 
 ```bash
-# ワークスペースルートから実行
-cd /home/devuser/workspace
-python app/a2a_prototype/simple_test.py
+# A2A SDK基本動作確認
+python examples/a2a_basic_check.py
+
+# SimpleTestAgentデモ
+python examples/simple_agent_demo.py
 ```
 
-**期待される出力:**
-```
-✅ A2A SDK imports successful
-✅ AgentCard created successfully
-✅ TaskState values (A2Aプロトコルで定義された全ての状態):
-   - failed: 'failed' (失敗（※エラーではなく正常な状態の一つ）)
-✅ EventQueue created successfully
-   Queue closed: False (作成直後 - まだ開いている)
-   Queue closed after close(): True (正常にクローズされました)
-🎉 Basic tests completed successfully!
-```
-
-**注意**: 
-- `failed`の表示: TaskStateの正常な状態の一つで、エラーではありません
-- `Queue closed: False/True`: EventQueueのライフサイクルテストで、正常な動作です
-
-### 2. エージェント機能テスト
-
-SimpleTestAgentの機能をテスト：
+### 2. TDD準拠のテスト実行
 
 ```bash
-python -m app.a2a_prototype.test_simple_agent
+# 単体テストのみ（高速）
+poetry run pytest tests/unit/ -v
+
+# 全テスト実行
+poetry run pytest tests/ -v
+
+# カバレッジ付きテスト実行
+poetry run pytest tests/ --cov=src --cov-report=html
+
+# テストカテゴリ別実行
+poetry run pytest tests/unit/ -m unit
+poetry run pytest tests/integration/ -m integration
 ```
 
-**期待される出力:**
-```
-=== Testing Agent Configuration ===
-Config Name: simple-test-agent
-Config Description: A simple test agent for A2A protocol verification
+## 🎯 TDD実践について
 
-=== Testing Agent Card ===
-Agent Name: simple-test-agent
-Skills:
-  - echo: Echo back the user's message
-  - greet: Greet the user
+このプロジェクトでは **Test Driven Development (TDD)** を厳格に実践しています：
 
-=== Testing User Input Processing ===
-Input: 'hello'
-Response: Hello! I'm simple-test-agent. How can I help you today?
-```
+1. **Red**: 失敗するテストを先に書く
+2. **Green**: テストを通すための最小限の実装
+3. **Refactor**: コードを改善しつつテストが通ることを確認
 
-### 3. HTTPサーバー起動テスト（準備中）
+詳細は [`docs/development_rules/tdd_implementation_guide.md`](../../docs/development_rules/tdd_implementation_guide.md) を参照してください。
 
-実際のA2AエンドポイントとしてHTTPサーバーを起動：
+## 📊 テスト品質指標
+
+- **単体テスト**: 最低90%、目標95% カバレッジ
+- **統合テスト**: 主要パス100%
+- **E2Eテスト**: クリティカルパス100%
+- **実行時間**: 単体テスト<10秒、統合テスト<30秒、E2E<120秒
+
+## 🔧 開発ワークフロー
+
+### 新機能追加時
 
 ```bash
-# 注意: 現在はBaseAgentクラスの修正が必要
-python -m app.a2a_prototype.agents.simple_agent
+# 1. テストファースト：失敗するテストを書く
+echo "def test_new_feature(): assert False" >> tests/unit/test_new_feature.py
+
+# 2. テスト実行（Red）
+poetry run pytest tests/unit/test_new_feature.py
+
+# 3. 最小実装（Green）
+# 実装コードを作成してテストを通す
+
+# 4. リファクタリング（Refactor）
+# コードを改善しつつテストが通ることを確認
 ```
 
-## 🏗️ 実装されている機能
-
-### BaseA2AAgent クラス
-
-- **場所**: `agents/base_agent.py`
-- **機能**: A2Aプロトコル準拠のベースクラス
-- **特徴**:
-  - AgentExecutorインターフェースの実装
-  - エージェントカードの自動生成
-  - リクエスト処理とイベント管理
-  - ヘルスチェック機能
-
-### SimpleTestAgent クラス
-
-- **場所**: `agents/simple_agent.py`
-- **機能**: テスト用の具体的なエージェント実装
-- **提供スキル**:
-  - `echo`: メッセージをエコーバック
-  - `greet`: ユーザーへの挨拶
-- **対応コマンド**:
-  - `hello`/`hi`: 挨拶
-  - `echo <message>`: メッセージエコー
-  - `status`: エージェント状態確認
-  - `help`: ヘルプ表示
-
-### AgentConfig クラス
-
-- **場所**: `utils/config.py`
-- **機能**: エージェント設定の管理
-- **プリセット**: 天気エージェント、チャットエージェント、計算エージェント
-
-## 🔧 技術仕様
-
-### 使用技術
-
-- **Python**: 3.10+
-- **A2A SDK**: v0.2.4 (Google公式)
-- **Webフレームワーク**: Starlette (a2a-sdk経由)
-- **非同期処理**: asyncio
-- **型システム**: Pydantic v2
-
-### A2Aプロトコル対応
-
-- ✅ Agent Card (`/.well-known/agent.json`)
-- ✅ Task lifecycle management
-- ✅ Event-driven architecture
-- ✅ JSON-RPC 2.0 over HTTP
-- ✅ Server-Sent Events (SSE)
-
-## 🧪 テストの実行
-
-### 基本テストスイート
+### バグ修正時
 
 ```bash
-# 基本動作確認
-python app/a2a_prototype/simple_test.py
-
-# エージェント機能テスト
-python -m app.a2a_prototype.test_simple_agent
+# 1. 再現テストを先に書く
+# 2. テストが失敗することを確認
+# 3. バグを修正
+# 4. テストが通ることを確認
 ```
 
-### 個別テスト
+## 💡 学習事項
 
-```bash
-# AgentCard作成テスト
-python -c "
-from app.a2a_prototype.agents.simple_agent import create_test_agent
-agent = create_test_agent(8001)
-print(f'Agent: {agent.config.name}')
-print(f'Skills: {[s.name for s in agent.agent_card.skills]}')
-"
+このプロジェクトから得られた重要な学習事項は以下にまとめられています：
 
-# ユーザー入力処理テスト
-python -c "
-import asyncio
-from app.a2a_prototype.agents.simple_agent import create_test_agent
+- [`memory-bank/a2a_implementation_lessons_learned.md`](../../memory-bank/a2a_implementation_lessons_learned.md)
+- A2A公式SDKの正確なAPI仕様確認方法
+- Pydanticバリデーションエラーの体系的解析
+- TDD実践の重要性と具体的手法
 
-async def test():
-    agent = create_test_agent(8001)
-    response = await agent.process_user_input('hello world')
-    print(f'Response: {response}')
+## 🔗 関連ドキュメント
 
-asyncio.run(test())
-"
-```
-
-## 🐛 トラブルシューティング
-
-### よくある問題
-
-1. **ImportError: cannot import name 'A2AStarletteApplication'**
-   - 原因: BaseAgentクラスのインポートパスが古い
-   - 解決: 正しいパス `from a2a.server.apps.starlette_app import A2AStarletteApplication` を使用
-
-2. **ModuleNotFoundError: No module named 'agents'**
-   - 原因: 相対インポートの問題
-   - 解決: ワークスペースルートから `python -m app.a2a_prototype.XXX` で実行
-
-3. **AgentCard validation error**
-   - 原因: AgentCapabilitiesの構造が不正
-   - 解決: 空の辞書 `{}` または適切なAgentCapabilitiesオブジェクトを使用
-
-### デバッグ方法
-
-```bash
-# ログレベルを上げて実行
-PYTHONPATH=/home/devuser/workspace python -c "
-import logging
-logging.basicConfig(level=logging.DEBUG)
-# テストコードを実行
-"
-
-# インポートテスト
-python -c "
-try:
-    from a2a.server.apps.starlette_app import A2AStarletteApplication
-    print('✅ A2AStarletteApplication import OK')
-except ImportError as e:
-    print(f'❌ Import failed: {e}')
-"
-```
-
-## 📝 次のステップ
-
-1. **HTTPサーバー起動テスト**: BaseAgentクラスの修正完了後
-2. **Agent Card取得**: `curl http://localhost:8001/.well-known/agent.json`
-3. **JSON-RPC通信テスト**: 実際のA2A通信の検証
-4. **複数エージェント連携**: Agent-to-Agent通信のテスト
-
-## 🔗 関連リンク
-
-- [A2A Protocol Specification](https://github.com/google/A2A)
-- [Google a2a-sdk Documentation](https://pypi.org/project/a2a-sdk/)
-- [Project Memory Bank](../../memory-bank/README.md)
+- [A2A実装技術ガイド](../../docs/a2a_implementation_guide.md)
+- [TDD実践ガイドライン](../../docs/development_rules/tdd_implementation_guide.md)
+- [プロジェクト学習事項](../../memory-bank/a2a_implementation_lessons_learned.md)
 
 ---
 
-**注意**: このプロトタイプは技術検証用です。本番環境での使用前に適切なセキュリティ設定とエラーハンドリングを追加してください。 
+**注意**: このプロトタイプは調査・学習目的です。本番環境での使用前に追加の検証・テストが必要です。 

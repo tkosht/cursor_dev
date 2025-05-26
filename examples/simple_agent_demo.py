@@ -1,18 +1,41 @@
 #!/usr/bin/env python3
 """
-Simple A2A Agent Test Script
+Simple A2A Agent Demo Script
 
-SimpleTestAgentの基本動作確認用スクリプト
+SimpleTestAgentの動作確認・デモ用スクリプト
+
+【このファイルの位置づけ】
+- 手動実行による動作確認用スクリプト（pytest テストではない）
+- SimpleTestAgentの機能をインタラクティブに確認
+- 開発中の動作確認やデバッグに使用
+
+【真のpytestテスト】
+- tests/unit/test_agents/test_simple_agent.py で TDD実践版を参照
+
+【使用方法】
+cd /home/devuser/workspace
+python examples/simple_agent_demo.py
 """
 
 import asyncio
 import json
 import logging
+import sys
+from pathlib import Path
 
-from app.a2a_prototype.agents.simple_agent import create_test_agent
+
+def setup_project_path():
+    """プロジェクトパスを設定し、必要なモジュールをインポート"""
+    # プロジェクトルートをPythonパスに追加
+    project_root = Path(__file__).parent.parent
+    sys.path.insert(0, str(project_root))
+    
+    # 動的インポート
+    from app.a2a_prototype.agents.simple_agent import create_test_agent
+    return create_test_agent
 
 
-async def test_agent_card():
+async def test_agent_card(create_test_agent):
     """エージェントカードの基本テスト"""
     print("=== Testing Agent Card ===")
     
@@ -44,7 +67,7 @@ async def test_agent_card():
         print(f"Agent card object: {card}")
 
 
-async def test_process_user_input():
+async def test_process_user_input(create_test_agent):
     """ユーザー入力処理のテスト"""
     print("\n=== Testing User Input Processing ===")
     
@@ -68,7 +91,7 @@ async def test_process_user_input():
             print(f"Error processing input: {e}")
 
 
-def test_agent_config():
+def test_agent_config(create_test_agent):
     """エージェント設定のテスト"""
     print("\n=== Testing Agent Configuration ===")
     
@@ -86,20 +109,30 @@ async def main():
     """メインテスト関数"""
     logging.basicConfig(level=logging.INFO)
     
-    print("A2A Simple Agent Test Suite")
+    print("A2A Simple Agent Demo")
+    print("=" * 50)
+    print("※ これは動作確認用デモスクリプトです")
+    print("※ TDD準拠のpytestテストは tests/unit/test_agents/test_simple_agent.py を参照")
     print("=" * 50)
     
     try:
+        # 一度だけプロジェクトパスを設定し、create_test_agent関数を取得
+        create_test_agent = setup_project_path()
+        
         # 基本的なテストを実行
-        test_agent_config()
-        await test_agent_card()
-        await test_process_user_input()
+        test_agent_config(create_test_agent)
+        await test_agent_card(create_test_agent)
+        await test_process_user_input(create_test_agent)
         
         print("\n" + "=" * 50)
-        print("All tests completed successfully!")
+        print("✅ All demo tests completed successfully!")
+        print("\n📝 次のステップ:")
+        print("1. poetry run pytest tests/unit/ でTDD準拠のテストを実行")
+        print("2. poetry run pytest tests/ --cov=src で包括的テスト実行")
+        print("=" * 50)
         
     except Exception as e:
-        print(f"\nTest failed with error: {e}")
+        print(f"\n❌ Demo failed with error: {e}")
         import traceback
         traceback.print_exc()
 
