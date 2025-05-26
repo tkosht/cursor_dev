@@ -209,8 +209,7 @@ graph TD
 が確立されます。
 
 認識済のルールファイル：
-- global.mdc
-- workflow.mdc
+- core.mdc
 - project.mdc
 - rules.mdc 
 

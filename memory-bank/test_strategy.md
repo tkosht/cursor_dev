@@ -23,7 +23,7 @@
 *   測定ツール: `pytest-cov`
 
 ## テスト実行
-*   [workflow.mdc](mdc:.cursor/rules/workflow.mdc) の開発工程に従い、実装後およびコードレビュー後に実行する。
+*   [core.mdc](mdc:.cursor/rules/core.mdc) の開発工程に従い、実装後およびコードレビュー後に実行する。
 *   CI/CD パイプラインでの自動実行を推奨。
 
 ## テスト失敗時の対応
