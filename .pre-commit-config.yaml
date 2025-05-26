@@ -1,0 +1,45 @@
+# Pre-commit configuration for TDD Process Enforcement
+# このファイルは、TDD実践ルールの確実な適用を保証します
+
+repos:
+  - repo: local
+    hooks:
+      # 🚀 統合品質ゲート (最重要 - 最初に実行)
+      - id: quality-gate-comprehensive
+        name: "🚀 Quality Gate: ALL Checks (Flake8+Tests+Coverage)"
+        entry: python scripts/quality_gate_check.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+        
+      # TDDプロセス必須確認
+      - id: tdd-process-check
+        name: "🔍 TDD Process Compliance Check"
+        entry: python scripts/tdd_compliance_check.py
+        language: python
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+      
+      # Memory Bank必須確認  
+      - id: memory-bank-check
+        name: "📚 Memory Bank Required Reading Check"
+        entry: python scripts/memory_bank_check.py
+        language: python
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+
+  # Code quality hooks
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        args: [--line-length=88]
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: [--max-line-length=88]

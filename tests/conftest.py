@@ -26,7 +26,7 @@ def sample_agent_config():
         name="test-agent",
         description="Test agent for TDD",
         url="http://localhost:8001",
-        port=8001
+        port=8001,
     )
 
 
@@ -37,7 +37,7 @@ def sample_agent_skill_data():
         "id": "test_skill",
         "name": "Test Skill",
         "description": "A skill for testing",
-        "tags": ["test", "unit"]
+        "tags": ["test", "unit"],
     }
 
 
@@ -48,7 +48,7 @@ def valid_agent_skill_data():
         "id": "echo_skill",
         "name": "Echo Skill",
         "description": "Echo back user messages",
-        "tags": ["text", "utility", "echo"]
+        "tags": ["text", "utility", "echo"],
     }
 
 
@@ -57,7 +57,7 @@ def mock_event_queue():
     """EventQueueのモック"""
     if EventQueue is None:
         pytest.skip("a2a-sdk not available")
-    
+
     queue = AsyncMock(spec=EventQueue)
     queue.is_closed.return_value = False
     return queue
@@ -68,14 +68,14 @@ async def async_mock_event_queue():
     """非同期テスト用EventQueueモック"""
     if EventQueue is None:
         pytest.skip("a2a-sdk not available")
-        
+
     queue = AsyncMock(spec=EventQueue)
     queue.is_closed.return_value = False
-    
+
     # ライフサイクルシミュレーション
     async def mock_close():
         queue.is_closed.return_value = True
-    
+
     queue.close.side_effect = mock_close
     return queue
 
@@ -85,14 +85,14 @@ def mock_agent_card():
     """AgentCardのモック"""
     if AgentCard is None:
         pytest.skip("a2a-sdk not available")
-        
+
     return MagicMock(spec=AgentCard)
 
 
 # テストカテゴリ用マーカー
 pytest_markers = [
     "unit: 単体テスト（高速・独立）",
-    "integration: 統合テスト（中速・依存あり）", 
+    "integration: 統合テスト（中速・依存あり）",
     "e2e: E2Eテスト（低速・完全シナリオ）",
     "slow: 実行時間の長いテスト",
-] 
+]

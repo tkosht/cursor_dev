@@ -46,7 +46,17 @@ profile = "black"
 line_length = 79
 multi_line_output = 3
 
-
+[tool.flake8]
+max-line-length = 88
+max-complexity = 10
+ignore = ["E203", "W503"]
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "venv",
+    ".pytest_cache"
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

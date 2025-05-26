@@ -140,8 +140,7 @@ class BaseA2AAgent(AgentExecutor, ABC):
             設定済みのA2AStarletteApplication
         """
         app = A2AStarletteApplication(
-            agent_card=self.agent_card,
-            agent_executor=self
+            agent_card=self.agent_card, agent_executor=self
         )
         return app
 
@@ -150,14 +149,13 @@ class BaseA2AAgent(AgentExecutor, ABC):
         if port is None:
             port = self.config.port
 
-        self.logger.info(
-            f"Starting {self.config.name} on port {port}"
-        )
+        self.logger.info(f"Starting {self.config.name} on port {port}")
         try:
             app = self.create_app()
             starlette_app = app.build()
 
             import uvicorn
+
             uvicorn.run(starlette_app, host=host, port=port)
         except Exception as e:
             self.logger.error(f"Failed to start agent: {e}")
