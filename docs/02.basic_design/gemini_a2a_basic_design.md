@@ -31,18 +31,43 @@ graph TB
     end
     
     subgraph "External Services"
-        Google_AI[Google AI API<br/>gemini-2.5-pro]
+        Google_AI["Google AI API<br/>gemini-2.5-pro-preview-05-06"]
     end
     
+    %% Client to A2A Protocol Layer
     A2A_Client --> A2A_App
     HTTP_Client --> A2A_App
+    
+    %% A2A Protocol to Agent Layer  
     A2A_App --> Gemini_Agent
+    Agent_Card -.-> Gemini_Agent
+    Event_Queue -.-> A2A_App
+    Task_State -.-> A2A_App
+    
+    %% Agent Layer relationships
     Base_Agent --> Gemini_Agent
-    Gemini_Agent --> Gemini_Client
-    Gemini_Client --> Google_AI
     Agent_Config --> Gemini_Agent
+    
+    %% Gemini Integration
+    Gemini_Agent --> Gemini_Client
     Gemini_Config --> Gemini_Client
     Conv_Context --> Gemini_Agent
+    
+    %% External API
+    Gemini_Client --> Google_AI
+    
+    %% Styling
+    classDef clientLayer fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef protocolLayer fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef agentLayer fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef integrationLayer fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef externalLayer fill:#ffebee,stroke:#b71c1c,stroke-width:2px
+    
+    class A2A_Client,HTTP_Client clientLayer
+    class A2A_App,Agent_Card,Event_Queue,Task_State protocolLayer
+    class Gemini_Agent,Base_Agent,Agent_Config agentLayer
+    class Gemini_Client,Gemini_Config,Conv_Context integrationLayer
+    class Google_AI externalLayer
 ```
 
 ### 1.2 コンポーネント設計
@@ -52,7 +77,7 @@ graph TB
 @dataclass
 class GeminiConfig:
     api_key: str                    # Google AI API キー
-    model: str = "gemini-2.5-pro"   # モデル名
+    model: str = "gemini-2.5-pro-preview-05-06"   # モデル名
     temperature: float = 0.7        # 創造性パラメータ
     max_tokens: int = 1000          # 最大トークン数
     safety_settings: dict = None    # セーフティ設定
@@ -360,7 +385,7 @@ def mock_gemini_client():
 # テスト用設定
 TEST_GEMINI_CONFIG = GeminiConfig(
     api_key="test-api-key",
-    model="gemini-2.5-pro",
+    model="gemini-2.5-pro-preview-05-06",
     temperature=0.5,
     max_tokens=500
 )
