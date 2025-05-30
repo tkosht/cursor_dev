@@ -102,11 +102,11 @@ class GeminiClient:
         Raises:
             GeminiAPIError: finish_reasonに問題がある場合
         """
-        if not (hasattr(response, 'candidates') and response.candidates):
+        if not (hasattr(response, "candidates") and response.candidates):
             return
 
         candidate = response.candidates[0]
-        if not hasattr(candidate, 'finish_reason'):
+        if not hasattr(candidate, "finish_reason"):
             return
 
         finish_reason = candidate.finish_reason
@@ -151,6 +151,32 @@ class GeminiClient:
             logger.error(f"Error accessing response text: {text_error}")
             return "申し訳ございません。AIサービスに一時的な問題が発生しています。"
 
+    def _classify_api_error(self, error_message: str) -> str:
+        """
+        APIエラーを分類してユーザーフレンドリーなメッセージを生成
+
+        Args:
+            error_message: 元のエラーメッセージ
+
+        Returns:
+            分類されたエラーメッセージ
+        """
+        error_lower = error_message.lower()
+
+        if (
+            "api key expired" in error_lower
+            or "api_key_invalid" in error_lower
+        ):
+            return "APIキーが期限切れまたは無効です。新しいAPIキーを取得してください。"
+        elif "quota" in error_lower or "rate" in error_lower:
+            return "APIの使用制限に達しました。しばらく待ってから再試行してください。"
+        elif "permission" in error_lower or "forbidden" in error_lower:
+            return "APIキーに必要な権限がありません。設定を確認してください。"
+        elif "network" in error_lower or "connection" in error_lower:
+            return "ネットワーク接続に問題があります。接続を確認してください。"
+        else:
+            return "申し訳ございません。AIサービスに一時的な問題が発生しています。"
+
     async def generate_response(self, prompt: str) -> str:
         """
         Geminiからレスポンスを生成
@@ -187,7 +213,9 @@ class GeminiClient:
             raise
         except Exception as e:
             logger.error(f"Gemini API error: {e}")
-            raise GeminiAPIError(f"Failed to generate response: {e}") from e
+            # APIエラーの分類とユーザーフレンドリーなメッセージ
+            classified_message = self._classify_api_error(str(e))
+            raise GeminiAPIError(classified_message) from e
 
     async def generate_response_with_timeout(
         self, prompt: str, timeout: float = 5.0

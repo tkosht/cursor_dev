@@ -60,29 +60,99 @@ class RobustE2ETestHelper:
     ]
 
     @staticmethod
+    def _classify_exception_error(exception: Exception) -> Optional[str]:
+        """例外からエラータイプを分類"""
+        if isinstance(exception, BlockedPromptException):
+            return APIErrorType.SAFETY_FILTER
+
+        exception_str = str(exception).lower()
+        if "rate" in exception_str or "quota" in exception_str:
+            return APIErrorType.RATE_LIMIT
+        if "network" in exception_str or "connection" in exception_str:
+            return APIErrorType.NETWORK_ERROR
+        if (
+            "api key expired" in exception_str
+            or "api_key_invalid" in exception_str
+        ):
+            return "API_KEY_EXPIRED"
+
+        return None
+
+    @staticmethod
+    def _classify_response_error(response: str) -> Optional[str]:
+        """レスポンス文字列からエラータイプを分類"""
+        response_lower = response.lower()
+
+        if "rate limit" in response_lower or "quota" in response_lower:
+            return APIErrorType.RATE_LIMIT
+        if "safety" in response_lower or "harmful" in response_lower:
+            return APIErrorType.SAFETY_FILTER
+        if "ネットワーク" in response or "接続" in response:
+            return APIErrorType.NETWORK_ERROR
+        if (
+            "apiキーが期限切れ" in response_lower
+            or "新しいapiキーを取得" in response_lower
+        ):
+            return "API_KEY_EXPIRED"
+
+        return None
+
+    @staticmethod
     def classify_error(
         response: str, exception: Optional[Exception] = None
     ) -> str:
         """エラーの種別を分類"""
         if exception:
-            if isinstance(exception, BlockedPromptException):
-                return APIErrorType.SAFETY_FILTER
-            exception_str = str(exception).lower()
-            if "rate" in exception_str or "quota" in exception_str:
-                return APIErrorType.RATE_LIMIT
-            if "network" in exception_str or "connection" in exception_str:
-                return APIErrorType.NETWORK_ERROR
+            error_type = RobustE2ETestHelper._classify_exception_error(
+                exception
+            )
+            if error_type:
+                return error_type
 
         if response:
-            response_lower = response.lower()
-            if "rate limit" in response_lower or "quota" in response_lower:
-                return APIErrorType.RATE_LIMIT
-            if "safety" in response_lower or "harmful" in response_lower:
-                return APIErrorType.SAFETY_FILTER
-            if "ネットワーク" in response or "接続" in response:
-                return APIErrorType.NETWORK_ERROR
+            error_type = RobustE2ETestHelper._classify_response_error(response)
+            if error_type:
+                return error_type
 
         return APIErrorType.UNKNOWN
+
+    @staticmethod
+    async def _handle_api_error(
+        error_type: str, attempt: int, query: str
+    ) -> Tuple[Optional[str], bool]:
+        """
+        APIエラーを処理し、適切な対応を決定
+
+        Returns:
+            (new_query, should_continue): 新しいクエリ（あるいはNone）と継続可否
+        """
+        if error_type == APIErrorType.RATE_LIMIT:
+            delay = RobustE2ETestHelper.RETRY_DELAY
+            logging.warning("Rate limit detected, retrying in %ss...", delay)
+            await asyncio.sleep(delay)
+            return query, True
+
+        elif error_type == APIErrorType.SAFETY_FILTER:
+            safe_queries = RobustE2ETestHelper.SAFE_TEST_QUERIES
+            if attempt < len(safe_queries):
+                new_query = safe_queries[attempt]
+                logging.warning(
+                    "Safety filter detected, trying safer query: %s", new_query
+                )
+                return new_query, True
+            else:
+                return None, False  # 安全なクエリが尽きた
+
+        elif error_type == APIErrorType.NETWORK_ERROR:
+            logging.warning("Network error detected, retrying...")
+            await asyncio.sleep(RobustE2ETestHelper.RETRY_DELAY)
+            return query, True
+
+        elif error_type == "API_KEY_EXPIRED":
+            return None, False  # APIキー期限切れは再試行不可
+
+        else:
+            return None, False  # 未知のエラーは再試行不可
 
     @staticmethod
     async def execute_with_retry(
@@ -109,39 +179,31 @@ class RobustE2ETestHelper:
                 ):
                     return response, True
 
-                # エラー分類
+                # エラー分類と処理
                 error_type = RobustE2ETestHelper.classify_error(response)
+                result = await RobustE2ETestHelper._handle_api_error(
+                    error_type, attempt, query
+                )
+                new_query, should_continue = result
 
-                if error_type == APIErrorType.RATE_LIMIT:
-                    delay = RobustE2ETestHelper.RETRY_DELAY
-                    logging.warning(
-                        "Rate limit detected, retrying in %ss...", delay
-                    )
-                    await asyncio.sleep(delay)
+                if should_continue and new_query:
+                    query = new_query
                     continue
-
-                elif error_type == APIErrorType.SAFETY_FILTER:
-                    safe_queries = RobustE2ETestHelper.SAFE_TEST_QUERIES
-                    if attempt < len(safe_queries):
-                        query = safe_queries[attempt]
-                        logging.warning(
-                            "Safety filter detected, trying safer query: %s",
-                            query,
-                        )
-                        continue
-                    else:
+                else:
+                    # 終了すべきエラーの場合
+                    if error_type == APIErrorType.SAFETY_FILTER:
                         return (
                             "SAFETY_FILTER_ERROR: All safe queries failed",
                             False,
                         )
-
-                elif error_type == APIErrorType.NETWORK_ERROR:
-                    logging.warning("Network error detected, retrying...")
-                    await asyncio.sleep(RobustE2ETestHelper.RETRY_DELAY)
-                    continue
-
-                else:
-                    return f"UNKNOWN_ERROR: {response}", False
+                    elif error_type == "API_KEY_EXPIRED":
+                        return (
+                            "API_KEY_EXPIRED: APIキーが期限切れです。"
+                            "新しいAPIキーを取得してください。",
+                            False,
+                        )
+                    else:
+                        return f"UNKNOWN_ERROR: {response}", False
 
             except Exception as e:
                 error_type = RobustE2ETestHelper.classify_error("", e)
