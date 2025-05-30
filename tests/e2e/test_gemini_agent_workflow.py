@@ -28,6 +28,23 @@ from app.a2a_prototype.utils.gemini_config import GeminiConfig
 
 load_dotenv()
 
+# 🔍 詳細ログ設定: DEBUGレベルでの完全ログ出力
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    force=True
+)
+
+# 特に重要なロガーを明示的にDEBUGに設定
+for logger_name in [
+    'app.a2a_prototype.utils.gemini_client',
+    'app.a2a_prototype.agents.gemini_agent',
+    'app.a2a_prototype.utils.gemini_config',
+]:
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(logging.DEBUG)
+    logger.info(f"🔍 Logger {logger_name} set to DEBUG level")
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 pytestmark = pytest.mark.skipif(
     not GEMINI_API_KEY,
@@ -85,7 +102,12 @@ class RobustE2ETestHelper:
 
         if "rate limit" in response_lower or "quota" in response_lower:
             return APIErrorType.RATE_LIMIT
-        if "safety" in response_lower or "harmful" in response_lower:
+        if (
+            "safety" in response_lower
+            or "harmful" in response_lower
+            or "安全性フィルター" in response_lower
+            or "セーフティフィルター" in response_lower
+        ):
             return APIErrorType.SAFETY_FILTER
         if "ネットワーク" in response or "接続" in response:
             return APIErrorType.NETWORK_ERROR

@@ -102,28 +102,77 @@ class GeminiClient:
         Raises:
             GeminiAPIError: finish_reasonに問題がある場合
         """
+        # 詳細なレスポンス構造ログ
+        logger.debug(
+            f"Checking response structure: "
+            f"hasattr candidates={hasattr(response, 'candidates')}"
+        )
+
         if not (hasattr(response, "candidates") and response.candidates):
+            logger.warning("Response has no candidates - empty response")
             return
 
         candidate = response.candidates[0]
+        logger.debug(
+            f"Candidate structure: "
+            f"hasattr finish_reason={hasattr(candidate, 'finish_reason')}"
+        )
+
         if not hasattr(candidate, "finish_reason"):
+            logger.warning("Candidate has no finish_reason attribute")
             return
 
         finish_reason = candidate.finish_reason
+        logger.info(
+            f"🔍 FINISH_REASON DETECTED: {finish_reason} "
+            f"(type: {type(finish_reason)})"
+        )
+
+        # 追加の詳細情報取得
+        if hasattr(candidate, "safety_ratings"):
+            logger.debug(f"Safety ratings: {candidate.safety_ratings}")
+        if hasattr(response, "prompt_feedback"):
+            logger.debug(f"Prompt feedback: {response.prompt_feedback}")
+
         if finish_reason == 2:  # SAFETY
-            logger.warning("Content blocked by safety filters")
+            logger.error(
+                "🚨 SAFETY FILTER TRIGGERED - Content blocked by safety filters"
+            )
+            logger.info(
+                "📝 Safety filter details: finish_reason=2 indicates "
+                "harmful content detection"
+            )
             raise GeminiAPIError(
                 "SAFETY_FILTER: Content blocked by safety filters"
             )
         elif finish_reason == 3:  # RECITATION
-            logger.warning("Content blocked for recitation")
+            logger.error(
+                "🚨 RECITATION FILTER TRIGGERED - Content blocked for recitation"
+            )
+            logger.info(
+                "📝 Recitation filter details: finish_reason=3 indicates "
+                "copyright content"
+            )
             raise GeminiAPIError(
                 "RECITATION_FILTER: Content blocked for recitation"
             )
         elif finish_reason == 4:  # OTHER
-            logger.warning("Content blocked for other reasons")
+            logger.error(
+                "🚨 OTHER FILTER TRIGGERED - Content blocked for other reasons"
+            )
+            logger.info(
+                "📝 Other filter details: finish_reason=4 indicates "
+                "unspecified blocking"
+            )
             raise GeminiAPIError(
                 "CONTENT_FILTER: Content blocked for other reasons"
+            )
+        elif finish_reason == 1:  # STOP (normal completion)
+            logger.debug("✅ Normal completion: finish_reason=1 (STOP)")
+        else:
+            logger.warning(
+                f"⚠️ Unknown finish_reason: {finish_reason} - "
+                f"proceeding with caution"
             )
 
     def _extract_response_text(self, response) -> str:
@@ -136,19 +185,39 @@ class GeminiClient:
         Returns:
             抽出されたテキスト
         """
+        logger.debug("🔍 Attempting to extract response text")
+
         try:
             text = response.text
             if not text or not text.strip():
-                logger.warning("Empty response from Gemini API")
+                logger.warning("📝 Empty response text from Gemini API")
+                logger.debug(
+                    f"Response text details: text='{text}', "
+                    f"length={len(text) if text else 0}"
+                )
                 return "申し訳ございませんが、回答を生成できませんでした。"
+
+            logger.info(
+                f"✅ Successfully extracted response text "
+                f"(length: {len(text.strip())})"
+            )
             return text.strip()
+
         except AttributeError as attr_error:
             # response.text にアクセスできない場合
-            logger.error(f"Cannot access response.text: {attr_error}")
+            logger.error(f"🚨 Cannot access response.text: {attr_error}")
+            logger.debug(f"Response object type: {type(response)}")
+            has_dict = hasattr(response, "__dict__")
+            logger.debug(
+                f"Response attributes: "
+                f"{dir(response) if has_dict else 'No __dict__'}"
+            )
             return "申し訳ございません。AIサービスに一時的な問題が発生しています。"
+
         except Exception as text_error:
             # その他のテキストアクセスエラー
-            logger.error(f"Error accessing response text: {text_error}")
+            logger.error(f"🚨 Error accessing response text: {text_error}")
+            logger.debug(f"Error type: {type(text_error)}")
             return "申し訳ございません。AIサービスに一時的な問題が発生しています。"
 
     def _classify_api_error(self, error_message: str) -> str:
@@ -177,6 +246,52 @@ class GeminiClient:
         else:
             return "申し訳ございません。AIサービスに一時的な問題が発生しています。"
 
+    def _log_api_request_details(self, prompt: str) -> None:
+        """API呼び出し前の詳細情報をログ出力"""
+        logger.info("🚀 Starting Gemini API call")
+        logger.debug(f"📝 Prompt length: {len(prompt.strip())}")
+        logger.debug(f"🔧 Model: {self.config.model}")
+        logger.debug(f"🌡️ Temperature: {self.config.temperature}")
+        logger.debug(f"📏 Max tokens: {self.config.max_tokens}")
+        logger.debug(
+            f"🔑 API key (masked): {self.config.get_masked_api_key()}"
+        )
+        logger.debug(f"✅ Client initialized: {self._initialized}")
+
+    def _log_api_response_details(self, response) -> None:
+        """API呼び出し後のレスポンス詳細をログ出力"""
+        logger.info("✅ API call completed, analyzing response...")
+
+        logger.debug(f"📦 Response type: {type(response)}")
+        logger.debug(f"📦 Response attributes: {dir(response)}")
+
+        if hasattr(response, "candidates"):
+            candidate_count = (
+                len(response.candidates) if response.candidates else 0
+            )
+            logger.debug(f"👥 Candidates count: {candidate_count}")
+
+            if response.candidates:
+                candidate = response.candidates[0]
+                logger.debug(f"🎯 Candidate type: {type(candidate)}")
+                logger.debug(f"🎯 Candidate attributes: {dir(candidate)}")
+
+                if hasattr(candidate, "finish_reason"):
+                    logger.info(
+                        f"🏁 Raw finish_reason value: {candidate.finish_reason}"
+                    )
+                    logger.debug(
+                        f"🏁 Finish_reason type: {type(candidate.finish_reason)}"
+                    )
+
+                if hasattr(candidate, "content"):
+                    logger.debug(
+                        f"📄 Content available: {candidate.content is not None}"
+                    )
+
+        if hasattr(response, "prompt_feedback"):
+            logger.debug(f"💬 Prompt feedback: {response.prompt_feedback}")
+
     async def generate_response(self, prompt: str) -> str:
         """
         Geminiからレスポンスを生成
@@ -196,11 +311,19 @@ class GeminiClient:
         if not prompt or not prompt.strip():
             raise ValueError("Prompt cannot be empty")
 
+        # 詳細ログ: API呼び出し前状態
+        self._log_api_request_details(prompt)
+
         try:
+            logger.info("📡 Executing generate_content API call...")
+
             # 非同期でAPI呼び出し
             response = await asyncio.to_thread(
                 self._model.generate_content, prompt.strip()
             )
+
+            # 詳細ログ: レスポンス分析
+            self._log_api_response_details(response)
 
             # finish_reason チェック
             self._check_finish_reason(response)
@@ -210,11 +333,21 @@ class GeminiClient:
 
         except GeminiAPIError:
             # 既に適切にハンドリングされたエラーは再発生
+            logger.warning("⚠️ GeminiAPIError caught, re-raising...")
             raise
         except Exception as e:
-            logger.error(f"Gemini API error: {e}")
+            logger.error(f"🚨 Unexpected API error: {e}")
+            logger.error(f"🚨 Error type: {type(e)}")
+            logger.error(f"🚨 Error args: {e.args}")
+
+            # 例外の詳細情報取得
+            import traceback
+
+            logger.debug(f"🔍 Full traceback: {traceback.format_exc()}")
+
             # APIエラーの分類とユーザーフレンドリーなメッセージ
             classified_message = self._classify_api_error(str(e))
+            logger.info(f"📋 Classified error message: {classified_message}")
             raise GeminiAPIError(classified_message) from e
 
     async def generate_response_with_timeout(
@@ -230,15 +363,33 @@ class GeminiClient:
         Returns:
             生成されたレスポンステキスト
         """
+        logger.info(f"⏱️ Starting API call with timeout: {timeout} seconds")
+        start_time = asyncio.get_event_loop().time()
+
         try:
             return await asyncio.wait_for(
                 self.generate_response(prompt), timeout=timeout
             )
         except asyncio.TimeoutError:
-            logger.warning(f"Gemini API timeout after {timeout} seconds")
-            return "応答時間が長すぎます。より簡潔な質問でお試しください。"
-        except GeminiAPIError:
-            return "申し訳ございません。AIサービスに一時的な問題が発生しています。"
+            elapsed_time = asyncio.get_event_loop().time() - start_time
+            logger.error(
+                f"🚨 API TIMEOUT DETAILS:"
+                f"\n  - Timeout setting: {timeout} seconds"
+                f"\n  - Actual elapsed: {elapsed_time:.2f} seconds"
+                f"\n  - Model: {self.config.model}"
+                f"\n  - Prompt length: {len(prompt)}"
+                f"\n  - Temperature: {self.config.temperature}"
+            )
+            return (
+                f"応答時間が長すぎます（{elapsed_time:.1f}秒）。"
+                f"より簡潔な質問でお試しください。"
+            )
+        except GeminiAPIError as e:
+            elapsed_time = asyncio.get_event_loop().time() - start_time
+            logger.warning(
+                f"⚠️ GeminiAPIError (after {elapsed_time:.2f}s, re-raising): {e}"
+            )
+            raise
 
     async def health_check(self) -> bool:
         """
@@ -252,7 +403,7 @@ class GeminiClient:
 
         try:
             response = await self.generate_response_with_timeout(
-                "Hello", timeout=3.0
+                "Hello", timeout=10.0
             )
             return bool(
                 response

@@ -146,3 +146,29 @@ if coverage_gap > (overall_coverage * threshold_ratio):  # 単純な比較
 **作成日**: 2025-01-XX  
 **最終更新**: 数値ハッキング問題発見・対策完了時  
 **ステータス**: 🚨 重要教訓 - 全プロジェクトで参照必須 
+
+##  Lessons Learned from Real Incidents (新規セクション)
+
+### Case Study: The Misleading API Key Incident (2025-05-31)
+
+**Incident Summary:**
+- **Initial Symptom:** E2E tests consistently failed with generic error messages, sometimes hinting at API key issues after an accidental `.env` display by the AI.
+- **Misdirection:** The AI (myself) and the user initially focused heavily on API key validity and configuration, as this was a known security breach.
+- **True Root Cause:** After extensive logging and iterative debugging, the actual problem was identified as overly aggressive API timeouts (5 seconds) for Gemini 2.5 Pro, and later, safety filter activations by the API for anodyne prompts.
+- **Contributing Factor:** Insufficiently detailed logging and error message masking in higher-level exception handlers obscured the true nature of the API responses (e.g. `finish_reason=2` for safety filters).
+
+**Key Lessons for Quality Assurance & Numerical Hacking Prevention:**
+1.  **Don't Be Blinded by Obvious Suspects:** While the API key leak was a critical security issue that needed addressing, it became a red herring that distracted from the true *technical* root cause of the test failures. A compromised key might lead to `API_KEY_INVALID` errors, but the observed timeouts and safety filter responses were distinct issues.
+2.  **Detailed Telemetry is Crucial:** The breakthrough came when logging was enhanced to show: 
+    *   Exact API `finish_reason` codes.
+    *   Precise timing of API calls, revealing timeouts.
+    *   Full propagation of specific error types instead of generic messages.
+3.  **Holistic Error Analysis:** Quality assurance must look beyond simple pass/fail. The *reason* for failure, especially with external dependencies, is key. Had the system initially reported "Safety Filter Activated" instead of a generic error, debugging would have been faster.
+4.  **Test System Robustness vs. External API Behavior:** E2E tests for AI services must anticipate behaviors like safety filtering. The test harness itself needed improvements (retry with safer prompts) to distinguish true application failures from expected API protective measures.
+
+**Systemic Improvements Implemented:**
+- Enhanced logging in `GeminiClient` to capture `finish_reason` and detailed error context.
+- Improved error propagation to ensure specific API error details reach test assertion levels.
+- Updated E2E test helpers to correctly classify errors based on propagated details (not just localized strings) and implement smarter retry logic for safety filters.
+
+This incident underscores that high-level metrics (like test pass/fail rates or even overall coverage) can be misleading if not supported by deep, granular telemetry and a robust understanding of the system's interaction with its dependencies. Preventing numerical hacking also means ensuring that the numbers (metrics) accurately reflect the true state and behavior of the system. 

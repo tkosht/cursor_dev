@@ -66,6 +66,59 @@ class GeminiA2AAgent(BaseA2AAgent):
             ),
         ]
 
+    def _handle_gemini_api_error(self, error: GeminiAPIError) -> str:
+        """
+        GeminiAPIErrorを分類して適切なユーザーメッセージを返す
+
+        Args:
+            error: GeminiAPIError例外
+
+        Returns:
+            ユーザーフレンドリーなエラーメッセージ
+        """
+        error_msg = str(error)
+
+        if "SAFETY_FILTER" in error_msg:
+            self.logger.warning(
+                "🚨 Safety filter activated - adjusting response"
+            )
+            return (
+                "申し訳ございませんが、安全性フィルターにより"
+                "この内容についてお答えできません。"
+                "別の質問をお試しください。"
+            )
+        elif "RECITATION_FILTER" in error_msg:
+            self.logger.warning("🚨 Recitation filter activated")
+            return (
+                "申し訳ございませんが、著作権の観点から"
+                "この内容についてお答えできません。"
+            )
+        elif "CONTENT_FILTER" in error_msg:
+            self.logger.warning("🚨 Content filter activated")
+            return (
+                "申し訳ございませんが、内容フィルターにより"
+                "この質問にはお答えできません。"
+            )
+        elif "APIキーが期限切れ" in error_msg:
+            self.logger.error("🚨 API key expired")
+            return (
+                "システムエラー: APIキーが期限切れです。"
+                "管理者にお問い合わせください。"
+            )
+        elif "使用制限" in error_msg:
+            self.logger.warning("🚨 API quota exceeded")
+            return (
+                "一時的にサービスが混雑しています。"
+                "しばらく時間をおいて再度お試しください。"
+            )
+        else:
+            # その他のAPIエラー
+            self.logger.error(f"🚨 Unclassified API error: {error_msg}")
+            return (
+                "申し訳ございません。AIサービスに一時的な問題が発生しています。"
+                "しばらく時間をおいて再度お試しください。"
+            )
+
     async def process_user_input(self, user_input: str) -> str:
         """
         ユーザー入力をGemini 2.5 Proで処理
@@ -93,7 +146,7 @@ class GeminiA2AAgent(BaseA2AAgent):
             # 通常の対話処理
             prompt = self._build_conversation_prompt(sanitized_input)
             response = await self.gemini_client.generate_response_with_timeout(
-                prompt
+                prompt, timeout=15.0  # 5秒→15秒に延長
             )
 
             # 会話履歴を更新
@@ -107,10 +160,7 @@ class GeminiA2AAgent(BaseA2AAgent):
 
         except GeminiAPIError as e:
             self.logger.error(f"Gemini API error: {e}")
-            return (
-                "申し訳ございません。AIサービスに一時的な問題が発生しています。"
-                "しばらく時間をおいて再度お試しください。"
-            )
+            return self._handle_gemini_api_error(e)
 
         except Exception as e:
             self.logger.error(f"Unexpected error in process_user_input: {e}")
