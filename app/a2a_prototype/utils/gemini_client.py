@@ -92,6 +92,65 @@ class GeminiClient:
             )
             return {}
 
+    def _check_finish_reason(self, response) -> None:
+        """
+        レスポンスのfinish_reasonをチェックしてエラーを発生させる
+
+        Args:
+            response: Gemini APIのレスポンス
+
+        Raises:
+            GeminiAPIError: finish_reasonに問題がある場合
+        """
+        if not (hasattr(response, 'candidates') and response.candidates):
+            return
+
+        candidate = response.candidates[0]
+        if not hasattr(candidate, 'finish_reason'):
+            return
+
+        finish_reason = candidate.finish_reason
+        if finish_reason == 2:  # SAFETY
+            logger.warning("Content blocked by safety filters")
+            raise GeminiAPIError(
+                "SAFETY_FILTER: Content blocked by safety filters"
+            )
+        elif finish_reason == 3:  # RECITATION
+            logger.warning("Content blocked for recitation")
+            raise GeminiAPIError(
+                "RECITATION_FILTER: Content blocked for recitation"
+            )
+        elif finish_reason == 4:  # OTHER
+            logger.warning("Content blocked for other reasons")
+            raise GeminiAPIError(
+                "CONTENT_FILTER: Content blocked for other reasons"
+            )
+
+    def _extract_response_text(self, response) -> str:
+        """
+        レスポンスからテキストを安全に抽出
+
+        Args:
+            response: Gemini APIのレスポンス
+
+        Returns:
+            抽出されたテキスト
+        """
+        try:
+            text = response.text
+            if not text or not text.strip():
+                logger.warning("Empty response from Gemini API")
+                return "申し訳ございませんが、回答を生成できませんでした。"
+            return text.strip()
+        except AttributeError as attr_error:
+            # response.text にアクセスできない場合
+            logger.error(f"Cannot access response.text: {attr_error}")
+            return "申し訳ございません。AIサービスに一時的な問題が発生しています。"
+        except Exception as text_error:
+            # その他のテキストアクセスエラー
+            logger.error(f"Error accessing response text: {text_error}")
+            return "申し訳ございません。AIサービスに一時的な問題が発生しています。"
+
     async def generate_response(self, prompt: str) -> str:
         """
         Geminiからレスポンスを生成
@@ -117,12 +176,15 @@ class GeminiClient:
                 self._model.generate_content, prompt.strip()
             )
 
-            if not response.text:
-                logger.warning("Empty response from Gemini API")
-                return "申し訳ございませんが、回答を生成できませんでした。"
+            # finish_reason チェック
+            self._check_finish_reason(response)
 
-            return response.text.strip()
+            # テキスト抽出
+            return self._extract_response_text(response)
 
+        except GeminiAPIError:
+            # 既に適切にハンドリングされたエラーは再発生
+            raise
         except Exception as e:
             logger.error(f"Gemini API error: {e}")
             raise GeminiAPIError(f"Failed to generate response: {e}") from e
