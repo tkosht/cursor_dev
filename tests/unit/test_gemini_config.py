@@ -20,7 +20,7 @@ class TestGeminiConfig:
         # Given: 有効な設定データ
         config_data = {
             "api_key": "test-api-key-12345678",
-            "model": "gemini-2.5-pro",
+            "model": "gemini-2.5-pro-preview-05-06",
             "temperature": 0.7,
             "max_tokens": 1000,
         }
@@ -30,7 +30,7 @@ class TestGeminiConfig:
 
         # Then: 期待される値で正確に作成される
         assert config.api_key == "test-api-key-12345678"
-        assert config.model == "gemini-2.5-pro"
+        assert config.model == "gemini-2.5-pro-preview-05-06"
         assert config.temperature == 0.7
         assert config.max_tokens == 1000
         assert config.safety_settings is None
@@ -40,7 +40,7 @@ class TestGeminiConfig:
         # Given: 空のAPIキー
         config_data = {
             "api_key": "",
-            "model": "gemini-2.5-pro",
+            "model": "gemini-2.5-pro-preview-05-06",
             "temperature": 0.7,
             "max_tokens": 1000,
         }
@@ -56,7 +56,7 @@ class TestGeminiConfig:
         # Given: 短すぎるAPIキー
         config_data = {
             "api_key": "short",
-            "model": "gemini-2.5-pro",
+            "model": "gemini-2.5-pro-preview-05-06",
             "temperature": 0.7,
             "max_tokens": 1000,
         }
@@ -70,7 +70,7 @@ class TestGeminiConfig:
         # Given: 無効なtemperature
         config_data = {
             "api_key": "test-api-key-12345678",
-            "model": "gemini-2.5-pro",
+            "model": "gemini-2.5-pro-preview-05-06",
             "temperature": -0.1,
             "max_tokens": 1000,
         }
@@ -86,7 +86,7 @@ class TestGeminiConfig:
         # Given: 無効なtemperature
         config_data = {
             "api_key": "test-api-key-12345678",
-            "model": "gemini-2.5-pro",
+            "model": "gemini-2.5-pro-preview-05-06",
             "temperature": 1.1,
             "max_tokens": 1000,
         }
@@ -102,7 +102,7 @@ class TestGeminiConfig:
         # Given: 無効なmax_tokens
         config_data = {
             "api_key": "test-api-key-12345678",
-            "model": "gemini-2.5-pro",
+            "model": "gemini-2.5-pro-preview-05-06",
             "temperature": 0.7,
             "max_tokens": 0,
         }
@@ -118,7 +118,7 @@ class TestGeminiConfig:
         # Given: 無効なmax_tokens
         config_data = {
             "api_key": "test-api-key-12345678",
-            "model": "gemini-2.5-pro",
+            "model": "gemini-2.5-pro-preview-05-06",
             "temperature": 0.7,
             "max_tokens": 10000,
         }
@@ -133,7 +133,7 @@ class TestGeminiConfig:
         os.environ,
         {
             "GEMINI_API_KEY": "test-api-key-12345678",
-            "GEMINI_MODEL": "gemini-2.5-pro",
+            "GEMINI_MODEL": "gemini-2.5-pro-preview-05-06",
             "GEMINI_TEMPERATURE": "0.5",
             "GEMINI_MAX_TOKENS": "500",
         },
@@ -145,7 +145,7 @@ class TestGeminiConfig:
 
         # Then: 環境変数の値が設定される
         assert config.api_key == "test-api-key-12345678"
-        assert config.model == "gemini-2.5-pro"
+        assert config.model == "gemini-2.5-pro-preview-05-06"
         assert config.temperature == 0.5
         assert config.max_tokens == 500
 
@@ -165,7 +165,7 @@ class TestGeminiConfig:
         # Given: 有効なGeminiConfig
         config_data = {
             "api_key": "test-api-key-12345678",
-            "model": "gemini-2.5-pro",
+            "model": "gemini-2.5-pro-preview-05-06",
             "temperature": 0.7,
             "max_tokens": 1000,
         }
@@ -186,7 +186,7 @@ class TestGeminiConfig:
         # Given: 有効なGeminiConfig
         config_data = {
             "api_key": "test-api-key-12345678",  # 21文字
-            "model": "gemini-2.5-pro",
+            "model": "gemini-2.5-pro-preview-05-06",
             "temperature": 0.7,
             "max_tokens": 1000,
         }
@@ -204,7 +204,7 @@ class TestGeminiConfig:
         # Given: 10文字のAPIキー（バリデーション通過する最小長）
         config_data = {
             "api_key": "short12345",  # 10文字
-            "model": "gemini-2.5-pro",
+            "model": "gemini-2.5-pro-preview-05-06",
             "temperature": 0.7,
             "max_tokens": 1000,
         }
@@ -221,7 +221,7 @@ class TestGeminiConfig:
         # Given: 8文字のAPIキー（バリデーションをスキップして直接作成）
         config = GeminiConfig.__new__(GeminiConfig)
         config.api_key = "eight123"  # 8文字
-        config.model = "gemini-2.5-pro"
+        config.model = "gemini-2.5-pro-preview-05-06"
         config.temperature = 0.7
         config.max_tokens = 1000
         config.safety_settings = None
@@ -244,7 +244,7 @@ class TestGeminiConfigValidation:
         # Given: 無効なAPIキー
         config_data = {
             "api_key": invalid_api_key,
-            "model": "gemini-2.5-pro",
+            "model": "gemini-2.5-pro-preview-05-06",
             "temperature": 0.7,
             "max_tokens": 1000,
         }
@@ -261,7 +261,7 @@ class TestGeminiConfigValidation:
         # Given: 無効なtemperature
         config_data = {
             "api_key": "test-api-key-12345678",
-            "model": "gemini-2.5-pro",
+            "model": "gemini-2.5-pro-preview-05-06",
             "temperature": invalid_temperature,
             "max_tokens": 1000,
         }
@@ -279,7 +279,7 @@ class TestGeminiConfigValidation:
         # Given: 無効なmax_tokens
         config_data = {
             "api_key": "test-api-key-12345678",
-            "model": "gemini-2.5-pro",
+            "model": "gemini-2.5-pro-preview-05-06",
             "temperature": 0.7,
             "max_tokens": invalid_max_tokens,
         }

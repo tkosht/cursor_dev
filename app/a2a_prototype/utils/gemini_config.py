@@ -17,7 +17,7 @@ class GeminiConfig:
     """Gemini API の設定情報を管理するデータクラス"""
 
     api_key: str
-    model: str = "gemini-2.5-pro"
+    model: str = "gemini-2.5-pro-preview-05-06"
     temperature: float = 0.7
     max_tokens: int = 1000
     safety_settings: Optional[Dict[str, Any]] = None
@@ -54,7 +54,27 @@ class GeminiConfig:
         """モデル名のバリデーション"""
         if not self.model or not isinstance(self.model, str):
             raise ValueError("Model must be a non-empty string")
-        valid_models = ["gemini-2.5-pro", "gemini-1.5-pro", "gemini-1.0-pro"]
+        # 利用可能なGeminiモデル一覧（2025年5月時点）
+        valid_models = [
+            # Gemini 2.5シリーズ（最新・推奨）
+            "gemini-2.5-pro-preview-05-06",
+            "gemini-2.5-flash-preview-05-20",
+            "gemini-2.5-flash-preview-native-audio-dialog",
+            "gemini-2.5-flash-preview-tts",
+            "gemini-2.5-pro-preview-tts",
+            # Gemini 2.0シリーズ
+            "gemini-2.0-flash",
+            "gemini-2.0-flash-lite",
+            "gemini-2.0-flash-preview-image-generation",
+            "gemini-2.0-flash-live-001",
+            # Gemini 1.5シリーズ（安定版）
+            "gemini-1.5-flash",
+            "gemini-1.5-flash-8b",
+            "gemini-1.5-pro",
+            # 旧形式（後方互換性のため）
+            "gemini-2.5-pro",
+            "gemini-1.0-pro",
+        ]
         if self.model not in valid_models:
             # 警告は出すが、新しいモデルの可能性もあるのでエラーにはしない
             logger.warning(
@@ -70,7 +90,7 @@ class GeminiConfig:
 
         return cls(
             api_key=api_key,
-            model=os.getenv("GEMINI_MODEL", "gemini-2.5-pro"),
+            model=os.getenv("GEMINI_MODEL", "gemini-2.5-pro-preview-05-06"),
             temperature=float(os.getenv("GEMINI_TEMPERATURE", "0.7")),
             max_tokens=int(os.getenv("GEMINI_MAX_TOKENS", "1000")),
         )

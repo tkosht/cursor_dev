@@ -28,7 +28,7 @@ class TestGeminiA2AIntegration:
 
         gemini_config = GeminiConfig(
             api_key="test-api-key-12345678",
-            model="gemini-2.5-pro",
+            model="gemini-2.5-pro-preview-05-06",
             temperature=0.5,
             max_tokens=500,
         )
@@ -48,10 +48,11 @@ class TestGeminiA2AIntegration:
 
         # Then: 正常に初期化される
         assert agent.config.name == "test-gemini-agent"
-        assert agent.gemini_config.model == "gemini-2.5-pro"
+        assert agent.gemini_config.model == "gemini-2.5-pro-preview-05-06"
         assert len(agent.get_skills()) == 3
         assert agent.conversation_context == []
 
+    @pytest.mark.asyncio
     @patch("app.a2a_prototype.utils.gemini_client.genai")
     async def test_help_command(self, mock_genai, test_configs):
         """ヘルプコマンドテスト"""
@@ -71,6 +72,7 @@ class TestGeminiA2AIntegration:
         assert "status" in response
         assert "clear" in response
 
+    @pytest.mark.asyncio
     @patch("app.a2a_prototype.utils.gemini_client.genai")
     async def test_clear_command(self, mock_genai, test_configs):
         """クリアコマンドテスト"""
@@ -91,6 +93,7 @@ class TestGeminiA2AIntegration:
         assert agent.conversation_context == []
         assert "会話履歴をクリアしました" in response
 
+    @pytest.mark.asyncio
     @patch("app.a2a_prototype.utils.gemini_client.genai")
     async def test_status_command_with_mock_health_check(
         self, mock_genai, test_configs
@@ -111,12 +114,15 @@ class TestGeminiA2AIntegration:
 
         # Then: ステータス情報が返される
         assert "test-gemini-agent" in response
-        assert "gemini-2.5-pro" in response
+        assert "gemini-2.5-pro-preview-05-06" in response
         assert "✅ OK" in response
         assert "test-api********" in response
 
+    @pytest.mark.asyncio
     @patch("app.a2a_prototype.utils.gemini_client.genai")
-    async def test_normal_conversation_with_mock_api(self, mock_genai, test_configs):
+    async def test_normal_conversation_with_mock_api(
+        self, mock_genai, test_configs
+    ):
         """通常対話テスト（モックAPI）"""
         # Given: モックされたGemini API（成功レスポンス）
         mock_response = MagicMock()
@@ -138,7 +144,10 @@ class TestGeminiA2AIntegration:
         # 会話履歴が更新される
         assert len(agent.conversation_context) == 2
         assert "User: こんにちは" in agent.conversation_context
-        assert "Assistant: こんにちは！何かお手伝いできることはありますか？" in agent.conversation_context
+        assert (
+            "Assistant: こんにちは！何かお手伝いできることはありますか？"
+            in agent.conversation_context
+        )
 
     def test_get_skills(self, test_configs):
         """スキル一覧取得テスト"""
@@ -165,7 +174,10 @@ class TestGeminiA2AIntegration:
             agent = GeminiA2AAgent(agent_config, gemini_config)
 
             # 履歴を追加
-            agent.conversation_context = ["User: test1", "Assistant: response1"]
+            agent.conversation_context = [
+                "User: test1",
+                "Assistant: response1",
+            ]
 
             # When: 統計情報を取得
             stats = agent.get_agent_stats()
@@ -173,10 +185,11 @@ class TestGeminiA2AIntegration:
             # Then: 期待される統計情報が返される
             assert stats["conversation_messages"] == 2
             assert stats["max_context_messages"] == 20
-            assert stats["gemini_model"] == "gemini-2.5-pro"
+            assert stats["gemini_model"] == "gemini-2.5-pro-preview-05-06"
             assert stats["gemini_temperature"] == 0.5
             assert stats["skills_count"] == 3
 
+    @pytest.mark.asyncio
     @patch("app.a2a_prototype.utils.gemini_client.genai")
     async def test_input_validation_empty(self, mock_genai, test_configs):
         """入力バリデーションテスト（空入力）"""
@@ -194,6 +207,7 @@ class TestGeminiA2AIntegration:
         assert "入力エラー" in response
         assert "入力が空です" in response
 
+    @pytest.mark.asyncio
     @patch("app.a2a_prototype.utils.gemini_client.genai")
     async def test_input_validation_too_long(self, mock_genai, test_configs):
         """入力バリデーションテスト（長すぎる入力）"""
@@ -210,4 +224,4 @@ class TestGeminiA2AIntegration:
 
         # Then: エラーメッセージが返される
         assert "入力エラー" in response
-        assert "入力が長すぎます" in response 
+        assert "入力が長すぎます" in response

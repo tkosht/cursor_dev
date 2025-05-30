@@ -228,17 +228,20 @@ class TestBaseA2AAgentCancelMethod:
         # Taskのモック（例外発生）
         task = MagicMock()
         task.status = MagicMock()
-        task.status.state = MagicMock(side_effect=Exception("Test exception"))
+        # 正しい例外発生方法: enqueue_eventで例外を発生させる
         context.current_task = task
 
-        # EventQueueのモック
+        # EventQueueのモック（例外発生）
         event_queue = AsyncMock()
+        event_queue.enqueue_event.side_effect = Exception("Enqueue failed")
 
         # When: cancelを実行（例外が発生）
         await agent.cancel(context, event_queue)
 
         # Then: 例外がログに記録される（エラーは飲み込まれる）
-        # 例外は内部で処理されるため、テストは正常に完了する
+        # TaskState.canceledの設定は試行されるが、enqueue_eventで例外発生
+        assert task.status.state == TaskState.canceled
+        event_queue.enqueue_event.assert_called_once_with(task)
 
 
 @pytest.mark.unit

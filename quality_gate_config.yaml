@@ -1,0 +1,38 @@
+# Quality Gate Configuration
+# 品質ゲートと数値ハッキング検出システムの設定
+
+# カバレッジ要件
+coverage:
+  overall_threshold: 90  # 全体カバレッジの最低要件(%)
+  individual_threshold: 50  # 個別カバレッジの最低要件(%)
+
+# 数値ハッキング検出設定
+hacking_detection:
+  enabled: true
+  coverage_gap_threshold: 0.5  # 全体と個別の差分許容比率
+  sample_size: 5  # サンプリングするテストクラス数
+  
+  # 検出対象パターン
+  test_patterns:
+    - "tests/unit/**/test_*.py"
+    - "tests/integration/**/test_*.py"
+  
+  # 除外パターン
+  exclude_patterns:
+    - "**/conftest.py"
+    - "**/test_fixtures.py"
+    - "**/test_helpers.py"
+
+# テスト実行設定
+testing:
+  timeout: 300  # テスト実行タイムアウト(秒)
+  pytest_args:
+    - "--cov=app"
+    - "--cov-report=term"
+    - "-v"
+
+# 出力設定
+output:
+  verbose: true
+  show_individual_coverage: true
+  export_results: false 

@@ -29,7 +29,8 @@ def create_gemini_agent(port: int = 8004, **kwargs) -> GeminiA2AAgent:
     agent_config = AgentConfig(
         name=kwargs.get("name", "gemini-chat-agent"),
         description=kwargs.get(
-            "description", "Advanced conversational AI agent powered by Gemini 2.5 Pro"
+            "description",
+            "Advanced conversational AI agent powered by Gemini 2.5 Pro",
         ),
         url=f"http://localhost:{port}",
         port=port,
@@ -50,4 +51,9 @@ def create_gemini_agent(port: int = 8004, **kwargs) -> GeminiA2AAgent:
     return GeminiA2AAgent(agent_config, gemini_config)
 
 
-__all__ = ["BaseA2AAgent", "SimpleTestAgent", "GeminiA2AAgent", "create_gemini_agent"]
+__all__ = [
+    "BaseA2AAgent",
+    "SimpleTestAgent",
+    "GeminiA2AAgent",
+    "create_gemini_agent",
+]

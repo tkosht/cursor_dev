@@ -72,18 +72,24 @@ class GeminiClient:
         # デフォルトのセーフティ設定（簡略化）
         try:
             return {
-                HarmCategory.HARM_CATEGORY_HARASSMENT: 
-                    HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_HATE_SPEECH: 
-                    HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: 
-                    HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: 
-                    HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                HarmCategory.HARM_CATEGORY_HARASSMENT: (
+                    HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+                ),
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: (
+                    HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+                ),
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: (
+                    HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+                ),
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: (
+                    HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+                ),
             }
         except AttributeError:
             # フォールバック：空の設定
-            logger.warning("Safety settings unavailable, using empty configuration")
+            logger.warning(
+                "Safety settings unavailable, using empty configuration"
+            )
             return {}
 
     async def generate_response(self, prompt: str) -> str:

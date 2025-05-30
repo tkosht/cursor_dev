@@ -12,6 +12,15 @@
 6. [トラブルシューティング](#トラブルシューティング)
 7. [パフォーマンス考慮事項](#パフォーマンス考慮事項)
 
+## 🎯 関連資料
+
+### **技術者向け効果分析**
+- **[A2Aプロトコル技術的効果分析](technical_analysis_a2a_protocol_effectiveness.md)**: **調査結果・検証結果に基づく技術的効果の詳細分析** ⭐ **重要**
+  - シーケンス図による通信フロー解説
+  - パフォーマンス検証結果 (レイテンシ73%削減、メモリ57%削減)
+  - 他プロトコルとの技術的ポジショニング
+  - 推奨採用戦略・適用領域分析
+
 ## 概要
 
 ### プロジェクト目標
@@ -305,6 +314,48 @@ print('✅ All imports successful')
 
 ---
 
+## Gemini A2A Agent 実装詳細 🧠 **NEW**
+
+### 概要
+Google Gemini 2.5 Pro を統合したA2Aエージェント実装。高度な対話機能と会話履歴管理を提供。
+
+### アーキテクチャ
+```python
+GeminiA2AAgent (BaseA2AAgent継承)
+├── GeminiClient (Gemini API連携)
+├── GeminiConfig (設定管理)
+├── ConversationContext (会話履歴管理)
+└── ErrorHandling (例外処理)
+```
+
+### 主要機能
+- **Google Gemini 2.5 Pro統合**: 高度なAI対話
+- **会話履歴管理**: 最大20メッセージ（10往復）保持
+- **特別コマンド**: help, clear, status
+- **リアルタイム応答**: 非同期処理による高速応答
+- **高度なエラーハンドリング**: API障害対応
+
+### 実装ファイル
+- `app/a2a_prototype/agents/gemini_agent.py`: メインエージェント
+- `app/a2a_prototype/utils/gemini_client.py`: Gemini API クライアント
+- `app/a2a_prototype/utils/gemini_config.py`: 設定管理
+- `scripts/run_gemini_agent.py`: 実行スクリプト
+
+### 使用方法
+```bash
+# 1. API Key設定
+export GEMINI_API_KEY="your-api-key"
+
+# 2. エージェント起動
+python scripts/run_gemini_agent.py
+
+# 3. 動作確認
+curl http://localhost:8004/.well-known/agent.json
+```
+
+---
+
 **更新履歴**
 - 2024-XX-XX: 初版作成（実機調査完了後）
-- 実装状況: Phase 1&2完了、Phase 3検証中 
+- 2025-01-XX: Gemini A2A Agent 実装完了・仕様追加
+- 実装状況: Phase 1-5完了、Gemini Agent実装完了 

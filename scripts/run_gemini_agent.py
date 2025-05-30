@@ -39,10 +39,15 @@ async def main() -> None:
         # 環境変数確認
         if not os.getenv("GEMINI_API_KEY"):
             print("❌ GEMINI_API_KEY environment variable is required")
-            print("🔧 Set it with: export GEMINI_API_KEY='your-api-key'")
-            print(
-                "💡 Get your API key from: https://makersuite.google.com/app/apikey"
-            )
+            print()
+            print("🔧 **Setting up API Key:**")
+            print("   1. Get your API key: https://makersuite.google.com/app/apikey")
+            print("   2. Create .env file: cp .env.example .env")
+            print("   3. Edit .env file and set: GEMINI_API_KEY=your-actual-api-key")
+            print("   4. Or export: export GEMINI_API_KEY='your-actual-api-key'")
+            print()
+            print("📖 Detailed guide: docs/setup/api_key_configuration.md")
+            print("💡 Note: .env file is Git-ignored for security")
             return
 
         # Geminiエージェント作成

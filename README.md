@@ -142,6 +142,7 @@ Gemini: "先ほどのpathlibについて、より詳細に説明します..." (�
 ### 技術実装ドキュメント
 - **[docs/technical_analysis_a2a_protocol_effectiveness.md](docs/technical_analysis_a2a_protocol_effectiveness.md)**: **A2Aプロトコル技術的効果分析** ⭐ **NEW**
 - **[docs/sample_code_flow_documentation.md](docs/sample_code_flow_documentation.md)**: **サンプルコード実装フロー詳細** ⭐ **NEW**
+- **[docs/eventqueue_implementation_analysis.md](docs/eventqueue_implementation_analysis.md)**: **EventQueue実装分析** ⭐ **NEW**
 - **[docs/a2a_implementation_guide.md](docs/a2a_implementation_guide.md)**: A2A実装ガイド
 - **[docs/gemini_a2a_agent_specification.md](docs/gemini_a2a_agent_specification.md)**: Gemini A2A Agent詳細仕様書 🧠 
 - **[memory-bank/a2a_implementation_lessons_learned.md](memory-bank/a2a_implementation_lessons_learned.md)**: 実装教訓集

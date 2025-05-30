@@ -119,7 +119,7 @@ skills = [
 ### 5.3 環境変数
 ```bash
 GEMINI_API_KEY="your-google-ai-api-key"       # 必須
-GEMINI_MODEL="gemini-2.5-pro"                 # デフォルト値あり
+GEMINI_MODEL="gemini-2.5-pro-preview-05-06"   # デフォルト値あり
 GEMINI_TEMPERATURE="0.7"                      # デフォルト値あり
 GEMINI_MAX_TOKENS="1000"                      # デフォルト値あり
 ```

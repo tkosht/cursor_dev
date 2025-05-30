@@ -17,7 +17,7 @@ def test_gemini_config_data():
     """テスト用Gemini設定データ"""
     return {
         "api_key": "test-api-key-12345678",
-        "model": "gemini-2.5-pro",
+        "model": "gemini-2.5-pro-preview-05-06",
         "temperature": 0.5,
         "max_tokens": 500,
     }
@@ -44,7 +44,7 @@ def mock_gemini_client():
     )
     client.health_check.return_value = True
     client.get_client_info.return_value = {
-        "model": "gemini-2.5-pro",
+        "model": "gemini-2.5-pro-preview-05-06",
         "temperature": 0.7,
         "max_tokens": 1000,
         "initialized": True,
@@ -81,7 +81,7 @@ def mock_environment_variables():
     """テスト用環境変数モック"""
     env_vars = {
         "GEMINI_API_KEY": "test-api-key-12345678",
-        "GEMINI_MODEL": "gemini-2.5-pro",
+        "GEMINI_MODEL": "gemini-2.5-pro-preview-05-06",
         "GEMINI_TEMPERATURE": "0.7",
         "GEMINI_MAX_TOKENS": "1000",
     }
