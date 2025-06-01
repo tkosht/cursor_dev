@@ -1,0 +1,4 @@
+/home/devuser/.nvm/versions/node/v22.16.0/lib
+├── corepack@0.32.0
+└── npm@10.9.2
+

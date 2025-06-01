@@ -145,6 +145,7 @@ class GeminiA2AAgent(BaseA2AAgent):
 
             # 通常の対話処理
             prompt = self._build_conversation_prompt(sanitized_input)
+            self.logger.debug(f"最終的にAPIに送信されるプロンプト: {prompt}")
             response = await self.gemini_client.generate_response_with_timeout(
                 prompt, timeout=15.0  # 5秒→15秒に延長
             )
@@ -197,21 +198,27 @@ class GeminiA2AAgent(BaseA2AAgent):
 
     def _build_conversation_prompt(self, user_input: str) -> str:
         """会話履歴を考慮したプロンプトを構築"""
-        base_prompt = (
-            "あなたは親切で知識豊富なAIアシスタントです。"
-            "ユーザーの質問に対して、正確で有用な回答を提供してください。"
-            "回答は分かりやすく、適度な長さで行ってください。\n\n"
-        )
+        # base_prompt = ""  # ★一時的にシステムプロンプトを空にする (調査のため)
+        # # base_prompt = (
+        # #     "あなたは親切で知識豊富なAIアシスタントです。"
+        # #     "ユーザーの質問に対して、正確で有用な回答を提供してください。"
+        # #     "回答は分かりやすく、適度な長さで行ってください。\n\n"
+        # # )
 
-        # 会話履歴があれば追加（最新6件=3往復分）
-        if self.conversation_context:
-            recent_context = self.conversation_context[-6:]
-            conversation_history = "\n".join(recent_context)
-            base_prompt += f"会話履歴:\n{conversation_history}\n\n"
+        # # 会話履歴があれば追加（最新6件=3往復分）
+        # if self.conversation_context:
+        #     recent_context = self.conversation_context[-6:]
+        #     conversation_history = "\n".join(recent_context)
+        #     # base_prompt が空なので、履歴がある場合は履歴から始まる
+        #     if base_prompt:  # base_promptが空でない場合のみ改行を追加
+        #         base_prompt += f"会話履歴:\n{conversation_history}\n\n"
+        #     else:
+        #         base_prompt = f"会話履歴:\n{conversation_history}\n\n"
 
-        base_prompt += f"ユーザー: {user_input}\nアシスタント: "
+        # base_prompt += f"ユーザー: {user_input}\nアシスタント: "
 
-        return base_prompt
+        # return base_prompt
+        return user_input  # ★★★ 最もシンプルな形 (システムプロンプト、履歴、接頭辞/接尾辞なし)
 
     def _update_conversation_context(
         self, user_input: str, ai_response: str

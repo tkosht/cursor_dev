@@ -13,7 +13,6 @@ RUN apt-get update -y && apt-get upgrade -y \
         libmecab-dev mecab mecab-ipadic-utf8 mecab-utils file \
     && localedef -f UTF-8 -i ja_JP ja_JP.UTF-8
 
-
 RUN apt-get install -y --fix-missing --no-install-recommends \
         python3.10 \
         python3.10-dev \
@@ -50,7 +49,7 @@ WORKDIR /tmp
 #     && git clone https://github.com/neologd/mecab-ipadic-neologd.git \
 #     && cd mecab-ipadic-neologd && bin/install-mecab-ipadic-neologd -n -a -y
 
-RUN python -m pip install --upgrade pip==21.0.1
+RUN python -m pip install --upgrade pip
 
 # upgrade system
 RUN apt-get upgrade -y \

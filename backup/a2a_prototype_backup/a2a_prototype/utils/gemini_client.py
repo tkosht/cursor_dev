@@ -46,7 +46,8 @@ class GeminiClient:
             genai.configure(api_key=self.config.api_key)
 
             # Safety settings
-            safety_settings = self._get_safety_settings()
+            safety_settings_to_use = self._get_safety_settings()
+            logger.info(f"実際に使用されるセーフティ設定 (in _setup_client): {safety_settings_to_use}")
 
             # モデル初期化
             self._model = genai.GenerativeModel(
@@ -54,7 +55,7 @@ class GeminiClient:
                 generation_config=GenerationConfig(
                     **self.config.to_generation_config()
                 ),
-                safety_settings=safety_settings,
+                safety_settings=safety_settings_to_use,
             )
 
             self._initialized = True
@@ -67,9 +68,11 @@ class GeminiClient:
     def _get_safety_settings(self) -> Dict[HarmCategory, HarmBlockThreshold]:
         """セーフティ設定を取得"""
         if self.config.safety_settings:
+            logger.debug(f"設定ファイルからセーフティ設定を使用: {self.config.safety_settings}")
             return self.config.safety_settings
 
         # デフォルトのセーフティ設定（簡略化）
+        logger.debug("デフォルトのセーフティ設定を使用")
         try:
             return {
                 HarmCategory.HARM_CATEGORY_HARASSMENT: (
@@ -121,6 +124,12 @@ class GeminiClient:
         if not hasattr(candidate, "finish_reason"):
             logger.warning("Candidate has no finish_reason attribute")
             return
+
+        logger.debug(f"Candidate object dir: {dir(candidate)}")
+        if hasattr(candidate, "content"):
+            logger.debug(f"Candidate content dir: {dir(candidate.content)}")
+            if hasattr(candidate.content, "parts"):
+                logger.debug(f"Candidate content parts: {candidate.content.parts}")
 
         finish_reason = candidate.finish_reason
         logger.info(
@@ -305,8 +314,13 @@ class GeminiClient:
         Raises:
             GeminiAPIError: API呼び出しに失敗した場合
         """
+        # ★実験: API呼び出しの都度クライアントを再セットアップ（モデルを再初期化）
+        # これにより minimal_gemini_test.py の挙動に近づける試み
+        logger.debug("実験的措置: generate_responseの度にクライアントを再セットアップします。")
+        self._setup_client()  # モデルを再初期化
+
         if not self._initialized or not self._model:
-            raise GeminiAPIError("Client not properly initialized")
+            raise GeminiAPIError("Client not properly initialized after re-setup")
 
         if not prompt or not prompt.strip():
             raise ValueError("Prompt cannot be empty")
@@ -315,12 +329,10 @@ class GeminiClient:
         self._log_api_request_details(prompt)
 
         try:
-            logger.info("📡 Executing generate_content API call...")
+            logger.info("📡 Executing generate_content_async API call...")
 
-            # 非同期でAPI呼び出し
-            response = await asyncio.to_thread(
-                self._model.generate_content, prompt.strip()
-            )
+            # 非同期でAPI呼び出し (SDKのネイティブ非同期メソッドを使用)
+            response = await self._model.generate_content_async(prompt.strip())
 
             # 詳細ログ: レスポンス分析
             self._log_api_response_details(response)
@@ -403,7 +415,7 @@ class GeminiClient:
 
         try:
             response = await self.generate_response_with_timeout(
-                "Hello", timeout=10.0
+                "今日の日本の首都はどこですか？", timeout=10.0
             )
             return bool(
                 response
@@ -414,6 +426,64 @@ class GeminiClient:
         except Exception as e:
             logger.warning(f"Gemini health check failed: {e}")
             return False
+
+    async def generate_response_for_diagnosis(self, prompt: str, timeout: float = 20.0) -> Any:
+        """
+        診断用に、Geminiからの生のAPIレスポンスオブジェクト全体を返す。
+        タイムアウト付き。
+
+        Args:
+            prompt: 入力プロンプト
+            timeout: タイムアウト時間（秒）
+
+        Returns:
+            Gemini APIからの生のレスポンスオブジェクト、またはタイムアウト/エラー時はNone
+        """
+        prompt_snippet = prompt[:30]
+        logger.info(
+            f"⏱️ [DIAGNOSIS] Starting API call with timeout: {timeout}s "
+            f"for prompt: {prompt_snippet}..."
+        )
+        # 実験的措置として、呼び出し都度クライアントを再セットアップする部分は一旦コメントアウトし、
+        # __init__で初期化された単一のモデルインスタンスを使用する標準的な方法に戻します。
+        # logger.debug("[DIAGNOSIS] (Skipping re-setup for this diagnostic method)")
+        # # self._setup_client()  # モデルを再初期化する実験的措置はここでは一旦保留
+
+        if not self._initialized or not self._model:
+            logger.error("[DIAGNOSIS] Client not properly initialized.")
+            raise GeminiAPIError("Client not properly initialized for diagnosis")
+
+        if not prompt or not prompt.strip():
+            logger.error("[DIAGNOSIS] Prompt cannot be empty for diagnosis.")
+            raise ValueError("Prompt cannot be empty for diagnosis")
+
+        self._log_api_request_details(prompt)
+
+        try:
+            logger.info("📡 [DIAGNOSIS] Executing generate_content_async API call...")
+            # SDKのネイティブ非同期メソッドを使用
+            api_response = await asyncio.wait_for(
+                self._model.generate_content_async(prompt.strip()),
+                timeout=timeout
+            )
+            self._log_api_response_details(api_response)
+            # ★診断のため、_check_finish_reason を呼び出してみる
+            try:
+                self._check_finish_reason(api_response)
+            except GeminiAPIError as e:
+                logger.warning(f"[DIAGNOSIS] chk_fin_reason: {e}") # メッセージを短縮
+            return api_response
+        except asyncio.TimeoutError:
+            logger.error(f"🚨 [DIAGNOSIS] API TIMEOUT for prompt: {prompt_snippet}...")
+            return None
+        except Exception as e:
+            logger.error(
+                f"🚨 [DIAGNOSIS] Unexpected API error for prompt: {prompt_snippet}... "
+                f"Error: {type(e).__name__} - {e}"
+            )
+            import traceback
+            logger.debug(f"🔍 [DIAGNOSIS] Full traceback: {traceback.format_exc()}")
+            return None
 
     def get_client_info(self) -> Dict[str, Any]:
         """クライアント情報を取得"""
