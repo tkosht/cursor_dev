@@ -101,7 +101,8 @@ def check_recent_activity():
         stat = Path("memory-bank/critical_issues_tracker.md").stat()
         last_modified = datetime.fromtimestamp(stat.st_mtime)
         print(
-            f"   📝 Critical Issues last updated: {last_modified.strftime('%Y-%m-%d %H:%M')}"
+            f"   📝 Critical Issues last updated: "
+            f"{last_modified.strftime('%Y-%m-%d %H:%M')}"
         )
 
         # 最近1時間以内なら活発

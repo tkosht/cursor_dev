@@ -579,7 +579,7 @@ class ScientificQualityGate:
             print("🚨 厳格品質保証システム: 品質基準違反")
             print("❌ 品質改善必要")
 
-        print(f"\n📊 測定サマリー:")
+        print("\n📊 測定サマリー:")
         print(f"- Flake8違反: {metrics.flake8_violations}件")
         print(f"- テスト成功率: {metrics.test_success_rate:.1f}%")
         print(f"- カバレッジ: {metrics.overall_coverage:.1f}%")
@@ -587,7 +587,7 @@ class ScientificQualityGate:
         print(f"- 個別サンプル数: {len(metrics.individual_test_samples)}")
 
         if self.violations:
-            print(f"\n🔧 要修正項目:")
+            print("\n🔧 要修正項目:")
             for i, violation in enumerate(self.violations, 1):
                 print(f"   {i}. {violation}")
 

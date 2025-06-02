@@ -21,7 +21,8 @@ class SecurityChecker:
         # Tuple format: (Name, Pattern, Mask, Capture Group Index for Secret)
         (
             "OpenAI APIキー",
-            # Capture group 1: The key itself (Compromise: Detects keys slightly longer than 48 chars)
+            # Capture group 1: The key itself
+            # (Compromise: Detects keys slightly longer than 48 chars)
             re.compile(r"(sk-[a-zA-Z0-9]{48})"),
             "[OPENAI_KEY_REDACTED]",
             1,
@@ -145,22 +146,26 @@ class SecurityChecker:
         for _, pattern, mask, capture_group_index in self.PATTERNS:
             new_masked_content = ""
             last_end = 0
-            # Find all matches for the current pattern in the *current* state of the content
+            # Find all matches for the current pattern in the
+            # *current* state of the content
             for match in pattern.finditer(modified_content):
                 # Get the start and end of the specific group to mask (key itself)
                 try:
                     key_start = match.start(capture_group_index)
                     key_end = match.end(capture_group_index)
-                    match_end = match.end()  # End of the entire match
+                    # End of the entire match
+                    match_end = match.end()
 
-                    # Append content before the key + the mask + content after the key but within the match
+                    # Append content before the key + the mask +
+                    # content after the key but within the match
                     new_masked_content += modified_content[last_end:key_start]
                     new_masked_content += mask
                     new_masked_content += modified_content[
                         key_end:match_end
                     ]  # Add back the part after the key
 
-                    last_end = match_end  # Use the end of the *entire* match for the next slice start
+                    # Use the end of the *entire* match for the next slice start
+                    last_end = match_end
                     changed = True
                 except IndexError:
                     # Handle cases where the capture group might not exist

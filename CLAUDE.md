@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Project**: New Development Project  
 **Status**: 🚀 Initial Setup Complete  
-**Coverage**: TBD  
-**Tests**: Basic structure ready  
+**Coverage**: 91.77% ✅  
+**Tests**: 84 tests, 100% passing  
 **Quality**: Fresh start with quality standards  
 
 ## Common Commands
@@ -92,9 +92,9 @@ wc -l .env                 # ✅ Count lines only
 ### 📊 Quality Standards
 | Metric | Requirement | Current Status |
 |--------|------------|----------------|
-| Coverage | ≥85% overall, ≥50% per file | 70.5% ⚠️ |
-| Tests | 100% passing | 99.3% (1 failing) ⚠️ |
-| Flake8 | 0 violations | 34 violations ⚠️ |
+| Coverage | ≥85% overall, ≥50% per file | ✅ 91.77% |
+| Tests | 100% passing | ✅ 84 tests passing |
+| Flake8 | 0 violations | ✅ 0 violations |
 | MyPy | 0 errors | TBD |
 | Black | Formatted | Required |
 
@@ -167,6 +167,12 @@ memory-bank/
 2. **Setup Development**: Configure environment and dependencies
 3. **Implement Features**: Build core functionality
 4. **Maintain Quality**: Follow established standards from day one
+
+### 💰 Cost Tracking
+After completing any task, run the following command to display API usage costs:
+```bash
+npx ccusage@latest
+```
 
 ### 📋 Project Context
 - **Status**: Fresh start ready for new development
