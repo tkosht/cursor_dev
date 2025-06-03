@@ -15,7 +15,7 @@
 ## 🎯 関連資料
 
 ### **技術者向け効果分析**
-- **[A2Aプロトコル技術的効果分析](technical_analysis_a2a_protocol_effectiveness.md)**: **調査結果・検証結果に基づく技術的効果の詳細分析** ⭐ **重要**
+- **[A2A Pythonサンプル分析レポート](a2a_python_samples_analysis_report.md)**: **調査結果・検証結果に基づく技術的効果の詳細分析** ⭐ **重要**
   - シーケンス図による通信フロー解説
   - パフォーマンス検証結果 (レイテンシ73%削減、メモリ57%削減)
   - 他プロトコルとの技術的ポジショニング
@@ -343,8 +343,8 @@ GeminiA2AAgent (BaseA2AAgent継承)
 
 ### 使用方法
 ```bash
-# 1. API Key設定
-export GEMINI_API_KEY="your-api-key"
+# 1. API Key設定（.env ファイルまたは環境変数）
+export GEMINI_API_KEY="[YOUR_API_KEY_HERE]"
 
 # 2. エージェント起動
 python scripts/run_gemini_agent.py

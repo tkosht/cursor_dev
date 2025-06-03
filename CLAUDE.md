@@ -4,179 +4,384 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status Overview
 
-**Project**: New Development Project  
-**Status**: 🚀 Initial Setup Complete  
-**Coverage**: 91.77% ✅  
-**Tests**: 84 tests, 100% passing  
-**Quality**: Fresh start with quality standards  
+**Project**: A2A MVP - Test-Driven Development
+**Status**: ✅ Implementation Complete
+**Coverage**: 91.77% ✅
+**Tests**: 84 tests, 100% passing
+**Quality**: Flake8 0 violations, Black formatted
 
-## Common Commands
+## 🚨 IMPORTANT: Essential Knowledge Documents
 
-### Development Environment
+**When starting ANY work on this project, ALWAYS load these documents in order:**
+
+### 1. Core Development Knowledge
+1. **[memory-bank/tdd_implementation_knowledge.md](memory-bank/tdd_implementation_knowledge.md)** - TDD実践の具体的手法
+2. **[memory-bank/generic_tdd_patterns.md](memory-bank/generic_tdd_patterns.md)** - 汎用的なTDDパターン
+3. **[memory-bank/development_workflow_rules.md](memory-bank/development_workflow_rules.md)** - 開発ワークフロー
+
+### 2. Project Specific Knowledge
+4. **[memory-bank/a2a_protocol_implementation_rules.md](memory-bank/a2a_protocol_implementation_rules.md)** - A2Aプロトコル実装仕様
+5. **[memory-bank/ci_cd_optimization_rules.md](memory-bank/ci_cd_optimization_rules.md)** - CI/CD設定と最適化
+
+### 3. Quality Assurance
+6. **[memory-bank/critical_review_framework.md](memory-bank/critical_review_framework.md)** - 批判的レビューフレームワーク
+7. **[memory-bank/a2a_mvp_critical_review.md](memory-bank/a2a_mvp_critical_review.md)** - プロジェクトレビュー結果
+
+### 4. Architecture Documentation
+8. **[docs/a2a_mvp_architecture.md](docs/a2a_mvp_architecture.md)** - システムアーキテクチャ設計
+9. **[docs/a2a_mvp_tdd_implementation.md](docs/a2a_mvp_tdd_implementation.md)** - TDD実装の詳細記録
+
+### 5. Reproduction Guide
+10. **[memory-bank/project_reproduction_checklist.md](memory-bank/project_reproduction_checklist.md)** - プロジェクト再現手順
+
+## 🔄 Development Workflow (MUST FOLLOW)
+
+### Standard Development Flow
+```mermaid
+graph LR
+    A[要件定義] --> B[設計レビュー]
+    B --> C[TDD実装]
+    C --> D[セルフレビュー]
+    D --> E[自動品質チェック]
+    E --> F{基準達成?}
+    F -->|No| C
+    F -->|Yes| G[ピアレビュー]
+    G --> H[批判的レビュー]
+    H --> I[マージ]
+```
+
+### Critical Review Points
+1. **汎用性**: 他プロジェクトへの転用可能性
+2. **再現性**: ゼロから同品質を再現可能か
+3. **保守性**: 6ヶ月後の他者による修正容易性
+4. **拡張性**: 新機能追加の容易性
+5. **セキュリティ**: 脆弱性対策の網羅性
+
+## Project Architecture (MUST FOLLOW)
+
+### Layer Structure and Dependencies
+```
+app/a2a_mvp/
+├── core/           # Business entities (NO dependencies)
+│   ├── types.py    # Task, TaskRequest, TaskResponse
+│   └── exceptions.py # Custom exceptions
+├── storage/        # Data persistence (depends on: core)
+│   ├── interface.py # Abstract storage interface
+│   └── memory.py   # In-memory implementation
+├── skills/         # Business logic (depends on: core, storage)
+│   ├── base.py     # Base skill class
+│   └── task_skills.py # Task management logic
+├── agents/         # A2A agents (depends on: ALL layers)
+│   ├── base.py     # Base agent class
+│   └── task_agent.py # Task management agent
+└── server/         # API server (depends on: agents)
+    └── app.py      # FastAPI application
+```
+
+**CRITICAL RULE**: Dependencies flow in ONE direction only (bottom to top)
+
+## TDD Implementation Process (MANDATORY)
+
+### Red-Green-Refactor Cycle
+1. **Red Phase (5-10 min)**: Write failing test FIRST
+   ```python
+   def test_new_feature():
+       # Test for non-existent code
+       result = feature_that_doesnt_exist()
+       assert result == expected
+   ```
+
+2. **Green Phase (10-15 min)**: Minimal implementation
+   ```python
+   def feature_that_doesnt_exist():
+       return expected  # Just make it pass
+   ```
+
+3. **Refactor Phase (5-10 min)**: Improve quality
+   - Extract methods if complexity > 10
+   - Add type hints
+   - Improve naming
+
+### Test Structure Requirements
+```python
+class TestFeature:
+    @pytest.fixture
+    def mock_dependency(self):
+        return Mock(spec=DependencyInterface)
+    
+    def test_success_case(self, mock_dependency):
+        # Given: Setup
+        # When: Action
+        # Then: Assert
+    
+    def test_error_case(self, mock_dependency):
+        # Test error handling
+    
+    def test_edge_case(self, mock_dependency):
+        # Test boundaries
+```
+
+## Quality Standards (NON-NEGOTIABLE)
+
+### Before EVERY Commit
 ```bash
-# Start development environment (Docker-based)
-make                    # Start containers and install dependencies
-make install           # Install poetry and claudecode
-make bash              # Access container shell
-make clean             # Clean logs, poetry, npm, and containers
+# Run quality gate check
+python scripts/quality_gate_check.py
 
-# Python environment
-poetry shell           # Activate virtual environment
-poetry install         # Install dependencies
-poetry add <package>   # Add new dependency
+# Individual checks if needed
+pytest --cov=app --cov-fail-under=85
+flake8 app/ tests/ --max-complexity=10
+black app/ tests/ --line-length=79
+isort app/ tests/
+mypy app/ --ignore-missing-imports
 ```
 
-### Testing and Quality
+### Coverage Requirements
+- Overall: ≥85% (currently 91.77%)
+- Core modules: ≥95%
+- New code: ≥90%
+- Per file: ≥50%
+
+## Generic Implementation Patterns (USE THESE)
+
+### 1. Result Type Pattern (Language Agnostic)
+```python
+class Result:
+    @classmethod
+    def ok(cls, value):
+        return cls(success=True, value=value)
+    
+    @classmethod
+    def fail(cls, error):
+        return cls(success=False, error=error)
+
+# Usage
+def divide(a, b):
+    if b == 0:
+        return Result.fail("Division by zero")
+    return Result.ok(a / b)
+```
+
+### 2. Action Map Pattern (Complexity Reduction)
+```python
+class Handler:
+    def __init__(self):
+        self._actions = {
+            "create": self._handle_create,
+            "update": self._handle_update,
+            "delete": self._handle_delete,
+        }
+    
+    def handle(self, action, data):
+        handler = self._actions.get(action)
+        if not handler:
+            return Result.fail(f"Unknown action: {action}")
+        return handler(data)
+```
+
+### 3. Dependency Injection Pattern
+```python
+class Service:
+    def __init__(self, repository: RepositoryInterface):
+        self._repository = repository  # Testable
+    
+    def process(self, data):
+        return self._repository.save(data)
+```
+
+## A2A Protocol Requirements
+
+### Agent Card Structure
+```python
+{
+    "name": "Task Manager Agent",
+    "version": "1.0.0",
+    "description": "Manages TODO tasks with full CRUD operations",
+    "capabilities": {
+        "request_response": True,
+        "streaming": False,
+        "batch": True
+    },
+    "skills": [
+        {
+            "id": "create_task",
+            "name": "Create Task",
+            "description": "Create a new TODO task",
+            "tags": ["task", "create", "todo"],
+            "examples": ["Create task 'Buy groceries'"]
+        }
+    ]
+}
+```
+
+### Message Format
+```python
+# Request
+{
+    "action": "create",
+    "data": {"title": "Task title"},
+    "task_id": "optional-for-specific-actions"
+}
+
+# Response
+{
+    "success": true,
+    "data": {"task": {...}},
+    "error": null
+}
+```
+
+## Security Rules (ABSOLUTE)
+
+### Never Expose Secrets
 ```bash
-# Testing
-pytest                 # Run all tests with coverage
-pytest -v             # Verbose test output
-pytest tests/unit/    # Run only unit tests
-pytest tests/integration/  # Run integration tests
-pytest tests/e2e/     # Run end-to-end tests
-pytest -k "test_name" # Run specific test by name
+# ❌ FORBIDDEN
+cat .env
+echo $API_KEY
+grep -r "API" .env
 
-# Quality checks (REQUIRED before commits)
-python scripts/quality_gate_check.py  # Comprehensive quality gate
-black app/            # Format code (79 char line length)
-flake8 app/           # Lint code (max complexity: 10)
-mypy app/ --ignore-missing-imports    # Type checking
-
-# Coverage report
-pytest --cov=app --cov-report=html   # Generate HTML coverage report
+# ✅ ALLOWED
+[ -f .env ] && echo "exists"
+wc -l .env
 ```
 
-## High-Level Architecture
+### Input Validation (MUST IMPLEMENT)
+```python
+from pydantic import BaseModel, validator
 
-### Project Structure
-```
-app/
-├── __init__.py           # Package initialization
-└── main.py               # Application entry point
-
-tests/                    # Test suite
-├── conftest.py          # Pytest configuration
-├── unit/                # Unit tests
-│   └── test_main.py     # Basic test example
-├── integration/         # Integration tests
-└── e2e/                # End-to-end tests
-
-backup/                  # Previous project backup
-├── a2a_prototype_backup/
-└── tests_backup/
+class TaskCreateModel(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
+    description: Optional[str] = Field(None, max_length=2000)
+    
+    @validator('title')
+    def validate_title(cls, v):
+        if not v.strip():
+            raise ValueError('Title cannot be empty')
+        # Check for malicious patterns
+        if re.search(r'[<>\"\'`;]', v):
+            raise ValueError('Invalid characters in title')
+        return v.strip()
 ```
 
-### Key Technologies
-- **Python**: 3.10-3.12
-- **Testing**: Pytest with coverage
-- **Quality**: Black, Flake8, MyPy
-- **Environment**: Docker with VSCode Dev Container
-- **Package Manager**: Poetry
+## Critical Review Checklist
 
-## Critical Development Rules
+### Before Merging ANY Code
+- [ ] **Reproducibility**: Can someone recreate this from scratch?
+- [ ] **Genericity**: Can this be used in other projects?
+- [ ] **Maintainability**: Will this be understandable in 6 months?
+- [ ] **Scalability**: Can this handle 10x load?
+- [ ] **Security**: Are all inputs validated?
+- [ ] **Documentation**: Is the intent clear?
+- [ ] **Test Quality**: Do tests specify behavior, not implementation?
 
-### 🔒 Security Rules (ABSOLUTE VIOLATIONS)
+## Common Commands Reference
+
+### Development
 ```bash
-# NEVER execute these commands:
-cat .env                    # ❌ Displays secrets
-echo $API_KEY              # ❌ Exposes API keys
-grep -r "API" .env         # ❌ Searches secrets
-printenv | grep KEY        # ❌ Shows environment secrets
+# Environment setup
+poetry install
+poetry shell
 
-# Safe alternatives:
-ls -la .env*               # ✅ Check file existence
-[ -f .env ] && echo "exists" # ✅ Verify without display
-wc -l .env                 # ✅ Count lines only
+# Run server
+uvicorn app.a2a_mvp.server.app:app --reload
+
+# Run specific tests
+pytest tests/unit/test_skills/test_task_skills.py -v
+pytest -k "test_create_task"
+
+# Generate coverage report
+pytest --cov=app --cov-report=html
+open htmlcov/index.html
 ```
 
-### 📊 Quality Standards
-| Metric | Requirement | Current Status |
-|--------|------------|----------------|
-| Coverage | ≥85% overall, ≥50% per file | ✅ 91.77% |
-| Tests | 100% passing | ✅ 84 tests passing |
-| Flake8 | 0 violations | ✅ 0 violations |
-| MyPy | 0 errors | TBD |
-| Black | Formatted | Required |
-
-### 🔄 Development Process
-1. **Think First**: Use `<thinking/>` tags for reasoning
-2. **Search Smart**: Check existing code/issues before implementing
-3. **File Safety**: Verify directories exist before file creation
-4. **Edit > Create**: Modify existing files rather than creating new ones
-5. **Quality Gate**: Run `python scripts/quality_gate_check.py` before commits
-
-### 📝 Git Workflow
+### Quality Checks
 ```bash
-# Branch naming
-feature/<issue>-<description>  # New features
-fix/<issue>-<description>      # Bug fixes
-docs/<issue>-<description>     # Documentation
+# Full quality check
+python scripts/quality_gate_check.py
 
-# Commit format (Conventional Commits)
-feat: add new agent skill      # New feature
-fix: resolve API timeout       # Bug fix
-docs: update setup guide       # Documentation
-test: add unit tests          # Testing
-refactor: simplify logic      # Code improvement
-
-# Verification commands
-git status | cat              # Objective status check
-git diff | cat                # Review changes
-git log --oneline -5          # Recent history
+# Individual tools
+flake8 app/ tests/ --statistics
+black app/ tests/ --check --diff
+isort app/ tests/ --check-only --diff
+mypy app/ --show-error-codes
+radon cc app/ -a  # Cyclomatic complexity
+bandit -r app/    # Security scan
 ```
 
-### 🤖 AI-Specific Guidelines
-
-#### Error Handling Excellence
-- **SAFETY_FILTER**: Handle Gemini safety blocks gracefully
-- **API_KEY_INVALID**: Clear error messages without exposing keys
-- **Rate Limits**: Implement exponential backoff
-- **Timeouts**: Set reasonable limits (30s default)
-
-#### Analysis Quality Rules
-1. **Question Everything**: "Is this implementation appropriate?"
-2. **Root Cause Focus**: Don't blame external factors first
-3. **Transparent Process**: Show reasoning clearly
-4. **Own Mistakes**: Take responsibility and provide fixes
-5. **Know Limits**: Suggest alternatives when tools fail
-
-### 📚 Memory Bank Structure
-```
-memory-bank/
-├── Core Context (Always Load)
-│   ├── projectbrief.md         # Project mission
-│   ├── activeContext.md        # Current focus
-│   ├── progress.md             # Status tracking
-│   └── rules.md                # Project rules
-├── Knowledge Base
-│   ├── *_lessons_learned.md    # Past learnings
-│   ├── debugging_best_practices.md
-│   └── security_incident_knowledge.md
-└── research/                    # Investigation results
-```
-
-### ⚡ Performance Patterns
-- **Async First**: Use async/await for I/O operations
-- **Batch Operations**: Group related API calls
-- **Error Recovery**: Implement retry with backoff
-- **Resource Cleanup**: Always close connections/files
-- **Logging**: DEBUG for details, INFO for milestones
-
-### 🎯 Current Priorities
-1. **Define Project Goals**: Determine the new project's purpose
-2. **Setup Development**: Configure environment and dependencies
-3. **Implement Features**: Build core functionality
-4. **Maintain Quality**: Follow established standards from day one
-
-### 💰 Cost Tracking
-After completing any task, run the following command to display API usage costs:
+### Docker
 ```bash
-npx ccusage@latest
+make              # Start development environment
+make bash         # Access container shell
+# Note: test commands use pytest directly
+make clean        # Clean up everything
 ```
 
-### 📋 Project Context
-- **Status**: Fresh start ready for new development
-- **Previous Work**: A2A protocol research (backed up)
-- **Environment**: Docker-based development ready
-- **Standards**: Quality gates and rules in place
-- **Rule Hierarchy**: rules.mdc → core.mdc → project.mdc
+## Performance Benchmarks
+
+### Target Metrics
+- Response time: <50ms (currently ~12ms)
+- Throughput: >1000 req/s
+- Memory usage: <100MB per agent
+- Startup time: <2s
+
+### Optimization Patterns
+1. Pre-compute action maps at startup
+2. Use async/await for I/O operations
+3. Implement caching where appropriate
+4. Batch database operations
+
+## Troubleshooting Guide
+
+### Common Issues
+
+1. **Import Errors**
+   - Check PYTHONPATH includes project root
+   - Verify `__init__.py` files exist
+   - Run from project root: `python -m app.a2a_mvp.server.app`
+
+2. **Test Failures**
+   - Check fixtures are properly scoped
+   - Verify mocks match interfaces
+   - Look for state leakage between tests
+
+3. **Coverage Drops**
+   - Run coverage report: `pytest --cov=app --cov-report=term-missing`
+   - Focus on uncovered lines
+   - Add tests for error cases
+
+4. **Complexity Errors**
+   - Extract methods from complex functions
+   - Use action map pattern
+   - Apply strategy pattern for many conditions
+
+## Project Improvement Roadmap
+
+### Immediate (1-2 weeks)
+- [ ] Add Pydantic for input validation
+- [ ] Implement async handlers
+- [ ] Add performance benchmarks
+- [ ] Create interactive tutorial
+
+### Short-term (1-2 months)
+- [ ] Extract generic agent framework
+- [ ] Add authentication/authorization
+- [ ] Implement PostgreSQL storage
+- [ ] Add WebSocket support
+
+### Long-term (3-6 months)
+- [ ] Microservice architecture
+- [ ] Kubernetes deployment
+- [ ] Multi-agent orchestration
+- [ ] AI/ML integration
+
+## 🚨 Final Reminders
+
+1. **Always write tests first** - No exceptions
+2. **Run quality checks before commit** - Save CI time
+3. **Think generic** - Will this work elsewhere?
+4. **Document why, not what** - Code shows what
+5. **Review critically** - Question everything
+
+---
+
+**Remember**: Quality is not negotiable. When in doubt, write a test!
