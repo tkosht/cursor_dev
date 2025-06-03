@@ -170,6 +170,7 @@ make              # 環境構築・起動
 make up           # コンテナ起動
 make bash         # コンテナ内シェルアクセス
 make clean        # クリーンアップ
+# make test は未定義（pytest を直接使用）
 ```
 
 ## 🔒 セキュリティ

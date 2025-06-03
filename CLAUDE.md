@@ -14,40 +14,82 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **When starting ANY work on this project, ALWAYS load these documents in order:**
 
-### 1. Core Development Knowledge
-1. **[memory-bank/tdd_implementation_knowledge.md](memory-bank/tdd_implementation_knowledge.md)** - TDD実践の具体的手法
-2. **[memory-bank/generic_tdd_patterns.md](memory-bank/generic_tdd_patterns.md)** - 汎用的なTDDパターン
-3. **[memory-bank/development_workflow_rules.md](memory-bank/development_workflow_rules.md)** - 開発ワークフロー
+### 1. Mandatory Compliance Rules (MUST READ FIRST)
+1. **[memory-bank/user_authorization_mandatory_rules.md](memory-bank/user_authorization_mandatory_rules.md)** - ユーザー承認必須ルール（絶対遵守）
+2. **[memory-bank/testing_mandatory_rules.md](memory-bank/testing_mandatory_rules.md)** - 自動化機能テスト必須化ルール
 
-### 2. Project Specific Knowledge
-4. **[memory-bank/a2a_protocol_implementation_rules.md](memory-bank/a2a_protocol_implementation_rules.md)** - A2Aプロトコル実装仕様
-5. **[memory-bank/ci_cd_optimization_rules.md](memory-bank/ci_cd_optimization_rules.md)** - CI/CD設定と最適化
+### 2. Core Development Knowledge
+3. **[memory-bank/tdd_implementation_knowledge.md](memory-bank/tdd_implementation_knowledge.md)** - TDD実践の具体的手法
+4. **[memory-bank/generic_tdd_patterns.md](memory-bank/generic_tdd_patterns.md)** - 汎用的なTDDパターン
+5. **[memory-bank/development_workflow_rules.md](memory-bank/development_workflow_rules.md)** - 開発ワークフロー
 
-### 3. Quality Assurance
-6. **[memory-bank/critical_review_framework.md](memory-bank/critical_review_framework.md)** - 批判的レビューフレームワーク
-7. **[memory-bank/a2a_mvp_critical_review.md](memory-bank/a2a_mvp_critical_review.md)** - プロジェクトレビュー結果
+### 3. Project Specific Knowledge
+6. **[memory-bank/a2a_protocol_implementation_rules.md](memory-bank/a2a_protocol_implementation_rules.md)** - A2Aプロトコル実装仕様
+7. **[memory-bank/ci_cd_optimization_rules.md](memory-bank/ci_cd_optimization_rules.md)** - CI/CD設定と最適化
 
-### 4. Architecture Documentation
-8. **[docs/a2a_mvp_architecture.md](docs/a2a_mvp_architecture.md)** - システムアーキテクチャ設計
-9. **[docs/a2a_mvp_tdd_implementation.md](docs/a2a_mvp_tdd_implementation.md)** - TDD実装の詳細記録
+### 4. Quality Assurance & Documentation Accuracy
+8. **[memory-bank/critical_review_framework.md](memory-bank/critical_review_framework.md)** - 批判的レビューフレームワーク
+9. **[memory-bank/a2a_mvp_critical_review.md](memory-bank/a2a_mvp_critical_review.md)** - プロジェクトレビュー結果
 
-### 5. Reproduction Guide
-10. **[memory-bank/project_reproduction_checklist.md](memory-bank/project_reproduction_checklist.md)** - プロジェクト再現手順
+### 5. Architecture Documentation
+10. **[docs/a2a_mvp_architecture.md](docs/a2a_mvp_architecture.md)** - システムアーキテクチャ設計
+11. **[docs/a2a_mvp_tdd_implementation.md](docs/a2a_mvp_tdd_implementation.md)** - TDD実装の詳細記録
+
+### 6. Reproduction Guide
+12. **[memory-bank/project_reproduction_checklist.md](memory-bank/project_reproduction_checklist.md)** - プロジェクト再現手順
+
+## 🚨 CRITICAL: Documentation Accuracy Rules (ABSOLUTE COMPLIANCE)
+
+### 事実ベース記載の強制原則
+
+#### 1. 記載前必須チェック（絶対実行）
+```bash
+# コマンド記載前の必須確認
+less Makefile                # Makeターゲット確認（直接ファイル確認）
+python scripts/script.py --help  # スクリプト動作確認
+ls -la path/to/file         # ファイル存在確認
+
+# 数値記載前の必須確認
+pytest --cov=app | grep TOTAL  # カバレッジ実測値取得
+time command                    # パフォーマンス実測
+```
+
+#### 2. 禁止事項（絶対遵守）
+- ❌ 未確認のコマンド記載
+- ❌ 推測による数値記載  
+- ❌ 憶測による機能説明
+- ❌ 根拠なき性能主張
+
+#### 3. 必須記載パターン
+```markdown
+# ✅ 正しい記載例
+**実測値**: 91.77%（pytest --cov実行結果: 2024-12-XX）
+**コマンド確認済み**: make up（Makefile:35行目で確認）
+**解釈**: 上記データから、業界平均を上回ると判断される
+```
+
+#### 4. 自動検証の実行（コミット前必須）
+```bash
+# ドキュメント正確性チェック
+python scripts/verify_accuracy.py
+python scripts/critical_documentation_review.py --target README.md
+```
 
 ## 🔄 Development Workflow (MUST FOLLOW)
 
-### Standard Development Flow
+### Enhanced Development Flow with Accuracy Verification
 ```mermaid
 graph LR
     A[要件定義] --> B[設計レビュー]
     B --> C[TDD実装]
     C --> D[セルフレビュー]
-    D --> E[自動品質チェック]
-    E --> F{基準達成?}
-    F -->|No| C
-    F -->|Yes| G[ピアレビュー]
-    G --> H[批判的レビュー]
-    H --> I[マージ]
+    D --> E[事実検証チェック]
+    E --> F[自動品質チェック]
+    F --> G{基準達成?}
+    G -->|No| C
+    G -->|Yes| H[批判的レビュー]
+    H --> I[ドキュメント正確性検証]
+    I --> J[マージ]
 ```
 
 ### Critical Review Points
@@ -125,10 +167,14 @@ class TestFeature:
 
 ### Before EVERY Commit
 ```bash
-# Run quality gate check
+# 1. Documentation accuracy verification (MANDATORY)
+python scripts/verify_accuracy.py
+python scripts/critical_documentation_review.py --target README.md
+
+# 2. Code quality gate check
 python scripts/quality_gate_check.py
 
-# Individual checks if needed
+# 3. Individual checks if needed
 pytest --cov=app --cov-fail-under=85
 flake8 app/ tests/ --max-complexity=10
 black app/ tests/ --line-length=79
