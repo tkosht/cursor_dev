@@ -7,7 +7,7 @@
 ## 🚨 必須参照ルール
 
 **開発前に必ず確認すること:**
-- **[code_quality_anti_hacking_rules.md](memory-bank/code_quality_anti_hacking_rules.md)** - 品質指標への誠実性を保つ絶対ルール
+- **[code_quality_anti_hacking_rules.md](code_quality_anti_hacking_rules.md)** - 品質指標への誠実性を保つ絶対ルール
 
 ## 📋 開発フロー全体像
 

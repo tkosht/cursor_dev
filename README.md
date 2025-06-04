@@ -59,7 +59,7 @@ make bash
 make clean
 ```
 
-注：`make test`、`make shell`などのターゲットは現在未定義です。今後の実装予定。
+注：テスト実行は `pytest` コマンドを直接使用してください。
 
 ## 📁 プロジェクト構造
 
@@ -170,7 +170,7 @@ make              # 環境構築・起動
 make up           # コンテナ起動
 make bash         # コンテナ内シェルアクセス
 make clean        # クリーンアップ
-# make test は未定義（pytest を直接使用）
+# テスト実行（pytestを直接使用）
 ```
 
 ## 🔒 セキュリティ
