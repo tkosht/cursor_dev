@@ -12,8 +12,8 @@ class TestTaskAgent:
     @pytest.fixture
     def task_agent(self):
         """Create a TaskAgent instance for testing."""
-        from app.a2a_mvp.agents.task_agent import TaskAgent
-        from app.a2a_mvp.storage.memory import InMemoryStorage
+        from app.a2a.agents.task_agent import TaskAgent
+        from app.a2a.storage.memory import InMemoryStorage
 
         storage = InMemoryStorage()
         return TaskAgent(storage=storage)
@@ -36,7 +36,7 @@ class TestTaskAgent:
 
     def test_process_create_task_request(self, task_agent):
         """Test processing create task request."""
-        from app.a2a_mvp.core.types import TaskRequest
+        from app.a2a.core.types import TaskRequest
 
         request = TaskRequest(
             action="create",
@@ -52,7 +52,7 @@ class TestTaskAgent:
 
     def test_process_list_tasks_request(self, task_agent):
         """Test processing list tasks request."""
-        from app.a2a_mvp.core.types import TaskRequest
+        from app.a2a.core.types import TaskRequest
 
         # First create some tasks
         task_agent.process_request(
@@ -74,7 +74,7 @@ class TestTaskAgent:
 
     def test_process_get_task_request(self, task_agent):
         """Test processing get task request."""
-        from app.a2a_mvp.core.types import TaskRequest
+        from app.a2a.core.types import TaskRequest
 
         # Create a task
         create_response = task_agent.process_request(
@@ -92,7 +92,7 @@ class TestTaskAgent:
 
     def test_process_update_task_request(self, task_agent):
         """Test processing update task request."""
-        from app.a2a_mvp.core.types import TaskRequest
+        from app.a2a.core.types import TaskRequest
 
         # Create a task
         create_response = task_agent.process_request(
@@ -115,7 +115,7 @@ class TestTaskAgent:
 
     def test_process_delete_task_request(self, task_agent):
         """Test processing delete task request."""
-        from app.a2a_mvp.core.types import TaskRequest
+        from app.a2a.core.types import TaskRequest
 
         # Create a task
         create_response = task_agent.process_request(
@@ -138,7 +138,7 @@ class TestTaskAgent:
 
     def test_process_toggle_completion_request(self, task_agent):
         """Test processing toggle completion request."""
-        from app.a2a_mvp.core.types import TaskRequest
+        from app.a2a.core.types import TaskRequest
 
         # Create a task
         create_response = task_agent.process_request(
@@ -160,7 +160,7 @@ class TestTaskAgent:
 
     def test_process_clear_all_request(self, task_agent):
         """Test processing clear all request."""
-        from app.a2a_mvp.core.types import TaskRequest
+        from app.a2a.core.types import TaskRequest
 
         # Create some tasks
         task_agent.process_request(
@@ -182,7 +182,7 @@ class TestTaskAgent:
 
     def test_process_invalid_action(self, task_agent):
         """Test processing invalid action."""
-        from app.a2a_mvp.core.types import TaskRequest
+        from app.a2a.core.types import TaskRequest
 
         request = TaskRequest(action="invalid_action")
         response = task_agent.process_request(request)
@@ -193,7 +193,7 @@ class TestTaskAgent:
 
     def test_process_create_without_title(self, task_agent):
         """Test creating task without title."""
-        from app.a2a_mvp.core.types import TaskRequest
+        from app.a2a.core.types import TaskRequest
 
         request = TaskRequest(action="create", data={})
         response = task_agent.process_request(request)

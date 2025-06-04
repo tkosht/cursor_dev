@@ -19,7 +19,7 @@
 
 ### アーキテクチャ設計
 ```
-app/a2a_mvp/
+app/a2a/
 ├── core/         # 型定義・例外処理
 ├── storage/      # データストレージ抽象化
 ├── skills/       # ビジネスロジック
@@ -392,7 +392,7 @@ class TestTaskAgentErrorHandling:
 def test_full_workflow_via_api():
     """完全ワークフローのAPIテスト"""
     from fastapi.testclient import TestClient
-    from app.a2a_mvp.server.app import app
+    from app.a2a.server.app import app
     
     client = TestClient(app)
     
@@ -471,11 +471,11 @@ def test_task_serialization_with_none_updated_at():
 
 ### テストカバレッジ結果
 ```
-app/a2a_mvp/core/types.py          100%
-app/a2a_mvp/core/exceptions.py     100%
-app/a2a_mvp/storage/memory.py      100%
-app/a2a_mvp/agents/task_agent.py    92%
-app/a2a_mvp/skills/task_skills.py   63%
+app/a2a/core/types.py          100%
+app/a2a/core/exceptions.py     100%
+app/a2a/storage/memory.py      100%
+app/a2a/agents/task_agent.py    92%
+app/a2a/skills/task_skills.py   63%
 -------------------------------------------
 TOTAL                               81%
 ```
@@ -496,24 +496,24 @@ TOTAL                               81%
 
 ```bash
 # サーバー起動
-python -m app.a2a_mvp.server.app
+python -m app.a2a.server.app
 
 # タスク作成
-python -m app.a2a_mvp.client.cli create "買い物に行く" -d "牛乳とパンを買う"
+python -m app.a2a.client.cli create "買い物に行く" -d "牛乳とパンを買う"
 # 出力: Task created successfully: 1a2b3c4d-...
 
 # タスク一覧表示
-python -m app.a2a_mvp.client.cli list
+python -m app.a2a.client.cli list
 # 出力:
 # Tasks (1 total):
 # □ 1a2b3c4d | 買い物に行く | 牛乳とパンを買う
 
 # タスク完了
-python -m app.a2a_mvp.client.cli toggle 1a2b3c4d
+python -m app.a2a.client.cli toggle 1a2b3c4d
 # 出力: Task completion toggled: 1a2b3c4d
 
 # 完了状態確認
-python -m app.a2a_mvp.client.cli list
+python -m app.a2a.client.cli list
 # 出力:
 # Tasks (1 total):
 # ✓ 1a2b3c4d | 買い物に行く | 牛乳とパンを買う

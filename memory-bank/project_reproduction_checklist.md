@@ -23,14 +23,14 @@ poetry add fastapi uvicorn pydantic
 #### 1.2 プロジェクト構造作成
 ```bash
 # ディレクトリ構造作成
-mkdir -p app/a2a_mvp/{core,storage,skills,agents,server}
+mkdir -p app/a2a/{core,storage,skills,agents,server}
 mkdir -p tests/{unit/{test_core,test_storage,test_skills,test_agents},integration/test_server}
 mkdir -p scripts docs memory-bank .github/workflows
 
 # __init__.pyファイル作成
 touch app/__init__.py
-touch app/a2a_mvp/__init__.py
-touch app/a2a_mvp/{core,storage,skills,agents,server}/__init__.py
+touch app/a2a/__init__.py
+touch app/a2a/{core,storage,skills,agents,server}/__init__.py
 touch tests/__init__.py
 touch tests/unit/__init__.py
 touch tests/unit/{test_core,test_storage,test_skills,test_agents}/__init__.py
@@ -76,7 +76,7 @@ from datetime import datetime
 
 def test_task_creation_with_required_fields():
     """Task作成テスト - この時点でTaskは存在しない"""
-    from app.a2a_mvp.core.types import Task  # ImportError!
+    from app.a2a.core.types import Task  # ImportError!
     
     task = Task(
         id="task-001",
@@ -88,7 +88,7 @@ def test_task_creation_with_required_fields():
     assert task.completed is False  # デフォルト値
 ```
 
-**Step 2: 最小実装** (`app/a2a_mvp/core/types.py`)
+**Step 2: 最小実装** (`app/a2a/core/types.py`)
 ```python
 from dataclasses import dataclass
 from datetime import datetime
@@ -143,7 +143,7 @@ class Task:
 **テスト** (`tests/unit/test_core/test_types.py` に追加):
 ```python
 def test_task_request_creation():
-    from app.a2a_mvp.core.types import TaskRequest
+    from app.a2a.core.types import TaskRequest
     
     request = TaskRequest(action="create", data={"title": "Test"})
     assert request.action == "create"
@@ -151,7 +151,7 @@ def test_task_request_creation():
     assert request.task_id is None
 ```
 
-**実装** (`app/a2a_mvp/core/types.py` に追加):
+**実装** (`app/a2a/core/types.py` に追加):
 ```python
 @dataclass
 class TaskRequest:
@@ -170,7 +170,7 @@ class TaskResponse:
 
 #### 2.3 例外定義
 
-**実装** (`app/a2a_mvp/core/exceptions.py`):
+**実装** (`app/a2a/core/exceptions.py`):
 ```python
 class TaskNotFoundException(Exception):
     """タスクが見つからない"""
@@ -190,7 +190,7 @@ class TaskAlreadyExistsException(Exception):
 import pytest
 
 def test_storage_interface_is_abstract():
-    from app.a2a_mvp.storage.interface import StorageInterface
+    from app.a2a.storage.interface import StorageInterface
     
     with pytest.raises(TypeError):
         StorageInterface()
@@ -202,11 +202,11 @@ def test_storage_interface_is_abstract():
     assert hasattr(StorageInterface, 'delete_task')
 ```
 
-**実装** (`app/a2a_mvp/storage/interface.py`):
+**実装** (`app/a2a/storage/interface.py`):
 ```python
 from abc import ABC, abstractmethod
 from typing import List
-from app.a2a_mvp.core.types import Task
+from app.a2a.core.types import Task
 
 class StorageInterface(ABC):
     @abstractmethod
@@ -240,12 +240,12 @@ from datetime import datetime
 class TestInMemoryStorage:
     @pytest.fixture
     def storage(self):
-        from app.a2a_mvp.storage.memory import InMemoryStorage
+        from app.a2a.storage.memory import InMemoryStorage
         return InMemoryStorage()
     
     @pytest.fixture
     def sample_task(self):
-        from app.a2a_mvp.core.types import Task
+        from app.a2a.core.types import Task
         return Task(
             id="test-001",
             title="テストタスク",
@@ -266,7 +266,7 @@ class TestInMemoryStorage:
             storage.create_task(sample_task)
     
     def test_get_nonexistent_raises_error(self, storage):
-        from app.a2a_mvp.core.exceptions import TaskNotFoundException
+        from app.a2a.core.exceptions import TaskNotFoundException
         
         with pytest.raises(TaskNotFoundException):
             storage.get_task("nonexistent")
@@ -284,12 +284,12 @@ class TestInMemoryStorage:
         storage.create_task(sample_task)
         storage.delete_task(sample_task.id)
         
-        from app.a2a_mvp.core.exceptions import TaskNotFoundException
+        from app.a2a.core.exceptions import TaskNotFoundException
         with pytest.raises(TaskNotFoundException):
             storage.get_task(sample_task.id)
     
     def test_get_all_tasks(self, storage):
-        from app.a2a_mvp.core.types import Task
+        from app.a2a.core.types import Task
         
         tasks = [
             Task(id=f"task-{i}", title=f"タスク{i}", created_at=datetime.now())
@@ -304,12 +304,12 @@ class TestInMemoryStorage:
         assert all(t in all_tasks for t in tasks)
 ```
 
-**実装** (`app/a2a_mvp/storage/memory.py`):
+**実装** (`app/a2a/storage/memory.py`):
 ```python
 from typing import Dict, List
-from app.a2a_mvp.core.exceptions import TaskNotFoundException
-from app.a2a_mvp.core.types import Task
-from app.a2a_mvp.storage.interface import StorageInterface
+from app.a2a.core.exceptions import TaskNotFoundException
+from app.a2a.core.types import Task
+from app.a2a.storage.interface import StorageInterface
 
 class InMemoryStorage(StorageInterface):
     def __init__(self):
@@ -345,7 +345,7 @@ class InMemoryStorage(StorageInterface):
 
 #### 4.1 BaseSkill定義
 
-**実装** (`app/a2a_mvp/skills/base.py`):
+**実装** (`app/a2a/skills/base.py`):
 ```python
 from abc import ABC, abstractmethod
 from typing import Any, Dict
@@ -367,16 +367,16 @@ from datetime import datetime
 class TestTaskSkills:
     @pytest.fixture
     def mock_storage(self):
-        from app.a2a_mvp.storage.interface import StorageInterface
+        from app.a2a.storage.interface import StorageInterface
         return Mock(spec=StorageInterface)
     
     @pytest.fixture
     def task_skill(self, mock_storage):
-        from app.a2a_mvp.skills.task_skills import TaskSkill
+        from app.a2a.skills.task_skills import TaskSkill
         return TaskSkill(mock_storage)
     
     def test_create_task_success(self, task_skill, mock_storage):
-        from app.a2a_mvp.core.types import Task
+        from app.a2a.core.types import Task
         
         # モック設定
         mock_task = Task(
@@ -410,7 +410,7 @@ class TestTaskSkills:
         assert "too long" in result["error"].lower()
     
     def test_toggle_completion(self, task_skill, mock_storage):
-        from app.a2a_mvp.core.types import Task
+        from app.a2a.core.types import Task
         
         task = Task(
             id="task-123",
@@ -465,17 +465,17 @@ class TestTaskSkills:
         getattr(task_skill, expected_method).assert_called_once()
 ```
 
-**実装** (`app/a2a_mvp/skills/task_skills.py`):
+**実装** (`app/a2a/skills/task_skills.py`):
 ```python
 import uuid
 import logging
 from datetime import datetime
 from typing import Dict, Any, List
 
-from app.a2a_mvp.core.types import Task
-from app.a2a_mvp.core.exceptions import TaskNotFoundException
-from app.a2a_mvp.storage.interface import StorageInterface
-from app.a2a_mvp.skills.base import BaseSkill
+from app.a2a.core.types import Task
+from app.a2a.core.exceptions import TaskNotFoundException
+from app.a2a.storage.interface import StorageInterface
+from app.a2a.skills.base import BaseSkill
 
 logger = logging.getLogger(__name__)
 
@@ -640,7 +640,7 @@ class TaskSkill(BaseSkill):
 
 #### 5.1 BaseAgent定義
 
-**実装** (`app/a2a_mvp/agents/base.py`):
+**実装** (`app/a2a/agents/base.py`):
 ```python
 from abc import ABC, abstractmethod
 from typing import Dict, Any
@@ -665,12 +665,12 @@ from unittest.mock import Mock
 class TestTaskAgent:
     @pytest.fixture
     def mock_storage(self):
-        from app.a2a_mvp.storage.interface import StorageInterface
+        from app.a2a.storage.interface import StorageInterface
         return Mock(spec=StorageInterface)
     
     @pytest.fixture
     def task_agent(self, mock_storage):
-        from app.a2a_mvp.agents.task_agent import TaskAgent
+        from app.a2a.agents.task_agent import TaskAgent
         return TaskAgent(mock_storage)
     
     def test_get_agent_card(self, task_agent):
@@ -687,7 +687,7 @@ class TestTaskAgent:
         assert "task" in create_skill["tags"]
     
     def test_process_request_create(self, task_agent):
-        from app.a2a_mvp.core.types import TaskRequest
+        from app.a2a.core.types import TaskRequest
         
         request = TaskRequest(
             action="create",
@@ -700,7 +700,7 @@ class TestTaskAgent:
         assert response.data is not None
     
     def test_process_request_invalid_action(self, task_agent):
-        from app.a2a_mvp.core.types import TaskRequest
+        from app.a2a.core.types import TaskRequest
         
         request = TaskRequest(action="invalid")
         response = task_agent.process_request(request)
@@ -709,7 +709,7 @@ class TestTaskAgent:
         assert "Invalid action" in response.error
     
     def test_process_request_error_handling(self, task_agent):
-        from app.a2a_mvp.core.types import TaskRequest
+        from app.a2a.core.types import TaskRequest
         
         # エラーを発生させる
         task_agent.task_skill.create_task = Mock(
@@ -727,15 +727,15 @@ class TestTaskAgent:
         assert "Internal error" in response.error
 ```
 
-**実装** (`app/a2a_mvp/agents/task_agent.py`):
+**実装** (`app/a2a/agents/task_agent.py`):
 ```python
 import logging
 from typing import Dict, Any
 
-from app.a2a_mvp.core.types import TaskRequest, TaskResponse
-from app.a2a_mvp.skills.task_skills import TaskSkill
-from app.a2a_mvp.storage.interface import StorageInterface
-from app.a2a_mvp.agents.base import BaseAgent
+from app.a2a.core.types import TaskRequest, TaskResponse
+from app.a2a.skills.task_skills import TaskSkill
+from app.a2a.storage.interface import StorageInterface
+from app.a2a.agents.base import BaseAgent
 
 logger = logging.getLogger(__name__)
 
@@ -883,7 +883,7 @@ from fastapi.testclient import TestClient
 class TestFastAPIServer:
     @pytest.fixture
     def client(self):
-        from app.a2a_mvp.server.app import app
+        from app.a2a.server.app import app
         return TestClient(app)
     
     def test_root_endpoint(self, client):
@@ -943,15 +943,15 @@ class TestFastAPIServer:
         assert "Invalid action" in response.json()["detail"]
 ```
 
-**実装** (`app/a2a_mvp/server/app.py`):
+**実装** (`app/a2a/server/app.py`):
 ```python
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 
-from app.a2a_mvp.agents.task_agent import TaskAgent
-from app.a2a_mvp.storage.memory import InMemoryStorage
-from app.a2a_mvp.core.types import TaskRequest
+from app.a2a.agents.task_agent import TaskAgent
+from app.a2a.storage.memory import InMemoryStorage
+from app.a2a.core.types import TaskRequest
 
 app = FastAPI(
     title="A2A Task Manager",
@@ -1135,13 +1135,13 @@ from datetime import datetime
 @pytest.fixture
 def mock_storage():
     """共通モックストレージ"""
-    from app.a2a_mvp.storage.interface import StorageInterface
+    from app.a2a.storage.interface import StorageInterface
     return Mock(spec=StorageInterface)
 
 @pytest.fixture
 def sample_task():
     """共通サンプルタスク"""
-    from app.a2a_mvp.core.types import Task
+    from app.a2a.core.types import Task
     return Task(
         id="test-001",
         title="テストタスク",
@@ -1152,13 +1152,13 @@ def sample_task():
 @pytest.fixture
 def task_skill(mock_storage):
     """TaskSkillインスタンス"""
-    from app.a2a_mvp.skills.task_skills import TaskSkill
+    from app.a2a.skills.task_skills import TaskSkill
     return TaskSkill(mock_storage)
 
 @pytest.fixture
 def task_agent(mock_storage):
     """TaskAgentインスタンス"""
-    from app.a2a_mvp.agents.task_agent import TaskAgent
+    from app.a2a.agents.task_agent import TaskAgent
     return TaskAgent(mock_storage)
 ```
 

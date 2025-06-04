@@ -7,8 +7,8 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.a2a_mvp.core.types import TaskResponse
-from app.a2a_mvp.server.app import app
+from app.a2a.core.types import TaskResponse
+from app.a2a.server.app import app
 
 
 class TestServerApp:
@@ -22,7 +22,7 @@ class TestServerApp:
     @pytest.fixture
     def mock_agent(self):
         """Create mock agent."""
-        with patch("app.a2a_mvp.server.app.task_agent") as mock:
+        with patch("app.a2a.server.app.task_agent") as mock:
             yield mock
 
     def test_root_endpoint(self, client):

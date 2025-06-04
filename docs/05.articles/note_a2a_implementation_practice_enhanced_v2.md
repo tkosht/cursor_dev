@@ -37,7 +37,7 @@ from datetime import datetime
 def test_task_creation_with_required_fields():
     """タスクが必須フィールドで作成できることを確認"""
     # このインポートは失敗する（まだ存在しない）
-    from app.a2a_mvp.core.types import Task
+    from app.a2a.core.types import Task
     
     # Given: タスクの作成に必要なデータ
     task_id = "task-001"
@@ -61,14 +61,14 @@ def test_task_creation_with_required_fields():
 **実行結果**：
 ```bash
 $ pytest tests/unit/test_core/test_types.py
-ImportError: cannot import name 'Task' from 'app.a2a_mvp.core.types'
+ImportError: cannot import name 'Task' from 'app.a2a.core.types'
 ❌ FAILED
 ```
 
 ### 🟢 Green：テストを通す最小限の実装
 
 ```python
-# app/a2a_mvp/core/types.py
+# app/a2a/core/types.py
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
@@ -95,7 +95,7 @@ $ pytest tests/unit/test_core/test_types.py
 テストが通ったので、安心してリファクタリングできます。
 
 ```python
-# app/a2a_mvp/core/types.py - 改善版
+# app/a2a/core/types.py - 改善版
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Any, Dict, Optional
@@ -166,7 +166,7 @@ def test_task_serialization():
 ### 🏗️ クリーンアーキテクチャの採用
 
 ```
-app/a2a_mvp/
+app/a2a/
 ├── core/           # ビジネスエンティティ（依存なし）
 ├── storage/        # データ永続化（coreに依存）
 ├── skills/         # ユースケース（core, storageに依存）
@@ -185,7 +185,7 @@ from abc import ABC
 
 def test_storage_interface_is_abstract():
     """ストレージインターフェースが抽象クラスであることを確認"""
-    from app.a2a_mvp.storage.interface import StorageInterface
+    from app.a2a.storage.interface import StorageInterface
     
     # 抽象クラスは直接インスタンス化できない
     with pytest.raises(TypeError):
@@ -212,13 +212,13 @@ class TestInMemoryStorage:
     @pytest.fixture
     def storage(self):
         """各テストで新しいストレージインスタンスを提供"""
-        from app.a2a_mvp.storage.memory import InMemoryStorage
+        from app.a2a.storage.memory import InMemoryStorage
         return InMemoryStorage()
     
     @pytest.fixture
     def sample_task(self):
         """テスト用のサンプルタスク"""
-        from app.a2a_mvp.core.types import Task
+        from app.a2a.core.types import Task
         return Task(
             id="test-001",
             title="テストタスク",
@@ -251,7 +251,7 @@ class TestInMemoryStorage:
     def test_get_nonexistent_task_raises_error(self, storage):
         """存在しないタスクの取得はエラーになる"""
         # When/Then: 存在しないIDで取得しようとするとエラー
-        from app.a2a_mvp.core.exceptions import TaskNotFoundException
+        from app.a2a.core.exceptions import TaskNotFoundException
         with pytest.raises(TaskNotFoundException):
             storage.get_task("nonexistent-id")
     
@@ -283,13 +283,13 @@ class TestInMemoryStorage:
         storage.delete_task(sample_task.id)
         
         # Then: 取得できなくなる
-        from app.a2a_mvp.core.exceptions import TaskNotFoundException
+        from app.a2a.core.exceptions import TaskNotFoundException
         with pytest.raises(TaskNotFoundException):
             storage.get_task(sample_task.id)
     
     def test_get_all_tasks(self, storage):
         """全タスクの取得が正しく動作する"""
-        from app.a2a_mvp.core.types import Task
+        from app.a2a.core.types import Task
         
         # Given: 複数のタスクを作成
         tasks = [
@@ -310,11 +310,11 @@ class TestInMemoryStorage:
 **実装コード**：
 
 ```python
-# app/a2a_mvp/storage/interface.py
+# app/a2a/storage/interface.py
 from abc import ABC, abstractmethod
 from typing import List
 
-from app.a2a_mvp.core.types import Task
+from app.a2a.core.types import Task
 
 class StorageInterface(ABC):
     """タスクストレージの抽象インターフェース"""
@@ -344,12 +344,12 @@ class StorageInterface(ABC):
         """タスクを削除"""
         pass
 
-# app/a2a_mvp/storage/memory.py
+# app/a2a/storage/memory.py
 from typing import Dict, List
 
-from app.a2a_mvp.core.exceptions import TaskNotFoundException
-from app.a2a_mvp.core.types import Task
-from app.a2a_mvp.storage.interface import StorageInterface
+from app.a2a.core.exceptions import TaskNotFoundException
+from app.a2a.core.types import Task
+from app.a2a.storage.interface import StorageInterface
 
 class InMemoryStorage(StorageInterface):
     """メモリ内でタスクを管理するストレージ実装"""
@@ -406,13 +406,13 @@ class TestTaskSkills:
     @pytest.fixture
     def mock_storage(self):
         """モックストレージを提供"""
-        from app.a2a_mvp.storage.interface import StorageInterface
+        from app.a2a.storage.interface import StorageInterface
         return Mock(spec=StorageInterface)
     
     @pytest.fixture
     def task_skill(self, mock_storage):
         """テスト対象のスキルインスタンス"""
-        from app.a2a_mvp.skills.task_skills import TaskSkill
+        from app.a2a.skills.task_skills import TaskSkill
         return TaskSkill(mock_storage)
     
     def test_create_task_success(self, task_skill, mock_storage):
@@ -424,7 +424,7 @@ class TestTaskSkills:
         }
         
         # モックの設定
-        from app.a2a_mvp.core.types import Task
+        from app.a2a.core.types import Task
         mock_task = Task(
             id="generated-id",
             title="テストタスク",
@@ -468,7 +468,7 @@ class TestTaskSkills:
     def test_toggle_task_completion(self, task_skill, mock_storage):
         """タスク完了状態の切り替えテスト"""
         # Given: 未完了のタスク
-        from app.a2a_mvp.core.types import Task
+        from app.a2a.core.types import Task
         existing_task = Task(
             id="task-123",
             title="既存タスク",
@@ -510,16 +510,16 @@ class TestTaskSkills:
 **実装コード**：
 
 ```python
-# app/a2a_mvp/skills/task_skills.py
+# app/a2a/skills/task_skills.py
 import uuid
 import logging
 from datetime import datetime
 from typing import Dict, Any, List
 
-from app.a2a_mvp.core.types import Task
-from app.a2a_mvp.core.exceptions import TaskNotFoundException
-from app.a2a_mvp.storage.interface import StorageInterface
-from app.a2a_mvp.skills.base import BaseSkill
+from app.a2a.core.types import Task
+from app.a2a.core.exceptions import TaskNotFoundException
+from app.a2a.storage.interface import StorageInterface
+from app.a2a.skills.base import BaseSkill
 
 logger = logging.getLogger(__name__)
 
@@ -620,7 +620,7 @@ class TestFastAPIServer:
     @pytest.fixture
     def client(self):
         """テストクライアントを提供"""
-        from app.a2a_mvp.server.app import app
+        from app.a2a.server.app import app
         return TestClient(app)
     
     def test_root_endpoint_returns_agent_card(self, client):
@@ -912,7 +912,7 @@ if __name__ == "__main__":
 
 **問題**：
 ```
-app/a2a_mvp/agents/task_agent.py:83:5: C901 'TaskAgent.process_request' is too complex (13)
+app/a2a/agents/task_agent.py:83:5: C901 'TaskAgent.process_request' is too complex (13)
 ```
 
 **原因**：1つのメソッドに多くの条件分岐が集中
@@ -1189,7 +1189,7 @@ class OptimizedAgent:
 ### 🔒 入力検証の徹底
 
 ```python
-# app/a2a_mvp/core/validators.py
+# app/a2a/core/validators.py
 from pydantic import BaseModel, Field, validator
 import re
 from typing import Optional
@@ -1237,7 +1237,7 @@ def create_task_with_validation(data: dict) -> dict:
 ### 🔐 レート制限の実装
 
 ```python
-# app/a2a_mvp/middleware/rate_limit.py
+# app/a2a/middleware/rate_limit.py
 from collections import defaultdict
 from datetime import datetime, timedelta
 import threading
@@ -1289,7 +1289,7 @@ class RateLimiter:
 ### 📊 メトリクス収集
 
 ```python
-# app/a2a_mvp/monitoring/metrics.py
+# app/a2a/monitoring/metrics.py
 import time
 from contextlib import contextmanager
 from typing import Dict
@@ -1345,7 +1345,7 @@ class MonitoredTaskAgent(TaskAgent):
 ### 🔍 構造化ログ
 
 ```python
-# app/a2a_mvp/utils/logging.py
+# app/a2a/utils/logging.py
 import logging
 import json
 from datetime import datetime
@@ -1458,7 +1458,7 @@ python scripts/quality_gate_check.py
 pytest --cov=app --cov-report=html
 
 # サーバー起動
-uvicorn app.a2a_mvp.server.app:app --reload
+uvicorn app.a2a.server.app:app --reload
 
 # Docker環境
 docker-compose up -d

@@ -35,7 +35,7 @@ poetry install
 poetry shell
 
 # Start the A2A server
-python -m app.a2a_mvp.server.app
+python -m app.a2a.server.app
 ```
 
 The server will start at `http://localhost:8000`
@@ -44,22 +44,22 @@ The server will start at `http://localhost:8000`
 
 ```bash
 # Get agent information
-python -m app.a2a_mvp.client.cli info
+python -m app.a2a.client.cli info
 
 # Create a task
-python -m app.a2a_mvp.client.cli create "Buy groceries" -d "Milk and bread"
+python -m app.a2a.client.cli create "Buy groceries" -d "Milk and bread"
 
 # List all tasks
-python -m app.a2a_mvp.client.cli list
+python -m app.a2a.client.cli list
 
 # Toggle task completion
-python -m app.a2a_mvp.client.cli toggle <task_id>
+python -m app.a2a.client.cli toggle <task_id>
 
 # Update a task
-python -m app.a2a_mvp.client.cli update <task_id> --title "New title"
+python -m app.a2a.client.cli update <task_id> --title "New title"
 
 # Delete a task
-python -m app.a2a_mvp.client.cli delete <task_id>
+python -m app.a2a.client.cli delete <task_id>
 ```
 
 ## API Reference
@@ -104,7 +104,7 @@ Handle A2A protocol messages.
 pytest tests/unit/ -v
 
 # Run with coverage
-pytest tests/unit/ --cov=app.a2a_mvp --cov-report=html
+pytest tests/unit/ --cov=app.a2a --cov-report=html
 
 # Run specific test module
 pytest tests/unit/test_agents/ -v

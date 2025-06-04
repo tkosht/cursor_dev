@@ -7,9 +7,9 @@ from typing import Any, Dict
 import uvicorn
 from fastapi import FastAPI, HTTPException
 
-from app.a2a_mvp.agents.task_agent import TaskAgent
-from app.a2a_mvp.core.types import TaskRequest
-from app.a2a_mvp.storage.memory import InMemoryStorage
+from app.a2a.agents.task_agent import TaskAgent
+from app.a2a.core.types import TaskRequest
+from app.a2a.storage.memory import InMemoryStorage
 
 # Create FastAPI app
 app = FastAPI(

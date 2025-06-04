@@ -4,9 +4,9 @@ In-memory storage implementation for A2A MVP.
 
 from typing import Dict, List
 
-from app.a2a_mvp.core.exceptions import TaskNotFoundException
-from app.a2a_mvp.core.types import Task
-from app.a2a_mvp.storage.interface import StorageInterface
+from app.a2a.core.exceptions import TaskNotFoundException
+from app.a2a.core.types import Task
+from app.a2a.storage.interface import StorageInterface
 
 
 class InMemoryStorage(StorageInterface):

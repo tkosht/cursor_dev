@@ -17,7 +17,7 @@
 def test_task_creation_with_required_fields():
     """タスクが必須フィールドで作成できることを確認"""
     # この時点でTaskクラスは存在しない！
-    from app.a2a_mvp.core.types import Task  # ImportError
+    from app.a2a.core.types import Task  # ImportError
     
     task = Task(
         id="task-001",
@@ -120,10 +120,10 @@ server → agents
 
 **実装例**: StorageInterfaceの定義
 ```python
-# app/a2a_mvp/storage/interface.py
+# app/a2a/storage/interface.py
 from abc import ABC, abstractmethod
 from typing import List
-from app.a2a_mvp.core.types import Task  # coreのみに依存
+from app.a2a.core.types import Task  # coreのみに依存
 
 class StorageInterface(ABC):
     @abstractmethod
@@ -149,7 +149,7 @@ class StorageInterface(ABC):
 # tests/unit/test_storage/test_interface.py
 def test_storage_interface_is_abstract():
     """インターフェースが抽象クラスであることを確認"""
-    from app.a2a_mvp.storage.interface import StorageInterface
+    from app.a2a.storage.interface import StorageInterface
     
     # 直接インスタンス化できない
     with pytest.raises(TypeError):
@@ -169,7 +169,7 @@ def test_storage_interface_is_abstract():
 
 **実装例**: TaskSkillのエラーハンドリング
 ```python
-# app/a2a_mvp/skills/task_skills.py
+# app/a2a/skills/task_skills.py
 def create_task(self, data: Dict[str, Any]) -> Dict[str, Any]:
     try:
         # バリデーション（ビジネスロジック）
@@ -201,7 +201,7 @@ def create_task(self, data: Dict[str, Any]) -> Dict[str, Any]:
 
 **解決策の実装**:
 ```python
-# app/a2a_mvp/agents/task_agent.py
+# app/a2a/agents/task_agent.py
 class TaskAgent(BaseAgent):
     def __init__(self, storage: StorageInterface):
         self.storage = storage
@@ -239,13 +239,13 @@ from datetime import datetime
 @pytest.fixture
 def mock_storage():
     """モックストレージ（全テストで使用）"""
-    from app.a2a_mvp.storage.interface import StorageInterface
+    from app.a2a.storage.interface import StorageInterface
     return Mock(spec=StorageInterface)
 
 @pytest.fixture
 def sample_task():
     """サンプルタスク（頻繁に使用）"""
-    from app.a2a_mvp.core.types import Task
+    from app.a2a.core.types import Task
     return Task(
         id="test-001",
         title="テストタスク",
@@ -256,7 +256,7 @@ def sample_task():
 @pytest.fixture
 def task_agent(mock_storage):
     """エージェントインスタンス（統合テスト用）"""
-    from app.a2a_mvp.agents.task_agent import TaskAgent
+    from app.a2a.agents.task_agent import TaskAgent
     return TaskAgent(storage=mock_storage)
 ```
 

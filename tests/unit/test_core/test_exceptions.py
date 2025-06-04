@@ -11,7 +11,7 @@ class TestA2AExceptions:
 
     def test_a2a_base_exception(self):
         """Test base A2A exception."""
-        from app.a2a_mvp.core.exceptions import A2AException
+        from app.a2a.core.exceptions import A2AException
 
         with pytest.raises(A2AException) as exc_info:
             raise A2AException("Base error occurred")
@@ -21,7 +21,7 @@ class TestA2AExceptions:
 
     def test_task_not_found_exception(self):
         """Test TaskNotFoundException."""
-        from app.a2a_mvp.core.exceptions import TaskNotFoundException
+        from app.a2a.core.exceptions import TaskNotFoundException
 
         with pytest.raises(TaskNotFoundException) as exc_info:
             raise TaskNotFoundException("task-123")
@@ -31,7 +31,7 @@ class TestA2AExceptions:
 
     def test_invalid_task_data_exception(self):
         """Test InvalidTaskDataException."""
-        from app.a2a_mvp.core.exceptions import InvalidTaskDataException
+        from app.a2a.core.exceptions import InvalidTaskDataException
 
         with pytest.raises(InvalidTaskDataException) as exc_info:
             raise InvalidTaskDataException("Title is required")
@@ -41,7 +41,7 @@ class TestA2AExceptions:
 
     def test_storage_exception(self):
         """Test StorageException."""
-        from app.a2a_mvp.core.exceptions import StorageException
+        from app.a2a.core.exceptions import StorageException
 
         with pytest.raises(StorageException) as exc_info:
             raise StorageException("Database connection failed")
@@ -52,7 +52,7 @@ class TestA2AExceptions:
 
     def test_a2a_protocol_exception(self):
         """Test A2AProtocolException."""
-        from app.a2a_mvp.core.exceptions import A2AProtocolException
+        from app.a2a.core.exceptions import A2AProtocolException
 
         with pytest.raises(A2AProtocolException) as exc_info:
             raise A2AProtocolException("Invalid message format")
@@ -63,7 +63,7 @@ class TestA2AExceptions:
 
     def test_exception_inheritance(self):
         """Test that custom exceptions inherit from A2AException."""
-        from app.a2a_mvp.core.exceptions import (
+        from app.a2a.core.exceptions import (
             A2AException,
             A2AProtocolException,
             InvalidTaskDataException,

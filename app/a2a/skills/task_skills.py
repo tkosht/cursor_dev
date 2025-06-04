@@ -6,10 +6,10 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from app.a2a_mvp.core.exceptions import TaskNotFoundException
-from app.a2a_mvp.core.types import Task
-from app.a2a_mvp.skills.base import BaseSkill
-from app.a2a_mvp.storage.interface import StorageInterface
+from app.a2a.core.exceptions import TaskNotFoundException
+from app.a2a.core.types import Task
+from app.a2a.skills.base import BaseSkill
+from app.a2a.storage.interface import StorageInterface
 
 
 class TaskSkill(BaseSkill):

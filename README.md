@@ -64,7 +64,7 @@ make clean
 ## 📁 プロジェクト構造
 
 ```
-app/a2a_mvp/
+app/a2a/
 ├── core/           # ビジネスエンティティ（Task, Request, Response）
 ├── storage/        # データ永続化層（インターフェース + 実装）
 ├── skills/         # ビジネスロジック（タスク管理スキル）
@@ -106,13 +106,13 @@ response = agent.handle_message(message)
 
 ### テストカバレッジ詳細
 ```
-app/a2a_mvp/core/types.py          100%
-app/a2a_mvp/core/exceptions.py     100%
-app/a2a_mvp/storage/interface.py   100%
-app/a2a_mvp/storage/memory.py      100%
-app/a2a_mvp/skills/task_skills.py   96%
-app/a2a_mvp/agents/task_agent.py    92%
-app/a2a_mvp/server/app.py           87%
+app/a2a/core/types.py          100%
+app/a2a/core/exceptions.py     100%
+app/a2a/storage/interface.py   100%
+app/a2a/storage/memory.py      100%
+app/a2a/skills/task_skills.py   96%
+app/a2a/agents/task_agent.py    92%
+app/a2a/server/app.py           87%
 -------------------------------------------
 TOTAL                             91.77%
 ```
@@ -127,12 +127,12 @@ TOTAL                             91.77%
 
 ### 開発ガイド
 - **[CLAUDE.md](CLAUDE.md)**: AI支援開発のためのプロジェクトガイド
-- **[docs/a2a_mvp_architecture.md](docs/a2a_mvp_architecture.md)**: アーキテクチャ設計書
-- **[docs/a2a_mvp_tdd_implementation.md](docs/a2a_mvp_tdd_implementation.md)**: TDD実装の詳細
+- **[docs/02.basic_design/a2a_architecture.md](docs/02.basic_design/a2a_architecture.md)**: アーキテクチャ設計書
+- **[docs/03.detail_design/a2a_tdd_implementation.md](docs/03.detail_design/a2a_tdd_implementation.md)**: TDD実装の詳細
 
 ### Note記事（実践的解説）
-- **[A2Aプロトコル入門](docs/note_a2a_introduction_enhanced_v2.md)**: 初心者向け解説
-- **[TDDで作るA2Aエージェント](docs/note_a2a_implementation_practice_enhanced_v2.md)**: 実装の詳細解説
+- **[A2Aプロトコル入門](docs/05.articles/note_a2a_introduction_enhanced_v2.md)**: 初心者向け解説
+- **[TDDで作るA2Aエージェント](docs/05.articles/note_a2a_implementation_practice_enhanced_v2.md)**: 実装の詳細解説
 
 ### 品質・セキュリティ
 - **[memory-bank/quality_management_system.md](memory-bank/quality_management_system.md)**: 品質管理システム
@@ -161,7 +161,7 @@ flake8 app/                    # Lintチェック
 mypy app/ --ignore-missing-imports  # 型チェック
 
 # サーバー起動
-uvicorn app.a2a_mvp.server.app:app --reload
+uvicorn app.a2a.server.app:app --reload
 ```
 
 ### Docker環境

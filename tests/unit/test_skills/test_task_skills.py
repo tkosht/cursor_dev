@@ -7,7 +7,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from app.a2a_mvp.skills.task_skills import TaskSkill
+from app.a2a.skills.task_skills import TaskSkill
 
 
 class TestTaskSkills:
@@ -16,8 +16,8 @@ class TestTaskSkills:
     @pytest.fixture
     def task_skill(self):
         """Create a TaskSkill instance for testing."""
-        from app.a2a_mvp.skills.task_skills import TaskSkill
-        from app.a2a_mvp.storage.memory import InMemoryStorage
+        from app.a2a.skills.task_skills import TaskSkill
+        from app.a2a.storage.memory import InMemoryStorage
 
         storage = InMemoryStorage()
         return TaskSkill(storage=storage)

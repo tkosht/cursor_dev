@@ -4,6 +4,11 @@
 
 批判的レビューを含む、品質を担保する開発ワークフローの標準化。
 
+## 🚨 必須参照ルール
+
+**開発前に必ず確認すること:**
+- **[code_quality_anti_hacking_rules.md](memory-bank/code_quality_anti_hacking_rules.md)** - 品質指標への誠実性を保つ絶対ルール
+
 ## 📋 開発フロー全体像
 
 ```mermaid

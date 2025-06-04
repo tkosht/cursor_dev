@@ -17,6 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### 1. Mandatory Compliance Rules (MUST READ FIRST)
 1. **[memory-bank/user_authorization_mandatory_rules.md](memory-bank/user_authorization_mandatory_rules.md)** - ユーザー承認必須ルール（絶対遵守）
 2. **[memory-bank/testing_mandatory_rules.md](memory-bank/testing_mandatory_rules.md)** - 自動化機能テスト必須化ルール
+3. **[memory-bank/code_quality_anti_hacking_rules.md](memory-bank/code_quality_anti_hacking_rules.md)** - 品質指標アンチハッキング・ルール（絶対遵守）
 
 ### 2. Core Development Knowledge
 3. **[memory-bank/tdd_implementation_knowledge.md](memory-bank/tdd_implementation_knowledge.md)** - TDD実践の具体的手法
@@ -29,11 +30,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 4. Quality Assurance & Documentation Accuracy
 8. **[memory-bank/critical_review_framework.md](memory-bank/critical_review_framework.md)** - 批判的レビューフレームワーク
-9. **[memory-bank/a2a_mvp_critical_review.md](memory-bank/a2a_mvp_critical_review.md)** - プロジェクトレビュー結果
+9. **[memory-bank/a2a_critical_review.md](memory-bank/a2a_critical_review.md)** - プロジェクトレビュー結果
 
 ### 5. Architecture Documentation
-10. **[docs/a2a_mvp_architecture.md](docs/a2a_mvp_architecture.md)** - システムアーキテクチャ設計
-11. **[docs/a2a_mvp_tdd_implementation.md](docs/a2a_mvp_tdd_implementation.md)** - TDD実装の詳細記録
+10. **[docs/02.basic_design/a2a_architecture.md](docs/02.basic_design/a2a_architecture.md)** - システムアーキテクチャ設計
+11. **[docs/03.detail_design/a2a_tdd_implementation.md](docs/03.detail_design/a2a_tdd_implementation.md)** - TDD実装の詳細記録
 
 ### 6. Reproduction Guide
 12. **[memory-bank/project_reproduction_checklist.md](memory-bank/project_reproduction_checklist.md)** - プロジェクト再現手順

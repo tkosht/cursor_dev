@@ -12,7 +12,7 @@ class TestTaskTypes:
 
     def test_task_creation_with_required_fields(self):
         """Test creating a Task with required fields only."""
-        from app.a2a_mvp.core.types import Task
+        from app.a2a.core.types import Task
 
         task = Task(
             id=str(uuid.uuid4()),
@@ -29,7 +29,7 @@ class TestTaskTypes:
 
     def test_task_creation_with_all_fields(self):
         """Test creating a Task with all fields."""
-        from app.a2a_mvp.core.types import Task
+        from app.a2a.core.types import Task
 
         task_id = str(uuid.uuid4())
         now = datetime.now()
@@ -52,7 +52,7 @@ class TestTaskTypes:
 
     def test_task_to_dict(self):
         """Test converting Task to dictionary."""
-        from app.a2a_mvp.core.types import Task
+        from app.a2a.core.types import Task
 
         task = Task(
             id="task-123",
@@ -71,7 +71,7 @@ class TestTaskTypes:
 
     def test_task_from_dict(self):
         """Test creating Task from dictionary."""
-        from app.a2a_mvp.core.types import Task
+        from app.a2a.core.types import Task
 
         task_dict = {
             "id": "task-456",
@@ -97,7 +97,7 @@ class TestA2AMessageTypes:
 
     def test_task_request_creation(self):
         """Test creating a TaskRequest."""
-        from app.a2a_mvp.core.types import TaskRequest
+        from app.a2a.core.types import TaskRequest
 
         request = TaskRequest(action="create", data={"title": "New task"})
 
@@ -107,7 +107,7 @@ class TestA2AMessageTypes:
 
     def test_task_request_with_task_id(self):
         """Test creating a TaskRequest with task_id."""
-        from app.a2a_mvp.core.types import TaskRequest
+        from app.a2a.core.types import TaskRequest
 
         request = TaskRequest(
             action="update", task_id="task-123", data={"completed": True}
@@ -119,7 +119,7 @@ class TestA2AMessageTypes:
 
     def test_task_response_success(self):
         """Test creating a successful TaskResponse."""
-        from app.a2a_mvp.core.types import TaskResponse
+        from app.a2a.core.types import TaskResponse
 
         response = TaskResponse(
             success=True, data={"id": "task-123", "title": "Created task"}
@@ -131,7 +131,7 @@ class TestA2AMessageTypes:
 
     def test_task_response_error(self):
         """Test creating an error TaskResponse."""
-        from app.a2a_mvp.core.types import TaskResponse
+        from app.a2a.core.types import TaskResponse
 
         response = TaskResponse(success=False, error="Task not found")
 
@@ -141,7 +141,7 @@ class TestA2AMessageTypes:
 
     def test_a2a_skill_definition(self):
         """Test A2ASkill type definition."""
-        from app.a2a_mvp.core.types import A2ASkill
+        from app.a2a.core.types import A2ASkill
 
         skill = A2ASkill(
             id="task_management",
@@ -159,7 +159,7 @@ class TestA2AMessageTypes:
 
     def test_a2a_agent_card(self):
         """Test A2AAgentCard type definition."""
-        from app.a2a_mvp.core.types import (
+        from app.a2a.core.types import (
             A2AAgentCard,
             A2ACapabilities,
             A2ASkill,

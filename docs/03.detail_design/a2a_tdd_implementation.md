@@ -7,7 +7,7 @@
 ## プロジェクト構成
 
 ```
-app/a2a_mvp/
+app/a2a/
 ├── core/               # コアプロトコル層
 │   ├── types.py       # 型定義（Task, TaskRequest, TaskResponse, A2A types）
 │   └── exceptions.py  # カスタム例外
@@ -109,26 +109,26 @@ cd /home/devuser/workspace
 poetry shell
 
 # サーバーの起動
-python -m app.a2a_mvp.server.app
+python -m app.a2a.server.app
 ```
 
 ### CLIクライアントの使用
 
 ```bash
 # エージェント情報の取得
-python -m app.a2a_mvp.client.cli info
+python -m app.a2a.client.cli info
 
 # タスクの作成
-python -m app.a2a_mvp.client.cli create "買い物に行く" -d "牛乳とパンを買う"
+python -m app.a2a.client.cli create "買い物に行く" -d "牛乳とパンを買う"
 
 # タスク一覧の表示
-python -m app.a2a_mvp.client.cli list
+python -m app.a2a.client.cli list
 
 # タスクの完了切り替え
-python -m app.a2a_mvp.client.cli toggle <task_id>
+python -m app.a2a.client.cli toggle <task_id>
 
 # タスクの削除
-python -m app.a2a_mvp.client.cli delete <task_id>
+python -m app.a2a.client.cli delete <task_id>
 ```
 
 ### APIエンドポイント
@@ -160,7 +160,7 @@ A2Aプロトコルメッセージを処理
 pytest tests/unit/ -v
 
 # カバレッジレポート付き
-pytest tests/unit/ --cov=app.a2a_mvp --cov-report=html
+pytest tests/unit/ --cov=app.a2a --cov-report=html
 
 # 特定のテストのみ
 pytest tests/unit/test_agents/ -v

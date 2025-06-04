@@ -5,7 +5,7 @@ Storage interface definition for A2A MVP.
 from abc import ABC, abstractmethod
 from typing import List
 
-from app.a2a_mvp.core.types import Task
+from app.a2a.core.types import Task
 
 
 class StorageInterface(ABC):

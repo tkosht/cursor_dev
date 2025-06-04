@@ -5,7 +5,7 @@ Base agent class for A2A MVP.
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 
-from app.a2a_mvp.core.types import A2AAgentCard, TaskRequest, TaskResponse
+from app.a2a.core.types import A2AAgentCard, TaskRequest, TaskResponse
 
 
 class BaseAgent(ABC):

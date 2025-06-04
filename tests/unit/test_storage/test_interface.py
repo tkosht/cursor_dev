@@ -14,7 +14,7 @@ class TestStorageInterface:
 
     def test_storage_interface_methods(self):
         """Test that StorageInterface defines all required methods."""
-        from app.a2a_mvp.storage.interface import StorageInterface
+        from app.a2a.storage.interface import StorageInterface
 
         # StorageInterface should be abstract
         assert issubclass(StorageInterface, ABC)
@@ -29,7 +29,7 @@ class TestStorageInterface:
 
     def test_cannot_instantiate_interface(self):
         """Test that StorageInterface cannot be instantiated directly."""
-        from app.a2a_mvp.storage.interface import StorageInterface
+        from app.a2a.storage.interface import StorageInterface
 
         with pytest.raises(TypeError):
             StorageInterface()
@@ -41,14 +41,14 @@ class TestInMemoryStorage:
     @pytest.fixture
     def storage(self):
         """Create an InMemoryStorage instance for testing."""
-        from app.a2a_mvp.storage.memory import InMemoryStorage
+        from app.a2a.storage.memory import InMemoryStorage
 
         return InMemoryStorage()
 
     @pytest.fixture
     def sample_task(self):
         """Create a sample task for testing."""
-        from app.a2a_mvp.core.types import Task
+        from app.a2a.core.types import Task
 
         return Task(
             id="test-123",
@@ -84,7 +84,7 @@ class TestInMemoryStorage:
 
     def test_get_nonexistent_task(self, storage):
         """Test retrieving a non-existent task."""
-        from app.a2a_mvp.core.exceptions import TaskNotFoundException
+        from app.a2a.core.exceptions import TaskNotFoundException
 
         with pytest.raises(TaskNotFoundException) as exc_info:
             storage.get_task("nonexistent-id")
@@ -93,7 +93,7 @@ class TestInMemoryStorage:
 
     def test_get_all_tasks(self, storage):
         """Test retrieving all tasks."""
-        from app.a2a_mvp.core.types import Task
+        from app.a2a.core.types import Task
 
         # Create multiple tasks
         task1 = Task(id="1", title="Task 1", created_at=datetime.now())
@@ -136,7 +136,7 @@ class TestInMemoryStorage:
 
     def test_update_nonexistent_task(self, storage, sample_task):
         """Test updating a non-existent task."""
-        from app.a2a_mvp.core.exceptions import TaskNotFoundException
+        from app.a2a.core.exceptions import TaskNotFoundException
 
         with pytest.raises(TaskNotFoundException):
             storage.update_task(sample_task)
@@ -154,21 +154,21 @@ class TestInMemoryStorage:
         assert len(storage.get_all_tasks()) == 0
 
         # Verify task is gone
-        from app.a2a_mvp.core.exceptions import TaskNotFoundException
+        from app.a2a.core.exceptions import TaskNotFoundException
 
         with pytest.raises(TaskNotFoundException):
             storage.get_task(sample_task.id)
 
     def test_delete_nonexistent_task(self, storage):
         """Test deleting a non-existent task."""
-        from app.a2a_mvp.core.exceptions import TaskNotFoundException
+        from app.a2a.core.exceptions import TaskNotFoundException
 
         with pytest.raises(TaskNotFoundException):
             storage.delete_task("nonexistent-id")
 
     def test_clear_all(self, storage):
         """Test clearing all tasks."""
-        from app.a2a_mvp.core.types import Task
+        from app.a2a.core.types import Task
 
         # Create multiple tasks
         for i in range(5):
@@ -187,8 +187,8 @@ class TestInMemoryStorage:
 
     def test_storage_isolation(self):
         """Test that different storage instances are isolated."""
-        from app.a2a_mvp.core.types import Task
-        from app.a2a_mvp.storage.memory import InMemoryStorage
+        from app.a2a.core.types import Task
+        from app.a2a.storage.memory import InMemoryStorage
 
         storage1 = InMemoryStorage()
         storage2 = InMemoryStorage()

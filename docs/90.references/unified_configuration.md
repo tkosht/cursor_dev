@@ -184,8 +184,8 @@ GEMINI_MAX_TOKENS=500
 
 ## 🔗 関連ドキュメント
 
-- [APIキー設定ガイド](api_key_configuration.md)
-- [Geminiモデル一覧](gemini_model_list.md)
+- [APIキー設定ガイド](../90.references/api_key_configuration.md)
+- [Geminiモデル一覧](../90.references/gemini_model_list.md)
 - [プロジェクトルール](../../.cursor/rules/project.mdc)
 
 ---
