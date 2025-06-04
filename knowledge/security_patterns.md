@@ -11,7 +11,7 @@ PATTERNS = [
     ("アクセストークン", r'(?i)(access[_-]?token|auth[_-]?token)'),
     ("GitHubトークン", r'(?i)gh[opsu]_[0-9a-zA-Z]{36}'), # Adjusted based on common formats
     ("GitHubトークン (Fine-grained)", r'(?i)github_pat_[0-9a-zA-Z_]{82}'), # Adjusted based on docs
-    ("Slackトークン", r'(?i)xox[baprs]-[0-9a-zA-Z]{10,48}'), # Adjusted based on docs
+    ("トークン", r'(?i)xox[baprs]-[0-9a-zA-Z]{10,48}'), # API token pattern
     ("一般的な機密情報", r'(?i)(password|secret|private[_-]?key)') # Added private key
 ]
 ```

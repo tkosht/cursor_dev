@@ -41,21 +41,31 @@ alwaysApply: true
 
 ```
 ./
+├── .cursor/            # Cursor AI 設定
+│   └── rules/          # ルールファイル (*.mdc)
 ├── .devcontainer/      # Dev Container 設定
+├── .ssh/               # SSH 設定
+├── .specstory/         # Cursor上の会話履歴
 ├── .vscode/            # VSCode 設定
+├── app/                # ソースコード (Pythonパッケージ)
+│   └── xxx/            # Pythonパッケージ名/カテゴリ名
+│       ├── __init__.py
+│       └── ... (機能ごとのモジュール)
+├── bin/                # 実行ファイル、スクリプト
+├── docker/             # Dockerfile群
 ├── docs/               # ドキュメント (設計書、要件定義書など)
 │   ├── 01.requirements/
 │   ├── 02.basic_design/
 │   └── 03.detail_design/
 ├── memory-bank/        # AIの記憶領域 (プロジェクトコンテキスト)
-├── src/                # ソースコード (Pythonパッケージ)
-│   └── cursor_dev/     # メインのPythonパッケージ
-│       ├── __init__.py
-│       └── ... (機能ごとのモジュール)
 ├── tests/              # テストコード
-├── .cursor/            # Cursor AI 設定
-│   └── rules/          # ルールファイル (*.mdc)
+├── .cursor*            # Cursor IDE 設定
+├── .dockerignore       # Docker ignore ファイル
+├── .env*               # 環境設定
+├── compose.yml         # Docker Compose ファイル(リンク)
+├── cursor_dev.code-workspace      # ワークスペース設定ファイル
 ├── pyproject.toml      # Poetry 設定ファイル
+├── LICENSE             # ライセンスファイル
 └── README.md
 ```
 

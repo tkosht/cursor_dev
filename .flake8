@@ -1,8 +1,20 @@
 [flake8]
-# Recommend matching the black line length (default 88),
-# rather than using the flake8 default of 79:
-max-line-length = 120
-extend-ignore =
-    # See https://github.com/PyCQA/pycodestyle/issues/373
-    E203,
-max-complexity = 8
+exclude = 
+    .git,
+    __pycache__,
+    backup,
+    docs,
+    memory-bank,
+    templates,
+    htmlcov,
+    .pytest_cache,
+    node_modules,
+    examples,
+    .venv,
+    venv,
+    build,
+    dist
+max-line-length = 79
+max-complexity = 10
+# Black-compatible settings
+ignore = E203, W503

@@ -19,6 +19,20 @@ bkup/
 ?.sh
 .env*
 
+# IDE specific files
+.idea/
+# Keep Cursor IDE files
+# .vscode/
+# *.code-workspace
+
+# OS specific
+Thumbs.db
+
+# Project specific
+/backup/
+/examples/old_*
+cleanup_analysis_report.md
+
 # Ignore other dot files/directories
 
 *logs/
@@ -86,6 +100,7 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+coverage.json
 *.cover
 *.py,cover
 .hypothesis/

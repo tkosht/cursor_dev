@@ -148,13 +148,13 @@ if not validate_url(host):
 - エラーメッセージの明確化
 
 ### 実装例
-1. Difyホスト設定
+1. APIホスト設定
 ```python
 # 設定例
-self.dify_host = os.getenv("DIFY_HOST", "https://api.dify.ai")
+self.api_host = os.getenv("API_HOST", "https://api.example.com")
 
 # 使用例
-endpoint = f"{self.dify_host}/v1/completion-messages"
+endpoint = f"{self.api_host}/v1/messages"
 ```
 - 完全なURLを使用
 - デフォルト値の提供
@@ -255,38 +255,21 @@ app/module.py           100    10     90%    45-50,60-65
 
 # API利用パターン
 
-## Dify API
-1. エンドポイント選択
+## A2A Protocol API
+1. エージェント連携の基本構造
 ```python
-# チャットメッセージ用
-endpoint = f"{host}/v1/chat-messages"
+# エージェントカードの取得
+agent_card = await client.get_agent_card(agent_id)
 
-# レスポンスモード
-response_mode = "blocking"  # または "streaming"
+# タスクの実行
+task_result = await client.execute_task(task_data)
 ```
 
-2. リクエスト構造
+2. エラーハンドリング
 ```python
-payload = {
-    "inputs": {},
-    "query": "クエリ文字列",
-    "response_mode": "blocking",
-    "conversation_id": "",
-    "user": "user_id"
-}
-```
-
-3. 認証
-```python
-headers = {
-    "Authorization": f"Bearer {api_key}",
-    "Content-Type": "application/json"
-}
-```
-
-4. エラーハンドリング
-```python
-if response.status != 200:
-    error_text = await response.text()
-    raise APIError(f"Status: {response.status}, Error: {error_text}")
+try:
+    result = await agent.process_task(task)
+except A2AProtocolError as e:
+    logger.error(f"A2A Protocol Error: {e}")
+    # 適切なフォールバック処理
 ```

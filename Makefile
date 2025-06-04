@@ -2,10 +2,13 @@ default: all
 
 all: up install
 
-install: poetry-install
+install: install-poetry install-claudecode
 
-poetry-install:
-	docker compose exec app bash bin/poetry_install.sh
+install-poetry:
+	docker compose exec app bash bin/install_poetry.sh
+
+install-claudecode:
+	docker compose exec app bash bin/install_claudecode.sh
 
 # ==========
 # interaction tasks
@@ -49,10 +52,13 @@ build-no-cache:
 
 reup: down up
 
-clean: clean-logs clean-poetry clean-container
+clean: clean-logs clean-poetry clean-npm clean-container
 
 clean-poetry:
 	rm -rf .venv poetry.lock
+
+clean-npm:
+	rm -rf .npm-global
 
 clean-logs:
 	rm -rf logs/*.log
@@ -63,3 +69,4 @@ clean-container:
 
 clean-repository: clean-poetry clean-logs
 	rm -rf app/* tests/* data/*
+
