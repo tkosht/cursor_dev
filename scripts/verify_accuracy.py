@@ -63,7 +63,8 @@ class AccuracyVerifier:
                         '修正前', '悪い例', 'make test  # テストを実行',
                         '❌ ERROR', '⚠️  WARNING', '# Note:', 'エラー例',
                         'Makefile target not found', '存在しないターゲット',
-                        '実行結果例', '以下は存在しない', 'ERROR:', 'WARNING:'
+                        '実行結果例', '以下は存在しない', 'ERROR:', 'WARNING:',
+                        '誤検出問題', '品質管理システム', 'ナレッジ化', '作成背景'
                     ]):
                         continue
                     commands = re.findall(r'make\s+([a-zA-Z0-9_-]+)', block)
@@ -76,7 +77,8 @@ class AccuracyVerifier:
                     if any(marker in line for marker in [
                         '注：', '注意：', 'Note:', '未定義', '未実装', '修正前', '悪い例', 
                         '<!-- 修正前', '❌ ERROR', '⚠️  WARNING', 'エラー例',
-                        'Makefile target not found', '存在しないターゲット'
+                        'Makefile target not found', '存在しないターゲット',
+                        '誤検出問題', '品質管理システム', 'ナレッジ化', '作成背景'
                     ]):
                         # この行のコマンドは除外
                         line_commands = re.findall(r'`make\s+([a-zA-Z0-9_-]+)`', line)

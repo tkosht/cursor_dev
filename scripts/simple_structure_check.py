@@ -38,12 +38,15 @@ class SimpleStructureChecker:
                         top_dir = file_path.split('/')[0]
                         new_dirs.add(top_dir)
                 
-                # 既知の許可ディレクトリ（現在のプロジェクト構造に基づく）
+                # 既知の許可ディレクトリ（README.mdプロジェクト構造 + 既存承認済み）
                 allowed_dirs = {
-                    'app', 'tests', 'docs', 'scripts', 'memory-bank', 
-                    'knowledge', 'templates', 'docker', 'bin', 'node_modules',
-                    'htmlcov', '.git', '.venv', '__pycache__', '.pytest_cache',
-                    '.mypy_cache', '.specstory'  # 自動生成ディレクトリも許可
+                    # README.md記載の正式構造
+                    'app', 'tests',
+                    # 既存承認済みディレクトリ
+                    'docs', 'scripts', 'memory-bank', 'templates', 'docker', 'bin',
+                    # 自動生成ディレクトリ
+                    'node_modules', 'htmlcov', '.git', '.venv', '__pycache__', 
+                    '.pytest_cache', '.mypy_cache', '.specstory'
                 }
                 
                 unauthorized_dirs = new_dirs - allowed_dirs
