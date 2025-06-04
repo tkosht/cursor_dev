@@ -36,8 +36,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 10. **[docs/02.basic_design/a2a_architecture.md](docs/02.basic_design/a2a_architecture.md)** - システムアーキテクチャ設計
 11. **[docs/03.detail_design/a2a_tdd_implementation.md](docs/03.detail_design/a2a_tdd_implementation.md)** - TDD実装の詳細記録
 
-### 6. Reproduction Guide
-12. **[memory-bank/project_reproduction_checklist.md](memory-bank/project_reproduction_checklist.md)** - プロジェクト再現手順
+### 6. System Configuration & Tools
+12. **[docs/90.references/git_hooks_specification.md](docs/90.references/git_hooks_specification.md)** - Gitフック仕様とトラブルシューティング
+13. **[memory-bank/project_reproduction_checklist.md](memory-bank/project_reproduction_checklist.md)** - プロジェクト再現手順
 
 ## 🚨 CRITICAL: Documentation Accuracy Rules (ABSOLUTE COMPLIANCE)
 
@@ -75,6 +76,15 @@ time command                    # パフォーマンス実測
 python scripts/verify_accuracy.py
 python scripts/critical_documentation_review.py --target README.md
 ```
+
+#### 5. Gitフック自動実行（コミット時）
+プロジェクトのGitフックが以下を自動実行:
+1. **セキュリティチェック**: 機密情報の検出・ブロック
+2. **ユーザー認証チェック**: 無許可変更の防止
+3. **ドキュメント正確性検証**: 記載内容の事実確認
+4. **批判的レビュー**: README.md変更時の品質確認
+
+**トラブル時の対処**: [Gitフック仕様書](docs/90.references/git_hooks_specification.md)を参照
 
 ## 🔄 Development Workflow (MUST FOLLOW)
 
