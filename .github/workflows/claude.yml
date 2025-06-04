@@ -30,6 +30,44 @@ jobs:
               with:
                   fetch-depth: 1
 
+            - name: Setup Node.js (Latest LTS)
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 'lts/*'
+                  cache: 'npm'
+
+            - name: Install Node.js dependencies
+              run: |
+                  # Ensure npm is up to date
+                  npm install -g npm@latest
+                  
+                  # Install project dependencies if package.json exists
+                  if [ -f package.json ]; then
+                      npm ci
+                  fi
+                  
+                  # Make Node.js and npm available to Claude
+                  echo "NODE_VERSION=$(node --version)" >> $GITHUB_ENV
+                  echo "NPM_VERSION=$(npm --version)" >> $GITHUB_ENV
+                  echo "Node.js $(node --version) and npm $(npm --version) are now available"
+
+            - name: Setup Python environment
+              uses: actions/setup-python@v5
+              with:
+                  python-version: '3.10'
+                  cache: 'pip'
+
+            - name: Install Python dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  # Install Poetry if pyproject.toml exists
+                  if [ -f pyproject.toml ]; then
+                      pip install poetry
+                      poetry install --no-dev
+                  elif [ -f requirements.txt ]; then
+                      pip install -r requirements.txt
+                  fi
+
             - name: Run Claude Code
               id: claude
               uses: tkosht/cursor_dev@main
@@ -38,4 +76,8 @@ jobs:
                   claude_access_token: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
                   claude_refresh_token: ${{ secrets.CLAUDE_REFRESH_TOKEN }}
                   claude_expires_at: ${{ secrets.CLAUDE_EXPIRES_AT }}
+              env:
+                  # Make development tools available to Claude
+                  NODE_VERSION: ${{ env.NODE_VERSION }}
+                  NPM_VERSION: ${{ env.NPM_VERSION }}
 
