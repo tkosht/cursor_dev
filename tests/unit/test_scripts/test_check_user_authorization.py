@@ -9,12 +9,12 @@
 - 誤検知防止
 """
 
-import pytest
-import tempfile
 import subprocess
+import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from check_user_authorization import UserAuthorizationChecker
 
 
