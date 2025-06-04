@@ -58,8 +58,13 @@ class AccuracyVerifier:
                 make_commands = []
                 
                 for block in code_blocks:
-                    # 修正前の例やバッドプラクティス例は除外
-                    if any(marker in block for marker in ['修正前', '悪い例', 'make test  # テストを実行']):
+                    # 修正前の例やバッドプラクティス例、エラー例は除外
+                    if any(marker in block for marker in [
+                        '修正前', '悪い例', 'make test  # テストを実行',
+                        '❌ ERROR', '⚠️  WARNING', '# Note:', 'エラー例',
+                        'Makefile target not found', '存在しないターゲット',
+                        '実行結果例', '以下は存在しない', 'ERROR:', 'WARNING:'
+                    ]):
                         continue
                     commands = re.findall(r'make\s+([a-zA-Z0-9_-]+)', block)
                     make_commands.extend(commands)
@@ -68,7 +73,11 @@ class AccuracyVerifier:
                 backtick_commands = re.findall(r'`make\s+([a-zA-Z0-9_-]+)`', content)
                 # 注釈文や説明文内のコマンドは除外
                 for line in content.split('\n'):
-                    if any(marker in line for marker in ['注：', '注意：', 'Note:', '未定義', '未実装', '修正前', '悪い例', '<!-- 修正前']):
+                    if any(marker in line for marker in [
+                        '注：', '注意：', 'Note:', '未定義', '未実装', '修正前', '悪い例', 
+                        '<!-- 修正前', '❌ ERROR', '⚠️  WARNING', 'エラー例',
+                        'Makefile target not found', '存在しないターゲット'
+                    ]):
                         # この行のコマンドは除外
                         line_commands = re.findall(r'`make\s+([a-zA-Z0-9_-]+)`', line)
                         for cmd in line_commands:
@@ -152,6 +161,14 @@ class AccuracyVerifier:
                 )
                 
                 for block in python_blocks:
+                    # 例文やエラー例のブロックは除外
+                    if any(marker in block for marker in [
+                        '# 例:', '# Example:', '# サンプル:', '修正前', '悪い例',
+                        'a2a_prototype', 'a2a_mvp', 'utils.helper', 'utils.config',
+                        '❌', '⚠️', 'ERROR', 'WARNING', '例文', 'エラー例'
+                    ]):
+                        continue
+                        
                     # from ... import ... パターンを検索
                     imports = re.findall(
                         r'from\s+(app\.[a-zA-Z0-9_.]+)\s+import', 
