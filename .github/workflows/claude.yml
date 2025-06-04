@@ -70,7 +70,7 @@ jobs:
 
             - name: Run Claude Code
               id: claude
-              uses: tkosht/cursor_dev@main
+              uses: anthropics/claude-code-action@main
               with:
                   use_oauth: 'true'
                   claude_access_token: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
