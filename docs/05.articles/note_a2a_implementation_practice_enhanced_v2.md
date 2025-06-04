@@ -1,6 +1,4 @@
-# TDDで作るA2Aエージェント：91.77%カバレッジ達成までの道のり【2025年最新版】
-
-> 🔐 **更新内容**: セキュリティ強化・品質管理システム・Git hooks統合
+# TDDで作るA2Aエージェント：91.77%カバレッジ達成までの道のり
 
 ## 🎯 この記事で得られる実践的スキル
 
@@ -15,7 +13,7 @@
 
 前回の記事でA2Aプロトコルの基本を学びました。今回は、**3日間で91.77%のテストカバレッジを達成**した開発プロセスを、実際のコードと共に詳しく解説します。
 
-### 📊 プロジェクトの成果（2025年6月実測値）
+### 📊 プロジェクトの成果
 
 | 指標 | 目標 | 達成値 | 業界平均 |
 |------|------|--------|----------|
@@ -24,8 +22,6 @@
 | ビルド時間 | 2分以内 | **45秒** | 2-5分 |
 | バグ発見タイミング | 開発中 | **開発中** | 本番環境 |
 | コード品質 | Flake8準拠 | **0違反** | - |
-| セキュリティチェック | 自動化 | **Git hooks統合** | 手動 |
-| ドキュメント検証 | - | **自動化** | なし |
 
 ## 第1章：TDDの基本サイクルを実践で学ぶ
 
@@ -801,12 +797,12 @@ jobs:
           fail_ci_if_error: true
 ```
 
-### 📊 品質ゲートの設定【2025年最新版】
+### 📊 品質ゲートの設定
 
 ```python
 # scripts/quality_gate_check.py
 #!/usr/bin/env python3
-"""品質ゲートチェックスクリプト - セキュリティ&ドキュメント検証統合版"""
+"""品質ゲートチェックスクリプト"""
 
 import subprocess
 import sys
@@ -880,33 +876,6 @@ def check_type_hints() -> bool:
     
     return True  # 現時点では警告のみ
 
-def check_security() -> bool:
-    """セキュリティチェック（新機能）"""
-    print("\n🔐 Checking security...")
-    code, output = run_command([
-        "python", "scripts/security_check.py"
-    ])
-    
-    if code != 0:
-        print("❌ Security issues found!")
-        print(output)
-        return False
-    print("✅ Security: No issues found")
-    return True
-
-def check_documentation() -> bool:
-    """ドキュメント正確性チェック（新機能）"""
-    print("\n📚 Checking documentation accuracy...")
-    code, output = run_command([
-        "python", "scripts/verify_accuracy.py"
-    ])
-    
-    if code != 0:
-        print("❌ Documentation accuracy issues!")
-        print(output)
-        return False
-    print("✅ Documentation: Accuracy verified")
-    return True
 
 def main():
     """メインの品質チェック"""
@@ -919,12 +888,6 @@ def main():
         all_passed = False
     
     if not check_linting():
-        all_passed = False
-    
-    if not check_security():  # 新機能
-        all_passed = False
-    
-    if not check_documentation():  # 新機能
         all_passed = False
     
     check_type_hints()  # 警告のみ
@@ -1222,9 +1185,9 @@ class OptimizedAgent:
         return result
 ```
 
-## 第8章：セキュリティとベストプラクティス
+## 第8章：ベストプラクティス
 
-### 🔒 入力検証の徹底
+### 📝 入力検証の実装
 
 ```python
 # app/a2a/core/validators.py
@@ -1243,22 +1206,16 @@ class TaskCreateModel(BaseModel):
         if not v.strip():
             raise ValueError('Title cannot be empty or whitespace only')
         
-        # SQLインジェクション対策
-        if re.search(r'[;\'"\\]', v):
-            raise ValueError('Title contains invalid characters')
-        
-        # XSS対策
-        if re.search(r'<script|javascript:', v, re.IGNORECASE):
-            raise ValueError('Title contains potentially malicious content')
+        # 基本的な文字チェック
+        if len(v.strip()) > 200:
+            raise ValueError('Title is too long')
         
         return v.strip()
     
     @validator('description')
     def validate_description(cls, v):
-        if v is not None:
-            # XSS対策
-            if re.search(r'<script|javascript:', v, re.IGNORECASE):
-                raise ValueError('Description contains potentially malicious content')
+        if v is not None and len(v) > 2000:
+            raise ValueError('Description is too long')
         return v
 
 # 使用例
@@ -1272,133 +1229,68 @@ def create_task_with_validation(data: dict) -> dict:
         return {"success": False, "error": str(e)}
 ```
 
-### 🔐 レート制限の実装
+
+## 第9章：運用とモニタリング
+
+### 📊 パフォーマンス監視の実装
 
 ```python
-# app/a2a/middleware/rate_limit.py
-from collections import defaultdict
-from datetime import datetime, timedelta
-import threading
+# app/a2a/monitoring/performance.py
+import time
+from functools import wraps
+from typing import Dict, Callable
 
-class RateLimiter:
-    """スレッドセーフなレート制限実装"""
+class PerformanceMonitor:
+    """パフォーマンス監視用のデコレーター"""
     
-    def __init__(
-        self, 
-        max_requests: int = 100, 
-        window: timedelta = timedelta(minutes=1)
-    ):
-        self.max_requests = max_requests
-        self.window = window
-        self.requests = defaultdict(list)
-        self.lock = threading.Lock()
+    def __init__(self):
+        self.metrics: Dict[str, list] = {}
     
-    def is_allowed(self, client_id: str) -> bool:
-        """クライアントのリクエストが許可されるか確認"""
-        with self.lock:
-            now = datetime.now()
-            
-            # 古いリクエストを削除
-            self.requests[client_id] = [
-                req_time for req_time in self.requests[client_id]
-                if now - req_time < self.window
-            ]
-            
-            # リクエスト数をチェック
-            if len(self.requests[client_id]) >= self.max_requests:
-                return False
-            
-            # リクエストを記録
-            self.requests[client_id].append(now)
-            return True
+    def track_time(self, name: str):
+        """実行時間を計測するデコレーター"""
+        def decorator(func: Callable):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                start_time = time.time()
+                try:
+                    result = func(*args, **kwargs)
+                    elapsed = time.time() - start_time
+                    
+                    if name not in self.metrics:
+                        self.metrics[name] = []
+                    self.metrics[name].append(elapsed)
+                    
+                    return result
+                except Exception as e:
+                    elapsed = time.time() - start_time
+                    print(f"Error in {name}: {e} (took {elapsed:.3f}s)")
+                    raise
+            return wrapper
+        return decorator
     
-    def get_reset_time(self, client_id: str) -> datetime:
-        """レート制限がリセットされる時刻を取得"""
-        with self.lock:
-            if not self.requests[client_id]:
-                return datetime.now()
-            
-            oldest_request = min(self.requests[client_id])
-            return oldest_request + self.window
-```
+    def get_stats(self, name: str) -> Dict[str, float]:
+        """統計情報を取得"""
+        if name not in self.metrics or not self.metrics[name]:
+            return {}
+        
+        times = self.metrics[name]
+        return {
+            "count": len(times),
+            "min": min(times),
+            "max": max(times),
+            "avg": sum(times) / len(times),
+            "total": sum(times)
+        }
 
-## 第9章：運用とモニタリング【セキュリティ監視強化版】
+# 使用例
+monitor = PerformanceMonitor()
 
-### 🔐 Git Hooks統合によるセキュリティ監視
-
-```python
-# .git/hooks/pre-commit
-#!/usr/bin/env python3
-"""セキュリティチェックを含むpre-commitフック"""
-
-import subprocess
-import sys
-
-def check_security():
-    """セキュリティチェックを実行"""
-    print("🔐 Running security checks...")
-    result = subprocess.run([
-        "python", "scripts/security_check.py"
-    ], capture_output=True, text=True)
-    
-    if result.returncode != 0:
-        print("❌ Security check failed!")
-        print(result.stdout)
-        print(result.stderr)
-        return False
-    
-    print("✅ Security check passed")
-    return True
-
-def check_user_authorization():
-    """ユーザー認証チェック"""
-    print("👤 Checking user authorization...")
-    result = subprocess.run([
-        "python", "scripts/check_user_authorization.py"
-    ], capture_output=True, text=True)
-    
-    if result.returncode != 0:
-        print("❌ User authorization check failed!")
-        print(result.stdout)
-        return False
-    
-    print("✅ User authorization verified")
-    return True
-
-def check_documentation_accuracy():
-    """ドキュメント正確性チェック"""
-    print("📚 Verifying documentation accuracy...")
-    result = subprocess.run([
-        "python", "scripts/verify_accuracy.py"
-    ], capture_output=True, text=True)
-    
-    if result.returncode != 0:
-        print("⚠️  Documentation accuracy warning:")
-        print(result.stdout)
-        # 警告のみ（ブロックしない）
-    else:
-        print("✅ Documentation accuracy verified")
-    
-    return True
-
-def main():
-    """メインのpre-commitチェック"""
-    checks = [
-        check_security,
-        check_user_authorization,
-        check_documentation_accuracy
-    ]
-    
-    for check in checks:
-        if not check():
-            print("\n🚫 Commit blocked due to failed checks")
-            sys.exit(1)
-    
-    print("\n✅ All pre-commit checks passed!")
-    sys.exit(0)
-
-if __name__ == "__main__":
-    main()
+class MonitoredAgent:
+    @monitor.track_time("create_task")
+    def create_task(self, title: str) -> Dict:
+        # タスク作成処理
+        time.sleep(0.01)  # 処理をシミュレート
+        return {"id": "123", "title": title}
 ```
 
 ### 📊 メトリクス収集
@@ -1576,12 +1468,8 @@ class StructuredFormatter(logging.Formatter):
 poetry install
 poetry shell
 
-# 品質チェック実行（セキュリティ&ドキュメント検証含む）
+# 品質チェック実行
 python scripts/quality_gate_check.py
-
-# Git hooks設定
-git config core.hooksPath .git/hooks
-chmod +x .git/hooks/pre-commit
 
 # テスト実行（カバレッジ付き）
 pytest --cov=app --cov-report=html
@@ -1613,9 +1501,9 @@ docker-compose exec app pytest
 
 ---
 
-**次回予告**：「A2Aエージェントの本番運用：スケーラビリティとセキュリティの実践」
+**次回予告**：「A2Aエージェントの本番運用：スケーラビリティとパフォーマンスの実践」
 
-実際の本番環境での運用経験から、パフォーマンスチューニング、セキュリティ強化、監視・アラートの設定まで、実践的なノウハウを共有します。
+実際の本番環境での運用経験から、パフォーマンスチューニング、監視・アラートの設定まで、実践的なノウハウを共有します。
 
 ---
 

@@ -1,6 +1,6 @@
 # AIエージェントが会話する時代へ：Google A2Aプロトコル入門
 
-## 🎯 この記事で得られる3つの成果
+## 🎯 この記事で得られること
 
 1. **5分で理解**：A2Aプロトコルの本質を、実例で理解
 2. **30分で実装**：動くコードを手元で確認
@@ -9,8 +9,6 @@
 ---
 
 ## プロローグ：なぜ今、A2Aプロトコルなのか？
-
-> 💡 **2025年最新版**: セキュリティ強化・品質管理システム対応
 
 ### 💭 想像してみてください
 
@@ -22,7 +20,7 @@
 
 これを実現するのが、**Google A2A（Agent-to-Agent）プロトコル**です。
 
-### 📊 実際の成果（2025年最新版）
+### 📊 実際の成果
 
 私たちのチームは、A2Aプロトコルを使って以下を達成しました：
 
@@ -34,7 +32,6 @@
 | 応答速度 | **12ms/リクエスト** | リアルタイム処理可能 |
 | ビルド時間 | **45秒** | 高速なCI/CD |
 | コード行数 | **1,200行** | シンプルで保守しやすい |
-| セキュリティ | **Git hooks + 自動検証** | 安全性を担保 |
 
 ## 第1章：A2Aプロトコルの本質を5分で理解
 
@@ -466,147 +463,64 @@ def performance_test_results():
     }
 ```
 
-### 🛡️ セキュリティとエラーハンドリング【2025年最新版】
-
-> 🔐 **新機能**: Git hooks統合・品質ゲートシステム対応
+### 🛡️ エラーハンドリングのベストプラクティス
 
 ```python
-# セキュリティ実装例
-from functools import wraps
-import time
-import hmac
-import hashlib
-
-class SecureAgent:
-    """セキュリティ強化されたエージェント"""
+# エラーハンドリング実装例
+class RobustAgent:
+    """堅牢なエラーハンドリングを備えたエージェント"""
     
-    def __init__(self, secret_key: str):
-        self.secret_key = secret_key
-        self.rate_limiter = {}
+    def __init__(self):
+        self.supported_actions = ["create", "list", "update", "delete"]
     
-    def verify_signature(self, message: Dict, signature: str) -> bool:
-        """メッセージの署名を検証"""
-        message_str = json.dumps(message, sort_keys=True)
-        expected_sig = hmac.new(
-            self.secret_key.encode(),
-            message_str.encode(),
-            hashlib.sha256
-        ).hexdigest()
-        return hmac.compare_digest(expected_sig, signature)
-    
-    def rate_limit(self, client_id: str, max_requests: int = 100) -> bool:
-        """レート制限をチェック"""
-        now = time.time()
-        minute_key = int(now // 60)
-        
-        if client_id not in self.rate_limiter:
-            self.rate_limiter[client_id] = {}
-        
-        client_limits = self.rate_limiter[client_id]
-        
-        # 古いエントリを削除
-        old_keys = [k for k in client_limits if k < minute_key - 1]
-        for k in old_keys:
-            del client_limits[k]
-        
-        # 現在の分のカウントを確認
-        current_count = client_limits.get(minute_key, 0)
-        if current_count >= max_requests:
-            return False
-        
-        client_limits[minute_key] = current_count + 1
-        return True
-    
-    def handle_secure_message(
-        self, 
-        message: Dict, 
-        signature: str,
-        client_id: str
-    ) -> Dict:
-        """セキュアなメッセージ処理"""
-        # 1. レート制限チェック
-        if not self.rate_limit(client_id):
-            return {"success": False, "error": "Rate limit exceeded"}
-        
-        # 2. 署名検証
-        if not self.verify_signature(message, signature):
-            return {"success": False, "error": "Invalid signature"}
-        
-        # 3. 入力検証
-        if not self._validate_input(message):
-            return {"success": False, "error": "Invalid input"}
-        
-        # 4. 実際の処理
+    def handle_message_safely(self, message: Dict) -> Dict:
+        """安全なメッセージ処理"""
         try:
-            return self._process_message(message)
-        except Exception as e:
-            # エラー情報は漏らさない
-            return {"success": False, "error": "Processing failed"}
+            # 入力検証
+            if not self._validate_input(message):
+                return {"success": False, "error": "Invalid input"}
+            
+            # アクション実行
+            action = message.get("action")
+            if action not in self.supported_actions:
+                return {
+                    "success": False, 
+                    "error": f"Unsupported action: {action}"
+                }
+            
+            # 実際の処理
+            return self._process_action(action, message.get("data", {}))
+            
+        except ValueError as e:
+            # ビジネスロジックエラー
+            return {"success": False, "error": str(e)}
+        except Exception:
+            # 予期しないエラー
+            return {"success": False, "error": "Internal error"}
     
     def _validate_input(self, message: Dict) -> bool:
         """入力検証"""
-        # SQLインジェクション対策
-        dangerous_patterns = ["';", "--", "/*", "*/", "xp_", "sp_"]
-        message_str = str(message).lower()
-        
-        for pattern in dangerous_patterns:
-            if pattern in message_str:
-                return False
-        
         # 必須フィールドチェック
         if "action" not in message:
             return False
         
+        # データ型チェック
+        if not isinstance(message.get("action"), str):
+            return False
+        
         return True
     
-    def _process_message(self, message: Dict) -> Dict:
-        """実際のメッセージ処理"""
+    def _process_action(self, action: str, data: Dict) -> Dict:
+        """アクション処理"""
         # ここに実際のビジネスロジックを実装
-        action = message.get("action")
-        if action == "create_task":
+        if action == "create":
+            if not data.get("title"):
+                raise ValueError("Title is required")
             return {"success": True, "task_id": "123"}
-        return {"success": False, "error": "Unknown action"}
+        
+        return {"success": True}
 ```
 
-#### 🚨 品質管理システム統合（新機能）
-
-```python
-# quality_gates.py - 品質ゲートシステム
-class QualityGateSystem:
-    """コミット前の品質チェックを自動化"""
-    
-    def __init__(self):
-        self.checks = {
-            "coverage": self.check_coverage,
-            "security": self.check_security,
-            "documentation": self.check_documentation,
-            "complexity": self.check_complexity
-        }
-    
-    def check_coverage(self) -> Tuple[bool, str]:
-        """テストカバレッジチェック（91.77%以上必須）"""
-        # 実際の実装では pytest --cov を実行
-        coverage = 91.77  # 現在の実測値
-        if coverage < 85.0:
-            return False, f"Coverage {coverage}% is below 85%"
-        return True, f"Coverage {coverage}% ✓"
-    
-    def check_security(self) -> Tuple[bool, str]:
-        """セキュリティチェック（Git hooks統合）"""
-        # 機密情報の検出
-        # APIキー、パスワードなどのパターンマッチング
-        return True, "No security issues found ✓"
-    
-    def run_all_checks(self) -> bool:
-        """全品質チェックを実行"""
-        all_passed = True
-        for check_name, check_func in self.checks.items():
-            passed, message = check_func()
-            print(f"[{check_name}] {message}")
-            if not passed:
-                all_passed = False
-        return all_passed
-```
 
 ### 📊 実運用での教訓
 
@@ -715,7 +629,6 @@ class MonitoredAgent:
 - **公式ドキュメント**: [Google A2A Protocol](https://github.com/google/a2a)
 - **実装ガイド**: 本記事の続編「TDDで作るA2Aエージェント」
 - **動画チュートリアル**: YouTube「A2A Protocol in 10 minutes」
-- **品質管理ガイド**: 「セキュリティファーストなA2A開発」（新記事）
 
 #### スキルレベル別の学習パス
 
@@ -726,7 +639,7 @@ class MonitoredAgent:
 
 **中級者向け**：
 1. TDD実装編を読む
-2. セキュリティ機能を実装
+2. エラーハンドリングを強化
 3. 実際のAPIと連携
 
 **上級者向け**：
@@ -746,7 +659,7 @@ A2Aプロトコルは単なる技術仕様ではありません。**AIエージ�
 
 ### 💡 最後に
 
-私たちのチームは、A2Aプロトコルを使って開発期間を**80%短縮**し、**91.77%のテストカバレッジ**を達成しました。さらに、**Git hooksとCI/CDパイプライン**により、品質を自動的に保証する仕組みを構築しました。
+私たちのチームは、A2Aプロトコルを使って開発期間を**80%短縮**し、**91.77%のテストカバレッジ**を達成しました。
 
 あなたも今日から、AIエージェントの可能性を探求してみませんか？
 
