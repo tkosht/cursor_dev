@@ -1,7 +1,7 @@
 """
 Unit tests for main module.
 """
-import pytest
+
 from app.main import main
 
 

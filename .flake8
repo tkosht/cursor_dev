@@ -1,19 +1,20 @@
 [flake8]
-# Recommend matching the black line length (default 88),
-# rather than using the flake8 default of 79:
-max-line-length = 88
-max-complexity = 10
-ignore = E203, W503
 exclude = 
     .git,
     __pycache__,
+    backup,
+    docs,
+    memory-bank,
+    templates,
+    htmlcov,
+    .pytest_cache,
+    node_modules,
+    examples,
     .venv,
     venv,
-    .pytest_cache,
     build,
     dist
-
-# プロジェクト品質基準 (Critical Issues Tracker準拠)
-# - max-line-length=88: Black互換設定
-# - 警告ゼロが合格条件
-# - 全app/とtests/ディレクトリをチェック対象
+max-line-length = 79
+max-complexity = 10
+# Black-compatible settings
+ignore = E203, W503

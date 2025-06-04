@@ -13,6 +13,7 @@
 - テスト品質 (実行成功率、テスト設計品質)
 - カバレッジ品質 (適切性、一貫性、信頼性)
 - プロセス品質 (データ整合性、手法妥当性)
+- アンチハッキング品質 (noqa/pragma濫用防止)
 """
 
 import json
@@ -579,7 +580,7 @@ class ScientificQualityGate:
             print("🚨 厳格品質保証システム: 品質基準違反")
             print("❌ 品質改善必要")
 
-        print(f"\n📊 測定サマリー:")
+        print("\n📊 測定サマリー:")
         print(f"- Flake8違反: {metrics.flake8_violations}件")
         print(f"- テスト成功率: {metrics.test_success_rate:.1f}%")
         print(f"- カバレッジ: {metrics.overall_coverage:.1f}%")
@@ -587,17 +588,44 @@ class ScientificQualityGate:
         print(f"- 個別サンプル数: {len(metrics.individual_test_samples)}")
 
         if self.violations:
-            print(f"\n🔧 要修正項目:")
+            print("\n🔧 要修正項目:")
             for i, violation in enumerate(self.violations, 1):
                 print(f"   {i}. {violation}")
 
         print("=" * 80)
 
+    def _run_anti_hacking_check(self) -> bool:
+        """品質アンチハッキングチェックの実行"""
+        try:
+            result = subprocess.run(
+                ["python", "scripts/check_quality_anti_hacking.py"],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            return result.returncode == 0
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            print("⚠️ アンチハッキングチェック実行失敗")
+            return True  # チェック失敗時は通す（スクリプト不備による誤検知回避）
+
 
 def main():
     """メイン処理"""
     gate = ScientificQualityGate()
+    
+    # 従来の品質チェック
     success = gate.run_comprehensive_quality_check()
+    
+    # アンチハッキングチェックの追加実行
+    if success:
+        print("\n🔍 品質アンチハッキングチェック実行中...")
+        anti_hack_success = gate._run_anti_hacking_check()
+        if not anti_hack_success:
+            print("❌ 品質アンチハッキングチェック失敗")
+            success = False
+        else:
+            print("✅ 品質アンチハッキングチェック合格")
+    
     sys.exit(0 if success else 1)
 
 

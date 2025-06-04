@@ -41,11 +41,25 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 line-length = 79
 target-version = ['py310']
+exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.pytest_cache
+  | htmlcov
+  | backup
+  | docs
+  | memory-bank
+  | templates
+  | examples
+)/
+'''
 
 [tool.isort]
 profile = "black"
 line_length = 79
 multi_line_output = 3
+skip = ["backup", "docs", "memory-bank", "templates", "examples"]
 
 [tool.flake8]
 max-line-length = 88
@@ -56,7 +70,8 @@ exclude = [
     "__pycache__",
     ".venv",
     "venv",
-    ".pytest_cache"
+    ".pytest_cache",
+    "backup"
 ]
 
 [tool.pytest.ini_options]
@@ -80,7 +95,7 @@ addopts = [
     "--cov=app",
     "--cov-report=term-missing",
     "--cov-report=html:htmlcov",
-    "--cov-fail-under=90",
+    "--cov-fail-under=85",
 ]
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"

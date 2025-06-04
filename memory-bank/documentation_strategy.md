@@ -165,7 +165,7 @@ graph TD
 
 ### 4.2 相互参照の記述
 ```markdown
-参照：[ドキュメント名](../path/to/document.md#section)
+参照：[ドキュメント名](#関連文書)
 ```
 
 ## 5. 品質基準
