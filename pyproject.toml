@@ -47,6 +47,7 @@ exclude = '''
   | \.mypy_cache
   | \.pytest_cache
   | htmlcov
+  | output
   | backup
   | docs
   | memory-bank
@@ -59,7 +60,7 @@ exclude = '''
 profile = "black"
 line_length = 79
 multi_line_output = 3
-skip = ["backup", "docs", "memory-bank", "templates", "examples"]
+skip = ["backup", "docs", "memory-bank", "templates", "examples", "output"]
 
 [tool.flake8]
 max-line-length = 88
@@ -71,7 +72,8 @@ exclude = [
     ".venv",
     "venv",
     ".pytest_cache",
-    "backup"
+    "backup",
+    "output"
 ]
 
 [tool.pytest.ini_options]
@@ -94,7 +96,9 @@ addopts = [
     "--strict-markers",
     "--cov=app",
     "--cov-report=term-missing",
-    "--cov-report=html:htmlcov",
+    "--cov-report=html:output/coverage/html",
+    "--cov-report=json:output/coverage/coverage.json",
+    "--cov-report=xml:output/coverage/coverage.xml",
     "--cov-fail-under=85",
 ]
 asyncio_mode = "strict"

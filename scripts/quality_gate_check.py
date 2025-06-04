@@ -348,7 +348,7 @@ class ScientificQualityGate:
         # カバレッジデータ整合性検証
         integrity_violations = (
             self.coverage_validator.validate_coverage_data_integrity(
-                self.project_root / "coverage.json"
+                self.project_root / "output" / "coverage" / "coverage.json"
             )
         )
 
@@ -521,7 +521,7 @@ class ScientificQualityGate:
 
     def _collect_file_coverage_data(self) -> Dict[str, float]:
         """ファイル別カバレッジデータ収集"""
-        coverage_file = self.project_root / "coverage.json"
+        coverage_file = self.project_root / "output" / "coverage" / "coverage.json"
 
         if not coverage_file.exists():
             return {}

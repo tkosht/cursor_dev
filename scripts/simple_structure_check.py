@@ -44,6 +44,8 @@ class SimpleStructureChecker:
                     'app', 'tests',
                     # 既存承認済みディレクトリ
                     'docs', 'scripts', 'memory-bank', 'templates', 'docker', 'bin',
+                    # 作業結果・生成物ディレクトリ
+                    'output',
                     # 自動生成ディレクトリ
                     'node_modules', 'htmlcov', '.git', '.venv', '__pycache__', 
                     '.pytest_cache', '.mypy_cache', '.specstory'

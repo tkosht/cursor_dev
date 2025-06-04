@@ -106,6 +106,9 @@ coverage.json
 .hypothesis/
 .pytest_cache/
 
+# 作業結果・生成物
+/output/
+
 # Translations
 *.mo
 *.pot
