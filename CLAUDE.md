@@ -6,9 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Project**: A2A MVP - Test-Driven Development
 **Status**: ✅ Implementation Complete
-**Coverage**: 91.77% ✅
-**Tests**: 84 tests, 100% passing
+**Coverage**: 92% ✅ (実測値: 2025-06-05)
+**Tests**: 101 tests, 100% passing
 **Quality**: Flake8 0 violations, Black formatted
+**Output**: Organized in `output/` directory structure
 
 ## 🚨 IMPORTANT: Essential Knowledge Documents
 
@@ -54,6 +55,7 @@ ls -la path/to/file         # ファイル存在確認
 # 数値記載前の必須確認
 pytest --cov=app | grep TOTAL  # カバレッジ実測値取得
 time command                    # パフォーマンス実測
+ls -la output/coverage/         # 出力ファイル確認
 ```
 
 #### 2. 禁止事項（絶対遵守）
@@ -65,8 +67,9 @@ time command                    # パフォーマンス実測
 #### 3. 必須記載パターン
 ```markdown
 # ✅ 正しい記載例
-**実測値**: 91.77%（pytest --cov実行結果: 2024-12-XX）
+**実測値**: 92%（pytest --cov実行結果: 2025-06-05）
 **コマンド確認済み**: make up（Makefile:35行目で確認）
+**出力先確認済み**: output/coverage/（実際に存在確認）
 **解釈**: 上記データから、業界平均を上回ると判断される
 ```
 
@@ -112,23 +115,26 @@ graph LR
 
 ## Project Architecture (MUST FOLLOW)
 
-### Layer Structure and Dependencies
+### Project Directory Structure
 ```
-app/a2a_mvp/
-├── core/           # Business entities (NO dependencies)
-│   ├── types.py    # Task, TaskRequest, TaskResponse
-│   └── exceptions.py # Custom exceptions
-├── storage/        # Data persistence (depends on: core)
-│   ├── interface.py # Abstract storage interface
-│   └── memory.py   # In-memory implementation
-├── skills/         # Business logic (depends on: core, storage)
-│   ├── base.py     # Base skill class
-│   └── task_skills.py # Task management logic
-├── agents/         # A2A agents (depends on: ALL layers)
-│   ├── base.py     # Base agent class
-│   └── task_agent.py # Task management agent
-└── server/         # API server (depends on: agents)
-    └── app.py      # FastAPI application
+./
+├── app/a2a/        # Source code (Python packages)
+│   ├── core/       # Business entities (NO dependencies)
+│   ├── storage/    # Data persistence (depends on: core)
+│   ├── skills/     # Business logic (depends on: core, storage)
+│   ├── agents/     # A2A agents (depends on: ALL layers)
+│   └── server/     # API server (depends on: agents)
+├── tests/          # Test code (unit, integration, e2e)
+├── docs/           # Documentation (requirements, design, reports)
+├── memory-bank/    # AI context and knowledge management
+│   └── knowledge/  # Generic technical knowledge
+├── output/         # Build artifacts and reports (git ignored)
+│   ├── coverage/   # Test coverage reports (HTML, JSON, XML)
+│   ├── reports/    # Quality/security analysis results
+│   ├── artifacts/  # Build artifacts
+│   └── logs/       # Execution logs
+├── scripts/        # Utility scripts for development
+└── templates/      # Documentation templates
 ```
 
 **CRITICAL RULE**: Dependencies flow in ONE direction only (bottom to top)
@@ -194,10 +200,16 @@ mypy app/ --ignore-missing-imports
 ```
 
 ### Coverage Requirements
-- Overall: ≥85% (currently 91.77%)
+- Overall: ≥85% (currently 92% - 実測値: 2025-06-05)
 - Core modules: ≥95%
 - New code: ≥90%
 - Per file: ≥50%
+
+### Output Directory Structure
+- **Coverage reports**: `output/coverage/` (HTML, JSON, XML formats)
+- **Quality reports**: `output/reports/` (security, quality metrics)
+- **Build artifacts**: `output/artifacts/` (distribution packages)
+- **Execution logs**: `output/logs/` (test, build, deploy logs)
 
 ## Generic Implementation Patterns (USE THESE)
 
@@ -348,7 +360,7 @@ pytest -k "test_create_task"
 
 # Generate coverage report
 pytest --cov=app --cov-report=html
-open htmlcov/index.html
+open output/coverage/html/index.html
 ```
 
 ### Quality Checks
@@ -403,6 +415,7 @@ make clean        # Clean up everything
 
 3. **Coverage Drops**
    - Run coverage report: `pytest --cov=app --cov-report=term-missing`
+   - Check coverage reports in: `output/coverage/html/index.html`
    - Focus on uncovered lines
    - Add tests for error cases
 
