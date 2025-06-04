@@ -409,7 +409,7 @@ git commit -m "test" 2>&1 | tee hook_debug.log
 
 - [プロジェクト品質管理システム](../../memory-bank/quality_management_system.md)
 - [開発ワークフロー](../../memory-bank/development_workflow_rules.md)
-- [セキュリティパターン](../91.notes/knowledge/security_patterns.md)
+- [セキュリティパターン](../../memory-bank/knowledge/security_patterns.md)
 - [TDD実装知識](../../memory-bank/tdd_implementation_knowledge.md)
 
 ---
