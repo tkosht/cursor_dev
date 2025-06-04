@@ -3,6 +3,7 @@
 
 このスクリプトは、.specstory/history/、memory-bank/、docs/、tests/ 内のファイルから
 機密情報を検出し、必要に応じてマスク処理を行います。
+誤検出を減らすため、コンテキストを考慮した検証を行います。
 """
 
 import re
@@ -14,6 +15,23 @@ from typing import List, Optional, Pattern, Tuple
 
 class SecurityChecker:
     """セキュリティチェッカークラス"""
+
+    # 除外パターン（誤検出を防ぐ）
+    EXCLUDED_PATHS = [
+        r"docs/.*/examples?/.*",
+        r"docs/.*/sample.*",
+        r"tests/.*test_.*\.py",
+        r"memory-bank/.*/example.*",
+        r"templates/.*",
+        r".*\.md\.template",
+    ]
+
+    # コードブロック内のパターン（Markdownファイル用）
+    CODE_BLOCK_PATTERNS = [
+        re.compile(r"```[\s\S]*?```", re.MULTILINE),  # Fenced code blocks
+        re.compile(r"^    .*$", re.MULTILINE),        # Indented code blocks
+        re.compile(r"`[^`\n]*`"),                     # Inline code
+    ]
 
     # 機密情報のパターン定義 (Specific patterns first, then Generic)
     PATTERNS: List[Tuple[str, Pattern[str], str, int]] = [
@@ -101,27 +119,89 @@ class SecurityChecker:
         else:
             self.target_dirs = []
 
-    def scan_file(self, file_path: Path) -> Tuple[bool, List[Tuple[str, int]]]:
+    def should_skip_file(self, file_path: Path) -> bool:
+        """ファイルをスキップすべきかどうか判定"""
+        file_str = str(file_path)
+        for pattern in self.EXCLUDED_PATHS:
+            if re.match(pattern, file_str):
+                return True
+        return False
+
+    def is_in_code_block(self, content: str, line_num: int) -> bool:
+        """指定行がコードブロック内にあるかチェック（Markdownファイル用）"""
+        lines = content.split('\n')
+        if line_num > len(lines):
+            return False
+        
+        # Check if we're inside a code block
+        in_fenced_block = False
+        for i, line in enumerate(lines[:line_num], 1):
+            if line.strip().startswith('```'):
+                in_fenced_block = not in_fenced_block
+            elif i == line_num:
+                # Check if current line is indented code block
+                if line.startswith('    ') or line.startswith('\t'):
+                    return True
+                # Check if current line is inline code
+                if line.count('`') >= 2:
+                    return True
+                return in_fenced_block
+        
+        return in_fenced_block
+
+    def is_documentation_example(self, file_path: Path, line: str) -> bool:
+        """ドキュメント内の例かどうか判定"""
+        # ファイル名での判定
+        if any(keyword in str(file_path).lower() for keyword in 
+               ['example', 'sample', 'template', 'demo', 'tutorial']):
+            return True
+        
+        # 行の内容での判定
+        example_indicators = [
+            '# 例:', '# Example:', '# サンプル:', '例：', 'Example:', 'Sample:',
+            'デモ用', 'テスト用', 'placeholder', 'your-key-here', 'dummy',
+            'fake-', 'test-', 'mock-', 'example-'
+        ]
+        
+        line_lower = line.lower()
+        return any(indicator.lower() in line_lower for indicator in example_indicators)
+
+    def scan_file(self, file_path: Path) -> Tuple[bool, List[Tuple[str, int, str]]]:
         """ファイルをスキャンし、機密情報を検出します。
 
         Args:
             file_path (Path): スキャン対象のファイルパス
 
         Returns:
-            Tuple[bool, List[Tuple[str, int]]]:
+            Tuple[bool, List[Tuple[str, int, str]]]:
                 - 機密情報が見つかったかどうか
-                - [(パターン名, 行番号), ...]
+                - [(パターン名, 行番号, 重要度), ...]
         """
+        # スキップ対象ファイルかチェック
+        if self.should_skip_file(file_path):
+            return False, []
+
         found = False
         findings = []
 
         with open(file_path, "r", encoding="utf-8") as f:
-            for i, line in enumerate(f, 1):
-                # Unpack including the capture group index (now unused here)
-                for pattern_name, pattern, _, _ in self.PATTERNS:
-                    if pattern.search(line):
+            content = f.read()
+            lines = content.split('\n')
+
+        for i, line in enumerate(lines, 1):
+            # コードブロック内かチェック（Markdownファイルの場合）
+            if file_path.suffix == '.md' and self.is_in_code_block(content, i):
+                continue
+
+            # ドキュメント例かチェック
+            is_example = self.is_documentation_example(file_path, line)
+
+            for pattern_name, pattern, _, _ in self.PATTERNS:
+                if pattern.search(line):
+                    severity = "warning" if is_example else "error"
+                    findings.append((pattern_name, i, severity))
+                    if severity == "error":
                         found = True
-                        findings.append((pattern_name, i))
 
         return found, findings
 
@@ -203,19 +283,31 @@ class SecurityChecker:
             auto_mask (bool): 機密情報を自動的にマスクするかどうか
 
         Returns:
-            bool: 機密情報が見つかったかどうか
+            bool: 機密情報が見つかったかどうか（エラーレベルのみ）
         """
         try:
-            has_secrets, findings = self.scan_file(file_path)
-            if has_secrets:
-                print(f"\n{file_path} で機密情報が見つかりました:")
-                for pattern_name, line_num in findings:
-                    print(f"  - {pattern_name} (行 {line_num})")
+            has_errors, findings = self.scan_file(file_path)
+            
+            if findings:
+                errors = [f for f in findings if f[2] == "error"]
+                warnings = [f for f in findings if f[2] == "warning"]
+                
+                if errors:
+                    print(f"\n❌ {file_path} で機密情報が見つかりました:")
+                    for pattern_name, line_num, _ in errors:
+                        print(f"  - {pattern_name} (行 {line_num})")
+                
+                if warnings:
+                    print(f"\n⚠️  {file_path} で潜在的な機密情報が見つかりました（例/サンプル）:")
+                    for pattern_name, line_num, _ in warnings:
+                        print(f"  - {pattern_name} (行 {line_num}) [警告のみ]")
 
-                if auto_mask:
+                if auto_mask and has_errors:
                     if self.mask_file(file_path):
                         print(f"  → 機密情報をマスクしました: {file_path}")
-                return True
+                
+                return has_errors  # エラーレベルのみコミットをブロック
+                
         except UnicodeDecodeError:
             print(
                 f"警告: ファイルの読み込みに失敗しました（エンコーディング問題）: {file_path}"
@@ -262,13 +354,15 @@ def filter_files_to_check(files: List[Path]) -> List[Path]:
     """チェック対象のファイルをフィルタリングします。"""
     # Compare relative paths directly
     test_file_rel_path = Path("tests/test_security_check.py")
+    checker = SecurityChecker()
+    
     return [
         f
         for f in files
         if f.suffix in SecurityChecker.TARGET_EXTENSIONS
         and f.exists()
-        and f
-        != test_file_rel_path  # Exclude the test file itself using relative path
+        and f != test_file_rel_path  # Exclude the test file itself
+        and not checker.should_skip_file(f)  # Apply improved filtering
     ]
 
 
@@ -315,14 +409,12 @@ def main():
 
     if found_secrets:
         if not args.auto_mask:
-            print("\n警告: 機密情報が見つかりました。")
-            print(
-                "コミットを続けるには、手動で修正するか、再度コミットする際に --no-verify を使用してください。"
-            )
+            print("\n❌ COMMIT BLOCKED: 機密情報（エラーレベル）が見つかりました。")
+            print("手動で修正するか、警告のみの場合は --no-verify でコミットできます。")
         sys.exit(1)
     else:
         print(
-            "\n✓ ステージングされたファイルに機密情報は見つかりませんでした。"
+            "\n✅ ステージングされたファイルに機密情報（エラーレベル）は見つかりませんでした。"
         )
         sys.exit(0)
 

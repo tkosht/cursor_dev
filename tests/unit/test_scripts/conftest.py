@@ -2,6 +2,7 @@
 test_scripts用のpytest設定
 scriptsディレクトリをPYTHONPATHに追加
 """
+
 import sys
 from pathlib import Path
 
