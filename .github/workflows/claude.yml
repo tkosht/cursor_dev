@@ -63,7 +63,8 @@ jobs:
                   # Install Poetry if pyproject.toml exists
                   if [ -f pyproject.toml ]; then
                       pip install poetry
-                      poetry install --no-dev
+                      # Use --without dev for Poetry 1.2+ (backward compatible)
+                      poetry install --without dev,test || poetry install --only main || poetry install
                   elif [ -f requirements.txt ]; then
                       pip install -r requirements.txt
                   fi
