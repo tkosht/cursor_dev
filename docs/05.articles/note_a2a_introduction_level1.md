@@ -134,7 +134,7 @@ class SimpleTaskAgent:
         return {"success": True, "data": self.tasks}
 ```
 
-### 🚀 使ってみる
+### 🚀 使ってみる（[完全な実装例はこちら](https://github.com/tkosht/cursor_dev)）
 
 ```python
 # エージェントを作成
@@ -181,7 +181,7 @@ print(response)
 
 ### 🚀 次に挑戦してみよう
 
-1. **サンプルコードを拡張**: 
+1. **サンプルコードを拡張**: ([実装例はこちら](https://github.com/tkosht/cursor_dev/tree/main/app/a2a))
    - タスクの削除機能を追加
    - タスクの完了状態を変更する機能
    
@@ -196,8 +196,10 @@ print(response)
 
 ### 📚 さらに学ぶには
 
-- **中級編**: 「A2A実践ガイド：本格的なエージェント開発」
-- **上級編**: 「エンタープライズA2A：大規模システムでの活用」
+- **実装サンプル**: [cursor_dev リポジトリ](https://github.com/tkosht/cursor_dev) - 本記事のコードを含む完全な実装例
+- **クイックスタート**: [A2Aエージェント開発 クイックセットアップガイド](a2a_quick_setup_guide.md) - 環境構築の詳細手順
+- **中級編**: [A2A実践ガイド：本格的なエージェント開発](note_a2a_practice_level2.md)
+- **上級編**: [エンタープライズA2A：大規模システムでの活用](note_a2a_advanced_level3.md)
 - **公式ドキュメント**: [A2A Protocol Specification](https://github.com/anthropics/a2a-protocol)
 
 ### 💬 コミュニティ

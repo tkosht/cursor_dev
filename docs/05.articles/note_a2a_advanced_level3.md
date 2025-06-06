@@ -94,7 +94,7 @@ layers:
     - Event Store
 ```
 
-### 🔧 実装パターン
+### 🔧 実装パターン（[実装例](https://github.com/tkosht/cursor_dev/tree/main/app/a2a)）
 
 #### 1. Saga パターンによる分散トランザクション
 
@@ -436,7 +436,7 @@ class A2AMetrics:
 
 ### 📞 次のアクション
 
-1. **技術評価**: POCプロジェクトの立ち上げ
+1. **技術評価**: POCプロジェクトの立ち上げ（[リファレンス実装](https://github.com/tkosht/cursor_dev)を参考に）
 2. **ビジネスケース作成**: ROI分析の詳細化
 3. **パートナー選定**: 実装支援ベンダーの評価
 4. **人材育成**: A2Aアーキテクトの養成

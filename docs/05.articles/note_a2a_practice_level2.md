@@ -12,7 +12,7 @@
 
 ### 🎯 この記事のゴール
 
-3日間で以下を達成した実践記録をもとに、あなたも同じ品質のシステムを構築できるようになります：
+3日間で以下を達成した実践記録をもとに、あなたも同じ品質のシステムを構築できるようになります（[実装コードはこちら](https://github.com/tkosht/cursor_dev)）：
 
 - **テストカバレッジ92%**のA2Aエージェント
 - **101個の自動テスト**による品質保証
@@ -56,7 +56,11 @@ tests/
 ### 🛠️ 必須ツールのセットアップ
 
 ```bash
-# プロジェクト初期化
+# プロジェクト初期化（テンプレートから開始する場合）
+git clone https://github.com/tkosht/cursor_dev.git a2a-agent
+cd a2a-agent
+
+# または新規作成
 mkdir a2a-agent && cd a2a-agent
 poetry init
 
@@ -843,7 +847,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
 このプロジェクトで得た知見を共有します：
 
-- **GitHub**: [完全なソースコード](https://github.com/yourusername/a2a-tdd)
+- **GitHub**: [完全なソースコード](https://github.com/tkosht/cursor_dev) - 本記事で紹介した全実装
 - **ブログ**: 詳細な実装解説
 - **勉強会**: TDD実践ワークショップ
 
