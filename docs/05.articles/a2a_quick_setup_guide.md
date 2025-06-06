@@ -159,3 +159,11 @@ git commit --no-verify
 - **Issues**: [GitHub Issues](https://github.com/tkosht/cursor_dev/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/tkosht/cursor_dev/discussions)
 - **Wiki**: [プロジェクトWiki](https://github.com/tkosht/cursor_dev/wiki)
+
+---
+
+📝 **この記事について**
+
+本記事はAI（Claude）の支援を受けて作成されました。技術的な正確性については確認を行っていますが、実際のプロジェクトへの適用にあたっては、ご自身の環境や要件に合わせて適切に調整してください。
+
+生成日: 2024年12月 | 最終確認: 2025年1月
