@@ -127,6 +127,7 @@ TOTAL                             91.77%
 
 ### 開発ガイド
 - **[CLAUDE.md](CLAUDE.md)**: AI支援開発のためのプロジェクトガイド
+- **[docs/01.requirements/target_personas.md](docs/01.requirements/target_personas.md)**: ターゲット層（想定読者）の定義
 - **[docs/02.basic_design/a2a_architecture.md](docs/02.basic_design/a2a_architecture.md)**: アーキテクチャ設計書
 - **[docs/03.detail_design/a2a_tdd_implementation.md](docs/03.detail_design/a2a_tdd_implementation.md)**: TDD実装の詳細
 
