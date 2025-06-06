@@ -200,7 +200,7 @@ print(response)
 - **クイックスタート**: [A2Aエージェント開発 クイックセットアップガイド](a2a_quick_setup_guide.md) - 環境構築の詳細手順
 - **中級編**: [A2A実践ガイド：本格的なエージェント開発](note_a2a_practice_level2.md)
 - **上級編**: [エンタープライズA2A：大規模システムでの活用](note_a2a_advanced_level3.md)
-- **公式ドキュメント**: [A2A Protocol Specification](https://github.com/anthropics/a2a-protocol)
+- **公式リポジトリ**: [Agent2Agent (A2A) Protocol](https://github.com/google-a2a/A2A)
 
 ### 💬 コミュニティ
 
