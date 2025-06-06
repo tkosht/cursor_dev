@@ -41,6 +41,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 12. **[docs/90.references/git_hooks_specification.md](docs/90.references/git_hooks_specification.md)** - Gitフック仕様とトラブルシューティング
 13. **[memory-bank/project_reproduction_checklist.md](memory-bank/project_reproduction_checklist.md)** - プロジェクト再現手順
 
+### 7. AI Agent Knowledge & Patterns
+14. **[memory-bank/knowledge/ai_agent_delegation_patterns.md](memory-bank/knowledge/ai_agent_delegation_patterns.md)** - AIエージェント委託パターン（タスク分解と委託実行）
+
 ## 🚨 CRITICAL: Documentation Accuracy Rules (ABSOLUTE COMPLIANCE)
 
 ### 事実ベース記載の強制原則
