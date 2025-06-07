@@ -391,7 +391,7 @@ class TaskAgent:
             return self._error_response(f"Unknown action: {action}")
         
         try:
-            return handler(message)
+            return handler(message)  # メッセージをハンドラーに渡す
         except Exception as e:
             return self._error_response(str(e))
     
@@ -687,7 +687,7 @@ class OptimizedTaskAgent(TaskAgent):
                 )
             
             # ハンドラー実行
-            response = self._precomputed_actions[action](message)
+            response = self._precomputed_actions.get(action)(message)  # actionに対応するハンドラーを実行
             
             # メトリクス更新
             self._update_metrics(time.time() - start_time)

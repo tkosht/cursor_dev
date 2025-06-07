@@ -44,6 +44,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### 7. AI Agent Knowledge & Patterns
 14. **[memory-bank/knowledge/ai_agent_delegation_patterns.md](memory-bank/knowledge/ai_agent_delegation_patterns.md)** - AIエージェント委託パターン（タスク分解と委託実行）
 
+### 8. Parallel Execution & Git Worktree (CRITICAL for Claude CLI)
+15. **[memory-bank/git_worktree_parallel_development_verified.md](memory-bank/git_worktree_parallel_development_verified.md)** - 並列開発実証完了報告書（再現手順・品質データ・運用ガイド完備）
+
 ## 🚨 CRITICAL: Documentation Accuracy Rules (ABSOLUTE COMPLIANCE)
 
 ### 事実ベース記載の強制原則
@@ -137,7 +140,11 @@ graph LR
 │   ├── artifacts/  # Build artifacts
 │   └── logs/       # Execution logs
 ├── scripts/        # Utility scripts for development
-└── templates/      # Documentation templates
+├── templates/      # Documentation templates
+└── dev-tools/      # Development tools (git ignored, Docker persistent)
+    ├── mcp-servers/    # MCP server installations
+    ├── external-repos/ # External repository clones
+    └── knowledge-base/ # Development knowledge and notes
 ```
 
 **CRITICAL RULE**: Dependencies flow in ONE direction only (bottom to top)

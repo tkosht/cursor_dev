@@ -132,8 +132,8 @@ TOTAL                             91.77%
 - **[docs/03.detail_design/a2a_tdd_implementation.md](docs/03.detail_design/a2a_tdd_implementation.md)**: TDD実装の詳細
 
 ### Note記事（実践的解説）
-- **[A2Aプロトコル入門](docs/05.articles/note_a2a_introduction_enhanced_v2.md)**: 初心者向け解説
-- **[TDDで作るA2Aエージェント](docs/05.articles/note_a2a_implementation_practice_enhanced_v2.md)**: 実装の詳細解説
+- **[A2Aプロトコル入門](docs/05.articles/note_a2a_introduction_level1.md)**: 初心者向け解説
+- **[TDDで作るA2Aエージェント](docs/05.articles/note_a2a_practice_level2.md)**: 実装の詳細解説
 
 ### 品質・セキュリティ
 - **[memory-bank/quality_management_system.md](memory-bank/quality_management_system.md)**: 品質管理システム
