@@ -1,6 +1,6 @@
 # プロジェクト ディレクトリ構造規約
 
-最終更新: 2025-06-04
+最終更新: 2025-06-07 (worker/ディレクトリ、dev-tools/ディレクトリ追加)
 
 ## 📋 概要
 
@@ -100,6 +100,41 @@
   - 実行可能ファイルには実行権限を付与
   - 用途が明確なファイル名を使用
 
+### `/worker/`
+- **用途**: Git worktreeによる並列開発ワークスペース
+- **ルール**:
+  - Git管理対象外（`.gitignore`で除外）
+  - Claude CLI並列実行時のファイル競合回避用
+  - Worktreeディレクトリの物理的分離による安全な並列開発
+- **構造例**:
+  ```
+  worker/
+  ├── worktree_01/    # 機能A開発用worktree
+  ├── worktree_02/    # 機能B開発用worktree
+  └── worktree_03/    # 機能C開発用worktree
+  ```
+- **参考文書**: [memory-bank/git_worktree_parallel_development_verified.md](../../memory-bank/git_worktree_parallel_development_verified.md)
+
+### `/dev-tools/`
+- **用途**: 開発ツール・外部リポジトリ（Docker永続化用）
+- **ルール**:
+  - Git管理対象外（`.gitignore`で除外）
+  - Dockerコンテナ再作成時もデータ保持のためworkspace内に配置
+  - MCPサーバや外部ツールのインストール先
+- **構造**:
+  ```
+  dev-tools/
+  ├── mcp-servers/      # MCPサーバインストール先
+  ├── external-repos/   # 外部リポジトリクローン先
+  └── knowledge-base/   # 開発ナレッジ・メモ保存先
+  ```
+- **使用例**:
+  ```bash
+  # MCPサーバのインストール
+  cd dev-tools/mcp-servers
+  git clone https://github.com/modelcontextprotocol/servers.git
+  ```
+
 ## 🚫 禁止事項
 
 1. **ルートディレクトリへの直接ファイル配置禁止**
@@ -138,3 +173,5 @@ python scripts/check_directory_structure.py
 ## 📝 更新履歴
 
 - 2025-06-04: 初版作成、ディレクトリ構造を標準化
+- 2025-06-07: `/worker/`ディレクトリ追加（Git worktree用）
+- 2025-06-07: `/dev-tools/`ディレクトリ追加（Docker永続化用）

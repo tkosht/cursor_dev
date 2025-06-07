@@ -1,0 +1,17 @@
+# compose.override.yml の例
+# 開発ツール用の追加ボリュームマウント設定
+
+services:
+  app:
+    volumes:
+      # 既存のworkspaceマウントに加えて
+      - ~/.mcp-servers:/home/$user_name/mcp-servers
+      - ~/dev-repos:/home/$user_name/dev-repos
+      - ~/.dev-knowledge:/home/$user_name/knowledge
+
+# 使用方法:
+# 1. ホスト側で必要なディレクトリを作成
+#    mkdir -p ~/.mcp-servers ~/.dev-repos ~/.dev-knowledge
+# 2. このファイルを compose.override.yml にコピー
+#    cp docker/compose.override.yml.example compose.override.yml
+# 3. docker compose up で起動
