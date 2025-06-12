@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🆕 3-Layer Architecture Overview
+
+This project employs a **3-Layer Architecture Framework** that combines:
+1. **🔴 Direct Constraint Enforcement**: Mandatory rules loaded from explicit files
+2. **🧠 Intelligent Knowledge Augmentation**: Cognee-powered search and context
+3. **🔄 Integrated Development Flow**: tmux-based parallel development with continuous verification
+
+This architecture ensures **absolute compliance** while maintaining **development efficiency**.
+
 
 ## Project Status Overview
 
@@ -12,21 +21,66 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Quality**: Flake8 0 violations, Black formatted
 **Output**: Organized in `output/` directory structure
 
-## 🚨 CRITICAL: Core Action Rules (ABSOLUTE COMPLIANCE)
+## 🏗️ CRITICAL: 3-Layer Architecture Framework (ABSOLUTE COMPLIANCE)
 
-**These rules MUST be followed in every action. No exceptions.**
+**This framework ensures both constraint enforcement AND intelligent assistance.**
 
-### 1. 事実ベース判断の原則
+### 🔴 Layer 1: Critical Constraints Foundation (絶対制約基盤層)
+
+#### 🚨 Mandatory Knowledge Loading (SESSION START REQUIRED)
+
+**Before ANY development work, MUST load these documents in this exact order:**
+
+##### Phase 1A: Core Compliance Rules (MUST READ FIRST)
+1. **[memory-bank/user_authorization_mandatory_rules.md](memory-bank/user_authorization_mandatory_rules.md)** - ユーザー承認必須ルール（絶対遵守）
+2. **[memory-bank/testing_mandatory_rules.md](memory-bank/testing_mandatory_rules.md)** - 自動化機能テスト必須化ルール
+3. **[memory-bank/code_quality_anti_hacking_rules.md](memory-bank/code_quality_anti_hacking_rules.md)** - 品質指標アンチハッキング・ルール（絶対遵守）
+
+##### Phase 1B: Core Development Knowledge
+4. **[memory-bank/tdd_implementation_knowledge.md](memory-bank/tdd_implementation_knowledge.md)** - TDD実践の具体的手法
+5. **[memory-bank/generic_tdd_patterns.md](memory-bank/generic_tdd_patterns.md)** - 汎用的なTDDパターン
+6. **[memory-bank/development_workflow_rules.md](memory-bank/development_workflow_rules.md)** - 開発ワークフロー
+
+##### Phase 1C: Project & Architecture
+7. **[memory-bank/a2a_protocol_implementation_rules.md](memory-bank/a2a_protocol_implementation_rules.md)** - A2Aプロトコル実装仕様
+8. **[docs/02.basic_design/a2a_architecture.md](docs/02.basic_design/a2a_architecture.md)** - システムアーキテクチャ設計
+9. **[docs/03.detail_design/a2a_tdd_implementation.md](docs/03.detail_design/a2a_tdd_implementation.md)** - TDD実装の詳細記録
+
+##### Phase 1D: Quality & Documentation
+10. **[memory-bank/critical_review_framework.md](memory-bank/critical_review_framework.md)** - 批判的レビューフレームワーク
+11. **[memory-bank/accuracy_verification_rules.md](memory-bank/accuracy_verification_rules.md)** - ドキュメント正確性検証ルール
+12. **[memory-bank/documentation_accuracy_verification_rules.md](memory-bank/documentation_accuracy_verification_rules.md)** - 正確性検証の詳細手順
+
+##### Phase 1E: Advanced Patterns & Tools
+13. **[memory-bank/ci_cd_optimization_rules.md](memory-bank/ci_cd_optimization_rules.md)** - CI/CD設定と最適化
+14. **[memory-bank/knowledge/ai_agent_delegation_patterns.md](memory-bank/knowledge/ai_agent_delegation_patterns.md)** - AIエージェント委託パターン
+15. **[memory-bank/git_worktree_parallel_development_verified.md](memory-bank/git_worktree_parallel_development_verified.md)** - 並列開発実証完了報告書
+
+#### 🚨 Constraint Compliance Check (AUTOMATED)
+```bash
+# MANDATORY: Direct file access to ensure constraint availability
+echo "=== CRITICAL CONSTRAINTS VERIFICATION ==="
+ls -la memory-bank/user_authorization_mandatory_rules.md memory-bank/testing_mandatory_rules.md memory-bank/code_quality_anti_hacking_rules.md
+
+# Load core constraints with verification
+cat memory-bank/user_authorization_mandatory_rules.md | head -30
+cat memory-bank/testing_mandatory_rules.md | head -20
+cat memory-bank/code_quality_anti_hacking_rules.md | head -20
+
+# Execute mandatory pre-action validation
+python scripts/pre_action_check.py --strict-mode
+# Exit code 0: Proceed | Exit code 1: STOP ALL ACTIONS
+```
+
+### 1. 事実ベース判断の原則（Core Principle）
 - ❌ **禁止**: 「たぶん」「おそらく」等の推測判断
 - ✅ **必須**: 客観的事実確認後の判断のみ
 
-## 🚨 CRITICAL: Documentation Accuracy Rules (ABSOLUTE COMPLIANCE)
+### 2. Documentation Accuracy Principles (ドキュメント正確性原則)
 
-### 事実ベース記載の強制原則
-
-#### 1. 記載前必須チェック（絶対実行）
+#### 事実ベース記載の強制原則
 ```bash
-# コマンド記載前の必須確認
+# 記載前必須チェック（絶対実行）
 less Makefile                # Makeターゲット確認（直接ファイル確認）
 python scripts/script.py --help  # スクリプト動作確認
 ls -la path/to/file         # ファイル存在確認
@@ -37,13 +91,13 @@ time command                    # パフォーマンス実測
 ls -la output/coverage/         # 出力ファイル確認
 ```
 
-#### 2. 禁止事項（絶対遵守）
+#### 禁止事項（絶対遵守）
 - ❌ 未確認のコマンド記載
 - ❌ 推測による数値記載  
 - ❌ 憶測による機能説明
 - ❌ 根拠なき性能主張
 
-#### 3. 必須記載パターン
+#### 必須記載パターン
 ```markdown
 # ✅ 正しい記載例
 **実測値**: 92%（pytest --cov実行結果: 2025-06-05）
@@ -52,14 +106,14 @@ ls -la output/coverage/         # 出力ファイル確認
 **解釈**: 上記データから、業界平均を上回ると判断される
 ```
 
-#### 4. 自動検証の実行（コミット前必須）
+#### 自動検証の実行（コミット前必須）
 ```bash
 # ドキュメント正確性チェック
 python scripts/verify_accuracy.py
 python scripts/critical_documentation_review.py --target README.md
 ```
 
-#### 5. Gitフック自動実行（コミット時）
+### 3. Git Hook Integration (Automated Enforcement)
 プロジェクトのGitフックが以下を自動実行:
 1. **セキュリティチェック**: 機密情報の検出・ブロック
 2. **ユーザー認証チェック**: 無許可変更の防止
@@ -123,39 +177,120 @@ tmux send-keys -t <pane> Enter
 
 **Note**: Claude Code instances within tmux may report different pane numbers internally than tmux's actual pane indexing due to execution context differences.
 
-### Session Start Procedure (MANDATORY)
+### 🧠 Layer 2: Enhanced Intelligence Layer (知能拡張層)
+
+#### Phase 2A: Cognee Knowledge Augmentation (SUPPLEMENTARY)
 ```bash
-# 1. Cogneeナレッジステータス確認
+# 1. Cognee system status verification
 mcp__cognee__cognify_status
 
-# 2. 開発者ルールの読み込み
+# 2. Developer rules integration (supplement to direct loading)
 mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
 
-# 3. プロジェクト概要の確認
-mcp__cognee__search --search_query "プロジェクト概要 A2A" --search_type "GRAPH_COMPLETION"
+# 3. Project context search (enhanced understanding)
+mcp__cognee__search --search_query "A2A project constraints user authorization" --search_type "GRAPH_COMPLETION"
 ```
 
-### Enhanced Development Flow with Cognee & Accuracy Verification
+#### Phase 2B: Cross-Validation Protocol (DUAL VERIFICATION)
+```bash
+# Compare direct constraints vs Cognee knowledge
+echo "=== CROSS-VALIDATION CHECK ==="
+# Ensure Cognee results align with direct constraint files
+# Flag any discrepancies for manual review
+```
+
+### 🔄 Layer 3: Development Flow Integration (統合フロー層)
+
+#### Complete Session Initialization (COPY-PASTE READY)
+```bash
+#!/bin/bash
+echo "🚨 CLAUDE SESSION INITIALIZATION - 3-Layer Architecture"
+echo "======================================================="
+
+# Layer 1: Critical Constraints (MANDATORY)
+echo "=== Layer 1: Critical Constraints Loading ==="
+ls -la memory-bank/user_authorization_mandatory_rules.md memory-bank/testing_mandatory_rules.md memory-bank/code_quality_anti_hacking_rules.md
+python scripts/pre_action_check.py --strict-mode || exit 1
+
+# Layer 2: Enhanced Intelligence (SUPPLEMENTARY)
+echo "=== Layer 2: Cognee Knowledge Integration ==="
+mcp__cognee__cognify_status
+mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
+mcp__cognee__search --search_query "A2A project session start checklist" --search_type "GRAPH_COMPLETION"
+
+# Layer 3: Development Flow Setup (ENVIRONMENT)
+echo "=== Layer 3: tmux Environment Setup ==="
+tmux list-sessions
+tmux list-panes -F "#{pane_index}: #{pane_title} #{pane_current_command}"
+
+echo "✅ 3-Layer Architecture Initialization Complete"
+echo "Ready for development with enhanced constraint enforcement + Cognee intelligence"
+```
+
+### Enhanced Development Flow (3-Layer Architecture Integrated)
 ```mermaid
 graph LR
-    A[要件定義] --> A1[Cognee検索]
-    A1 --> B[設計レビュー]
-    B --> B1[パターン検索]
-    B1 --> C[TDD実装]
+    A[要件定義] --> A1[🔍 Constraint Check]
+    A1 --> A2[🧠 Cognee Search]
+    A2 --> B[設計レビュー]
+    B --> B1[📋 Pattern Search]
+    B1 --> B2[✅ Validation]
+    B2 --> C[TDD実装]
     C --> D[セルフレビュー]
-    D --> E[事実検証チェック]
+    D --> E[🚨 Constraint Verification]
     E --> F[自動品質チェック]
     F --> G{基準達成?}
     G -->|No| C
     G -->|Yes| H[批判的レビュー]
-    H --> I[ドキュメント正確性検証]
+    H --> I[📊 Knowledge Recording]
     I --> J[マージ]
-    J --> K[ナレッジ記録<br/>MD + Cognee]
     
-    style A1 fill:#e1f5fe
+    style A1 fill:#ff6b6b
+    style E fill:#ff6b6b
+    style A2 fill:#e1f5fe
     style B1 fill:#e1f5fe
-    style K fill:#e1f5fe
+    style I fill:#e1f5fe
 ```
+
+### 🛡️ Failsafe Mechanisms (フェイルセーフ・メカニズム)
+
+#### 1. Cognee Connection Failure Protocol
+```bash
+# Test Cognee availability
+if ! mcp__cognee__cognify_status > /dev/null 2>&1; then
+    echo "⚠️ Cognee unavailable - Activating Direct Constraint Mode"
+    
+    # MANDATORY: Load all critical constraints directly
+    echo "=== DIRECT CONSTRAINT LOADING ==="
+    cat memory-bank/user_authorization_mandatory_rules.md
+    cat memory-bank/testing_mandatory_rules.md
+    cat memory-bank/code_quality_anti_hacking_rules.md
+    
+    # Set environment flag
+    export CLAUDE_CONSTRAINT_MODE="DIRECT_ONLY"
+fi
+```
+
+#### 2. Multi-Layer Verification Protocol
+```bash
+# Every Action Verification (TRIPLE CHECK)
+# Check 1: Direct constraint validation
+python scripts/pre_action_check.py --constraint-source=direct
+
+# Check 2: Cognee knowledge validation (if available)
+if [ "$CLAUDE_CONSTRAINT_MODE" != "DIRECT_ONLY" ]; then
+    mcp__cognee__search --search_query "action validation $(echo $PROPOSED_ACTION)" --search_type "INSIGHTS"
+fi
+
+# Check 3: Cross-validation
+python scripts/cross_validate_constraints.py --action="$PROPOSED_ACTION"
+```
+
+#### 3. Violation Response Escalation
+- **Level 1**: Warning + Guidance (minor issues)
+- **Level 2**: Action Block + User Confirmation Required (moderate violations)  
+- **Level 3**: Full Stop + Manual Review Required (critical violations)
+- **Level 4**: Session Termination + Administrative Review (security violations)
 
 ### Critical Review Points
 1. **汎用性**: 他プロジェクトへの転用可能性
@@ -400,23 +535,48 @@ class TaskCreateModel(BaseModel):
 
 ## Common Commands Reference
 
-### Cognee Knowledge Management (MANDATORY AT SESSION START)
+### 3-Layer Knowledge Management (MANDATORY AT SESSION START)
+
+#### 🔴 Layer 1: Direct Constraint Access (PRIMARY)
 ```bash
-# Session initialization
-mcp__cognee__cognify_status
-mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
+# Mandatory constraint verification
+ls -la memory-bank/*_mandatory_rules.md
+cat memory-bank/user_authorization_mandatory_rules.md | head -30
+python scripts/pre_action_check.py --strict-mode
+```
 
-# Search patterns
-mcp__cognee__search --search_query "TDD patterns" --search_type "GRAPH_COMPLETION"
-mcp__cognee__search --search_query "error handling" --search_type "INSIGHTS"
-mcp__cognee__search --search_query "pytest fixture" --search_type "CHUNKS"
+#### 🧠 Layer 2: Cognee Intelligence (SUPPLEMENTARY)
+```bash
+# Session initialization with failsafe
+if mcp__cognee__cognify_status > /dev/null 2>&1; then
+    # Cognee available - Full intelligence mode
+    mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
+    
+    # Search patterns
+    mcp__cognee__search --search_query "TDD patterns" --search_type "GRAPH_COMPLETION"
+    mcp__cognee__search --search_query "error handling" --search_type "INSIGHTS"
+    mcp__cognee__search --search_query "pytest fixture" --search_type "CHUNKS"
+    
+    # Knowledge registration
+    mcp__cognee__cognify --data /path/to/knowledge.md
+    mcp__cognee__cognify_status
+else
+    # Cognee unavailable - Direct constraint mode
+    echo "⚠️ Cognee unavailable - Using direct constraint mode"
+    cat memory-bank/*.md | grep -A 5 "MANDATORY\|CRITICAL\|MUST"
+fi
 
-# Knowledge registration
-mcp__cognee__cognify --data /path/to/knowledge.md
-mcp__cognee__cognify_status
+# Knowledge maintenance (ONLY with authorization)
+mcp__cognee__prune  # CAUTION: Deletes all data - requires explicit user approval
+```
 
-# Knowledge maintenance
-mcp__cognee__prune  # CAUTION: Deletes all data
+#### 🔄 Layer 3: Integrated Workflow Commands
+```bash
+# Before EVERY action - Automated verification
+python scripts/pre_action_check.py || echo "ACTION BLOCKED"
+
+# Cross-validation when available
+python scripts/cross_validate_constraints.py --cognee-available=$(mcp__cognee__cognify_status > /dev/null 2>&1 && echo "yes" || echo "no")
 ```
 
 ### Development
@@ -518,13 +678,41 @@ make clean        # Clean up everything
 - [ ] Multi-agent orchestration
 - [ ] AI/ML integration
 
+## 📋 Ongoing Development Protocol (CONTINUOUS VERIFICATION)
+
+### Before EVERY Action (AUTOMATED CHECK)
+1. **Constraint Pre-Check**: Execute `python scripts/pre_action_check.py`
+2. **Cognee Context Search**: Relevant pattern/knowledge lookup (if available)
+3. **Cross-Validation**: Compare direct constraints vs Cognee results
+4. **Proceed**: Only if all checks pass
+
+### During Development (CONTINUOUS MONITORING)
+1. **tmux Pane Coordination**: Use multiple panes for parallel validation
+2. **Real-time Constraint Monitoring**: Background constraint checking
+3. **Knowledge Recording**: Capture lessons learned in both MD files and Cognee
+4. **Session State Tracking**: Maintain development state across panes
+
+### Action Verification Checklist
+```markdown
+**Pre-Action Questions (MUST ALL BE "YES"):**
+- [ ] Have I loaded the mandatory constraint documents?
+- [ ] Does this action comply with user_authorization_mandatory_rules.md?
+- [ ] Have I verified this against testing_mandatory_rules.md?
+- [ ] Is there objective evidence supporting this action?
+- [ ] Have I run pre_action_check.py?
+
+**If ANY answer is "NO" - STOP and seek clarification**
+```
+
 ## 🚨 Final Reminders
 
-1. **Always write tests first** - No exceptions
-2. **Run quality checks before commit** - Save CI time
-3. **Think generic** - Will this work elsewhere?
-4. **Document why, not what** - Code shows what
-5. **Review critically** - Question everything
+1. **Always load constraints first** - Direct files, then Cognee
+2. **Always write tests first** - No exceptions
+3. **Run quality checks before commit** - Save CI time
+4. **Think generic** - Will this work elsewhere?
+5. **Document why, not what** - Code shows what
+6. **Review critically** - Question everything
+7. **Verify constraints continuously** - Not just at start
 
 ---
 
