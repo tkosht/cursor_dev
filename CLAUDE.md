@@ -2,6 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+
 ## Project Status Overview
 
 **Project**: A2A MVP - Test-Driven Development
@@ -11,41 +12,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Quality**: Flake8 0 violations, Black formatted
 **Output**: Organized in `output/` directory structure
 
-## 🚨 IMPORTANT: Essential Knowledge Documents
+## 🚨 CRITICAL: Core Action Rules (ABSOLUTE COMPLIANCE)
 
-**When starting ANY work on this project, ALWAYS load these documents in order:**
+**These rules MUST be followed in every action. No exceptions.**
 
-### 1. Mandatory Compliance Rules (MUST READ FIRST)
-1. **[memory-bank/user_authorization_mandatory_rules.md](memory-bank/user_authorization_mandatory_rules.md)** - ユーザー承認必須ルール（絶対遵守）
-2. **[memory-bank/testing_mandatory_rules.md](memory-bank/testing_mandatory_rules.md)** - 自動化機能テスト必須化ルール
-3. **[memory-bank/code_quality_anti_hacking_rules.md](memory-bank/code_quality_anti_hacking_rules.md)** - 品質指標アンチハッキング・ルール（絶対遵守）
-
-### 2. Core Development Knowledge
-3. **[memory-bank/tdd_implementation_knowledge.md](memory-bank/tdd_implementation_knowledge.md)** - TDD実践の具体的手法
-4. **[memory-bank/generic_tdd_patterns.md](memory-bank/generic_tdd_patterns.md)** - 汎用的なTDDパターン
-5. **[memory-bank/development_workflow_rules.md](memory-bank/development_workflow_rules.md)** - 開発ワークフロー
-
-### 3. Project Specific Knowledge
-6. **[memory-bank/a2a_protocol_implementation_rules.md](memory-bank/a2a_protocol_implementation_rules.md)** - A2Aプロトコル実装仕様
-7. **[memory-bank/ci_cd_optimization_rules.md](memory-bank/ci_cd_optimization_rules.md)** - CI/CD設定と最適化
-
-### 4. Quality Assurance & Documentation Accuracy
-8. **[memory-bank/critical_review_framework.md](memory-bank/critical_review_framework.md)** - 批判的レビューフレームワーク
-9. **[memory-bank/a2a_critical_review.md](memory-bank/a2a_critical_review.md)** - プロジェクトレビュー結果
-
-### 5. Architecture Documentation
-10. **[docs/02.basic_design/a2a_architecture.md](docs/02.basic_design/a2a_architecture.md)** - システムアーキテクチャ設計
-11. **[docs/03.detail_design/a2a_tdd_implementation.md](docs/03.detail_design/a2a_tdd_implementation.md)** - TDD実装の詳細記録
-
-### 6. System Configuration & Tools
-12. **[docs/90.references/git_hooks_specification.md](docs/90.references/git_hooks_specification.md)** - Gitフック仕様とトラブルシューティング
-13. **[memory-bank/project_reproduction_checklist.md](memory-bank/project_reproduction_checklist.md)** - プロジェクト再現手順
-
-### 7. AI Agent Knowledge & Patterns
-14. **[memory-bank/knowledge/ai_agent_delegation_patterns.md](memory-bank/knowledge/ai_agent_delegation_patterns.md)** - AIエージェント委託パターン（タスク分解と委託実行）
-
-### 8. Parallel Execution & Git Worktree (CRITICAL for Claude CLI)
-15. **[memory-bank/git_worktree_parallel_development_verified.md](memory-bank/git_worktree_parallel_development_verified.md)** - 並列開発実証完了報告書（再現手順・品質データ・運用ガイド完備）
+### 1. 事実ベース判断の原則
+- ❌ **禁止**: 「たぶん」「おそらく」等の推測判断
+- ✅ **必須**: 客観的事実確認後の判断のみ
 
 ## 🚨 CRITICAL: Documentation Accuracy Rules (ABSOLUTE COMPLIANCE)
 
@@ -97,11 +70,78 @@ python scripts/critical_documentation_review.py --target README.md
 
 ## 🔄 Development Workflow (MUST FOLLOW)
 
-### Enhanced Development Flow with Accuracy Verification
+### tmux Session Management Rules (MANDATORY)
+
+**This repository assumes Claude Code sessions run within tmux environments.**
+
+#### Session Environment Requirements
+```bash
+# Check current tmux session state
+tmux list-sessions
+tmux list-panes -F "#{pane_index}: #{pane_title} #{pane_current_command}"
+
+# Create additional work panes when needed
+tmux split-window -v     # Split vertically (create pane below)
+tmux split-window -h     # Split horizontally (create pane right)
+tmux new-window -n work  # Create new window for parallel work
+```
+
+#### Multi-Pane Development Strategy
+1. **Main Pane**: Primary Claude Code session for development
+2. **Test Pane**: Dedicated for running tests and quality checks
+3. **Server Pane**: For running development servers
+4. **Monitor Pane**: For system monitoring and logs
+
+#### Pane Communication Protocol
+```bash
+# 🚨 CRITICAL: Send commands to specific panes (SEPARATE MESSAGE AND ENTER)
+tmux send-keys -t <pane_number> '<command>'
+tmux send-keys -t <pane_number> Enter
+
+# Capture output from panes
+tmux capture-pane -t <pane_number> -p
+
+# Switch between panes during development
+tmux select-pane -t <pane_number>
+```
+
+#### ⚠️ ABSOLUTE RULE: Never use single-line tmux send with Enter
+```bash
+# ❌ FORBIDDEN PATTERN - will cause Enter sending failures
+tmux send-keys -t <pane> '<message>' Enter
+
+# ✅ REQUIRED PATTERN - separate message and Enter sending
+tmux send-keys -t <pane> '<message>'
+tmux send-keys -t <pane> Enter
+```
+
+#### tmux-Claude Integration Best Practices
+- Use tmux pane numbers for task delegation
+- Maintain separate Claude Code instances for parallel work
+- Coordinate testing across multiple panes
+- Use tmux session persistence for long-running tasks
+
+**Note**: Claude Code instances within tmux may report different pane numbers internally than tmux's actual pane indexing due to execution context differences.
+
+### Session Start Procedure (MANDATORY)
+```bash
+# 1. Cogneeナレッジステータス確認
+mcp__cognee__cognify_status
+
+# 2. 開発者ルールの読み込み
+mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
+
+# 3. プロジェクト概要の確認
+mcp__cognee__search --search_query "プロジェクト概要 A2A" --search_type "GRAPH_COMPLETION"
+```
+
+### Enhanced Development Flow with Cognee & Accuracy Verification
 ```mermaid
 graph LR
-    A[要件定義] --> B[設計レビュー]
-    B --> C[TDD実装]
+    A[要件定義] --> A1[Cognee検索]
+    A1 --> B[設計レビュー]
+    B --> B1[パターン検索]
+    B1 --> C[TDD実装]
     C --> D[セルフレビュー]
     D --> E[事実検証チェック]
     E --> F[自動品質チェック]
@@ -110,6 +150,11 @@ graph LR
     G -->|Yes| H[批判的レビュー]
     H --> I[ドキュメント正確性検証]
     I --> J[マージ]
+    J --> K[ナレッジ記録<br/>MD + Cognee]
+    
+    style A1 fill:#e1f5fe
+    style B1 fill:#e1f5fe
+    style K fill:#e1f5fe
 ```
 
 ### Critical Review Points
@@ -354,6 +399,25 @@ class TaskCreateModel(BaseModel):
 - [ ] **Test Quality**: Do tests specify behavior, not implementation?
 
 ## Common Commands Reference
+
+### Cognee Knowledge Management (MANDATORY AT SESSION START)
+```bash
+# Session initialization
+mcp__cognee__cognify_status
+mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
+
+# Search patterns
+mcp__cognee__search --search_query "TDD patterns" --search_type "GRAPH_COMPLETION"
+mcp__cognee__search --search_query "error handling" --search_type "INSIGHTS"
+mcp__cognee__search --search_query "pytest fixture" --search_type "CHUNKS"
+
+# Knowledge registration
+mcp__cognee__cognify --data /path/to/knowledge.md
+mcp__cognee__cognify_status
+
+# Knowledge maintenance
+mcp__cognee__prune  # CAUTION: Deletes all data
+```
 
 ### Development
 ```bash

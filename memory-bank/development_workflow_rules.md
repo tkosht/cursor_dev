@@ -7,14 +7,17 @@
 ## 🚨 必須参照ルール
 
 **開発前に必ず確認すること:**
+- **[cognee_mandatory_utilization_rules.md](cognee_mandatory_utilization_rules.md)** - Cogneeナレッジ必須利活用ルール
 - **[code_quality_anti_hacking_rules.md](code_quality_anti_hacking_rules.md)** - 品質指標への誠実性を保つ絶対ルール
 
 ## 📋 開発フロー全体像
 
 ```mermaid
 graph TD
-    A[要件定義] --> B[設計レビュー]
-    B --> C[TDD実装]
+    A[要件定義] --> A1[Cogneeナレッジ検索]
+    A1 --> B[設計レビュー]
+    B --> B1[実装パターン検索]
+    B1 --> C[TDD実装]
     C --> D[セルフレビュー]
     D --> E[自動品質チェック]
     E --> F{品質基準達成?}
@@ -26,15 +29,33 @@ graph TD
     J --> D
     I -->|No| K[マージ]
     K --> L[振り返り]
+    L --> L1[ナレッジ記録<br/>MD + Cognee]
+    
+    style A1 fill:#e1f5fe
+    style B1 fill:#e1f5fe
+    style L1 fill:#e1f5fe
 ```
 
 ## 🔄 各フェーズの詳細
 
 ### 1. 要件定義フェーズ
 
+#### Cogneeナレッジ活用
+```bash
+# 類似要件の検索
+mcp__cognee__search --search_query "類似機能要件" --search_type "GRAPH_COMPLETION"
+# 過去の実装パターン確認
+mcp__cognee__search --search_query "実装パターン" --search_type "INSIGHTS"
+```
+
 #### チェックリスト
 ```yaml
 requirements_checklist:
+  cognee_search:
+    - [ ] 類似要件をCogneeで検索済み
+    - [ ] 過去の教訓を確認済み
+    - [ ] 関連パターンを特定済み
+    
   functional:
     - [ ] ユーザーストーリーが明確
     - [ ] 受け入れ条件が定義済み
