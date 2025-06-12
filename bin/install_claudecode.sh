@@ -28,4 +28,6 @@ npm install -g @anthropic-ai/claude-code
 # Optional: Reinstall your previous global packages in the new location
 # Look at ~/workspace/.npm-global-packages.txt and install packages you want to keep
 
+export PATH=$HOME/workspace/.npm-global/bin:$PATH
+sh bin/add_cognee_mcp.sh
 
