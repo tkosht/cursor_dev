@@ -181,6 +181,9 @@ def test_unicode_handling():
 4. ドキュメントの更新
 
 ## 6. 参考資料
-- [多言語対応ベストプラクティス](../references/multilingual_best_practices.md)
-- [文化的配慮ガイドライン](../references/cultural_considerations.md)
 - [A2Aプロトコル仕様](../02.basic_design/a2a_architecture.md)
+
+<!-- 
+注記：多言語対応・文化的配慮に関する詳細は、本文書の第2章「文化的配慮事項」に
+包括的に記載されており、追加の参考資料は不要です。
+-->

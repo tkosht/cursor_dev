@@ -99,7 +99,7 @@ EOF
 # tests/unit/test_core/test_task.py
 import pytest
 from datetime import datetime
-from app.a2a.core.task import Task
+from app.a2a.core.types import Task
 
 class TestTask:
     def test_create_task_with_required_fields(self):
@@ -227,7 +227,7 @@ class Task:
 import pytest
 from app.a2a.storage.interface import TaskRepository
 from app.a2a.storage.memory import InMemoryTaskRepository
-from app.a2a.core.task import Task
+from app.a2a.core.types import Task
 
 class TestInMemoryTaskRepository:
     @pytest.fixture
@@ -272,7 +272,7 @@ class TestInMemoryTaskRepository:
 # app/a2a/storage/interface.py
 from abc import ABC, abstractmethod
 from typing import Optional, List
-from app.a2a.core.task import Task
+from app.a2a.core.types import Task
 
 class TaskRepository(ABC):
     """タスクリポジトリのインターフェース"""
@@ -299,7 +299,7 @@ class TaskRepository(ABC):
 
 # app/a2a/storage/memory.py
 from typing import Dict, Optional, List
-from app.a2a.core.task import Task
+from app.a2a.core.types import Task
 from .interface import TaskRepository
 
 class InMemoryTaskRepository(TaskRepository):
