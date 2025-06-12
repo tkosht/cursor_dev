@@ -265,9 +265,9 @@ Data Pipeline Manager
 4. **エラー伝播**: 一部Agent障害の全体への影響
 
 ## 関連ドキュメント
-- [Claude Agent組織化実験報告書](claude_agent_organizational_experiment_report.md)
-- [tmux-Claude間インタラクション・トラブルシューティング](tmux_claude_interaction_troubleshooting.md)
 - [AI Agent委託パターン](ai_agent_delegation_patterns.md)
+
+**注**: この文書は13ペイン階層組織の理論的パターンを記録したものです。実際の運用では、ルールの複雑化により機能不全となったため、より簡素なアプローチを推奨します。
 
 ---
 **パターン検証**: 9ペイン階層組織での実証実験済み  

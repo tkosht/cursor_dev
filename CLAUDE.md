@@ -73,7 +73,18 @@ python scripts/pre_action_check.py --strict-mode
 ```
 
 ### 1. 事実ベース判断の原則（Core Principle）
-- ❌ **禁止**: 「たぶん」「おそらく」等の推測判断
+
+#### 根本原則
+```
+推測禁止 = 憶測・推定・想像による判断の絶対禁止
+事実のみ = 客観的に検証可能な事実のみに基づく判断
+確認優先 = 結論前に必ず物理的・直接的確認を実施
+```
+
+#### 禁止事項（絶対遵守）
+- ❌ **憶測による状況判断**: 「たぶん」「おそらく」による結論
+- ❌ **推測による問題診断**: 根拠なき「技術的制約」判定
+- ❌ **責任回避的判断**: 安易な外部要因への転嫁
 - ✅ **必須**: 客観的事実確認後の判断のみ
 
 ### 2. Documentation Accuracy Principles (ドキュメント正確性原則)
@@ -168,6 +179,41 @@ tmux send-keys -t <pane> '<message>' Enter
 tmux send-keys -t <pane> '<message>'
 tmux send-keys -t <pane> Enter
 ```
+
+#### Safe Send Function (Recommended for Automation)
+```bash
+function safe_send() {
+    local pane=$1
+    local message="$2"
+    
+    echo "=== SAFE SEND to pane $pane ==="
+    echo "Message: $message"
+    
+    # 1. Message sending
+    tmux send-keys -t $pane "$message"
+    echo "✓ Message sent"
+    
+    # 2. Enter sending
+    tmux send-keys -t $pane Enter
+    echo "✓ Enter sent"
+    
+    # 3. Verification
+    sleep 2
+    echo "=== Verification ==="
+    tmux capture-pane -t $pane -p | tail -5
+}
+```
+
+#### Pre/Post Execution Checklist
+**Before sending:**
+- [ ] Verify message content
+- [ ] Confirm target pane number
+- [ ] Use separate send pattern
+
+**After sending:**
+- [ ] Confirm message display on receiver
+- [ ] Check for Thinking or prompt display
+- [ ] Verify response starts within 3 seconds
 
 #### tmux-Claude Integration Best Practices
 - Use tmux pane numbers for task delegation
@@ -680,11 +726,13 @@ make clean        # Clean up everything
 
 ## 📋 Ongoing Development Protocol (CONTINUOUS VERIFICATION)
 
-### Before EVERY Action (AUTOMATED CHECK)
-1. **Constraint Pre-Check**: Execute `python scripts/pre_action_check.py`
-2. **Cognee Context Search**: Relevant pattern/knowledge lookup (if available)
-3. **Cross-Validation**: Compare direct constraints vs Cognee results
-4. **Proceed**: Only if all checks pass
+### Before EVERY Action (TASK DAG + CONSTRAINT SYSTEM)
+1. **Task DAG Construction**: Structure tasks with dependencies and parallelism using TodoWrite
+2. **Constraint Gate Check**: Execute `python scripts/pre_action_check.py` for integrated validation
+3. **Delegation Assessment**: Automatic scoring and optimization using Task DAG analysis
+4. **Cognee Context Search**: Relevant pattern/knowledge lookup (if available)
+5. **Cross-Validation**: Compare direct constraints vs Cognee results
+6. **Proceed**: Execute using hybrid strategy (parallel delegation + direct execution)
 
 ### During Development (CONTINUOUS MONITORING)
 1. **tmux Pane Coordination**: Use multiple panes for parallel validation
@@ -695,24 +743,28 @@ make clean        # Clean up everything
 ### Action Verification Checklist
 ```markdown
 **Pre-Action Questions (MUST ALL BE "YES"):**
-- [ ] Have I loaded the mandatory constraint documents?
-- [ ] Does this action comply with user_authorization_mandatory_rules.md?
-- [ ] Have I verified this against testing_mandatory_rules.md?
-- [ ] Is there objective evidence supporting this action?
-- [ ] Have I run pre_action_check.py?
+- [ ] Have I constructed a Task DAG with clear dependencies using TodoWrite?
+- [ ] Have I run `python scripts/pre_action_check.py` on the complete task plan?
+- [ ] Does the Task DAG comply with user_authorization_mandatory_rules.md?
+- [ ] Have I verified testing requirements for each DAG node?
+- [ ] Have I evaluated delegation opportunities using automatic scoring?
+- [ ] Is there objective evidence supporting this execution plan?
+- [ ] Are delegation candidates identified for parallel execution?
 
-**If ANY answer is "NO" - STOP and seek clarification**
+**If ANY answer is "NO" - STOP and redesign the Task DAG**
 ```
 
 ## 🚨 Final Reminders
 
-1. **Always load constraints first** - Direct files, then Cognee
-2. **Always write tests first** - No exceptions
-3. **Run quality checks before commit** - Save CI time
-4. **Think generic** - Will this work elsewhere?
-5. **Document why, not what** - Code shows what
-6. **Review critically** - Question everything
-7. **Verify constraints continuously** - Not just at start
+1. **Always construct Task DAG first** - Structure before execution
+2. **Always run pre_action_check.py** - Integrated constraint validation
+3. **Always evaluate delegation opportunities** - Optimize execution strategy
+4. **Always write tests first** - No exceptions
+5. **Run quality checks before commit** - Save CI time
+6. **Think generic** - Will this work elsewhere?
+7. **Document why, not what** - Code shows what
+8. **Review critically** - Question everything
+9. **Verify constraints continuously** - Not just at start
 
 ---
 
