@@ -44,7 +44,10 @@ class AccuracyVerifier:
         # ドキュメントからmakeコマンドを抽出して検証
         for doc_path in self.project_root.glob('**/*.md'):
             # 除外パス
-            if any(exclude in str(doc_path) for exclude in ['.venv', 'node_modules', 'htmlcov', '.specstory', 'worker']):
+            if any(exclude in str(doc_path) for exclude in [
+                '.venv', 'node_modules', 'htmlcov', '.specstory', 'worker',
+                'backup', 'dev-tools/external-repos'
+            ]):
                 continue
                 
             with open(doc_path, 'r', encoding='utf-8') as f:
@@ -102,7 +105,10 @@ class AccuracyVerifier:
         
         for doc_path in self.project_root.glob('**/*.md'):
             # 除外パス
-            if any(exclude in str(doc_path) for exclude in ['.venv', 'node_modules', 'htmlcov', '.specstory', 'worker']):
+            if any(exclude in str(doc_path) for exclude in [
+                '.venv', 'node_modules', 'htmlcov', '.specstory', 'worker',
+                'backup', 'dev-tools/external-repos'
+            ]):
                 continue
                 
             with open(doc_path, 'r', encoding='utf-8') as f:
@@ -149,7 +155,10 @@ class AccuracyVerifier:
         
         for doc_path in self.project_root.glob('**/*.md'):
             # 除外パス
-            if any(exclude in str(doc_path) for exclude in ['.venv', 'node_modules', 'htmlcov', '.specstory', 'worker']):
+            if any(exclude in str(doc_path) for exclude in [
+                '.venv', 'node_modules', 'htmlcov', '.specstory', 'worker',
+                'backup', 'dev-tools/external-repos'
+            ]):
                 continue
                 
             with open(doc_path, 'r', encoding='utf-8') as f:
@@ -196,7 +205,10 @@ class AccuracyVerifier:
         # pytest関連のコマンドを確認
         for doc_path in self.project_root.glob('**/*.md'):
             # 除外パス
-            if any(exclude in str(doc_path) for exclude in ['.venv', 'node_modules', 'htmlcov', '.specstory', 'worker']):
+            if any(exclude in str(doc_path) for exclude in [
+                '.venv', 'node_modules', 'htmlcov', '.specstory', 'worker',
+                'backup', 'dev-tools/external-repos'
+            ]):
                 continue
                 
             with open(doc_path, 'r', encoding='utf-8') as f:
