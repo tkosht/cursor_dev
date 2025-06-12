@@ -19,4 +19,13 @@ services:
     #   - net.ipv4.tcp_syncookies=0
     # ports:
     #   - "8502:8501    # streamlit
+    networks:
+      - default
+      - cognee-network
+
+
+networks:
+  cognee-network:
+    external: true
+    name: cognee-network
 

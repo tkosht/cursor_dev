@@ -20,6 +20,7 @@ services:
               capabilities: [gpu, utility, compute, video]
     volumes:
       - .:/home/$user_name/workspace
+      - ../cognee:/home/$user_name/cognee
       - .ssh/:/home/$user_name/.ssh/
     working_dir: /home/$user_name/workspace
     environment:
@@ -30,4 +31,13 @@ services:
     # ports:
     #   - "8502:8501"   # streamlit
 
-
+#     networks:
+#       - default
+#       - cognee-network
+# 
+# 
+# networks:
+#   cognee-network:
+#     external: true
+#     name: cognee-network
+# 
