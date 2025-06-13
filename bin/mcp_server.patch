@@ -1,0 +1,28 @@
+diff --git a/cognee-mcp/src/server.py b/cognee-mcp/src/server.py
+index fffbaf22..f5a72771 100755
+--- a/cognee-mcp/src/server.py
++++ b/cognee-mcp/src/server.py
+@@ -16,6 +16,7 @@ from cognee.api.v1.cognify.code_graph_pipeline import run_code_graph_pipeline
+ from cognee.modules.search.types import SearchType
+ from cognee.shared.data_models import KnowledgeGraph
+ from cognee.modules.storage.utils import JSONEncoder
++from cognee.modules.engine.operations.setup import setup
+ 
+ mcp = FastMCP("Cognee")
+ 
+@@ -443,6 +444,15 @@ async def main():
+ 
+     args = parser.parse_args()
+ 
++    # Initialize database and tables before starting server
++    logger.info("Initializing Cognee database...")
++    try:
++        await setup()
++        logger.info("Cognee database initialized successfully")
++    except Exception as e:
++        logger.warning(f"Database initialization warning: {str(e)}")
++        # Continue anyway as it might already be initialized
++
+     logger.info(f"Starting MCP server with transport: {args.transport}")
+     if args.transport == "stdio":
+         await mcp.run_stdio_async()

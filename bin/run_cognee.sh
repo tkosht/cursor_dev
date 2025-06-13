@@ -5,10 +5,7 @@ cd $d/../
 
 
 cd dev-tools/external-repos/cognee/cognee-mcp
-uv sync --dev --all-extras --reinstall
-
 . .venv/bin/activate
-
-. ./.env
+. ../../.env
 python src/server.py --transport sse
 
