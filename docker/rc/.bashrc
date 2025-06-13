@@ -122,5 +122,5 @@ export PATH="$HOME/.detaspace/bin:$PATH"
 export UV_LINK_MODE=copy
 
 alias auto_claude="claude --dangerously-skip-permissions"
-alias claude="auto_claude"
+# alias claude="auto_claude"
 
