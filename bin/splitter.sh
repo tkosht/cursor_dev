@@ -17,16 +17,18 @@ tmux select-layout even-horizontal
 
 # 横に分割
 ## 2分割
-for i in $(seq 1 $(expr $n))
+for i in $(seq 1 $(expr $n + 1))
 do
-    p=$(expr \( $i - 1 \) \* 2 + 1)
+    # p=$(expr \( $i - 1 \) \* 2 + 1)
+    p=$(expr \( $i - 1 \) \* 2)
     tmux select-pane -t $p && tmux split-window -v
 done
 
+
 ## 3分割目
-for i in $(seq 1 $(expr $n))
+for i in $(seq 1 $(expr $n + 1))
 do
-    p=$(expr \( $i - 1 \) \* 3 + 1)
+    p=$(expr \( $i - 1 \) \* 3 + 2)
     tmux select-pane -t $p && tmux split-window -v
     tmux select-layout -E
 done
