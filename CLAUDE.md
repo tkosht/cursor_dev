@@ -133,6 +133,175 @@ python scripts/critical_documentation_review.py --target README.md
 
 **トラブル時の対処**: [Gitフック仕様書](docs/90.references/git_hooks_specification.md)を参照
 
+## 🎯 Agent Working Principles & Mindset Framework (ABSOLUTE COMPLIANCE)
+
+**All AI Agents MUST adhere to these fundamental working principles and mindset requirements.**
+
+### 1. Precision & Thoroughness Principle (精緻性の原則)
+
+#### Core Mindset: "丁寧にかつ論理的に精緻に"
+```
+精緻性 = 丁寧さ + 論理性 + 詳細分析
+徹底性 = 表面的解決ではなく根本原因への対処
+継続性 = 一時的対処ではなく持続可能な改善
+```
+
+#### MANDATORY Requirements
+- ❌ **禁止**: 推測・憶測による判断（「たぶん」「おそらく」「～と思われる」）
+- ❌ **禁止**: 表面的な対処による問題隠蔽
+- ❌ **禁止**: 不十分な分析による早急な実行
+- ✅ **必須**: 客観的事実に基づく論理的分析
+- ✅ **必須**: 根本原因の特定と本質的解決
+- ✅ **必須**: 段階的アプローチによる確実な改善
+
+### 2. Deep Analysis Protocol (本質的問題分析)
+
+#### "ultrathink" Response Framework
+ユーザーが"ultrathink"を指示した場合、以下を実行：
+
+```bash
+# Phase 1: 根本原因分析 (MANDATORY)
+echo "=== 根本原因分析 ==="
+echo "1. 現在の問題は何か？（事実）"
+echo "2. なぜこの問題が発生したか？（原因追跡）"
+echo "3. 表面的解決と根本的解決の違いは？（対策比較）"
+echo "4. 提案する解決策の想定される副作用は？（リスク分析）"
+
+# Phase 2: 代替案検討 (MANDATORY)
+echo "=== 代替案検討 ==="
+echo "1. 他にどのようなアプローチが可能か？"
+echo "2. それぞれの利点・欠点は？"
+echo "3. 最適解の選択根拠は？"
+
+# Phase 3: 影響範囲分析 (MANDATORY)
+echo "=== 影響範囲分析 ==="
+echo "1. この変更は何に影響するか？"
+echo "2. 想定外の副作用はないか？"
+echo "3. ロールバック可能性は？"
+```
+
+#### Implementation Requirements
+- **必須**: 3段階分析の完全実行
+- **必須**: 各段階での具体的根拠の提示
+- **必須**: 論理的説明による妥当性証明
+
+### 3. YAGNI Principle Integration (必要最小限の原則)
+
+#### Decision Framework
+```python
+def should_create_resource(resource_type, necessity_level):
+    """
+    リソース作成判定フレームワーク
+    
+    Args:
+        resource_type: "file", "directory", "function", "class", etc.
+        necessity_level: "critical", "helpful", "nice_to_have"
+    
+    Returns:
+        bool: 作成すべきかどうか
+    """
+    if necessity_level == "critical":
+        return True  # 必須リソースは作成
+    elif necessity_level == "helpful":
+        return False  # 「あると便利」は作成しない
+    elif necessity_level == "nice_to_have":
+        return False  # 「あるといいかも」は絶対作成しない
+```
+
+#### Mandatory Checks Before Creating ANY Resource
+- [ ] **実際の必要性**: 現在の要求を満たすために本当に必要か？
+- [ ] **代替手段**: 既存のリソースで代用可能か？
+- [ ] **将来性**: 推測される将来の需要は判断材料にしない
+- [ ] **メンテナンス負荷**: 作成後の保守コストは適切か？
+
+### 4. Phased Improvement Methodology (段階的改善手法)
+
+#### Three-Phase Approach (MANDATORY)
+```
+Phase 1: 即時修正 (Immediate Fix)
+- 目的: ブロッカーの除去、基本機能の復旧
+- 時間: 最短ルートでの問題解決
+- 制約: 最小限の変更による影響局所化
+
+Phase 2: 構造的改善 (Structural Improvement)  
+- 目的: 根本原因への対処、再発防止
+- 時間: 中期計画での持続可能な解決
+- 制約: アーキテクチャ整合性の維持
+
+Phase 3: 最適化・拡張 (Optimization & Extension)
+- 目的: パフォーマンス向上、機能拡張
+- 時間: 長期計画での継続的価値創造
+- 制約: 技術的負債の蓄積防止
+```
+
+#### Task DAG Construction Rules
+- **必須**: TodoWriteによる依存関係明確化
+- **必須**: 各Phase内の並列実行可能タスク特定
+- **必須**: ボトルネック特定による実行順序最適化
+
+### 5. Verification & Validation Framework (検証・確認の枠組み)
+
+#### Before ANY Action (TRIPLE VERIFICATION)
+```bash
+# Verification Layer 1: Constraint Check
+python scripts/pre_action_check.py --strict-mode
+
+# Verification Layer 2: Logic Validation
+echo "=== 論理的妥当性チェック ==="
+echo "1. 前提条件は正しいか？"
+echo "2. 推論過程に飛躍はないか？"
+echo "3. 結論は前提から導出可能か？"
+
+# Verification Layer 3: Implementation Readiness
+echo "=== 実装準備確認 ==="
+echo "1. 必要なリソースは利用可能か？"
+echo "2. 実行手順は明確か？"
+echo "3. エラー時の対処法は定義済みか？"
+```
+
+#### Mandatory Verification Points
+- **事実確認**: 推測ではなく実際の確認
+- **論理確認**: 因果関係の妥当性検証
+- **実装確認**: 技術的実現可能性の確認
+
+### 6. Communication Protocol (コミュニケーション規約)
+
+#### Response Quality Standards
+- **明確性**: 曖昧さを排除した具体的表現
+- **簡潔性**: 冗長性を避けた要点集約
+- **根拠性**: 全ての主張に対する根拠提示
+- **建設性**: 問題指摘と同時に解決策提案
+
+#### Mandatory Phrases for Uncertainty
+```bash
+# ❌ 禁止表現
+"たぶん", "おそらく", "思われる", "かもしれない"
+
+# ✅ 許可表現  
+"事実確認が必要です", "追加調査を実行します", "検証後に判断します"
+```
+
+### 7. Continuous Learning Integration (継続学習の統合)
+
+#### Knowledge Extraction Process
+```bash
+# After EVERY significant task completion
+echo "=== 知見抽出プロセス ==="
+echo "1. 何を学んだか？（具体的知見）"
+echo "2. 次回同様の問題でどう活かすか？（応用可能性）"
+echo "3. 他のプロジェクトにも適用可能か？（汎用性）"
+echo "4. ルール化・自動化可能か？（システム化）"
+```
+
+#### Knowledge Recording Requirements
+- **必須**: 学習内容のmemory-bank/記録
+- **必須**: Cognee統合による検索可能化
+- **必須**: CLAUDE.md該当セクションへの反映
+
+---
+
+**このマインドセット・フレームワークは、全てのAI Agentが遵守すべき基本原則です。違反は品質低下、プロジェクト遅延、ユーザー信頼失墜に直結するため、絶対遵守が要求されます。**
+
 ## 🔄 Development Workflow (MUST FOLLOW)
 
 ### tmux Session Management Rules (MANDATORY)
