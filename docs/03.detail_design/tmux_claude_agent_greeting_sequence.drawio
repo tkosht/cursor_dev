@@ -1,0 +1,278 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Greeting Task Sequence" id="greeting-task-sequence">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="2000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Lifelines -->
+        <mxCell id="user" value="User" style="shape=umlLifeline;participant=umlActor;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;verticalAlign=top;spacingTop=36;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="50" y="50" width="100" height="1800" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="pm" value="Project Manager&#xa;(tmux-pane-0)" style="shape=umlLifeline;participant=umlEntity;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;verticalAlign=top;spacingTop=36;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="200" y="50" width="120" height="1800" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="pmo" value="PMO/Consultant&#xa;(tmux-pane-1)" style="shape=umlLifeline;participant=umlEntity;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;verticalAlign=top;spacingTop=36;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="370" y="50" width="120" height="1800" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="tem" value="Task Execution Manager&#xa;(tmux-pane-2)" style="shape=umlLifeline;participant=umlEntity;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;verticalAlign=top;spacingTop=36;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="540" y="50" width="140" height="1800" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="trm" value="Task Review Manager&#xa;(tmux-pane-3)" style="shape=umlLifeline;participant=umlEntity;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;verticalAlign=top;spacingTop=36;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="730" y="50" width="140" height="1800" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="krm" value="Knowledge/Rule Manager&#xa;(tmux-pane-4)" style="shape=umlLifeline;participant=umlEntity;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;verticalAlign=top;spacingTop=36;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="920" y="50" width="140" height="1800" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="tew5" value="Task Execution Worker&#xa;(tmux-pane-5)" style="shape=umlLifeline;participant=umlEntity;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;verticalAlign=top;spacingTop=36;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="50" width="140" height="1800" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="trw6" value="Task Review Worker&#xa;(tmux-pane-6)" style="shape=umlLifeline;participant=umlEntity;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;verticalAlign=top;spacingTop=36;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="50" width="140" height="1800" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="krw7" value="Knowledge/Rule Worker&#xa;(tmux-pane-7)" style="shape=umlLifeline;participant=umlEntity;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;verticalAlign=top;spacingTop=36;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1490" y="50" width="140" height="1800" as="geometry" />
+        </mxCell>
+        
+        <!-- Messages -->
+        <!-- 1. User to PM -->
+        <mxCell id="msg1" value="挨拶タスクの実行を依頼" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="100" y="150" as="sourcePoint" />
+            <mxPoint x="260" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 2. PM to PMO (consultation) -->
+        <mxCell id="msg2" value="挨拶タスクの実行計画について相談&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="260" y="200" as="sourcePoint" />
+            <mxPoint x="430" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 3. PMO to PM (response) -->
+        <mxCell id="msg3" value="組織階層に従った確認を推奨&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="250" as="sourcePoint" />
+            <mxPoint x="260" y="250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 4. PM clears context for TEM -->
+        <mxCell id="msg4" value="/clear" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="260" y="300" as="sourcePoint" />
+            <mxPoint x="610" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 5. PM to TEM -->
+        <mxCell id="msg5" value="挨拶タスクの実行を指示&lt;br&gt;各Workerに「こんにちは」を表示させる&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="260" y="350" as="sourcePoint" />
+            <mxPoint x="610" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 6. TEM clears context for TEW5 -->
+        <mxCell id="msg6" value="/clear" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="610" y="400" as="sourcePoint" />
+            <mxPoint x="1180" y="400" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 7. TEM to TEW5 -->
+        <mxCell id="msg7" value="「こんにちは」を表示してください&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="610" y="450" as="sourcePoint" />
+            <mxPoint x="1180" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 8. TEW5 executes -->
+        <mxCell id="msg8" value="echo &quot;こんにちは&quot;" style="html=1;verticalAlign=bottom;endArrow=none;curved=0;rounded=0;fillColor=#d5e8d4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1180" y="500" as="sourcePoint" />
+            <mxPoint x="1250" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 9. TEW5 to TEM (report) -->
+        <mxCell id="msg9" value="挨拶タスク完了しました&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1180" y="550" as="sourcePoint" />
+            <mxPoint x="610" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 10. TEM to PM (report) -->
+        <mxCell id="msg10" value="挨拶タスク実行完了&lt;br&gt;Worker 1名で実行&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="610" y="600" as="sourcePoint" />
+            <mxPoint x="260" y="600" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 11. PM clears context for TRM -->
+        <mxCell id="msg11" value="/clear" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="260" y="650" as="sourcePoint" />
+            <mxPoint x="800" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 12. PM to TRM -->
+        <mxCell id="msg12" value="挨拶タスクの成果物レビューを依頼&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="260" y="700" as="sourcePoint" />
+            <mxPoint x="800" y="700" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 13. TRM clears context for TRW6 -->
+        <mxCell id="msg13" value="/clear" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="800" y="750" as="sourcePoint" />
+            <mxPoint x="1370" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 14. TRM to TRW6 -->
+        <mxCell id="msg14" value="挨拶タスクの実行結果を&lt;br&gt;レビューしてください&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="800" y="800" as="sourcePoint" />
+            <mxPoint x="1370" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 15. TRW6 reviews -->
+        <mxCell id="msg15" value="レビュー実施" style="html=1;verticalAlign=bottom;endArrow=none;curved=0;rounded=0;fillColor=#f8cecc;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1370" y="850" as="sourcePoint" />
+            <mxPoint x="1440" y="850" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 16. TRW6 to TRM (report) -->
+        <mxCell id="msg16" value="レビュー完了&lt;br&gt;挨拶は正常に表示されました&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1370" y="900" as="sourcePoint" />
+            <mxPoint x="800" y="900" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 17. TRM to PM (report) -->
+        <mxCell id="msg17" value="レビュー結果：問題なし&lt;br&gt;挨拶タスクは正常に完了&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="800" y="950" as="sourcePoint" />
+            <mxPoint x="260" y="950" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 18. PM clears context for KRM -->
+        <mxCell id="msg18" value="/clear" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="260" y="1000" as="sourcePoint" />
+            <mxPoint x="990" y="1000" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 19. PM to KRM -->
+        <mxCell id="msg19" value="挨拶タスクの知見を&lt;br&gt;ナレッジ化してください&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="260" y="1050" as="sourcePoint" />
+            <mxPoint x="990" y="1050" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 20. KRM clears context for KRW7 -->
+        <mxCell id="msg20" value="/clear" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="990" y="1100" as="sourcePoint" />
+            <mxPoint x="1560" y="1100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 21. KRM to KRW7 -->
+        <mxCell id="msg21" value="挨拶タスクの実行プロセスを&lt;br&gt;文書化してください&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="990" y="1150" as="sourcePoint" />
+            <mxPoint x="1560" y="1150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 22. KRW7 documents -->
+        <mxCell id="msg22" value="ナレッジ文書作成" style="html=1;verticalAlign=bottom;endArrow=none;curved=0;rounded=0;fillColor=#fff2cc;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1560" y="1200" as="sourcePoint" />
+            <mxPoint x="1630" y="1200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 23. KRW7 to KRM (report) -->
+        <mxCell id="msg23" value="文書化完了&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1560" y="1250" as="sourcePoint" />
+            <mxPoint x="990" y="1250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 24. KRM to PM (report) -->
+        <mxCell id="msg24" value="ナレッジ化完了&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="990" y="1300" as="sourcePoint" />
+            <mxPoint x="260" y="1300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 25. PM consults PMO again -->
+        <mxCell id="msg25" value="全タスク完了の確認&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="260" y="1350" as="sourcePoint" />
+            <mxPoint x="430" y="1350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 26. PMO confirms -->
+        <mxCell id="msg26" value="指示系統・レポートラインの&lt;br&gt;確認が完了しています&lt;br&gt;&lt;super-ultrathink/&gt;" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="430" y="1400" as="sourcePoint" />
+            <mxPoint x="260" y="1400" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 27. PM to User (final report) -->
+        <mxCell id="msg27" value="挨拶タスク完了&lt;br&gt;全階層での確認済み" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="260" y="1450" as="sourcePoint" />
+            <mxPoint x="100" y="1450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Notes -->
+        <mxCell id="note1" value="注釈:&#xa;- 実線矢印: 指示（上位→下位）&#xa;- 破線矢印: 報告（下位→上位）&#xa;- /clear: コンテキストクリア&#xa;- &lt;super-ultrathink/&gt;: 深い思考促進タグ" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1550" width="300" height="120" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="note2" value="色分け:&#xa;- 青系: PM/PMO (最上位層)&#xa;- 緑系: Task Execution チーム&#xa;- 赤系: Task Review チーム&#xa;- 黄系: Knowledge/Rule チーム" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1550" width="250" height="120" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="note3" value="簡略化のため:&#xa;- 各チームから1名のWorkerのみ表示&#xa;- 実際は各チーム3名のWorkerが存在&#xa;- tmux-pane-8〜13のWorkerは省略" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="700" y="1550" width="250" height="100" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
