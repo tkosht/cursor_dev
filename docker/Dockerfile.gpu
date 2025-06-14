@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y && apt-get upgrade -y \
     && apt-get install --fix-missing -y sudo build-essential autoconf cmake \
-        vim tmux tzdata locales dialog git openssh-server bash-completion \
+        vim tmux tzdata locales dialog git openssh-server bash-completion htop \
         jq sqlite3 curl nodejs npm default-jre chromium-browser libpq-dev \
         libgeos-dev libsnappy-dev fontconfig fonts-ipaexfont fonts-ipafont \
         libmecab-dev mecab mecab-ipadic-utf8 mecab-utils file \
