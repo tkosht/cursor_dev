@@ -862,7 +862,164 @@ tmux send-keys -t 5 'claude -p "Phase1結果に基づく実装開始"'
 
 **Note**: This policy overrides any default sequential behavior. Always consider parallel agent delegation as the first option for any non-trivial task.
 
-**📚 詳細参照**: [Task Tool統合パターン](memory-bank/knowledge/task_tool_delegation_integration_patterns.md)
+### 3-Layer Delegation Architecture (統合委譲アーキテクチャ)
+
+**CRITICAL**: Unified delegation strategy integrating Task Tool, Claude CLI (`claude -p`), and tmux organization.
+
+#### Technology Foundation Understanding
+
+| Method | Task Tool | Claude CLI (`claude -p`) | Direct Execution |
+|--------|-----------|-------------------------|------------------|
+| **Environment** | Claude Code内蔵 | tmux pane外部プロセス | メインスレッド |
+| **State Management** | ステートレス | ステートフル | 即座完了 |
+| **Context** | 分離・最適化 | pane独立 | メイン共有 |
+| **Continuity** | 一回限り | セッション継続 | なし |
+| **Specialization** | 汎用調査 | 専門化蓄積 | 単純作業 |
+
+#### Layer 1: Task Tool Domain (高速・軽量委譲)
+
+**Optimal Use Cases**:
+```bash
+✅ 大量データ検索・分析（コンテキスト>2000 tokens）
+✅ 独立性の高い調査・研究
+✅ 並列実行可能なタスク
+✅ 一回限りの情報取得
+
+# Implementation Examples
+Task("競合技術調査", "AI開発ツールの比較分析・トレンド調査")
+Task("ライブラリ検索", "Python機械学習ライブラリの機能比較")
+Task("ドキュメント分析", "APIドキュメントから使用方法抽出")
+```
+
+#### Layer 2: Claude CLI Domain (継続・専門委譲)
+
+**Optimal Use Cases**:
+```bash
+✅ 長期継続作業（30分以上）
+✅ 専門性蓄積が必要
+✅ 状態・コンテキスト継承重要
+✅ 段階的作業進行
+
+# Implementation Examples (tmux組織活用)
+# pane-5: Task Execution Worker
+tmux send-keys -t 5 'claude -p "認証システム実装: OAuth2.0の段階的実装開始"'
+tmux send-keys -t 5 Enter
+
+# 30分後、同じWorkerで継続
+tmux send-keys -t 5 'claude -p "認証システム拡張: 先ほどの実装にJWT統合"'
+tmux send-keys -t 5 Enter
+```
+
+#### Layer 3: Hybrid Coordination (動的最適化)
+
+**Phase-based Optimal Strategy**:
+```bash
+# Research → Implementation Pipeline
+# Stage 1: Task Tool並列調査（高速情報収集）
+Task("技術調査", "認証技術の包括的調査・比較分析")
+Task("要件分析", "セキュリティ要件・制約条件の詳細分析")
+Task("実装方式調査", "最適な実装アプローチの特定")
+
+# Stage 2: Results Integration
+integrate_research_results()
+
+# Stage 3: Claude CLI継続実装（専門性活用）
+tmux send-keys -t 5 'claude -p "統合調査結果に基づく認証システム実装開始"'
+tmux send-keys -t 5 Enter
+```
+
+#### Dynamic Decision Algorithm (3秒判定拡張版)
+
+**即座判定フローチャート**:
+```bash
+function optimal_delegation_decision() {
+    local context_usage="$1"     # tokens
+    local duration="$2"          # minutes  
+    local requires_state="$3"    # true/false
+    local complexity="$4"        # 1-10
+    
+    # Layer 1: Task Tool判定
+    if (( context_usage > 2000 )) && (( duration < 30 )) && [ "$requires_state" = "false" ]; then
+        echo "Task Tool"
+        return 0
+    fi
+    
+    # Layer 2: Claude CLI判定  
+    if (( duration >= 30 )) && [ "$requires_state" = "true" ] && (( complexity >= 6 )); then
+        echo "Claude CLI"
+        return 0
+    fi
+    
+    # Layer 3: Hybrid判定
+    if (( complexity >= 7 )) && [ "$1" = "multi_phase" ]; then
+        echo "Hybrid Pipeline"
+        return 0
+    fi
+    
+    # Default: Direct Execution
+    echo "Direct Execution"
+    return 0
+}
+```
+
+#### Integration Session Initialization
+
+**統合セッション開始プロトコル**:
+```bash
+#!/bin/bash
+echo "🔄 3-Layer Delegation Architecture Initialization"
+echo "================================================="
+
+# Capability Assessment
+TASK_TOOL_AVAILABLE=$(command -v Task &> /dev/null && echo "true" || echo "false")
+CLAUDE_CLI_AVAILABLE=$(command -v claude &> /dev/null && echo "true" || echo "false")  
+TMUX_ORG_READY=$(tmux list-panes 2>/dev/null | wc -l | grep -q "14" && echo "true" || echo "false")
+
+# Strategy Selection
+if [ "$TASK_TOOL_AVAILABLE" = "true" ] && [ "$CLAUDE_CLI_AVAILABLE" = "true" ] && [ "$TMUX_ORG_READY" = "true" ]; then
+    echo "🚀 Full 3-Layer Strategy: Task Tool + Claude CLI + tmux Organization"
+    export DELEGATION_STRATEGY="FULL_3LAYER"
+elif [ "$TASK_TOOL_AVAILABLE" = "true" ] && [ "$CLAUDE_CLI_AVAILABLE" = "true" ]; then
+    echo "⚡ Hybrid Strategy: Task Tool + Claude CLI"
+    export DELEGATION_STRATEGY="HYBRID_2LAYER"
+elif [ "$TASK_TOOL_AVAILABLE" = "true" ]; then
+    echo "📊 Task Tool Strategy"
+    export DELEGATION_STRATEGY="TASK_TOOL_ONLY"
+else
+    echo "📝 Direct Execution Strategy"
+    export DELEGATION_STRATEGY="DIRECT_ONLY"
+fi
+
+echo "✅ 3-Layer Delegation Architecture Ready"
+```
+
+#### Cross-Reference Navigation (統合文書ナビゲーション)
+
+**📚 詳細技術実装**: [Task Tool統合パターン](memory-bank/knowledge/task_tool_delegation_integration_patterns.md)  
+**🏗️ 組織運用ルール**: [tmux組織ルール - Claude CLI統合](memory-bank/tmux_claude_agent_organization_rules.md)  
+**🔬 研究機能拡張**: [Research-Adaptive Multi-Agent Organization](memory-bank/knowledge/research_adaptive_multi_agent_organization.md)
+
+#### Quick Reference Guide (クイックリファレンス)
+
+**3秒判定チェックリスト**:
+```bash
+# Task Tool推奨条件
+[ コンテキスト使用量 > 2000 tokens ] && 
+[ 作業時間 < 30分 ] && 
+[ 独立性 = 完全 ] 
+→ Task Tool
+
+# Claude CLI推奨条件  
+[ 作業時間 ≥ 30分 ] && 
+[ 状態継承 = 必要 ] && 
+[ 専門性蓄積 = 必要 ]
+→ Claude CLI
+
+# Hybrid推奨条件
+[ 複雑性 ≥ 7/10 ] && 
+[ 多段階処理 = 必要 ]
+→ Hybrid Pipeline
+```
 
 ## Project Architecture (MUST FOLLOW)
 
