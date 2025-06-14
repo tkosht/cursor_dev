@@ -276,6 +276,11 @@ tmux capture-pane -t [target_pane] -p
 - 実行技術の習得・向上
 - 効率的実行手法の開発
 - 実行知見の蓄積・共有
+
+相互レビュー責務:
+- 他Agentからの成果物に対する批判的レビュー
+- 複眼的評価（重要度・時間軸・最適性）の実施
+- 建設的フィードバックの提供
 ```
 
 #### Task Review Workers (pane-6,9,12)
@@ -594,6 +599,7 @@ Level 4 (致命的): 組織秩序破壊、安全性問題
 レビュー指摘対応率: 目標 100%
 顧客満足度: 目標 >4.0/5.0
 再作業発生率: 目標 <10%
+相互レビュー実施率: 目標 100%  # Agent間成果物の批判的レビュー
 ```
 
 #### 学習・改善指標
@@ -632,6 +638,7 @@ Quarterly: 根本的見直し・戦略調整・組織最適化
 - `memory-bank/organization_failure_analysis_and_solutions.md`: 組織運営失敗分析
 - `memory-bank/development_workflow_rules.md`: 開発ワークフロー規則
 - `memory-bank/critical_review_framework.md`: 批判的レビューフレームワーク
+- `memory-bank/agent_peer_review_protocol.md`: エージェント相互レビュープロトコル
 
 #### 知識管理関連
 - `memory-bank/knowledge_utilization_failure_analysis.md`: 知識活用失敗分析

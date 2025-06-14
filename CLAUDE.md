@@ -59,6 +59,8 @@ This architecture ensures **absolute compliance** while maintaining **developmen
 17. **[memory-bank/git_worktree_parallel_development_verified.md](memory-bank/git_worktree_parallel_development_verified.md)** - 並列開発実証完了報告書
 18. **[memory-bank/organization_failure_analysis_and_solutions.md](memory-bank/organization_failure_analysis_and_solutions.md)** - 組織運営失敗分析と解決策
 19. **[memory-bank/tmux_claude_agent_organization_rules.md](memory-bank/tmux_claude_agent_organization_rules.md)** - tmux Claude Agent組織体制ルール（正式版）
+20. **[memory-bank/agent_peer_review_protocol.md](memory-bank/agent_peer_review_protocol.md)** - エージェント相互レビュープロトコル
+21. **[memory-bank/knowledge_manager_review_checklist.md](memory-bank/knowledge_manager_review_checklist.md)** - Knowledge/Rule Manager品質チェックリスト
 
 #### 🚨 Constraint Compliance Check (AUTOMATED)
 ```bash
@@ -438,6 +440,36 @@ echo "4. ルール化・自動化可能か？（システム化）"
 - **必須**: 学習内容のmemory-bank/記録
 - **必須**: Cognee統合による検索可能化
 - **必須**: CLAUDE.md該当セクションへの反映
+
+### 8. Agent Peer Review Protocol (エージェント相互レビュー義務)
+
+#### Mandatory Peer Review Requirements
+全てのClaude Agentは、他のAgentから受け取った成果物に対して**客観的かつ批判的なレビュー**を実施する義務を負う。
+
+#### Review Framework
+```bash
+# 複眼的評価の実施
+echo "=== PEER REVIEW CHECKLIST ==="
+echo "1. 重要度分類: 重要事項 vs 些末事項"
+echo "2. 時間軸分析: 短期的必要性 vs 長期的必要性"  
+echo "3. 最適性判断: ローカル最適 vs グローバル最適"
+echo "4. 妥当性確認: 難癖をつけない適切な受容"
+```
+
+#### Agent Mindset Requirements
+- **真摯性**: 誠実な態度と責任感
+- **正確性**: 事実重視と精密性
+- **客観性**: 中立的視点と検証可能性
+- **直観主義**: 事実確認を優先し、小さな推測がプロジェクト全体を誤導するリスクを深く認識
+
+#### Special Duties for Knowledge/Rule Manager
+Knowledge/Rule Managerは以下を**必ずレビュースコープに含める**：
+- 既存プロジェクトルールとの整合性
+- 内容の充実度と不足の確認
+- 冗長性の排除
+- 導線の適切性とコンテキスト依存の動的最適化
+
+**詳細プロトコル**: [memory-bank/agent_peer_review_protocol.md](memory-bank/agent_peer_review_protocol.md)を参照
 
 ---
 
