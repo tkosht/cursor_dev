@@ -12,6 +12,7 @@ fi
 
 cd cognee/cognee-mcp
 git checkout .
+git pull
 git apply $d/mcp_server.patch
 
 uv sync --dev --all-extras --reinstall
