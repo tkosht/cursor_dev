@@ -75,7 +75,8 @@
       "Bash(SKIP_ACCURACY_CHECK=1 git commit -m \"$(cat <<'EOF'\nrefactor: consolidate knowledge and implement Task DAG constraint system\n\n## Major Changes\n- **Task DAG Framework**: Add Task DAG construction and delegation optimization\n- **Knowledge Consolidation**: Integrate valuable knowledge into CLAUDE.md\n- **Complexity Reduction**: Remove defunct 13-pane hierarchical organization rules\n\n## Added Features\n- scripts/pre_action_check.py: Integrated constraint validation\n- scripts/task_dag.py: Task DAG construction and analysis\n- Task DAG design patterns and delegation decision framework\n- Phased development methodology documentation\n\n## Knowledge Integration (CLAUDE.md)\n- **tmux Safety**: Add safe_send() function and execution checklists\n- **Fact-based Judgment**: Enhance objective fact verification principles\n- **3-Layer Architecture**: Integrate Task DAG with existing constraint system\n\n## Removed Obsolete Files\n- memory-bank/knowledge_loading_optimization.md (superseded by 3-layer architecture)\n- memory-bank/objective_fact_verification_protocol.md (core principles integrated)\n- memory-bank/enter_key_prevention_critical_rules.md (tmux knowledge integrated)\n- memory-bank/optimized_claude_md_section.md (outdated optimization proposal)\n\n## Impact\n- Reduced accuracy check errors: 43 → 31 (12 resolved)\n- Consolidated scattered knowledge into maintainable structure\n- Eliminated complex rules that caused organizational dysfunction\n- Enhanced development workflow with Task DAG planning\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(echo:*)",
       "Bash(uv run:*)",
-      "Bash(uv sync:*)"
+      "Bash(uv sync:*)",
+      "WebFetch(domain:www.anthropic.com)"
     ],
     "deny": []
   },

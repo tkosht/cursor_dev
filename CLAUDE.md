@@ -565,6 +565,96 @@ function safe_send() {
 
 **Note**: Claude Code instances within tmux may report different pane numbers internally than tmux's actual pane indexing due to execution context differences.
 
+### 🔬 Research-Adaptive Multi-Agent Enhancement (研究適応マルチエージェント拡張)
+
+**CRITICAL**: For research and investigation tasks, activate enhanced multi-agent coordination based on Anthropic's multi-agent research system.
+
+#### Automatic Research Mode Activation
+
+**Trigger Conditions (Auto-Detection)**:
+```bash
+# Research mode automatically activates when:
+# - Query complexity ≥ 7/10
+# - Investigation scope ≥ 3 domains  
+# - Quality requirement ≥ 0.8/1.0
+# - Source diversity requirement ≥ 5 types
+# - Synthesis requirement: Present
+```
+
+#### Enhanced Organization for Research
+
+**Base Foundation**: tmux 14-pane organization (proven stable)  
+**Research Enhancement**: Dynamic coordination + LLM-as-judge quality assurance
+
+```bash
+# Enhanced Role Assignments for Research Tasks
+pane-0: Research Orchestrator (+ Extended Thinking Mode)
+pane-1: Research Strategy Manager (+ Progressive Methodology)  
+pane-2: Research Execution Manager (+ Parallel Coordination)
+pane-3: Research Delegation Manager (+ Intelligence Scoring)
+pane-4: Research Quality Manager (+ LLM-as-judge)
+
+# Research-Specialized Workers
+pane-5,8,11: Research Execution Workers (+ Deep Investigation)
+pane-6,9,12: Research Quality Workers (+ Citation Verification)  
+pane-7,10,13: Research Knowledge Workers (+ Synthesis Integration)
+```
+
+#### Progressive Research Methodology
+
+**Phase 1: Broad Exploration (拡散フェーズ)**
+```bash
+# Parallel information gathering across domains
+Task("技術背景調査", "Comprehensive technical background investigation")
+Task("市場動向分析", "Market trends and industry analysis")
+Task("学術文献調査", "Academic literature and research survey")
+```
+
+**Phase 2: Focused Investigation (収束フェーズ)**
+```bash
+# Deep analysis based on Phase 1 results
+Task("深度技術分析", "Detailed technical analysis of identified areas")
+Task("比較評価分析", "Comparative analysis of alternative approaches")  
+Task("実装可能性調査", "Implementation feasibility and constraint analysis")
+```
+
+**Phase 3: Synthesis & Integration (統合フェーズ)**
+```bash
+# Knowledge integration and quality verification
+Task("知見統合", "Synthesis of research findings and insights")
+Task("品質検証", "LLM-as-judge quality verification and validation")
+```
+
+#### Quality Assurance Integration
+
+**LLM-as-judge Evaluation Framework**:
+```python
+research_quality_rubric = {
+    "factual_accuracy": 0.25,      # 事実正確性
+    "citation_precision": 0.20,    # 引用精度  
+    "completeness": 0.25,          # 完全性
+    "source_quality": 0.15,        # 情報源品質
+    "synthesis_quality": 0.15      # 統合品質
+}
+```
+
+**Research Session Initialization**:
+```bash
+#!/bin/bash
+echo "🔬 Research-Adaptive Mode Activation"
+echo "Foundation: tmux 14-pane organization (proven stability)"
+echo "Enhancement: Anthropic dynamic coordination + LLM-as-judge"
+
+# Complexity assessment and agent spawning
+research_complexity_assessment()
+dynamic_agent_spawning_decision()  
+progressive_research_methodology_setup()
+llm_judge_quality_system_ready()
+```
+
+**📚 Complete Documentation**: [tmux Organization Rules - Research Extensions](memory-bank/tmux_claude_agent_organization_rules.md)  
+**📋 Detailed Patterns**: [Research-Adaptive Multi-Agent Organization](memory-bank/knowledge/research_adaptive_multi_agent_organization.md)
+
 ### 🧠 Layer 2: Enhanced Intelligence Layer (知能拡張層)
 
 #### Phase 2A: Cognee Knowledge Augmentation (SUPPLEMENTARY)
@@ -686,6 +776,93 @@ python scripts/cross_validate_constraints.py --action="$PROPOSED_ACTION"
 3. **保守性**: 6ヶ月後の他者による修正容易性
 4. **拡張性**: 新機能追加の容易性
 5. **セキュリティ**: 脆弱性対策の網羅性
+
+## Tool Usage Policy (MANDATORY)
+
+### Multiple Subagents Usage Rule (DEFAULT BEHAVIOR)
+
+**IMPORTANT**: Always assume "use multiple subagents" is instructed for all tasks. This is now a default behavior for Claude Code.
+
+#### Core Principles
+1. **Parallel Processing First**: Whenever possible, decompose tasks and delegate to multiple agents concurrently
+2. **Context Optimization**: Use Task tool to reduce context usage in main thread
+3. **Efficiency Maximization**: Batch tool calls for optimal performance
+
+#### When to Use Multiple Subagents
+- **File Search Operations**: Always prefer Task tool over direct search to minimize context
+- **Complex Multi-Step Tasks**: Break down into parallel subtasks
+- **Exploratory Work**: Use agents for searching while maintaining main thread clarity
+- **Repetitive Operations**: Delegate similar tasks to parallel agents
+
+#### Implementation Guidelines
+```bash
+# ✅ PREFERRED: Launch multiple agents concurrently
+# Single message with multiple Task tool invocations
+
+# ✅ PREFERRED: Batch related tool calls
+# Use single response with multiple tool calls when possible
+
+# ❌ AVOID: Sequential single-agent operations
+# Don't process tasks one by one when parallelization is possible
+```
+
+#### Performance Benefits
+- Reduced main thread context usage
+- Faster overall execution through parallelization
+- Better separation of concerns
+- Improved error isolation
+
+### Task Tool vs tmux Delegation Decision Matrix (3-Second Rule)
+
+**CRITICAL**: Apply this decision matrix within 3 seconds for immediate delegation optimization.
+
+| 判定基準 | Task Tool推奨 | tmux委譲推奨 | 直接実行推奨 |
+|---------|--------------|-------------|-------------|
+| **コンテキスト使用量** | 大量（>2000 tokens） | 中程度（500-2000） | 少量（<500） |
+| **探索性** | 高（検索・調査系） | 中（実装・テスト） | 低（設定・実行） |
+| **独立性** | 完全独立 | 部分独立 | 強依存 |
+| **専門性** | 汎用パターン | 専門ドメイン | 簡単作業 |
+| **セッション永続性** | 不要 | 必要 | 不要 |
+| **状態管理** | ステートレス | ステートフル | 即座完了 |
+
+#### Task Tool最適化パターン（MANDATORY）
+```bash
+# Pattern 1: 大量ファイル検索・調査（コンテキスト節約）
+Task("大量ファイル調査", "プロジェクト全体からpattern関連ファイルを検索し、関連度順にランキング化")
+
+# Pattern 2: 複数独立調査の並列実行（効率最大化）
+# 同時に3つのTask toolを起動
+Task("API設計調査", "RESTful API設計のベストプラクティスを調査")
+Task("DB設計調査", "データベーススキーマ設計パターンを調査") 
+Task("UI設計調査", "ユーザーインターフェース設計トレンドを調査")
+```
+
+#### tmux組織委譲パターン（専門化）
+```bash
+# Pattern 3: 継続的開発作業（tmux 14-pane組織活用）
+# Task Execution Workers (pane-5, 8, 11)
+tmux send-keys -t 5 'claude -p "機能A実装: 詳細設計書に基づく実装"'
+tmux send-keys -t 5 Enter
+
+# Task Review Workers (pane-6, 9, 12)  
+tmux send-keys -t 6 'claude -p "機能Aレビュー: 品質チェックと改善提案"'
+tmux send-keys -t 6 Enter
+```
+
+#### Hybrid Strategy（複合活用）
+```bash
+# Phase 1: Task Tool並列調査
+Task("要件分析", "要求の詳細分析と制約条件特定")
+Task("技術調査", "実装技術の選定と制約分析")  
+Task("リスク分析", "潜在的問題と対策の特定")
+
+# Phase 2: tmux組織委譲実装（Task Tool結果を基に）
+tmux send-keys -t 5 'claude -p "Phase1結果に基づく実装開始"'
+```
+
+**Note**: This policy overrides any default sequential behavior. Always consider parallel agent delegation as the first option for any non-trivial task.
+
+**📚 詳細参照**: [Task Tool統合パターン](memory-bank/knowledge/task_tool_delegation_integration_patterns.md)
 
 ## Project Architecture (MUST FOLLOW)
 
