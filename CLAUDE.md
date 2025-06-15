@@ -1,1447 +1,252 @@
-# CLAUDE.md
+# CLAUDE.md - Phase 1: Quick Start Implementation
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 🆕 3-Layer Architecture Overview
+## 🚀 Quick Start (5-Minute Essentials) - NEW USERS START HERE
 
-This project employs a **3-Layer Architecture Framework** that combines:
-1. **🔴 Direct Constraint Enforcement**: Mandatory rules loaded from explicit files
-2. **🧠 Intelligent Knowledge Augmentation**: Cognee-powered search and context
-3. **🔄 Integrated Development Flow**: tmux-based parallel development with continuous verification
-
-This architecture ensures **absolute compliance** while maintaining **development efficiency**.
-
-
-## Project Status Overview
-
-**Project**: A2A MVP - Test-Driven Development
-**Status**: ✅ Implementation Complete
-**Coverage**: 92% ✅ (実測値: 2025-06-05)
-**Tests**: 101 tests, 100% passing
-**Quality**: Flake8 0 violations, Black formatted
-**Output**: Organized in `output/` directory structure
-
-## 🏗️ CRITICAL: 3-Layer Architecture Framework (ABSOLUTE COMPLIANCE)
-
-**This framework ensures both constraint enforcement AND intelligent assistance.**
-
-### 🔴 Layer 1: Critical Constraints Foundation (絶対制約基盤層)
-
-#### 🚨 Mandatory Knowledge Loading (SESSION START REQUIRED)
-
-**Before ANY development work, MUST load these documents in this exact order:**
-
-##### Phase 1A: Core Compliance Rules (MUST READ FIRST)
-1. **[memory-bank/user_authorization_mandatory_rules.md](memory-bank/user_authorization_mandatory_rules.md)** - ユーザー承認必須ルール（絶対遵守）
-2. **[memory-bank/testing_mandatory_rules.md](memory-bank/testing_mandatory_rules.md)** - 自動化機能テスト必須化ルール
-3. **[memory-bank/code_quality_anti_hacking_rules.md](memory-bank/code_quality_anti_hacking_rules.md)** - 品質指標アンチハッキング・ルール（絶対遵守）
-
-##### Phase 1B: Core Development Knowledge
-4. **[memory-bank/tdd_implementation_knowledge.md](memory-bank/tdd_implementation_knowledge.md)** - TDD実践の具体的手法
-5. **[memory-bank/generic_tdd_patterns.md](memory-bank/generic_tdd_patterns.md)** - 汎用的なTDDパターン
-6. **[memory-bank/development_workflow_rules.md](memory-bank/development_workflow_rules.md)** - 開発ワークフロー
-
-##### Phase 1C: Project & Architecture
-7. **[memory-bank/a2a_protocol_implementation_rules.md](memory-bank/a2a_protocol_implementation_rules.md)** - A2Aプロトコル実装仕様
-8. **[docs/02.basic_design/a2a_architecture.md](docs/02.basic_design/a2a_architecture.md)** - システムアーキテクチャ設計
-9. **[docs/03.detail_design/a2a_tdd_implementation.md](docs/03.detail_design/a2a_tdd_implementation.md)** - TDD実装の詳細記録
-
-##### Phase 1D: Quality & Documentation
-10. **[memory-bank/critical_review_framework.md](memory-bank/critical_review_framework.md)** - 批判的レビューフレームワーク
-11. **[memory-bank/accuracy_verification_rules.md](memory-bank/accuracy_verification_rules.md)** - ドキュメント正確性検証ルール
-12. **[memory-bank/documentation_accuracy_verification_rules.md](memory-bank/documentation_accuracy_verification_rules.md)** - 正確性検証の詳細手順
-13. **[memory-bank/knowledge_utilization_failure_analysis.md](memory-bank/knowledge_utilization_failure_analysis.md)** - 知識活用失敗パターン分析（推測禁止）
-14. **[memory-bank/session_start_checklist.md](memory-bank/session_start_checklist.md)** - セッション開始必須チェックリスト
-
-##### Phase 1E: Advanced Patterns & Tools
-15. **[memory-bank/ci_cd_optimization_rules.md](memory-bank/ci_cd_optimization_rules.md)** - CI/CD設定と最適化
-16. **[memory-bank/knowledge/ai_agent_delegation_patterns.md](memory-bank/knowledge/ai_agent_delegation_patterns.md)** - AIエージェント委託パターン
-17. **[memory-bank/git_worktree_parallel_development_verified.md](memory-bank/git_worktree_parallel_development_verified.md)** - 並列開発実証完了報告書
-18. **[memory-bank/organization_failure_analysis_and_solutions.md](memory-bank/organization_failure_analysis_and_solutions.md)** - 組織運営失敗分析と解決策
-19. **[memory-bank/tmux_claude_agent_organization_rules.md](memory-bank/tmux_claude_agent_organization_rules.md)** - tmux Claude Agent組織体制ルール（正式版）
-20. **[memory-bank/agent_peer_review_protocol.md](memory-bank/agent_peer_review_protocol.md)** - エージェント相互レビュープロトコル
-21. **[memory-bank/knowledge_manager_review_checklist.md](memory-bank/knowledge_manager_review_checklist.md)** - Knowledge/Rule Manager品質チェックリスト
-
-#### 🚨 Constraint Compliance Check (AUTOMATED)
+### ⚡ Immediate Session Start (Copy-Paste Ready)
 ```bash
-# MANDATORY: Direct file access to ensure constraint availability
-echo "=== CRITICAL CONSTRAINTS VERIFICATION ==="
-ls -la memory-bank/user_authorization_mandatory_rules.md memory-bank/testing_mandatory_rules.md memory-bank/code_quality_anti_hacking_rules.md
+# 1. MANDATORY constraint verification (ALWAYS FIRST)
+python scripts/pre_action_check.py --strict-mode || exit 1
 
-# Load core constraints with verification
-cat memory-bank/user_authorization_mandatory_rules.md | head -30
-cat memory-bank/testing_mandatory_rules.md | head -20
-cat memory-bank/code_quality_anti_hacking_rules.md | head -20
+# 2. Load essential constraints (minimum required)
+echo "Loading core constraints..."
+[ -f memory-bank/user_authorization_mandatory_rules.md ] && echo "✅ User auth rules found"
+[ -f memory-bank/testing_mandatory_rules.md ] && echo "✅ Testing rules found"
+[ -f memory-bank/code_quality_anti_hacking_rules.md ] && echo "✅ Quality rules found"
 
-# Execute mandatory pre-action validation
-python scripts/pre_action_check.py --strict-mode
-# Exit code 0: Proceed | Exit code 1: STOP ALL ACTIONS
-```
-
-### 1. 事実ベース判断の原則（Core Principle）
-
-#### 根本原則
-```
-推測禁止 = 憶測・推定・想像による判断の絶対禁止
-事実のみ = 客観的に検証可能な事実のみに基づく判断
-確認優先 = 結論前に必ず物理的・直接的確認を実施
-```
-
-#### 禁止事項（絶対遵守）
-- ❌ **憶測による状況判断**: 「たぶん」「おそらく」による結論
-- ❌ **推測による問題診断**: 根拠なき「技術的制約」判定
-- ❌ **責任回避的判断**: 安易な外部要因への転嫁
-- ✅ **必須**: 客観的事実確認後の判断のみ
-
-### 2. Documentation Accuracy Principles (ドキュメント正確性原則)
-
-#### 事実ベース記載の強制原則
-```bash
-# 記載前必須チェック（絶対実行）
-less Makefile                # Makeターゲット確認（直接ファイル確認）
-python scripts/script.py --help  # スクリプト動作確認
-ls -la path/to/file         # ファイル存在確認
-
-# 数値記載前の必須確認
-pytest --cov=app | grep TOTAL  # カバレッジ実測値取得
-time command                    # パフォーマンス実測
-ls -la output/coverage/         # 出力ファイル確認
-```
-
-#### 禁止事項（絶対遵守）
-- ❌ 未確認のコマンド記載
-- ❌ 推測による数値記載  
-- ❌ 憶測による機能説明
-- ❌ 根拠なき性能主張
-
-#### 必須記載パターン
-```markdown
-# ✅ 正しい記載例
-**実測値**: 92%（pytest --cov実行結果: 2025-06-05）
-**コマンド確認済み**: make up（Makefile:35行目で確認）
-**出力先確認済み**: output/coverage/（実際に存在確認）
-**解釈**: 上記データから、業界平均を上回ると判断される
-```
-
-#### 自動検証の実行（コミット前必須）
-```bash
-# ドキュメント正確性チェック
-python scripts/verify_accuracy.py
-python scripts/critical_documentation_review.py --target README.md
-```
-
-### 3. Git Hook Integration (Automated Enforcement)
-プロジェクトのGitフックが以下を自動実行:
-1. **セキュリティチェック**: 機密情報の検出・ブロック
-2. **ユーザー認証チェック**: 無許可変更の防止
-3. **ドキュメント正確性検証**: 記載内容の事実確認
-4. **批判的レビュー**: README.md変更時の品質確認
-
-**トラブル時の対処**: [Gitフック仕様書](docs/90.references/git_hooks_specification.md)を参照
-
-## 🧠 Knowledge Utilization Protocol (絶対遵守)
-
-**本プロトコルは、豊富な知識アセットの確実な活用を強制し、推測ベース行動を根絶します。**
-
-### **🚨 3秒ルール（行動前必須）**
-
-**何かを実行する前に3秒立ち止まり、以下を自問（絶対実行）**:
-
-```bash
-# 必須自問プロトコル（3秒以内）
-echo "1. これは事実か推測か？"
-echo "2. 関連ナレッジを確認したか？" 
-echo "3. より確実な方法はないか？"
-
-# 推測検出時の強制停止
-if [ "$ANSWER_CONTAINS_GUESS" = "true" ]; then
-    echo "❌ 推測検出：実行中止"
-    echo "➡️ knowledge確認必須"
-    exit 1
+# 3. Cognee integration (enhanced mode if available)
+if mcp__cognee__cognify_status > /dev/null 2>&1; then
+    mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
+    echo "✅ Cognee enhanced mode active"
+else
+    echo "⚠️ Direct constraint mode only"
 fi
+
+echo "🎯 Session ready! You can now start development."
 ```
 
-### **📋 セッション開始時強制チェック（MANDATORY）**
-
+### 🧠 Core Principles (Absolute Compliance)
 ```bash
-#!/bin/bash
-# SESSION_START_PROTOCOL (必須実行)
+# The 3-Second Rule (MANDATORY before ANY action)
+echo "1. Is this fact or speculation?"
+echo "2. Have I verified related knowledge?"  
+echo "3. Is there a more reliable method?"
 
-echo "=== SESSION INITIALIZATION PROTOCOL ==="
-echo "今日の作業: [具体的内容を記載]"
-echo "関連ナレッジ: memory-bank/[該当ファイル名]"
-echo "確認済み項目:"
-echo "  ✅ CLAUDE.md関連セクション"
-echo "  ✅ memory-bank該当ファイル"
-echo "  ✅ 類似問題の解決例"
-
-# 確認完了まで開発作業禁止
-if [ -z "$KNOWLEDGE_CONFIRMED" ]; then
-    echo "❌ 知識確認未完了：開発作業禁止"
-    echo "➡️ 上記チェック完了後に再開"
-    exit 1
-fi
+# FORBIDDEN PHRASES (auto-stop on detection)
+FORBIDDEN=("probably" "maybe" "I think" "seems like" "たぶん" "おそらく")
 ```
 
-### **🔍 動的知識インデックス（作業タイプ別参照先）**
+### ⚡ 3-Second Delegation Decision
+| Context Size | Duration | State Required | → Use |
+|--------------|----------|----------------|-------|
+| >2000 tokens | <30 min | No | **Task Tool** |
+| Any | ≥30 min | Yes | **tmux + Claude CLI** |
+| <2000 tokens | <30 min | No | **Direct Execution** |
 
-#### **即座参照マップ**
-```markdown
-| 作業タイプ | 必須参照先 | 追加参照先 |
-|-----------|------------|------------|
-| **Cognee関連** | cognee_knowledge_operations_manual.md | cognee_*.md |
-| **Git操作** | git_worktree_parallel_development_verified.md | git_*.md |
-| **TDD実装** | tdd_implementation_knowledge.md | development_workflow_rules.md |
-| **A2A開発** | a2a_protocol_implementation_rules.md | a2a_*.md |
-| **品質チェック** | critical_review_framework.md | accuracy_verification_rules.md |
-| **エラー対処** | knowledge_utilization_failure_analysis.md | 該当技術のmd |
-```
-
-### **⚡ 推測禁止強制メカニズム**
-
-#### **禁止フレーズ（使用時即停止）**
+### 🔧 Essential Commands (Most Used)
 ```bash
-# ❌ 絶対禁止表現（検出時強制停止）
-FORBIDDEN_PHRASES=(
-    "たぶん" "おそらく" "思われる" "かもしれない"
-    "だと思う" "推測すると" "恐らく" "多分"
-    "なんとなく" "感覚的に" "経験上" "予想では"
-)
+# Start development environment
+poetry install && poetry shell
 
-# 使用検出時の強制アクション
-echo "❌ 推測表現検出：思考プロセス停止"
-echo "➡️ 事実確認後に再開"
-echo "📚 参照: memory-bank/knowledge_utilization_failure_analysis.md"
+# Run tests with coverage
+pytest --cov=app --cov-report=html
+
+# Quality check before commit
+flake8 app/ tests/ && black app/ tests/ --check && mypy app/
+
+# TDD cycle (Red-Green-Refactor)
+# 1. Write failing test first
+# 2. Minimal implementation 
+# 3. Refactor for quality
 ```
 
-#### **許可表現（事実確認後使用可）**
-```bash
-# ✅ 許可表現パターン
-ALLOWED_PHRASES=(
-    "事実確認が必要です" "追加調査を実行します"
-    "検証後に判断します" "ドキュメント確認済み"
-    "実測値に基づき" "検証結果として"
-)
-```
-
-### **📊 知識活用率監視（自動トラッキング）**
-
-#### **セッション終了時必須レポート**
-```bash
-# 必須実行（セッション終了時）
-echo "=== 知識活用レポート ==="
-echo "参照したmemory-bankファイル数: $REFERENCED_FILES"
-echo "推測ベース判断回数: $GUESS_COUNT"
-echo "事前確認実行率: $PRECHECK_RATE"
-echo "解決時間: $RESOLUTION_TIME"
-
-# 基準値未達時の警告
-if [ "$GUESS_COUNT" -gt 0 ]; then
-    echo "⚠️ 推測ベース判断検出：改善必要"
-    echo "📚 参照: memory-bank/knowledge_utilization_failure_analysis.md"
-fi
-```
-
-### **🎯 効果測定指標**
-
-#### **即座指標（リアルタイム）**
-- 推測フレーズ使用回数（目標：0回）
-- 事前knowledge確認実行率（目標：100%）
-- 3秒ルール遵守率（目標：100%）
-
-#### **セッション指標（終了時）**
-- 問題解決時の事後調査発生率（目標：0%）
-- memory-bank活用ファイル数（目標：3+）
-- 同種問題の再発防止確認（必須）
-
-### **🚨 違反時エスカレーション**
-
-#### **レベル1**: 推測表現検出
-- 即座警告 + 思考停止
-- 該当knowledge確認必須
-
-#### **レベル2**: 事前確認スキップ  
-- 作業中断 + チェックリスト実行
-- セッション開始プロトコル再実行
-
-#### **レベル3**: 同種問題再発
-- 全作業停止 + 根本原因分析
-- 知識活用失敗分析レポート作成
-
-#### **レベル4**: システム的違反
-- セッション終了 + 手順見直し
-- knowledge_utilization_failure_analysis.md更新
+**🎯 That's it! You're ready to develop. For detailed procedures, see sections below.**
 
 ---
 
-**この知識活用プロトコルにより、「推測→失敗→調査」から「確認→実行→成功」への行動パターン転換を強制します。**
+## 📖 Navigation Guide
 
-## 🎯 Agent Working Principles & Mindset Framework (ABSOLUTE COMPLIANCE)
+**Choose your path based on your needs:**
 
-**All AI Agents MUST adhere to these fundamental working principles and mindset requirements.**
-
-### 1. Precision & Thoroughness Principle (精緻性の原則)
-
-#### Core Mindset: "丁寧にかつ論理的に精緻に"
-```
-精緻性 = 丁寧さ + 論理性 + 詳細分析
-徹底性 = 表面的解決ではなく根本原因への対処
-継続性 = 一時的対処ではなく持続可能な改善
-```
-
-#### MANDATORY Requirements
-- ❌ **禁止**: 推測・憶測による判断（「たぶん」「おそらく」「～と思われる」）
-- ❌ **禁止**: 表面的な対処による問題隠蔽
-- ❌ **禁止**: 不十分な分析による早急な実行
-- ✅ **必須**: 客観的事実に基づく論理的分析
-- ✅ **必須**: 根本原因の特定と本質的解決
-- ✅ **必須**: 段階的アプローチによる確実な改善
-
-### 2. Deep Analysis Protocol (本質的問題分析)
-
-#### "ultrathink" Response Framework
-ユーザーが"ultrathink"を指示した場合、以下を実行：
-
-```bash
-# Phase 1: 根本原因分析 (MANDATORY)
-echo "=== 根本原因分析 ==="
-echo "1. 現在の問題は何か？（事実）"
-echo "2. なぜこの問題が発生したか？（原因追跡）"
-echo "3. 表面的解決と根本的解決の違いは？（対策比較）"
-echo "4. 提案する解決策の想定される副作用は？（リスク分析）"
-
-# Phase 2: 代替案検討 (MANDATORY)
-echo "=== 代替案検討 ==="
-echo "1. 他にどのようなアプローチが可能か？"
-echo "2. それぞれの利点・欠点は？"
-echo "3. 最適解の選択根拠は？"
-
-# Phase 3: 影響範囲分析 (MANDATORY)
-echo "=== 影響範囲分析 ==="
-echo "1. この変更は何に影響するか？"
-echo "2. 想定外の副作用はないか？"
-echo "3. ロールバック可能性は？"
-```
-
-#### Implementation Requirements
-- **必須**: 3段階分析の完全実行
-- **必須**: 各段階での具体的根拠の提示
-- **必須**: 論理的説明による妥当性証明
-
-### 3. YAGNI Principle Integration (必要最小限の原則)
-
-#### Decision Framework
-```python
-def should_create_resource(resource_type, necessity_level):
-    """
-    リソース作成判定フレームワーク
-    
-    Args:
-        resource_type: "file", "directory", "function", "class", etc.
-        necessity_level: "critical", "helpful", "nice_to_have"
-    
-    Returns:
-        bool: 作成すべきかどうか
-    """
-    if necessity_level == "critical":
-        return True  # 必須リソースは作成
-    elif necessity_level == "helpful":
-        return False  # 「あると便利」は作成しない
-    elif necessity_level == "nice_to_have":
-        return False  # 「あるといいかも」は絶対作成しない
-```
-
-#### Mandatory Checks Before Creating ANY Resource
-- [ ] **実際の必要性**: 現在の要求を満たすために本当に必要か？
-- [ ] **代替手段**: 既存のリソースで代用可能か？
-- [ ] **将来性**: 推測される将来の需要は判断材料にしない
-- [ ] **メンテナンス負荷**: 作成後の保守コストは適切か？
-
-### 4. Phased Improvement Methodology (段階的改善手法)
-
-#### Three-Phase Approach (MANDATORY)
-```
-Phase 1: 即時修正 (Immediate Fix)
-- 目的: ブロッカーの除去、基本機能の復旧
-- 時間: 最短ルートでの問題解決
-- 制約: 最小限の変更による影響局所化
-
-Phase 2: 構造的改善 (Structural Improvement)  
-- 目的: 根本原因への対処、再発防止
-- 時間: 中期計画での持続可能な解決
-- 制約: アーキテクチャ整合性の維持
-
-Phase 3: 最適化・拡張 (Optimization & Extension)
-- 目的: パフォーマンス向上、機能拡張
-- 時間: 長期計画での継続的価値創造
-- 制約: 技術的負債の蓄積防止
-```
-
-#### Task DAG Construction Rules
-- **必須**: TodoWriteによる依存関係明確化
-- **必須**: 各Phase内の並列実行可能タスク特定
-- **必須**: ボトルネック特定による実行順序最適化
-
-### 5. Verification & Validation Framework (検証・確認の枠組み)
-
-#### Before ANY Action (TRIPLE VERIFICATION)
-```bash
-# Verification Layer 1: Constraint Check
-python scripts/pre_action_check.py --strict-mode
-
-# Verification Layer 2: Logic Validation
-echo "=== 論理的妥当性チェック ==="
-echo "1. 前提条件は正しいか？"
-echo "2. 推論過程に飛躍はないか？"
-echo "3. 結論は前提から導出可能か？"
-
-# Verification Layer 3: Implementation Readiness
-echo "=== 実装準備確認 ==="
-echo "1. 必要なリソースは利用可能か？"
-echo "2. 実行手順は明確か？"
-echo "3. エラー時の対処法は定義済みか？"
-```
-
-#### Mandatory Verification Points
-- **事実確認**: 推測ではなく実際の確認
-- **論理確認**: 因果関係の妥当性検証
-- **実装確認**: 技術的実現可能性の確認
-
-### 6. Communication Protocol (コミュニケーション規約)
-
-#### Response Quality Standards
-- **明確性**: 曖昧さを排除した具体的表現
-- **簡潔性**: 冗長性を避けた要点集約
-- **根拠性**: 全ての主張に対する根拠提示
-- **建設性**: 問題指摘と同時に解決策提案
-
-#### Mandatory Phrases for Uncertainty
-```bash
-# ❌ 禁止表現
-"たぶん", "おそらく", "思われる", "かもしれない"
-
-# ✅ 許可表現  
-"事実確認が必要です", "追加調査を実行します", "検証後に判断します"
-```
-
-### 7. Continuous Learning Integration (継続学習の統合)
-
-#### Knowledge Extraction Process
-```bash
-# After EVERY significant task completion
-echo "=== 知見抽出プロセス ==="
-echo "1. 何を学んだか？（具体的知見）"
-echo "2. 次回同様の問題でどう活かすか？（応用可能性）"
-echo "3. 他のプロジェクトにも適用可能か？（汎用性）"
-echo "4. ルール化・自動化可能か？（システム化）"
-```
-
-#### Knowledge Recording Requirements
-- **必須**: 学習内容のmemory-bank/記録
-- **必須**: Cognee統合による検索可能化
-- **必須**: CLAUDE.md該当セクションへの反映
-
-### 8. Agent Peer Review Protocol (エージェント相互レビュー義務)
-
-#### Mandatory Peer Review Requirements
-全てのClaude Agentは、他のAgentから受け取った成果物に対して**客観的かつ批判的なレビュー**を実施する義務を負う。
-
-#### Review Framework
-```bash
-# 複眼的評価の実施
-echo "=== PEER REVIEW CHECKLIST ==="
-echo "1. 重要度分類: 重要事項 vs 些末事項"
-echo "2. 時間軸分析: 短期的必要性 vs 長期的必要性"  
-echo "3. 最適性判断: ローカル最適 vs グローバル最適"
-echo "4. 妥当性確認: 難癖をつけない適切な受容"
-```
-
-#### Agent Mindset Requirements
-- **真摯性**: 誠実な態度と責任感
-- **正確性**: 事実重視と精密性
-- **客観性**: 中立的視点と検証可能性
-- **直観主義**: 事実確認を優先し、小さな推測がプロジェクト全体を誤導するリスクを深く認識
-
-#### Special Duties for Knowledge/Rule Manager
-Knowledge/Rule Managerは以下を**必ずレビュースコープに含める**：
-- 既存プロジェクトルールとの整合性
-- 内容の充実度と不足の確認
-- 冗長性の排除
-- 導線の適切性とコンテキスト依存の動的最適化
-
-**詳細プロトコル**: [memory-bank/agent_peer_review_protocol.md](memory-bank/agent_peer_review_protocol.md)を参照
+| Your Role | Time Available | → Go To Section |
+|-----------|----------------|-----------------|
+| **New User** | 5 minutes | ✅ **You're done! Start coding above** |
+| **Need Setup Details** | 15 minutes | 📋 [Essential Protocols](#essential-protocols) |
+| **Implementing Features** | 30+ minutes | 🔧 [Detailed Implementation](#detailed-implementation) |
+| **Looking for Commands** | As needed | 📚 [Reference & Examples](#reference--examples) |
 
 ---
 
-**このマインドセット・フレームワークは、全てのAI Agentが遵守すべき基本原則です。違反は品質低下、プロジェクト遅延、ユーザー信頼失墜に直結するため、絶対遵守が要求されます。**
+## 📋 Essential Protocols (Mandatory Execution)
 
-## 🔄 Development Workflow (MUST FOLLOW)
+### 🚨 Critical Session Initialization (DETAILED VERSION)
 
-### tmux Session Management Rules (MANDATORY)
+**Only read this if Quick Start above wasn't sufficient.**
 
-**This repository assumes Claude Code sessions run within tmux environments.**
-
-#### Session Environment Requirements
+#### Phase 1A: Core Compliance Rules (MUST READ FIRST)
 ```bash
-# Check current tmux session state
+# MANDATORY reading order - DO NOT skip or reorder
+1. memory-bank/user_authorization_mandatory_rules.md    # User authorization (absolute compliance)
+2. memory-bank/testing_mandatory_rules.md               # Automated testing requirements  
+3. memory-bank/code_quality_anti_hacking_rules.md       # Quality anti-hacking rules
+```
+
+#### Phase 1B: Core Development Knowledge
+```bash
+4. memory-bank/tdd_implementation_knowledge.md          # TDD implementation methods
+5. memory-bank/development_workflow_rules.md            # Development workflow
+```
+
+#### Key Additional Files (Load as needed)
+```bash
+# Architecture & Quality
+memory-bank/a2a_protocol_implementation_rules.md        # A2A protocol implementation
+memory-bank/critical_review_framework.md                # Critical review framework
+memory-bank/accuracy_verification_rules.md              # Documentation accuracy verification
+
+# Advanced Patterns & Tools (For experienced users)
+memory-bank/tmux_claude_agent_organization_rules.md     # tmux organization rules
+memory-bank/agent_peer_review_protocol.md               # Agent peer review protocol
+```
+
+### 🔄 3-Layer Architecture (Simplified)
+
+#### Layer 1: Direct Constraints (MANDATORY)
+```bash
+# Verify constraint files exist
+ls -la memory-bank/*_mandatory_rules.md
+
+# Execute mandatory validation
+python scripts/pre_action_check.py --strict-mode
+```
+
+#### Layer 2: Cognee Intelligence (SUPPLEMENTARY)
+```bash
+# If Cognee available
+if mcp__cognee__cognify_status > /dev/null 2>&1; then
+    mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
+    mcp__cognee__search --search_query "relevant context" --search_type "GRAPH_COMPLETION"
+else
+    echo "⚠️ Using direct constraint mode"
+fi
+```
+
+#### Layer 3: tmux Development Flow (OPTIONAL)
+```bash
+# Check tmux state (only if using multiple agents)
 tmux list-sessions
-tmux list-panes -F "#{pane_index}: #{pane_title} #{pane_current_command}"
+tmux list-panes -F "#{pane_index}: #{pane_title}"
 
-# Create additional work panes when needed
-tmux split-window -v     # Split vertically (create pane below)
-tmux split-window -h     # Split horizontally (create pane right)
-tmux new-window -n work  # Create new window for parallel work
-```
-
-#### Multi-Pane Development Strategy
-1. **Main Pane**: Primary Claude Code session for development
-2. **Test Pane**: Dedicated for running tests and quality checks
-3. **Server Pane**: For running development servers
-4. **Monitor Pane**: For system monitoring and logs
-
-#### Pane Communication Protocol
-```bash
-# 🚨 CRITICAL: Send commands to specific panes (SEPARATE MESSAGE AND ENTER)
-tmux send-keys -t <pane_number> '<command>'
-tmux send-keys -t <pane_number> Enter
-
-# Capture output from panes
-tmux capture-pane -t <pane_number> -p
-
-# Switch between panes during development
-tmux select-pane -t <pane_number>
-```
-
-#### ⚠️ ABSOLUTE RULE: Never use single-line tmux send with Enter
-```bash
-# ❌ FORBIDDEN PATTERN - will cause Enter sending failures
-tmux send-keys -t <pane> '<message>' Enter
-
-# ✅ REQUIRED PATTERN - separate message and Enter sending
-tmux send-keys -t <pane> '<message>'
+# Safe command sending (CRITICAL: separate message and Enter)
+tmux send-keys -t <pane> '<command>'
 tmux send-keys -t <pane> Enter
 ```
 
-#### Safe Send Function (Recommended for Automation)
+### 🎯 Working Principles (Core Mindset)
+
+#### Fact-Based Decision Enforcement
+- ❌ **FORBIDDEN**: Speculation ("probably", "maybe", "I think")
+- ❌ **FORBIDDEN**: Surface-level solutions without root cause analysis
+- ✅ **REQUIRED**: Objective fact-based logical analysis
+- ✅ **REQUIRED**: Root cause identification and fundamental solutions
+
+#### Quality Gates (NON-NEGOTIABLE)
 ```bash
-function safe_send() {
-    local pane=$1
-    local message="$2"
-    
-    echo "=== SAFE SEND to pane $pane ==="
-    echo "Message: $message"
-    
-    # 1. Message sending
-    tmux send-keys -t $pane "$message"
-    echo "✓ Message sent"
-    
-    # 2. Enter sending
-    tmux send-keys -t $pane Enter
-    echo "✓ Enter sent"
-    
-    # 3. Verification
-    sleep 2
-    echo "=== Verification ==="
-    tmux capture-pane -t $pane -p | tail -5
-}
-```
-
-#### Pre/Post Execution Checklist
-**Before sending:**
-- [ ] Verify message content
-- [ ] Confirm target pane number
-- [ ] Use separate send pattern
-
-**After sending:**
-- [ ] Confirm message display on receiver
-- [ ] Check for Thinking or prompt display
-- [ ] Verify response starts within 3 seconds
-
-#### tmux-Claude Integration Best Practices
-- Use tmux pane numbers for task delegation
-- Maintain separate Claude Code instances for parallel work
-- Coordinate testing across multiple panes
-- Use tmux session persistence for long-running tasks
-
-**Note**: Claude Code instances within tmux may report different pane numbers internally than tmux's actual pane indexing due to execution context differences.
-
-### 🔬 Research-Adaptive Multi-Agent Enhancement (研究適応マルチエージェント拡張)
-
-**CRITICAL**: For research and investigation tasks, activate enhanced multi-agent coordination based on Anthropic's multi-agent research system.
-
-#### Automatic Research Mode Activation
-
-**Trigger Conditions (Auto-Detection)**:
-```bash
-# Research mode automatically activates when:
-# - Query complexity ≥ 7/10
-# - Investigation scope ≥ 3 domains  
-# - Quality requirement ≥ 0.8/1.0
-# - Source diversity requirement ≥ 5 types
-# - Synthesis requirement: Present
-```
-
-#### Enhanced Organization for Research
-
-**Base Foundation**: tmux 14-pane organization (proven stable)  
-**Research Enhancement**: Dynamic coordination + LLM-as-judge quality assurance
-
-```bash
-# Enhanced Role Assignments for Research Tasks
-pane-0: Research Orchestrator (+ Extended Thinking Mode)
-pane-1: Research Strategy Manager (+ Progressive Methodology)  
-pane-2: Research Execution Manager (+ Parallel Coordination)
-pane-3: Research Delegation Manager (+ Intelligence Scoring)
-pane-4: Research Quality Manager (+ LLM-as-judge)
-
-# Research-Specialized Workers
-pane-5,8,11: Research Execution Workers (+ Deep Investigation)
-pane-6,9,12: Research Quality Workers (+ Citation Verification)  
-pane-7,10,13: Research Knowledge Workers (+ Synthesis Integration)
-```
-
-#### Progressive Research Methodology
-
-**Phase 1: Broad Exploration (拡散フェーズ)**
-```bash
-# Parallel information gathering across domains
-Task("技術背景調査", "Comprehensive technical background investigation")
-Task("市場動向分析", "Market trends and industry analysis")
-Task("学術文献調査", "Academic literature and research survey")
-```
-
-**Phase 2: Focused Investigation (収束フェーズ)**
-```bash
-# Deep analysis based on Phase 1 results
-Task("深度技術分析", "Detailed technical analysis of identified areas")
-Task("比較評価分析", "Comparative analysis of alternative approaches")  
-Task("実装可能性調査", "Implementation feasibility and constraint analysis")
-```
-
-**Phase 3: Synthesis & Integration (統合フェーズ)**
-```bash
-# Knowledge integration and quality verification
-Task("知見統合", "Synthesis of research findings and insights")
-Task("品質検証", "LLM-as-judge quality verification and validation")
-```
-
-#### Quality Assurance Integration
-
-**LLM-as-judge Evaluation Framework**:
-```python
-research_quality_rubric = {
-    "factual_accuracy": 0.25,      # 事実正確性
-    "citation_precision": 0.20,    # 引用精度  
-    "completeness": 0.25,          # 完全性
-    "source_quality": 0.15,        # 情報源品質
-    "synthesis_quality": 0.15      # 統合品質
-}
-```
-
-**Research Session Initialization**:
-```bash
-#!/bin/bash
-echo "🔬 Research-Adaptive Mode Activation"
-echo "Foundation: tmux 14-pane organization (proven stability)"
-echo "Enhancement: Anthropic dynamic coordination + LLM-as-judge"
-
-# Complexity assessment and agent spawning
-research_complexity_assessment()
-dynamic_agent_spawning_decision()  
-progressive_research_methodology_setup()
-llm_judge_quality_system_ready()
-```
-
-**📚 Complete Documentation**: [tmux Organization Rules - Research Extensions](memory-bank/tmux_claude_agent_organization_rules.md)  
-**📋 Detailed Patterns**: [Research-Adaptive Multi-Agent Organization](memory-bank/knowledge/research_adaptive_multi_agent_organization.md)
-
-### 🧠 Layer 2: Enhanced Intelligence Layer (知能拡張層)
-
-#### Phase 2A: Cognee Knowledge Augmentation (SUPPLEMENTARY)
-```bash
-# 1. Cognee system status verification
-mcp__cognee__cognify_status
-
-# 2. Developer rules integration (supplement to direct loading)
-mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
-
-# 3. Project context search (enhanced understanding)
-mcp__cognee__search --search_query "A2A project constraints user authorization" --search_type "GRAPH_COMPLETION"
-```
-
-#### Phase 2B: Cross-Validation Protocol (DUAL VERIFICATION)
-```bash
-# Compare direct constraints vs Cognee knowledge
-echo "=== CROSS-VALIDATION CHECK ==="
-# Ensure Cognee results align with direct constraint files
-# Flag any discrepancies for manual review
-```
-
-### 🔄 Layer 3: Development Flow Integration (統合フロー層)
-
-#### Complete Session Initialization (COPY-PASTE READY)
-```bash
-#!/bin/bash
-echo "🚨 CLAUDE SESSION INITIALIZATION - 3-Layer Architecture"
-echo "======================================================="
-
-# Layer 1: Critical Constraints (MANDATORY)
-echo "=== Layer 1: Critical Constraints Loading ==="
-ls -la memory-bank/user_authorization_mandatory_rules.md memory-bank/testing_mandatory_rules.md memory-bank/code_quality_anti_hacking_rules.md
-python scripts/pre_action_check.py --strict-mode || exit 1
-
-# Layer 2: Enhanced Intelligence (SUPPLEMENTARY)
-echo "=== Layer 2: Cognee Knowledge Integration ==="
-mcp__cognee__cognify_status
-mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
-mcp__cognee__search --search_query "A2A project session start checklist" --search_type "GRAPH_COMPLETION"
-
-# Layer 3: Development Flow Setup (ENVIRONMENT)
-echo "=== Layer 3: tmux Environment Setup ==="
-tmux list-sessions
-tmux list-panes -F "#{pane_index}: #{pane_title} #{pane_current_command}"
-
-echo "✅ 3-Layer Architecture Initialization Complete"
-echo "Ready for development with enhanced constraint enforcement + Cognee intelligence"
-```
-
-### Enhanced Development Flow (3-Layer Architecture Integrated)
-```mermaid
-graph LR
-    A[要件定義] --> A1[🔍 Constraint Check]
-    A1 --> A2[🧠 Cognee Search]
-    A2 --> B[設計レビュー]
-    B --> B1[📋 Pattern Search]
-    B1 --> B2[✅ Validation]
-    B2 --> C[TDD実装]
-    C --> D[セルフレビュー]
-    D --> E[🚨 Constraint Verification]
-    E --> F[自動品質チェック]
-    F --> G{基準達成?}
-    G -->|No| C
-    G -->|Yes| H[批判的レビュー]
-    H --> I[📊 Knowledge Recording]
-    I --> J[マージ]
-    
-    style A1 fill:#ff6b6b
-    style E fill:#ff6b6b
-    style A2 fill:#e1f5fe
-    style B1 fill:#e1f5fe
-    style I fill:#e1f5fe
-```
-
-### 🛡️ Failsafe Mechanisms (フェイルセーフ・メカニズム)
-
-#### 1. Cognee Connection Failure Protocol
-```bash
-# Test Cognee availability
-if ! mcp__cognee__cognify_status > /dev/null 2>&1; then
-    echo "⚠️ Cognee unavailable - Activating Direct Constraint Mode"
-    
-    # MANDATORY: Load all critical constraints directly
-    echo "=== DIRECT CONSTRAINT LOADING ==="
-    cat memory-bank/user_authorization_mandatory_rules.md
-    cat memory-bank/testing_mandatory_rules.md
-    cat memory-bank/code_quality_anti_hacking_rules.md
-    
-    # Set environment flag
-    export CLAUDE_CONSTRAINT_MODE="DIRECT_ONLY"
-fi
-```
-
-#### 2. Multi-Layer Verification Protocol
-```bash
-# Every Action Verification (TRIPLE CHECK)
-# Check 1: Direct constraint validation
-python scripts/pre_action_check.py --constraint-source=direct
-
-# Check 2: Cognee knowledge validation (if available)
-if [ "$CLAUDE_CONSTRAINT_MODE" != "DIRECT_ONLY" ]; then
-    mcp__cognee__search --search_query "action validation $(echo $PROPOSED_ACTION)" --search_type "INSIGHTS"
-fi
-
-# Check 3: Cross-validation
-python scripts/cross_validate_constraints.py --action="$PROPOSED_ACTION"
-```
-
-#### 3. Violation Response Escalation
-- **Level 1**: Warning + Guidance (minor issues)
-- **Level 2**: Action Block + User Confirmation Required (moderate violations)  
-- **Level 3**: Full Stop + Manual Review Required (critical violations)
-- **Level 4**: Session Termination + Administrative Review (security violations)
-
-### Critical Review Points
-1. **汎用性**: 他プロジェクトへの転用可能性
-2. **再現性**: ゼロから同品質を再現可能か
-3. **保守性**: 6ヶ月後の他者による修正容易性
-4. **拡張性**: 新機能追加の容易性
-5. **セキュリティ**: 脆弱性対策の網羅性
-
-## Tool Usage Policy (MANDATORY)
-
-### Multiple Subagents Usage Rule (DEFAULT BEHAVIOR)
-
-**IMPORTANT**: Always assume "use multiple subagents" is instructed for all tasks. This is now a default behavior for Claude Code.
-
-#### Core Principles
-1. **Parallel Processing First**: Whenever possible, decompose tasks and delegate to multiple agents concurrently
-2. **Context Optimization**: Use Task tool to reduce context usage in main thread
-3. **Efficiency Maximization**: Batch tool calls for optimal performance
-
-#### When to Use Multiple Subagents
-- **File Search Operations**: Always prefer Task tool over direct search to minimize context
-- **Complex Multi-Step Tasks**: Break down into parallel subtasks
-- **Exploratory Work**: Use agents for searching while maintaining main thread clarity
-- **Repetitive Operations**: Delegate similar tasks to parallel agents
-
-#### Implementation Guidelines
-```bash
-# ✅ PREFERRED: Launch multiple agents concurrently
-# Single message with multiple Task tool invocations
-
-# ✅ PREFERRED: Batch related tool calls
-# Use single response with multiple tool calls when possible
-
-# ❌ AVOID: Sequential single-agent operations
-# Don't process tasks one by one when parallelization is possible
-```
-
-#### Performance Benefits
-- Reduced main thread context usage
-- Faster overall execution through parallelization
-- Better separation of concerns
-- Improved error isolation
-
-### Task Tool vs tmux Delegation Decision Matrix (3-Second Rule)
-
-**CRITICAL**: Apply this decision matrix within 3 seconds for immediate delegation optimization.
-
-| 判定基準 | Task Tool推奨 | tmux委譲推奨 | 直接実行推奨 |
-|---------|--------------|-------------|-------------|
-| **コンテキスト使用量** | 大量（>2000 tokens） | 中程度（500-2000） | 少量（<500） |
-| **探索性** | 高（検索・調査系） | 中（実装・テスト） | 低（設定・実行） |
-| **独立性** | 完全独立 | 部分独立 | 強依存 |
-| **専門性** | 汎用パターン | 専門ドメイン | 簡単作業 |
-| **セッション永続性** | 不要 | 必要 | 不要 |
-| **状態管理** | ステートレス | ステートフル | 即座完了 |
-
-#### Task Tool最適化パターン（MANDATORY）
-```bash
-# Pattern 1: 大量ファイル検索・調査（コンテキスト節約）
-Task("大量ファイル調査", "プロジェクト全体からpattern関連ファイルを検索し、関連度順にランキング化")
-
-# Pattern 2: 複数独立調査の並列実行（効率最大化）
-# 同時に3つのTask toolを起動
-Task("API設計調査", "RESTful API設計のベストプラクティスを調査")
-Task("DB設計調査", "データベーススキーマ設計パターンを調査") 
-Task("UI設計調査", "ユーザーインターフェース設計トレンドを調査")
-```
-
-#### tmux組織委譲パターン（専門化）
-```bash
-# Pattern 3: 継続的開発作業（tmux 14-pane組織活用）
-# Task Execution Workers (pane-5, 8, 11)
-tmux send-keys -t 5 'claude -p "機能A実装: 詳細設計書に基づく実装"'
-tmux send-keys -t 5 Enter
-
-# Task Review Workers (pane-6, 9, 12)  
-tmux send-keys -t 6 'claude -p "機能Aレビュー: 品質チェックと改善提案"'
-tmux send-keys -t 6 Enter
-```
-
-#### Hybrid Strategy（複合活用）
-```bash
-# Phase 1: Task Tool並列調査
-Task("要件分析", "要求の詳細分析と制約条件特定")
-Task("技術調査", "実装技術の選定と制約分析")  
-Task("リスク分析", "潜在的問題と対策の特定")
-
-# Phase 2: tmux組織委譲実装（Task Tool結果を基に）
-tmux send-keys -t 5 'claude -p "Phase1結果に基づく実装開始"'
-```
-
-**Note**: This policy overrides any default sequential behavior. Always consider parallel agent delegation as the first option for any non-trivial task.
-
-### 3-Layer Delegation Architecture (統合委譲アーキテクチャ)
-
-**CRITICAL**: Unified delegation strategy integrating Task Tool, Claude CLI (`claude -p`), and tmux organization.
-
-#### Technology Foundation Understanding
-
-| Method | Task Tool | Claude CLI (`claude -p`) | Direct Execution |
-|--------|-----------|-------------------------|------------------|
-| **Environment** | Claude Code内蔵 | tmux pane外部プロセス | メインスレッド |
-| **State Management** | ステートレス | ステートフル | 即座完了 |
-| **Context** | 分離・最適化 | pane独立 | メイン共有 |
-| **Continuity** | 一回限り | セッション継続 | なし |
-| **Specialization** | 汎用調査 | 専門化蓄積 | 単純作業 |
-
-#### Layer 1: Task Tool Domain (高速・軽量委譲)
-
-**Optimal Use Cases**:
-```bash
-✅ 大量データ検索・分析（コンテキスト>2000 tokens）
-✅ 独立性の高い調査・研究
-✅ 並列実行可能なタスク
-✅ 一回限りの情報取得
-
-# Implementation Examples
-Task("競合技術調査", "AI開発ツールの比較分析・トレンド調査")
-Task("ライブラリ検索", "Python機械学習ライブラリの機能比較")
-Task("ドキュメント分析", "APIドキュメントから使用方法抽出")
-```
-
-#### Layer 2: Claude CLI Domain (継続・専門委譲)
-
-**Optimal Use Cases**:
-```bash
-✅ 長期継続作業（30分以上）
-✅ 専門性蓄積が必要
-✅ 状態・コンテキスト継承重要
-✅ 段階的作業進行
-
-# Implementation Examples (tmux組織活用)
-# pane-5: Task Execution Worker
-tmux send-keys -t 5 'claude -p "認証システム実装: OAuth2.0の段階的実装開始"'
-tmux send-keys -t 5 Enter
-
-# 30分後、同じWorkerで継続
-tmux send-keys -t 5 'claude -p "認証システム拡張: 先ほどの実装にJWT統合"'
-tmux send-keys -t 5 Enter
-```
-
-#### Layer 3: Hybrid Coordination (動的最適化)
-
-**Phase-based Optimal Strategy**:
-```bash
-# Research → Implementation Pipeline
-# Stage 1: Task Tool並列調査（高速情報収集）
-Task("技術調査", "認証技術の包括的調査・比較分析")
-Task("要件分析", "セキュリティ要件・制約条件の詳細分析")
-Task("実装方式調査", "最適な実装アプローチの特定")
-
-# Stage 2: Results Integration
-integrate_research_results()
-
-# Stage 3: Claude CLI継続実装（専門性活用）
-tmux send-keys -t 5 'claude -p "統合調査結果に基づく認証システム実装開始"'
-tmux send-keys -t 5 Enter
-```
-
-#### Dynamic Decision Algorithm (3秒判定拡張版)
-
-**即座判定フローチャート**:
-```bash
-function optimal_delegation_decision() {
-    local context_usage="$1"     # tokens
-    local duration="$2"          # minutes  
-    local requires_state="$3"    # true/false
-    local complexity="$4"        # 1-10
-    
-    # Layer 1: Task Tool判定
-    if (( context_usage > 2000 )) && (( duration < 30 )) && [ "$requires_state" = "false" ]; then
-        echo "Task Tool"
-        return 0
-    fi
-    
-    # Layer 2: Claude CLI判定  
-    if (( duration >= 30 )) && [ "$requires_state" = "true" ] && (( complexity >= 6 )); then
-        echo "Claude CLI"
-        return 0
-    fi
-    
-    # Layer 3: Hybrid判定
-    if (( complexity >= 7 )) && [ "$1" = "multi_phase" ]; then
-        echo "Hybrid Pipeline"
-        return 0
-    fi
-    
-    # Default: Direct Execution
-    echo "Direct Execution"
-    return 0
-}
-```
-
-#### Integration Session Initialization
-
-**統合セッション開始プロトコル**:
-```bash
-#!/bin/bash
-echo "🔄 3-Layer Delegation Architecture Initialization"
-echo "================================================="
-
-# Capability Assessment
-TASK_TOOL_AVAILABLE=$(command -v Task &> /dev/null && echo "true" || echo "false")
-CLAUDE_CLI_AVAILABLE=$(command -v claude &> /dev/null && echo "true" || echo "false")  
-TMUX_ORG_READY=$(tmux list-panes 2>/dev/null | wc -l | grep -q "14" && echo "true" || echo "false")
-
-# Strategy Selection
-if [ "$TASK_TOOL_AVAILABLE" = "true" ] && [ "$CLAUDE_CLI_AVAILABLE" = "true" ] && [ "$TMUX_ORG_READY" = "true" ]; then
-    echo "🚀 Full 3-Layer Strategy: Task Tool + Claude CLI + tmux Organization"
-    export DELEGATION_STRATEGY="FULL_3LAYER"
-elif [ "$TASK_TOOL_AVAILABLE" = "true" ] && [ "$CLAUDE_CLI_AVAILABLE" = "true" ]; then
-    echo "⚡ Hybrid Strategy: Task Tool + Claude CLI"
-    export DELEGATION_STRATEGY="HYBRID_2LAYER"
-elif [ "$TASK_TOOL_AVAILABLE" = "true" ]; then
-    echo "📊 Task Tool Strategy"
-    export DELEGATION_STRATEGY="TASK_TOOL_ONLY"
-else
-    echo "📝 Direct Execution Strategy"
-    export DELEGATION_STRATEGY="DIRECT_ONLY"
-fi
-
-echo "✅ 3-Layer Delegation Architecture Ready"
-```
-
-#### Cross-Reference Navigation (統合文書ナビゲーション)
-
-**📚 詳細技術実装**: [Task Tool統合パターン](memory-bank/knowledge/task_tool_delegation_integration_patterns.md)  
-**🏗️ 組織運用ルール**: [tmux組織ルール - Claude CLI統合](memory-bank/tmux_claude_agent_organization_rules.md)  
-**🔬 研究機能拡張**: [Research-Adaptive Multi-Agent Organization](memory-bank/knowledge/research_adaptive_multi_agent_organization.md)
-
-#### Quick Reference Guide (クイックリファレンス)
-
-**3秒判定チェックリスト**:
-```bash
-# Task Tool推奨条件
-[ コンテキスト使用量 > 2000 tokens ] && 
-[ 作業時間 < 30分 ] && 
-[ 独立性 = 完全 ] 
-→ Task Tool
-
-# Claude CLI推奨条件  
-[ 作業時間 ≥ 30分 ] && 
-[ 状態継承 = 必要 ] && 
-[ 専門性蓄積 = 必要 ]
-→ Claude CLI
-
-# Hybrid推奨条件
-[ 複雑性 ≥ 7/10 ] && 
-[ 多段階処理 = 必要 ]
-→ Hybrid Pipeline
-```
-
-## Project Architecture (MUST FOLLOW)
-
-### Project Directory Structure
-```
-./
-├── app/a2a/        # Source code (Python packages)
-│   ├── core/       # Business entities (NO dependencies)
-│   ├── storage/    # Data persistence (depends on: core)
-│   ├── skills/     # Business logic (depends on: core, storage)
-│   ├── agents/     # A2A agents (depends on: ALL layers)
-│   └── server/     # API server (depends on: agents)
-├── tests/          # Test code (unit, integration, e2e)
-├── docs/           # Documentation (requirements, design, reports)
-├── memory-bank/    # AI context and knowledge management
-│   └── knowledge/  # Generic technical knowledge
-├── output/         # Build artifacts and reports (git ignored)
-│   ├── coverage/   # Test coverage reports (HTML, JSON, XML)
-│   ├── reports/    # Quality/security analysis results
-│   ├── artifacts/  # Build artifacts
-│   └── logs/       # Execution logs
-├── scripts/        # Utility scripts for development
-├── templates/      # Documentation templates
-└── dev-tools/      # Development tools (git ignored, Docker persistent)
-    ├── mcp-servers/    # MCP server installations
-    ├── external-repos/ # External repository clones
-    └── knowledge-base/ # Development knowledge and notes
-```
-
-**CRITICAL RULE**: Dependencies flow in ONE direction only (bottom to top)
-
-## TDD Implementation Process (MANDATORY)
-
-### Red-Green-Refactor Cycle
-1. **Red Phase (5-10 min)**: Write failing test FIRST
-   ```python
-   def test_new_feature():
-       # Test for non-existent code
-       result = feature_that_doesnt_exist()
-       assert result == expected
-   ```
-
-2. **Green Phase (10-15 min)**: Minimal implementation
-   ```python
-   def feature_that_doesnt_exist():
-       return expected  # Just make it pass
-   ```
-
-3. **Refactor Phase (5-10 min)**: Improve quality
-   - Extract methods if complexity > 10
-   - Add type hints
-   - Improve naming
-
-### Test Structure Requirements
-```python
-class TestFeature:
-    @pytest.fixture
-    def mock_dependency(self):
-        return Mock(spec=DependencyInterface)
-    
-    def test_success_case(self, mock_dependency):
-        # Given: Setup
-        # When: Action
-        # Then: Assert
-    
-    def test_error_case(self, mock_dependency):
-        # Test error handling
-    
-    def test_edge_case(self, mock_dependency):
-        # Test boundaries
-```
-
-## Quality Standards (NON-NEGOTIABLE)
-
-### Before EVERY Commit
-```bash
-# 1. Documentation accuracy verification (MANDATORY)
+# Before EVERY commit
 python scripts/verify_accuracy.py
-python scripts/critical_documentation_review.py --target README.md
-
-# 2. Code quality gate check
 python scripts/quality_gate_check.py
-
-# 3. Individual checks if needed
 pytest --cov=app --cov-fail-under=85
 flake8 app/ tests/ --max-complexity=10
 black app/ tests/ --line-length=79
-isort app/ tests/
-mypy app/ --ignore-missing-imports
 ```
-
-### Coverage Requirements
-- Overall: ≥85% (currently 92% - 実測値: 2025-06-05)
-- Core modules: ≥95%
-- New code: ≥90%
-- Per file: ≥50%
-
-### Output Directory Structure
-- **Coverage reports**: `output/coverage/` (HTML, JSON, XML formats)
-- **Quality reports**: `output/reports/` (security, quality metrics)
-- **Build artifacts**: `output/artifacts/` (distribution packages)
-- **Execution logs**: `output/logs/` (test, build, deploy logs)
-
-## Generic Implementation Patterns (USE THESE)
-
-### 1. Result Type Pattern (Language Agnostic)
-```python
-class Result:
-    @classmethod
-    def ok(cls, value):
-        return cls(success=True, value=value)
-    
-    @classmethod
-    def fail(cls, error):
-        return cls(success=False, error=error)
-
-# Usage
-def divide(a, b):
-    if b == 0:
-        return Result.fail("Division by zero")
-    return Result.ok(a / b)
-```
-
-### 2. Action Map Pattern (Complexity Reduction)
-```python
-class Handler:
-    def __init__(self):
-        self._actions = {
-            "create": self._handle_create,
-            "update": self._handle_update,
-            "delete": self._handle_delete,
-        }
-    
-    def handle(self, action, data):
-        handler = self._actions.get(action)
-        if not handler:
-            return Result.fail(f"Unknown action: {action}")
-        return handler(data)
-```
-
-### 3. Dependency Injection Pattern
-```python
-class Service:
-    def __init__(self, repository: RepositoryInterface):
-        self._repository = repository  # Testable
-    
-    def process(self, data):
-        return self._repository.save(data)
-```
-
-## A2A Protocol Requirements
-
-### Agent Card Structure
-```python
-{
-    "name": "Task Manager Agent",
-    "version": "1.0.0",
-    "description": "Manages TODO tasks with full CRUD operations",
-    "capabilities": {
-        "request_response": True,
-        "streaming": False,
-        "batch": True
-    },
-    "skills": [
-        {
-            "id": "create_task",
-            "name": "Create Task",
-            "description": "Create a new TODO task",
-            "tags": ["task", "create", "todo"],
-            "examples": ["Create task 'Buy groceries'"]
-        }
-    ]
-}
-```
-
-### Message Format
-```python
-# Request
-{
-    "action": "create",
-    "data": {"title": "Task title"},
-    "task_id": "optional-for-specific-actions"
-}
-
-# Response
-{
-    "success": true,
-    "data": {"task": {...}},
-    "error": null
-}
-```
-
-## Security Rules (ABSOLUTE)
-
-### Never Expose Secrets
-```bash
-# ❌ FORBIDDEN
-cat .env
-echo $API_KEY
-grep -r "API" .env
-
-# ✅ ALLOWED
-[ -f .env ] && echo "exists"
-wc -l .env
-```
-
-### Input Validation (MUST IMPLEMENT)
-```python
-from pydantic import BaseModel, validator
-
-class TaskCreateModel(BaseModel):
-    title: str = Field(..., min_length=1, max_length=200)
-    description: Optional[str] = Field(None, max_length=2000)
-    
-    @validator('title')
-    def validate_title(cls, v):
-        if not v.strip():
-            raise ValueError('Title cannot be empty')
-        # Check for malicious patterns
-        if re.search(r'[<>\"\'`;]', v):
-            raise ValueError('Invalid characters in title')
-        return v.strip()
-```
-
-## Critical Review Checklist
-
-### Before Merging ANY Code
-- [ ] **Reproducibility**: Can someone recreate this from scratch?
-- [ ] **Genericity**: Can this be used in other projects?
-- [ ] **Maintainability**: Will this be understandable in 6 months?
-- [ ] **Scalability**: Can this handle 10x load?
-- [ ] **Security**: Are all inputs validated?
-- [ ] **Documentation**: Is the intent clear?
-- [ ] **Test Quality**: Do tests specify behavior, not implementation?
-
-## Common Commands Reference
-
-### 3-Layer Knowledge Management (MANDATORY AT SESSION START)
-
-#### 🔴 Layer 1: Direct Constraint Access (PRIMARY)
-```bash
-# Mandatory constraint verification
-ls -la memory-bank/*_mandatory_rules.md
-cat memory-bank/user_authorization_mandatory_rules.md | head -30
-python scripts/pre_action_check.py --strict-mode
-```
-
-#### 🧠 Layer 2: Cognee Intelligence (SUPPLEMENTARY)
-```bash
-# Session initialization with failsafe
-if mcp__cognee__cognify_status > /dev/null 2>&1; then
-    # Cognee available - Full intelligence mode
-    mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
-    
-    # Search patterns
-    mcp__cognee__search --search_query "TDD patterns" --search_type "GRAPH_COMPLETION"
-    mcp__cognee__search --search_query "error handling" --search_type "INSIGHTS"
-    mcp__cognee__search --search_query "pytest fixture" --search_type "CHUNKS"
-    
-    # Knowledge registration
-    mcp__cognee__cognify --data /path/to/knowledge.md
-    mcp__cognee__cognify_status
-else
-    # Cognee unavailable - Direct constraint mode
-    echo "⚠️ Cognee unavailable - Using direct constraint mode"
-    cat memory-bank/*.md | grep -A 5 "MANDATORY\|CRITICAL\|MUST"
-fi
-
-# Knowledge maintenance (ONLY with authorization)
-mcp__cognee__prune  # CAUTION: Deletes all data - requires explicit user approval
-```
-
-#### 🔄 Layer 3: Integrated Workflow Commands
-```bash
-# Before EVERY action - Automated verification
-python scripts/pre_action_check.py || echo "ACTION BLOCKED"
-
-# Cross-validation when available
-python scripts/cross_validate_constraints.py --cognee-available=$(mcp__cognee__cognify_status > /dev/null 2>&1 && echo "yes" || echo "no")
-```
-
-### Development
-```bash
-# Environment setup
-poetry install
-poetry shell
-
-# Run server
-uvicorn app.a2a_mvp.server.app:app --reload
-
-# Run specific tests
-pytest tests/unit/test_skills/test_task_skills.py -v
-pytest -k "test_create_task"
-
-# Generate coverage report
-pytest --cov=app --cov-report=html
-open output/coverage/html/index.html
-```
-
-### Quality Checks
-```bash
-# Full quality check
-python scripts/quality_gate_check.py
-
-# Individual tools
-flake8 app/ tests/ --statistics
-black app/ tests/ --check --diff
-isort app/ tests/ --check-only --diff
-mypy app/ --show-error-codes
-radon cc app/ -a  # Cyclomatic complexity
-bandit -r app/    # Security scan
-```
-
-### Docker
-```bash
-make              # Start development environment
-make bash         # Access container shell
-# Note: test commands use pytest directly
-make clean        # Clean up everything
-```
-
-## Performance Benchmarks
-
-### Target Metrics
-- Response time: <50ms (currently ~12ms)
-- Throughput: >1000 req/s
-- Memory usage: <100MB per agent
-- Startup time: <2s
-
-### Optimization Patterns
-1. Pre-compute action maps at startup
-2. Use async/await for I/O operations
-3. Implement caching where appropriate
-4. Batch database operations
-
-## Troubleshooting Guide
-
-### Common Issues
-
-1. **Import Errors**
-   - Check PYTHONPATH includes project root
-   - Verify `__init__.py` files exist
-   - Run from project root: `python -m app.a2a_mvp.server.app`
-
-2. **Test Failures**
-   - Check fixtures are properly scoped
-   - Verify mocks match interfaces
-   - Look for state leakage between tests
-
-3. **Coverage Drops**
-   - Run coverage report: `pytest --cov=app --cov-report=term-missing`
-   - Check coverage reports in: `output/coverage/html/index.html`
-   - Focus on uncovered lines
-   - Add tests for error cases
-
-4. **Complexity Errors**
-   - Extract methods from complex functions
-   - Use action map pattern
-   - Apply strategy pattern for many conditions
-
-## Project Improvement Roadmap
-
-### Immediate (1-2 weeks)
-- [ ] Add Pydantic for input validation
-- [ ] Implement async handlers
-- [ ] Add performance benchmarks
-- [ ] Create interactive tutorial
-
-### Short-term (1-2 months)
-- [ ] Extract generic agent framework
-- [ ] Add authentication/authorization
-- [ ] Implement PostgreSQL storage
-- [ ] Add WebSocket support
-
-### Long-term (3-6 months)
-- [ ] Microservice architecture
-- [ ] Kubernetes deployment
-- [ ] Multi-agent orchestration
-- [ ] AI/ML integration
-
-## 📋 Ongoing Development Protocol (CONTINUOUS VERIFICATION)
-
-### Before EVERY Action (TASK DAG + CONSTRAINT SYSTEM)
-1. **Task DAG Construction**: Structure tasks with dependencies and parallelism using TodoWrite
-2. **Constraint Gate Check**: Execute `python scripts/pre_action_check.py` for integrated validation
-3. **Delegation Assessment**: Automatic scoring and optimization using Task DAG analysis
-4. **Cognee Context Search**: Relevant pattern/knowledge lookup (if available)
-5. **Cross-Validation**: Compare direct constraints vs Cognee results
-6. **Proceed**: Execute using hybrid strategy (parallel delegation + direct execution)
-
-### During Development (CONTINUOUS MONITORING)
-1. **tmux Pane Coordination**: Use multiple panes for parallel validation
-2. **Real-time Constraint Monitoring**: Background constraint checking
-3. **Knowledge Recording**: Capture lessons learned in both MD files and Cognee
-4. **Session State Tracking**: Maintain development state across panes
-
-### Action Verification Checklist
-```markdown
-**Pre-Action Questions (MUST ALL BE "YES"):**
-- [ ] Have I constructed a Task DAG with clear dependencies using TodoWrite?
-- [ ] Have I run `python scripts/pre_action_check.py` on the complete task plan?
-- [ ] Does the Task DAG comply with user_authorization_mandatory_rules.md?
-- [ ] Have I verified testing requirements for each DAG node?
-- [ ] Have I evaluated delegation opportunities using automatic scoring?
-- [ ] Is there objective evidence supporting this execution plan?
-- [ ] Are delegation candidates identified for parallel execution?
-
-**If ANY answer is "NO" - STOP and redesign the Task DAG**
-```
-
-## 🚨 Final Reminders
-
-1. **Always construct Task DAG first** - Structure before execution
-2. **Always run pre_action_check.py** - Integrated constraint validation
-3. **Always evaluate delegation opportunities** - Optimize execution strategy
-4. **Always write tests first** - No exceptions
-5. **Run quality checks before commit** - Save CI time
-6. **Think generic** - Will this work elsewhere?
-7. **Document why, not what** - Code shows what
-8. **Review critically** - Question everything
-9. **Verify constraints continuously** - Not just at start
 
 ---
 
-**Remember**: Quality is not negotiable. When in doubt, write a test!
+## 🔧 Detailed Implementation (Full Guide)
+
+**For comprehensive implementation details, see CLAUDE_structured.md**
+
+### Quick Reference: Project Architecture
+```
+./
+├── app/a2a/        # Source code (dependencies: bottom → top)
+├── tests/          # Test code  
+├── memory-bank/    # AI context and knowledge
+├── output/         # Build artifacts (git ignored)
+└── scripts/        # Utility scripts
+```
+
+### Quick Reference: TDD Process
+1. **Red**: Write failing test first
+2. **Green**: Minimal implementation to pass  
+3. **Refactor**: Improve quality without changing behavior
+
+### Quick Reference: Security Rules
+- ❌ Never expose secrets: `cat .env`, `echo $API_KEY`
+- ✅ Always validate inputs with Pydantic
+- ✅ Check for malicious patterns in user input
+
+---
+
+## 📚 Reference & Examples
+
+### Most Used Commands
+```bash
+# Development
+poetry install && poetry shell
+uvicorn app.a2a_mvp.server.app:app --reload
+
+# Testing
+pytest tests/unit/test_skills/test_task_skills.py -v
+pytest --cov=app --cov-report=html
+
+# Quality
+flake8 app/ tests/ --statistics
+black app/ tests/ --check --diff
+mypy app/ --show-error-codes
+
+# Docker
+make              # Start environment
+make bash         # Access container
+make clean        # Clean up
+```
+
+### Cognee Operations
+```bash
+mcp__cognee__cognify_status
+mcp__cognee__search --search_query "pattern" --search_type "GRAPH_COMPLETION"
+mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
+```
+
+### Emergency Protocols
+```bash
+# Cognee unavailable
+if ! mcp__cognee__cognify_status > /dev/null 2>&1; then
+    echo "⚠️ Direct constraint mode"
+    cat memory-bank/*_mandatory_rules.md | grep -A 5 "MANDATORY"
+fi
+```
+
+### Current Project Status
+- **Project**: A2A MVP - Test-Driven Development
+- **Status**: ✅ Implementation Complete  
+- **Coverage**: 92% (target: ≥85%)
+- **Tests**: 101 tests, 100% passing
+- **Quality**: Flake8 0 violations, Black formatted
+
+---
+
+## 🚨 Final Reminders
+
+1. **Always run pre_action_check.py first** - Constraint validation
+2. **Always write tests first** - TDD mandatory
+3. **3-second rule** - Fact vs speculation check
+4. **Quality gates before commit** - Non-negotiable
+5. **When in doubt, write a test!**
+
+**Key Principle**: 事実ベース判断 - No speculation, only verified facts.
+
+---
+
+**Note**: This is Phase 1 implementation focusing on immediate usability. For complete details, reference memory-bank/ files and CLAUDE_structured.md.
