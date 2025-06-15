@@ -113,7 +113,7 @@
   ├── worktree_02/    # 機能B開発用worktree
   └── worktree_03/    # 機能C開発用worktree
   ```
-- **参考文書**: [memory-bank/git_worktree_parallel_development_verified.md](../../memory-bank/git_worktree_parallel_development_verified.md)
+- **参考文書**: [memory-bank/08-automation/git_worktree_parallel_development.md](../../memory-bank/08-automation/git_worktree_parallel_development.md)
 
 ### `/dev-tools/`
 - **用途**: 開発ツール・外部リポジトリ（Docker永続化用）

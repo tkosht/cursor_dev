@@ -225,7 +225,7 @@ CPU使用率（平均）: 45%
 ## 📚 関連資料
 
 - [Git Worktree並列実行ルール](../90.references/git_worktree_parallel_execution_rules.md)
-- [並列開発実証報告書](../../memory-bank/git_worktree_parallel_development_verified.md)
+- [並列開発実証報告書](../../memory-bank/08-automation/git_worktree_parallel_development.md)
 - [再現性検証スクリプト](../../scripts/verify_git_worktree_parallel_execution.py)
 
 ## 🏁 結論

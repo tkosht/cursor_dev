@@ -1031,9 +1031,9 @@ git commit
 ## 📚 参考資料
 
 - [Git Worktree公式ドキュメント](https://git-scm.com/docs/git-worktree)
-- [並列開発実証報告書](../../memory-bank/git_worktree_parallel_development_verified.md)
+- [並列開発実証報告書](../../memory-bank/08-automation/git_worktree_parallel_development.md)
 - [プロジェクト品質基準](../../CLAUDE.md)
-- [TDD実装パターン](../../memory-bank/generic_tdd_patterns.md)
+- [TDD実装パターン](../../memory-bank/03-patterns/generic_tdd_patterns.md)
 
 ---
 
