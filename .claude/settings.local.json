@@ -76,7 +76,11 @@
       "Bash(echo:*)",
       "Bash(uv run:*)",
       "Bash(uv sync:*)",
-      "WebFetch(domain:www.anthropic.com)"
+      "WebFetch(domain:www.anthropic.com)",
+      "Bash(poetry --version)",
+      "Bash(poetry run mypy:*)",
+      "Bash(tmux:*)",
+      "Bash(poetry run:*)"
     ],
     "deny": []
   },
