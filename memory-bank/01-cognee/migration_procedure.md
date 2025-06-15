@@ -82,7 +82,7 @@ echo "Phase 2: 必須ルール移行中..."
 files=(
     "memory-bank/user_authorization_mandatory_rules.md"
     "memory-bank/testing_mandatory_rules.md"
-    "memory-bank/code_quality_anti_hacking_rules.md"
+    "00-core/code_quality_anti_hacking.md"
     "memory-bank/documentation_accuracy_verification_rules.md"
 )
 
@@ -114,10 +114,10 @@ python scripts/cognee_verification.py --phase=mandatory_rules
 echo "Phase 3: コア知識移行中..."
 
 core_files=(
-    "memory-bank/tdd_implementation_knowledge.md"
-    "memory-bank/generic_tdd_patterns.md"
-    "memory-bank/development_workflow_rules.md"
-    "memory-bank/git_worktree_parallel_development_verified.md"
+    "../00-core/tdd_implementation_knowledge.md"
+    "../03-patterns/generic_tdd_patterns.md"
+    "00-core/development_workflow.md"
+    "08-automation/git_worktree_parallel_development.md"
     "memory-bank/a2a_protocol_implementation_rules.md"
     "docs/02.basic_design/a2a_architecture.md"
     "docs/03.detail_design/a2a_implementation_guide.md"
@@ -162,7 +162,6 @@ echo "Phase 4: 補助知識移行中..."
 categories=(
     "memory-bank/knowledge"
     "memory-bank/research"
-    "docs/90.references"
     "templates"
     "other_docs"
 )

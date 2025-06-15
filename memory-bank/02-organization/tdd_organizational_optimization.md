@@ -861,9 +861,9 @@ def failure_learning_integration(failure_data, organizational_context):
 - `memory-bank/organization_failure_analysis_and_solutions.md`: 組織運営失敗分析
 
 **開発手法関連**:
-- `memory-bank/tdd_implementation_knowledge.md`: TDD実装知見
-- `memory-bank/generic_tdd_patterns.md`: 汎用TDDパターン
-- `memory-bank/development_workflow_rules.md`: 開発ワークフロー
+- `../00-core/tdd_implementation_knowledge.md`: TDD実装知見
+- `../03-patterns/generic_tdd_patterns.md`: 汎用TDDパターン
+- `00-core/development_workflow.md`: 開発ワークフロー
 
 **品質・改善関連**:
 - `memory-bank/critical_review_framework.md`: 批判的レビューフレームワーク
@@ -879,7 +879,7 @@ def failure_learning_integration(failure_data, organizational_context):
 
 **専門技術関連**:
 - `memory-bank/cognee_knowledge_operations_manual.md`: Cognee知識運用
-- `memory-bank/git_worktree_parallel_development_verified.md`: 並列開発手法
+- `08-automation/git_worktree_parallel_development.md`: 並列開発手法
 ```
 
 ### 7.2 発展・応用可能性

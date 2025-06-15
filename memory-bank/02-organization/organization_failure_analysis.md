@@ -390,7 +390,7 @@ Quarterly: 組織体制見直し
 ## 📚 VI. 参照・関連文書
 
 ### 組織管理関連
-- `memory-bank/development_workflow_rules.md`
+- `00-core/development_workflow.md`
 - `memory-bank/knowledge_utilization_failure_analysis.md`
 - `memory-bank/critical_review_framework.md`
 
@@ -400,7 +400,7 @@ Quarterly: 組織体制見直し
 
 ### 品質管理関連
 - `memory-bank/testing_mandatory_rules.md`
-- `memory-bank/code_quality_anti_hacking_rules.md`
+- `00-core/code_quality_anti_hacking.md`
 
 ---
 

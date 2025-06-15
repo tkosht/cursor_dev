@@ -14,7 +14,6 @@
 *   **docs/adr/:** アーキテクチャ決定記録。
 *   **docs/11.errors/, docs/12.fixes/:** エラー情報と修正記録。
 *   **docs/31.progress/:** (より詳細な)進捗記録 (任意)。
-*   **docs/90.references/:** 参考資料。
 *   **docs/91.notes/:** メモ、議事録など。
 *   **knowledge/:** AIアシスタントが学習した汎用的な知識 ([global.mdc](mdc:.cursor/rules/global.mdc) 参照)。
 
@@ -63,7 +62,6 @@ graph TD
 - /docs/11.errors/：エラー記録
 - /docs/12.fixes/：修正記録
 - /docs/31.progress/：進捗報告
-- /docs/90.references/：参考資料
 - /docs/91.notes/：作業メモ
 
 ## 2. ドキュメントテンプレート

@@ -7,8 +7,8 @@
 ## 🚨 必須参照ルール
 
 **開発前に必ず確認すること:**
-- **[cognee_mandatory_utilization_rules.md](cognee_mandatory_utilization_rules.md)** - Cogneeナレッジ必須利活用ルール
-- **[code_quality_anti_hacking_rules.md](code_quality_anti_hacking_rules.md)** - 品質指標への誠実性を保つ絶対ルール
+- **[cognee_mandatory_utilization_rules.md](../01-cognee/mandatory_utilization_rules.md)** - Cogneeナレッジ必須利活用ルール
+- **[code_quality_anti_hacking.md](code_quality_anti_hacking.md)** - 品質指標への誠実性を保つ絶対ルール
 
 ## 📋 開発フロー全体像
 

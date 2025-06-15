@@ -16,8 +16,8 @@
 | 作業タイプ | 必須参照先 | 確認済み |
 |-----------|------------|----------|
 | **Cognee関連** | memory-bank/cognee_knowledge_operations_manual.md | [ ] |
-| **Git操作** | memory-bank/git_worktree_parallel_development_verified.md | [ ] |
-| **TDD実装** | memory-bank/tdd_implementation_knowledge.md | [ ] |
+| **Git操作** | 08-automation/git_worktree_parallel_development.md | [ ] |
+| **TDD実装** | ../00-core/tdd_implementation_knowledge.md | [ ] |
 | **A2A開発** | memory-bank/a2a_protocol_implementation_rules.md | [ ] |
 | **品質チェック** | memory-bank/critical_review_framework.md | [ ] |
 | **エラー対処** | memory-bank/knowledge_utilization_failure_analysis.md | [ ] |

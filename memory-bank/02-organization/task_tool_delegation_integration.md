@@ -615,10 +615,10 @@ graph LR
 - **本文書**: Task Tool + Claude CLI技術統合パターン・実装例・パフォーマンス最適化
 
 #### **Organizational Operations (組織運用詳細)**  
-- **[tmux組織ルール - XII章](../tmux_claude_agent_organization_rules.md)**: Claude CLI統合プロトコル・pane別運用ガイド・品質保証
+- **[tmux組織ルール - XII章](./tmux_claude_agent_organization.md)**: Claude CLI統合プロトコル・pane別運用ガイド・品質保証
 
 #### **Advanced Research Extensions (高度研究機能)**
-- **[Research-Adaptive Multi-Agent Organization](./research_adaptive_multi_agent_organization.md)**: Anthropic手法統合・Progressive Research・LLM-as-judge
+- **[Research-Adaptive Multi-Agent Organization](../03-patterns/research_adaptive_multi_agent.md)**: Anthropic手法統合・Progressive Research・LLM-as-judge
 
 ### Quick Navigation Guide
 

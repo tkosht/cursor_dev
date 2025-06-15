@@ -365,13 +365,10 @@ class ParallelDevelopment:
 
 ## 📚 参考資料・関連文書
 
-### プロジェクト内文書
-- [docs/90.references/git_hooks_specification.md](../docs/90.references/git_hooks_specification.md) - Git フック仕様
-
 ### 技術仕様
 - Git worktree: [Git Official Documentation](https://git-scm.com/docs/git-worktree)
-- TDD実装パターン: memory-bank/generic_tdd_patterns.md
-- 品質基準: memory-bank/code_quality_anti_hacking_rules.md
+- TDD実装パターン: ../03-patterns/generic_tdd_patterns.md
+- 品質基準: 00-core/code_quality_anti_hacking.md
 
 ## 🏁 結論
 

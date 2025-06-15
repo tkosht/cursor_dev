@@ -16,7 +16,7 @@ This document describes patterns and methods for delegating subtasks to other AI
 
 **関連ドキュメント**:
 - [operational_patterns.md](./operational_patterns.md) - 運用パターン全般
-- [security_patterns.md](./security_patterns.md) - セキュリティ考慮事項
+- [security_patterns.md](security_patterns.md) - セキュリティ考慮事項
 
 ## 🎯 基本原則
 
@@ -390,7 +390,7 @@ echo "$context" | claude -p "$prompt"
 python scripts/security_check.py
 ```
 
-**参照**: [security_patterns.md](./security_patterns.md) でより詳細なセキュリティパターンを確認
+**参照**: [security_patterns.md](security_patterns.md) でより詳細なセキュリティパターンを確認
 
 ## 📈 効果測定
 

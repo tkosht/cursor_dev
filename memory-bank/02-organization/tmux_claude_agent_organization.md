@@ -722,7 +722,7 @@ Quarterly: 根本的見直し・戦略調整・組織最適化
 
 #### 組織運営関連
 - `memory-bank/organization_failure_analysis_and_solutions.md`: 組織運営失敗分析
-- `memory-bank/development_workflow_rules.md`: 開発ワークフロー規則
+- `00-core/development_workflow.md`: 開発ワークフロー規則
 - `memory-bank/critical_review_framework.md`: 批判的レビューフレームワーク
 - `memory-bank/agent_peer_review_protocol.md`: エージェント相互レビュープロトコル
 
@@ -733,7 +733,7 @@ Quarterly: 根本的見直し・戦略調整・組織最適化
 
 #### 品質管理関連
 - `memory-bank/testing_mandatory_rules.md`: 自動化機能テスト必須化ルール
-- `memory-bank/code_quality_anti_hacking_rules.md`: 品質指標アンチハッキング・ルール
+- `00-core/code_quality_anti_hacking.md`: 品質指標アンチハッキング・ルール
 - `memory-bank/user_authorization_mandatory_rules.md`: ユーザー承認必須ルール
 
 ### 9.2 テンプレート・フォーム
@@ -789,7 +789,7 @@ Quarterly: 根本的見直し・戦略調整・組織最適化
 **拡張制定日**: 2025-06-14  
 **拡張根拠**: Anthropic Multi-Agent Research System 知見統合  
 **適用条件**: 研究・調査タスク実行時の組織強化  
-**統合文書**: `memory-bank/knowledge/research_adaptive_multi_agent_organization.md`
+**統合文書**: `03-patterns/research_adaptive_multi_agent.md`
 
 ### 11.1 研究特化組織拡張
 
@@ -1059,7 +1059,7 @@ Complete Fallback: 全研究機能無効化時の安全復帰
 **拡張制定日**: 2025-06-14  
 **拡張根拠**: 3-Layer Delegation Architecture 統合戦略  
 **適用条件**: Task Tool + Claude CLI + tmux 完全統合運用  
-**統合文書**: `memory-bank/knowledge/task_tool_delegation_integration_patterns.md`
+**統合文書**: `02-organization/task_tool_delegation_integration.md`
 
 ### 12.1 Claude CLI統合原則
 
@@ -1539,10 +1539,10 @@ graph TB
 
 | 用途 | 文書 | セクション | 内容 |
 |------|------|----------|------|
-| **即座判定** | [CLAUDE.md](../CLAUDE.md) | 3-Layer Delegation | 3秒判定マトリクス・決定アルゴリズム |
-| **技術実装** | [Task Tool Integration](knowledge/task_tool_delegation_integration_patterns.md) | Claude CLI Integration | 技術比較・実装パターン・最適化 |
+| **即座判定** | [CLAUDE.md](../../CLAUDE.md) | 3-Layer Delegation | 3秒判定マトリクス・決定アルゴリズム |
+| **技術実装** | [Task Tool Integration](./task_tool_delegation_integration.md) | Claude CLI Integration | 技術比較・実装パターン・最適化 |
 | **運用実践** | 本文書 | XII章 | Claude CLI通信プロトコル・pane別運用 |
-| **研究・調査** | [Research-Adaptive](knowledge/research_adaptive_multi_agent_organization.md) | RAMAO | Progressive Research・LLM-as-judge |
+| **研究・調査** | [Research-Adaptive](../03-patterns/research_adaptive_multi_agent.md) | RAMAO | Progressive Research・LLM-as-judge |
 
 #### **実践的統合フロー**
 

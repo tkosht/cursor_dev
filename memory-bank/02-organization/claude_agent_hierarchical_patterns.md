@@ -265,7 +265,7 @@ Data Pipeline Manager
 4. **エラー伝播**: 一部Agent障害の全体への影響
 
 ## 関連ドキュメント
-- [AI Agent委託パターン](ai_agent_delegation_patterns.md)
+- [AI Agent委託パターン](../03-patterns/ai_agent_delegation_patterns.md)
 
 **注**: この文書は13ペイン階層組織の理論的パターンを記録したものです。実際の運用では、ルールの複雑化により機能不全となったため、より簡素なアプローチを推奨します。
 

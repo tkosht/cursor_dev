@@ -89,7 +89,7 @@ FAILED test_check_all_agents_health - missing required argument 'description'
 - [x] **Pre-commit強制化**: 全チェック自動実行 ✅
 - [x] **設定統一化**: 88文字制限で全ツール統一 ✅
 - [x] **プロセス自動化**: 手動依存からの完全脱却 ✅
-- [x] **Memory Bank記録**: `quality_management_system.md` 作成 ✅
+- [x] **Memory Bank記録**: `04-quality/quality_management_system.md` 作成 ✅
 
 #### システム効果
 ```bash
