@@ -92,6 +92,10 @@ def search_knowledge(query):
 ### CODE
 - **用途**: コード実装パターンを探す場合
 - **例**: "Result型パターンの実装例"
+- **注意事項**: 
+  - 事前に`codify`でコードリポジトリを処理する必要がある
+  - 大規模リポジトリは処理エラーになる可能性があるため、必要な部分のみを対象にする
+  - `codify_status`で処理完了を確認してから使用する
 
 ### RAG_COMPLETION
 - **用途**: 従来のRAG方式での検索が必要な場合
@@ -288,3 +292,4 @@ python scripts/cognee_migration.py --batch-size 10
 ## 改訂履歴
 
 - 2025-06-11: 初版作成（Claude並列実行検証を契機に）
+- 2025-06-16: CODE検索タイプの注意事項を追加（codify事前処理要件）
