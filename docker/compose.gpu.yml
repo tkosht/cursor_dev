@@ -28,8 +28,12 @@ services:
     # sysctls:
     #   - net.core.somaxconn=$somaxconn
     #   - net.ipv4.tcp_syncookies=0
-    # ports:
-    #   - "8502:8501"   # streamlit
+    ports:
+      - "13000:3000"    # cognee frontend
+      - "7474:7474"     # cognee neo4j
+      - "7687:7687"     # cognee neo4j/bolt
+      - "15432:5432"    # cognee postgres
+      # - "8502:8501"   # streamlit
 
 #     networks:
 #       - default

@@ -10,10 +10,16 @@ if [ ! -d "cognee/" ]; then
 fi
 
 
-cd cognee/cognee-mcp
+cd cognee/
+ln -s ../.env .
+git apply $d/mcp_server.patch
+docker compose up -d
+
+
+cd cognee-mcp/
 git checkout .
 git pull
-git apply $d/mcp_server.patch
 
 uv sync --dev --all-extras --reinstall
+
 

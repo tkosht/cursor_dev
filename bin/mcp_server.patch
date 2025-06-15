@@ -26,3 +26,38 @@ index fffbaf22..f5a72771 100755
      logger.info(f"Starting MCP server with transport: {args.transport}")
      if args.transport == "stdio":
          await mcp.run_stdio_async()
+diff --git a/docker-compose.yml b/docker-compose.yml
+index f6c1b4da..fc50060e 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -53,8 +53,13 @@ services:
+       - 7474:7474
+       - 7687:7687
+     environment:
+-      - NEO4J_AUTH=neo4j/pleaseletmein
++      - NEO4J_AUTH=neo4j/neo4j:123
+       - NEO4J_PLUGINS=["apoc", "graph-data-science"]
++    volumes:
++      - ./data/neo4j/data:/data
++      - ./data/neo4j/logs:/logs
++      - ./data/neo4j/import:/var/lib/neo4j/import
++      - ./data/neo4j/plugins:/var/lib/neo4j/plugins
+     networks:
+       - cognee-network
+ 
+@@ -96,7 +101,8 @@ services:
+       POSTGRES_USER: cognee
+       POSTGRES_PASSWORD: cognee
+       POSTGRES_DB: cognee_db
+-      # - postgres_data:/var/lib/postgresql/data
++    volumes:
++      - ./data/postgres:/var/lib/postgresql/data
+     ports:
+       - 5432:5432
+     networks:
+@@ -108,4 +114,4 @@ networks:
+ 
+ volumes:
+   chromadb_data:
+-  postgres_data:
++
