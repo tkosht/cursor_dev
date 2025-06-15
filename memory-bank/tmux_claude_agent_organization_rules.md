@@ -17,7 +17,33 @@
 運営原理: 単一指揮系統 + 専門化分業
 品質保証: 批判的レビュー + 継続的改善
 効率最適化: 並列処理 + 責任分散
+管理原則: 修正量最小化＋目的達成最適化＋拡張性最大化＋複雑化最小化
 ```
+
+### 1.1.1 役割階層定義 (Role Hierarchy Definition)
+
+#### 戦略・戦術・実行の3層フロー
+```mermaid
+flowchart TD
+    A[USER: 最高権限者] --> B[Project Manager: pane-0]
+    A --> C[PMO/Consultant: pane-1]
+    B --> D{戦略策定}
+    C --> D
+    D --> E[各Manager: 戦術策定]
+    E --> F[各Worker: 戦術実行]
+    F --> G[Manager: 報告監視・受領]
+    G --> H[Project Manager: 報告監視・受領]
+    H --> A
+```
+
+#### 役割定義マトリクス
+| 階層 | 役割 | pane | 主要責務 | 権限範囲 | 報告関係 |
+|------|------|------|----------|----------|----------|
+| **最高層** | USER | - | 最終意思決定・組織承認 | 全組織 | 最終受領者 |
+| **戦略層** | Project Manager | pane-0 | 戦略策定・Manager指示・報告監視 | 全Manager | USERに報告 |
+| **戦略層** | PMO/Consultant | pane-1 | 戦略協力議論・実装支援 | 戦略策定協力 | Project Managerと協力 |
+| **戦術層** | 各Manager | pane-2~4 | 戦術策定・Worker指示・報告監視 | 配下Worker | Project Managerに報告 |
+| **実行層** | 各Worker | pane-5~13 | 戦術実行・指示元Manager報告 | 担当タスク | 指示元Managerに報告 |
 
 ### 1.2 組織規模
 - **総ペイン数**: 14ペイン (pane-0 〜 pane-13)
@@ -54,50 +80,59 @@
 #### 【最高権限者】
 - **User**: 全組織の最終意思決定権者
 
-#### 【第1階層: 管理層】
+#### 【第1階層: 戦略・管理層】
 ```
-pane-0: 組織ルール (Knowledge/Rule Manager)
-├─ 役割: 組織全体のルール策定・知見管理
-├─ 権限: 全配下Worker（pane-7,10,13）への指示
-└─ 責務: 組織学習・品質保証・ルール遵守監視
+pane-0: Project Manager (Knowledge/Rule Manager)
+├─ 役割: 戦略策定・組織ルール管理・全体統制
+├─ 権限: 全Manager・Worker（特にpane-7,10,13）への指示
+└─ 責務: USER依頼受領→戦略策定→Manager指示→報告監視受領
 
-pane-1: Rule Implementation (Rule Implementation Manager)  
-├─ 役割: ルール実装・プロセス標準化
-├─ 権限: 実装系Worker への指示
-└─ 責務: プロセス品質・標準遵守
+pane-1: PMO/Consultant (Rule Implementation Manager)  
+├─ 役割: PMO機能・戦略協力議論・ルール実装支援
+├─ 権限: 実装系Worker・戦略策定協力
+└─ 責務: Project Manager戦略協力→戦術策定→Worker実行指示
 
 pane-2: Task Execution (Task Execution Manager)
 ├─ 役割: タスク実行統括・進捗管理
 ├─ 権限: 実行系Worker への指示  
-└─ 責務: 実行効率・成果品質
+└─ 責務: 戦略受領→実行戦術策定→Worker報告監視受領
 
 pane-3: Task Delegation (Task Delegation Manager)
 ├─ 役割: タスク分散・負荷調整
 ├─ 権限: 全Workerへのタスク配分
-└─ 責務: 効率最適化・リソース配分
+└─ 責務: 戦略配分→各Worker戦術指示→並列報告監視
 
 pane-4: Org Failure Analysis (Analysis Manager)
 ├─ 役割: 組織分析・改善策策定
 ├─ 権限: 全ペインからの情報収集
-└─ 責務: 問題分析・改善提案
+└─ 責務: 戦略分析→改善戦術策定→Worker分析指示
 ```
 
-#### 【第2階層: 実行層】
+#### 【第2階層: 戦術実行層】
 ```
-専門領域A: Task Execution Workers
+専門領域A: Task Execution Workers (戦術実行特化)
 ├─ pane-5: Task Execution Worker
+│   └─ 責務: Manager戦術受領→実行→指示元Manager報告
 ├─ pane-8: Task Execution Worker  
+│   └─ 責務: 並列実行戦術→進捗報告→完了報告
 └─ pane-11: Task Execution Worker
+    └─ 責務: 専門実行戦術→品質確認→成果報告
 
-専門領域B: Task Review Workers
+専門領域B: Task Review Workers (戦術品質保証)
 ├─ pane-6: Task Review Worker
+│   └─ 責務: Manager品質戦術→レビュー実行→品質報告
 ├─ pane-9: Task Review Worker
+│   └─ 責務: 横断品質戦術→監査実行→改善報告
 └─ pane-12: Task Review Worker
+    └─ 責務: 継続品質戦術→監視実行→アラート報告
 
-専門領域C: Task Knowledge/Rule Workers
+専門領域C: Task Knowledge/Rule Workers (戦術知識管理)
 ├─ pane-7: Task Knowledge/Rule Worker
+│   └─ 責務: Project Manager知識戦術→体系化→学習報告
 ├─ pane-10: Task Knowledge/Rule Worker
+│   └─ 責務: Manager学習戦術→知見統合→活用報告
 └─ pane-13: Task Knowledge/Rule Worker
+    └─ 責務: 組織改善戦術→知識蓄積→改善報告
 ```
 
 ---
@@ -131,9 +166,60 @@ Task Delegation Manager (pane-3):
 
 ### 3.2 レポートライン (Report Lines)
 
-#### Upward Reporting (上位報告)
+#### 新統合レポートライン: 戦略・戦術・実行の報告体系
+```mermaid
+flowchart TD
+    subgraph "実行層報告"
+        W1[Worker] --> W2[指示元Manager報告]
+    end
+    
+    subgraph "戦術層報告監視・受領"
+        M1[各Manager] --> M2[Worker報告監視・受領]
+        M2 --> M3[Project Manager報告]
+    end
+    
+    subgraph "戦略層報告監視・受領"
+        P1[Project Manager & PMO/Consultant] --> P2[Manager報告監視・受領]
+        P2 --> P3[USER報告]
+    end
+    
+    W2 --> M2
+    M3 --> P2
+    P3 --> U[USER]
 ```
-Worker → Manager → Knowledge/Rule Manager → USER
+
+#### Upward Reporting (上位報告) - 新フロー統合
+```
+Worker → 指示元Manager (報告監視・受領) → Project Manager (報告監視・受領) → USER
+```
+
+#### Strategic Reporting (戦略報告)
+```
+Project Manager (pane-0):
+├─ ユーザ依頼受領 → 戦略策定 → Manager指示
+├─ Manager戦術実行監視 → 報告受領 → USER報告
+└─ 全組織成果統合 → 戦略評価 → 改善提案
+
+PMO/Consultant (pane-1):
+├─ Project Manager戦略協力 → 実装支援
+├─ 戦術策定支援 → Worker実行指示
+└─ 実装品質確認 → Project Manager報告
+```
+
+#### Tactical Reporting (戦術報告)
+```
+各Manager:
+├─ Project Manager戦略受領 → 戦術策定 → Worker指示
+├─ Worker実行監視 → 報告受領 → 戦術調整
+└─ 戦術成果統合 → Project Manager報告
+```
+
+#### Execution Reporting (実行報告)
+```
+各Worker:
+├─ Manager戦術受領 → 実行計画 → 実行開始
+├─ 進捗・課題発生 → 指示元Manager報告
+└─ 完了・成果 → 指示元Manager最終報告
 ```
 
 #### Cross-functional Reporting (横断報告)
@@ -143,7 +229,7 @@ Worker → Manager → Knowledge/Rule Manager → USER
 
 #### Emergency Escalation (緊急エスカレーション)
 ```
-任意ペイン → Knowledge/Rule Manager → USER
+任意ペイン → Project Manager & PMO/Consultant → USER
 ```
 
 ### 3.3 通信プロトコル
