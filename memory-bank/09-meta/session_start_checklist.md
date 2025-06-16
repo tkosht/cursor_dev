@@ -15,12 +15,15 @@
 
 | 作業タイプ | 必須参照先 | 確認済み |
 |-----------|------------|----------|
-| **Cognee関連** | memory-bank/cognee_knowledge_operations_manual.md | [ ] |
-| **Git操作** | 08-automation/git_worktree_parallel_development.md | [ ] |
-| **TDD実装** | ../00-core/tdd_implementation_knowledge.md | [ ] |
-| **A2A開発** | memory-bank/a2a_protocol_implementation_rules.md | [ ] |
-| **品質チェック** | memory-bank/critical_review_framework.md | [ ] |
-| **エラー対処** | memory-bank/knowledge_utilization_failure_analysis.md | [ ] |
+| **Progress Recording** | memory-bank/09-meta/progress_recording_mandatory_rules.md | [ ] |
+| **Memory Management** | memory-bank/01-cognee/memory_resource_management_critical_lessons.md | [ ] |
+| **Cognee Expansion** | memory-bank/01-cognee/cognee_expansion_progress.md | [ ] |
+| **Cognee関連** | memory-bank/01-cognee/knowledge_operations_manual.md | [ ] |
+| **Git操作** | memory-bank/08-automation/git_worktree_parallel_development.md | [ ] |
+| **TDD実装** | memory-bank/00-core/tdd_implementation_knowledge.md | [ ] |
+| **A2A開発** | memory-bank/05-architecture/a2a_protocol_implementation_rules.md | [ ] |
+| **品質チェック** | memory-bank/04-quality/critical_review_framework.md | [ ] |
+| **エラー対処** | memory-bank/09-meta/knowledge_utilization_failure_analysis.md | [ ] |
 
 ### Step 3: 3秒ルール実装（作業前毎回）
 

@@ -80,7 +80,8 @@
       "Bash(poetry --version)",
       "Bash(poetry run mypy:*)",
       "Bash(tmux:*)",
-      "Bash(poetry run:*)"
+      "Bash(poetry run:*)",
+      "Bash(mcp__cognee__search:*)"
     ],
     "deny": []
   },

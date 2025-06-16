@@ -11,9 +11,10 @@ python scripts/pre_action_check.py --strict-mode || exit 1
 
 # 2. Load essential constraints (minimum required)
 echo "Loading core constraints..."
-[ -f memory-bank/user_authorization_mandatory_rules.md ] && echo "✅ User auth rules found"
-[ -f memory-bank/testing_mandatory_rules.md ] && echo "✅ Testing rules found"
-[ -f memory-bank/code_quality_anti_hacking_rules.md ] && echo "✅ Quality rules found"
+[ -f memory-bank/00-core/user_authorization_mandatory.md ] && echo "✅ User auth rules found"
+[ -f memory-bank/00-core/testing_mandatory.md ] && echo "✅ Testing rules found"
+[ -f memory-bank/00-core/code_quality_anti_hacking.md ] && echo "✅ Quality rules found"
+[ -f memory-bank/09-meta/progress_recording_mandatory_rules.md ] && echo "✅ Progress recording rules found"
 
 # 3. Cognee integration (enhanced mode if available)
 if mcp__cognee__cognify_status > /dev/null 2>&1; then
@@ -87,15 +88,17 @@ flake8 app/ tests/ && black app/ tests/ --check && mypy app/
 #### Phase 1A: Core Compliance Rules (MUST READ FIRST)
 ```bash
 # MANDATORY reading order - DO NOT skip or reorder
-1. memory-bank/user_authorization_mandatory_rules.md    # User authorization (absolute compliance)
-2. memory-bank/testing_mandatory_rules.md               # Automated testing requirements  
-3. memory-bank/code_quality_anti_hacking_rules.md       # Quality anti-hacking rules
+1. memory-bank/00-core/user_authorization_mandatory.md        # User authorization (absolute compliance)
+2. memory-bank/00-core/testing_mandatory.md                  # Automated testing requirements  
+3. memory-bank/00-core/code_quality_anti_hacking.md          # Quality anti-hacking rules
+4. memory-bank/09-meta/progress_recording_mandatory_rules.md # Progress recording requirements
 ```
 
 #### Phase 1B: Core Development Knowledge
 ```bash
-4. memory-bank/tdd_implementation_knowledge.md          # TDD implementation methods
-5. memory-bank/development_workflow_rules.md            # Development workflow
+5. memory-bank/00-core/tdd_implementation_knowledge.md       # TDD implementation methods
+6. memory-bank/00-core/development_workflow.md              # Development workflow
+7. memory-bank/01-cognee/memory_resource_management_critical_lessons.md  # Memory resource management
 ```
 
 #### Key Additional Files (Load as needed)

@@ -24,9 +24,10 @@ class PreActionChecker:
     def __init__(self, project_root: str = "."):
         self.project_root = Path(project_root)
         self.constraint_files = [
-            'memory-bank/user_authorization_mandatory_rules.md',
-            'memory-bank/testing_mandatory_rules.md',
-            'memory-bank/code_quality_anti_hacking_rules.md'
+            'memory-bank/00-core/user_authorization_mandatory.md',
+            'memory-bank/00-core/testing_mandatory.md',
+            'memory-bank/00-core/code_quality_anti_hacking.md',
+            'memory-bank/09-meta/progress_recording_mandatory_rules.md'
         ]
         self.violations = []
         self.results = {}
