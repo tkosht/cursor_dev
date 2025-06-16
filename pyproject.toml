@@ -1,28 +1,28 @@
 [tool.poetry]
 name = "cursor_dev"
 version = "0.1.0"
-description = "X（旧Twitter）のブックマークをリアルタイムで検索し、RAGを実現するPythonツール"
+description = "Cursor 開発環境"
 authors = ["AI Developer <dev@example.com>"]
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.10,<=3.13"
 aiohttp = "^3.9.1"
-beautifulsoup4 = "^4.12.3"
-numpy = "<2.0.0"
-matplotlib = "^3.10.0"
-python-dotenv = "^1.0.1"
-requests = "^2.32.3"
-ipykernel = "^6.29.5"
+beautifulsoup4 = "*"
+numpy = "*"
+matplotlib = "*"
+python-dotenv = "*"
+requests = "*"
+ipykernel = "*"
 # A2A prototype dependencies
-fastapi = "^0.115.12"
-uvicorn = "^0.24.0"
-httpx = "^0.28.1"
-pydantic = "^2.4.0"
-python-multipart = "^0.0.6"
-starlette = "^0.46.2"
-a2a-sdk = "^0.2.4"
-google-generativeai = "^0.8.5"
+fastapi = "*"
+uvicorn = "*"
+httpx = "*"
+pydantic = "*"
+python-multipart = "*"
+starlette = "*"
+a2a-sdk = "*"
+google-generativeai = "*"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
@@ -31,8 +31,8 @@ pytest-mock = "*"
 black = "*"
 flake8 = "*"
 isort = "*"
-pytest-asyncio = "^0.25.3"
-mypy = "^1.15.0"
+pytest-asyncio = "*"
+mypy = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
