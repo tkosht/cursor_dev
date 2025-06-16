@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import List, Dict, Any
 import asyncio
 import logging
+from dotenv import load_dotenv
+import cognee
 
 # ログ設定
 logging.basicConfig(
@@ -27,79 +29,36 @@ class CogneeMigration:
         self.migration_log = []
         self.error_log = []
         
+        # .env ファイルから環境変数を読み込み
+        env_path = self.base_path / "dev-tools/external-repos/cognee/.env"
+        if env_path.exists():
+            load_dotenv(env_path)
+            logger.info(f"Environment variables loaded from: {env_path}")
+        else:
+            logger.warning(f"Environment file not found: {env_path}")
+        
     def get_migration_files(self) -> Dict[str, List[str]]:
-        """移行対象ファイルをカテゴリ別に取得"""
+        """移行対象ファイルをカテゴリ別に取得 - S+A級対応版"""
         files = {
-            "mandatory_rules": [
-                "memory-bank/user_authorization_mandatory_rules.md",
-                "memory-bank/testing_mandatory_rules.md",
-                "memory-bank/code_quality_anti_hacking_rules.md",
-                "memory-bank/documentation_accuracy_verification_rules.md"
+            "s_grade_files": [
+                # S級ファイル（全て登録済み）
+                # "memory-bank/00-core/user_authorization_mandatory.md",     # ✅ 登録済み
+                # "memory-bank/00-core/testing_mandatory.md",               # ✅ 登録済み  
+                # "memory-bank/00-core/code_quality_anti_hacking.md",       # ✅ 登録済み
+                # "memory-bank/01-cognee/mandatory_utilization_rules.md",   # ✅ 登録済み
+                # "memory-bank/09-meta/progress_recording_mandatory_rules.md"  # ✅ 登録済み
             ],
-            "core_knowledge": [
-                "memory-bank/tdd_implementation_knowledge.md",
-                "memory-bank/generic_tdd_patterns.md",
-                "memory-bank/development_workflow_rules.md",
-                "memory-bank/git_worktree_parallel_development_verified.md",
-                "memory-bank/a2a_protocol_implementation_rules.md",
-                "docs/02.basic_design/a2a_architecture.md",
-                "docs/03.detail_design/a2a_implementation_guide.md",
-                "docs/03.detail_design/a2a_tdd_implementation.md",
-                "memory-bank/projectbrief.md",
-                "memory-bank/critical_review_framework.md"
+            "a_grade_files": [
+                # A級ファイル（残り5ファイル） - accuracy_verification_rules.md と critical_review_framework.md は実行中のため除外
+                "memory-bank/02-organization/delegation_decision_framework.md",
+                "memory-bank/02-organization/task_tool_delegation_integration.md",
+                "memory-bank/04-quality/test_strategy.md",
+                "memory-bank/04-quality/tdd_process_failures_lessons.md",
+                "memory-bank/01-cognee/migration_procedure.md"
             ],
-            "knowledge_patterns": [],
-            "research_docs": [],
-            "reference_docs": [],
-            "templates": []
         }
         
-        # memory-bank/knowledge/ 配下
-        knowledge_dir = self.base_path / "memory-bank" / "knowledge"
-        if knowledge_dir.exists():
-            files["knowledge_patterns"] = [
-                str(p.relative_to(self.base_path)) 
-                for p in knowledge_dir.glob("*.md")
-            ]
-        
-        # memory-bank/research/ 配下
-        research_dir = self.base_path / "memory-bank" / "research"
-        if research_dir.exists():
-            files["research_docs"] = [
-                str(p.relative_to(self.base_path)) 
-                for p in research_dir.glob("*.md")
-            ]
-        
-        # docs/90.references/ 配下
-        ref_dir = self.base_path / "docs" / "90.references"
-        if ref_dir.exists():
-            files["reference_docs"] = [
-                str(p.relative_to(self.base_path)) 
-                for p in ref_dir.glob("*.md")
-            ]
-        
-        # templates/ 配下
-        templates_dir = self.base_path / "templates"
-        if templates_dir.exists():
-            files["templates"] = [
-                str(p.relative_to(self.base_path)) 
-                for p in templates_dir.glob("*.md")
-            ]
-        
-        # その他のファイルを収集
-        all_md_files = set()
-        for pattern in ["memory-bank/**/*.md", "docs/**/*.md"]:
-            all_md_files.update(
-                str(p.relative_to(self.base_path)) 
-                for p in self.base_path.glob(pattern)
-            )
-        
-        # カテゴリ化されていないファイルを追加
-        categorized_files = set()
-        for category_files in files.values():
-            categorized_files.update(category_files)
-        
-        files["other_docs"] = list(all_md_files - categorized_files)
+        # S+A級のみの移行なので、他のカテゴリは除外
         
         return files
     
@@ -109,7 +68,7 @@ class CogneeMigration:
         return full_path.exists()
     
     async def migrate_file(self, file_path: str, category: str) -> Dict[str, Any]:
-        """単一ファイルの移行（シミュレーション）"""
+        """単一ファイルの移行（Cognee Python API使用）"""
         result = {
             "file": file_path,
             "category": category,
@@ -122,15 +81,22 @@ class CogneeMigration:
             if not self.validate_file_exists(file_path):
                 raise FileNotFoundError(f"File not found: {file_path}")
             
-            # Cognee APIの呼び出しをシミュレート
+            # Cognee Python APIを使用
             logger.info(f"Migrating {category}: {file_path}")
-            # 実際の実装では：
-            # await cognee.cognify(f"file:{self.base_path}/{file_path}")
+            full_path = self.base_path / file_path
             
-            # レート制限対策
-            await asyncio.sleep(0.5)
+            # ファイル内容を読み込み
+            with open(full_path, 'r', encoding='utf-8') as f:
+                content = f.read()
             
-            result["status"] = "completed"
+            # Cogneeにドキュメントを追加
+            logger.info(f"Adding document to Cognee: {file_path}")
+            await cognee.add(content, dataset_name="main_dataset")
+            
+            # cognifyはバッチごとに1回実行するので、ここでは実行しない
+            result["status"] = "added"
+            logger.info(f"Document added: {file_path}")
+            
             self.migration_log.append(result)
             
         except Exception as e:
@@ -141,9 +107,10 @@ class CogneeMigration:
         
         return result
     
+    
     async def migrate_category(self, category: str, files: List[str], 
-                             batch_size: int = 10) -> Dict[str, Any]:
-        """カテゴリ単位での移行"""
+                             batch_size: int = 3) -> Dict[str, Any]:
+        """カテゴリ単位での移行（並列実行テスト）"""
         logger.info(f"\n=== Migrating {category} ({len(files)} files) ===")
         
         results = {
@@ -154,50 +121,79 @@ class CogneeMigration:
             "files": []
         }
         
-        # バッチ処理
+        # 並列実行テスト（バッチ処理）
         for i in range(0, len(files), batch_size):
             batch = files[i:i + batch_size]
+            logger.info(f"Processing batch {i//batch_size + 1} ({len(batch)} files)")
+            
+            # バッチ内並列実行
             batch_results = await asyncio.gather(
                 *[self.migrate_file(f, category) for f in batch],
                 return_exceptions=True
             )
             
-            for result in batch_results:
+            for idx, result in enumerate(batch_results):
                 if isinstance(result, dict):
                     results["files"].append(result)
-                    if result["status"] == "completed":
+                    if result["status"] in ["added", "completed"]:
                         results["success"] += 1
+                        logger.info(f"✅ Completed: {batch[idx]}")
                     else:
                         results["failed"] += 1
+                        logger.error(f"❌ Failed: {batch[idx]} - {result['error']}")
                 else:
                     results["failed"] += 1
-                    logger.error(f"Batch processing error: {result}")
+                    logger.error(f"❌ Exception in batch processing: {result}")
             
-            # バッチ間の待機
+            # バッチ完了後にcognifyを実行
+            logger.info(f"Running cognify for batch {i//batch_size + 1}...")
+            try:
+                await cognee.cognify()
+                logger.info(f"Cognify completed for batch {i//batch_size + 1}")
+                
+                # 成功したファイルのステータスを更新
+                for idx, file_result in enumerate(results["files"][-len(batch):]):
+                    if file_result["status"] == "added":
+                        file_result["status"] = "completed"
+            except Exception as e:
+                logger.error(f"Cognify failed for batch: {e}")
+                # 失敗したファイルのステータスを更新
+                for idx, file_result in enumerate(results["files"][-len(batch):]):
+                    if file_result["status"] == "added":
+                        file_result["status"] = "failed"
+                        file_result["error"] = f"Cognify batch failed: {str(e)}"
+            
+            # バッチ間待機（メモリ負荷軽減）
             if i + batch_size < len(files):
-                logger.info(f"Batch {i//batch_size + 1} completed. Waiting...")
-                await asyncio.sleep(2)
+                logger.info("Waiting 60 seconds before next batch...")
+                await asyncio.sleep(60)
         
         return results
     
     async def run_migration(self) -> Dict[str, Any]:
-        """移行処理のメイン実行"""
+        """S+A級移行処理のメイン実行（非同期版）"""
         start_time = time.time()
         
-        logger.info("Starting Cognee migration...")
+        logger.info("Starting S+A Grade Cognee migration...")
         
-        # Phase 1: 初期セットアップ
-        logger.info("\n=== Phase 1: Initial Setup ===")
-        # 実際の実装では：
-        # await cognee.prune()
-        # await cognee.add_developer_rules(base_path=str(self.base_path))
+        # Cogneeの設定（環境変数から読み込み）
+        cognee.config.llm_api_key = os.getenv("LLM_API_KEY")
+        cognee.config.llm_model = os.getenv("LLM_MODEL", "openai/gpt-4o-mini")
+        cognee.config.llm_provider = os.getenv("LLM_PROVIDER", "openai")
+        
+        # データベース設定
+        cognee.config.db_provider = os.getenv("DB_PROVIDER", "sqlite")
+        cognee.config.graph_database_provider = os.getenv("GRAPH_DATABASE_PROVIDER", "networkx")
+        cognee.config.vector_db_provider = os.getenv("VECTOR_DB_PROVIDER", "lancedb")
+        
+        logger.info("Cognee configured with environment settings")
         
         # ファイル収集
         files_by_category = self.get_migration_files()
         
         # 統計情報
         total_files = sum(len(files) for files in files_by_category.values())
-        logger.info(f"Total files to migrate: {total_files}")
+        logger.info(f"Total S+A grade files to migrate: {total_files}")
         
         migration_results = {
             "total_files": total_files,
@@ -206,38 +202,25 @@ class CogneeMigration:
             "phases": []
         }
         
-        # Phase 2: 必須ルール移行
-        logger.info("\n=== Phase 2: Mandatory Rules ===")
-        mandatory_results = await self.migrate_category(
-            "mandatory_rules", 
-            files_by_category["mandatory_rules"],
-            batch_size=4
+        # Phase 2: S級ファイル移行
+        logger.info("\n=== Phase 2: S-Grade Files ===")
+        s_results = await self.migrate_category(
+            "s_grade_files", 
+            files_by_category["s_grade_files"],
+            batch_size=1  # S級は慎重に1ファイルずつ（現在空なのでスキップ）
         )
-        migration_results["categories"]["mandatory_rules"] = mandatory_results
-        migration_results["phases"].append("mandatory_rules")
+        migration_results["categories"]["s_grade_files"] = s_results
+        migration_results["phases"].append("s_grade_files")
         
-        # Phase 3: コア知識移行
-        logger.info("\n=== Phase 3: Core Knowledge ===")
-        core_results = await self.migrate_category(
-            "core_knowledge",
-            files_by_category["core_knowledge"],
-            batch_size=5
+        # Phase 3: A級ファイル移行  
+        logger.info("\n=== Phase 3: A-Grade Files ===")
+        a_results = await self.migrate_category(
+            "a_grade_files",
+            files_by_category["a_grade_files"],
+            batch_size=2  # A級は2ファイルずつ（メモリ負荷考慮）
         )
-        migration_results["categories"]["core_knowledge"] = core_results
-        migration_results["phases"].append("core_knowledge")
-        
-        # Phase 4: 補助知識移行
-        logger.info("\n=== Phase 4: Auxiliary Knowledge ===")
-        for category in ["knowledge_patterns", "research_docs", 
-                        "reference_docs", "templates", "other_docs"]:
-            if files_by_category[category]:
-                results = await self.migrate_category(
-                    category,
-                    files_by_category[category],
-                    batch_size=10
-                )
-                migration_results["categories"][category] = results
-                migration_results["phases"].append(category)
+        migration_results["categories"]["a_grade_files"] = a_results
+        migration_results["phases"].append("a_grade_files")
         
         # 移行完了
         end_time = time.time()
@@ -272,17 +255,17 @@ class CogneeMigration:
 
 
 async def main():
-    """メイン実行関数"""
+    """メイン実行関数 - S+A級実行（非同期版）"""
     migration = CogneeMigration()
     
-    # ドライラン（実際のCognee APIは呼ばない）
-    logger.info("Running in DRY RUN mode (no actual Cognee API calls)")
+    logger.info("Running S+A Grade Migration with Cognee Python API")
+    logger.info("Using batch processing with cognify after each batch...")
     
     results = await migration.run_migration()
     
     # サマリー表示
     print("\n" + "="*60)
-    print("MIGRATION SUMMARY")
+    print("S+A GRADE MIGRATION SUMMARY")
     print("="*60)
     print(f"Total files: {results['total_files']}")
     print(f"Success: {results['success_count']}")
@@ -291,6 +274,17 @@ async def main():
     print("\nBy Category:")
     for category, cat_results in results['categories'].items():
         print(f"  {category}: {cat_results['success']}/{cat_results['total']}")
+    
+    # 合格基準チェック
+    success_rate = results['success_count'] / results['total_files'] * 100
+    print(f"\n📊 Success Rate: {success_rate:.1f}%")
+    
+    if success_rate >= 100:
+        print("✅ PASSED: All files migrated successfully!")
+    elif success_rate >= 80:
+        print("⚠️ PARTIAL: Most files migrated, check failed files")
+    else:
+        print("❌ FAILED: Migration did not meet success criteria")
 
 
 if __name__ == "__main__":

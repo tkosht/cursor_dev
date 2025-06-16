@@ -81,7 +81,8 @@
       "Bash(poetry run mypy:*)",
       "Bash(tmux:*)",
       "Bash(poetry run:*)",
-      "Bash(mcp__cognee__search:*)"
+      "Bash(mcp__cognee__search:*)",
+      "Bash(docker exec:*)"
     ],
     "deny": []
   },

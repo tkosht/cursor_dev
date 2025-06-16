@@ -25,9 +25,19 @@ class PreActionChecker:
         self.project_root = Path(project_root)
         self.constraint_files = [
             'memory-bank/00-core/user_authorization_mandatory.md',
+            'memory-bank/00-core/value_assessment_mandatory.md',
             'memory-bank/00-core/testing_mandatory.md',
             'memory-bank/00-core/code_quality_anti_hacking.md',
             'memory-bank/09-meta/progress_recording_mandatory_rules.md'
+        ]
+        
+        # SECURITY LEVEL 0: API Key / Secrets protection (HIGHEST PRIORITY)
+        self.security_forbidden_patterns = [
+            r'env.*[|].*grep.*(?i)(api|key|token|secret)',
+            r'printenv.*(?i)(api|key|token|secret)',
+            r'cat.*\.env',
+            r'echo.*\$.*(?i)(api|key|token|secret)',
+            r'grep.*(?i)(api|key|token|secret).*env'
         ]
         self.violations = []
         self.results = {}

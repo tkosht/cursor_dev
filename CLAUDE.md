@@ -29,13 +29,36 @@ echo "🎯 Session ready! You can now start development."
 
 ### 🧠 Core Principles (Absolute Compliance)
 ```bash
-# The 3-Second Rule (MANDATORY before ANY action)
-echo "1. Is this fact or speculation?"
-echo "2. Have I verified related knowledge?"  
-echo "3. Is there a more reliable method?"
+# The 5-Point Evaluation Rule (MANDATORY before ANY action)
+echo "🚨 0. SECURITY: Will this expose API keys, secrets, or credentials? → STOP if yes"
+echo "🎯 1. USER VALUE: Does this serve USER's interests, not Claude's convenience?"
+echo "⏰ 2. TIME HORIZON: Long-term value vs short-term convenience evaluated?"
+echo "🔍 3. FACT CHECK: Is this fact or speculation?"
+echo "📚 4. KNOWLEDGE: Have I verified related knowledge?"
+echo "🎲 5. ALTERNATIVES: Is there a more reliable/valuable method?"
+
+# MINDSET PRINCIPLES (absolute compliance)
+EXCELLENCE_MINDSET=("User benefit FIRST" "Long-term value PRIORITY" "Lazy solutions FORBIDDEN")
+
+# SECURITY FORBIDDEN COMMANDS (auto-stop on detection)
+SECURITY_FORBIDDEN=("env.*API" "cat.*key" "echo.*token" "grep.*secret" "printenv.*KEY")
 
 # FORBIDDEN PHRASES (auto-stop on detection)
 FORBIDDEN=("probably" "maybe" "I think" "seems like" "たぶん" "おそらく")
+
+# FACT-BASED VERIFICATION (see detailed rules in Cognee)
+# For implementation details, query: mcp__cognee__search --search_query "documentation accuracy verification rules" --search_type "GRAPH_COMPLETION"
+```
+
+### 🎯 Value Assessment Framework (MANDATORY)
+```bash
+# Multi-dimensional Evaluation (required for ALL proposals)
+echo "=== VALUE ASSESSMENT FRAMEWORK ==="
+echo "1. 🧑‍💼 USER BENEFIT: How does this serve the user's actual needs?"
+echo "2. ⏳ LONG-TERM VALUE: Sustainable vs quick-fix solution?"
+echo "3. 🔄 COMPREHENSIVE: All aspects considered (security, quality, efficiency)?"
+echo "4. 🚫 LAZINESS CHECK: Am I avoiding hard work that benefits the user?"
+echo "================================="
 ```
 
 ### ⚡ 3-Second Delegation Decision
@@ -88,10 +111,11 @@ flake8 app/ tests/ && black app/ tests/ --check && mypy app/
 #### Phase 1A: Core Compliance Rules (MUST READ FIRST)
 ```bash
 # MANDATORY reading order - DO NOT skip or reorder
-1. memory-bank/00-core/user_authorization_mandatory.md        # User authorization (absolute compliance)
-2. memory-bank/00-core/testing_mandatory.md                  # Automated testing requirements  
-3. memory-bank/00-core/code_quality_anti_hacking.md          # Quality anti-hacking rules
-4. memory-bank/09-meta/progress_recording_mandatory_rules.md # Progress recording requirements
+1. memory-bank/00-core/user_authorization_mandatory.md        # User authorization + Security + Mindset (absolute compliance)
+2. memory-bank/00-core/value_assessment_mandatory.md          # Value evaluation framework (absolute compliance)
+3. memory-bank/00-core/testing_mandatory.md                  # Automated testing requirements  
+4. memory-bank/00-core/code_quality_anti_hacking.md          # Quality anti-hacking rules
+5. memory-bank/09-meta/progress_recording_mandatory_rules.md # Progress recording requirements
 ```
 
 #### Phase 1B: Core Development Knowledge
