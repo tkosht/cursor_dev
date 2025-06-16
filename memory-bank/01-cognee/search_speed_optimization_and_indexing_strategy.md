@@ -4,6 +4,39 @@
 **チーム**: 検索最適化エンジニア、データベースアーキテクト、メタデータスペシャリスト  
 **目的**: Cogneeの検索速度を劇的に向上させる統合的な戦略設計
 
+## 🔍 検索・利用ガイド
+
+### 🎯 **利用シーン**
+- **性能問題**: 検索遅延・応答時間の改善
+- **戦略立案**: Cognee拡張・改善計画の策定
+- **アーキテクチャ設計**: 大規模ナレッジベースの設計
+- **技術評価**: 検索最適化技術の理解・選定
+- **運用改善**: 日常運用でのパフォーマンス向上
+
+### 🏷️ **検索キーワード**
+`search optimization`, `indexing strategy`, `performance improvement`, `80% speed increase`, `3-stage search`, `multilayer cache`, `L1 L2 L3 cache`, `metadata indexing`, `bloom filter`, `inverted index`, `semantic search`, `graph completion optimization`, `chunks limits`, `search type optimization`
+
+### 📋 **関連ファイル**
+- **実装基盤**: `memory-bank/01-cognee/cognee_reconstruction_successful_procedure.md`
+- **運用基本**: `memory-bank/01-cognee/mandatory_utilization_rules.md`
+- **戦略フレームワーク**: `memory-bank/01-cognee/cognee_strategic_expansion_framework.md`
+- **メモリ管理**: `memory-bank/01-cognee/memory_resource_management_critical_lessons.md`
+- **進捗追跡**: `memory-bank/01-cognee/cognee_expansion_progress.md`
+
+### ⚡ **クイックアクセス**
+```bash
+# 検索性能確認
+time mcp__cognee__search "test query" GRAPH_COMPLETION
+
+# 段階的検索テスト
+mcp__cognee__search "specific term" CHUNKS        # Phase 1: 高速検索
+mcp__cognee__search "specific term" RAG_COMPLETION # Phase 2: 詳細検索
+mcp__cognee__search "specific term" GRAPH_COMPLETION # Phase 3: 包括検索
+
+# キャッシュ効果確認
+for i in {1..3}; do time mcp__cognee__search "repeated query" GRAPH_COMPLETION; done
+```
+
 ## エグゼクティブサマリー
 
 本文書は、Cogneeの検索速度向上とインデックス戦略について、3つの専門家視点から統合的な設計を提案します。段階的検索戦略、高度なメタデータインデックス構造、検索タイプ別最適化、そして登録時のメタデータ付与戦略を通じて、検索速度80%短縮と情報アクセス効率70%向上を実現します。

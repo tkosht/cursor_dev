@@ -30,6 +30,24 @@ mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
 mcp__cognee__search --search_query "プロジェクト概要" --search_type "GRAPH_COMPLETION"
 ```
 
+#### 🚨 エラー対応プロトコル
+```bash
+# Cogneeが空/エラーの場合の緊急対応
+if [[ $? -ne 0 ]] || [[ "$(mcp__cognee__search --search_query 'test' --search_type 'GRAPH_COMPLETION')" == *"No data found"* ]]; then
+    echo "🚨 COGNEE EMERGENCY RECONSTRUCTION REQUIRED"
+    echo "📋 Follow procedure: memory-bank/01-cognee/cognee_reconstruction_successful_procedure.md"
+    echo "⏱️  Estimated time: 45 minutes (S+A grade files)"
+    echo "📊 Expected result: 14 files (6 S-grade + 8 A-grade)"
+fi
+
+# 検索性能が遅い場合の対応
+if [[ $(date +%s) -gt $((start_time + 10)) ]]; then
+    echo "⚠️ COGNEE PERFORMANCE ISSUE DETECTED"
+    echo "🚀 Optimization guide: memory-bank/01-cognee/search_speed_optimization_and_indexing_strategy.md"
+    echo "📈 Expected improvement: 80% speed increase, 70% efficiency gain"
+fi
+```
+
 ### B. 新規ナレッジ作成時
 ```bash
 # 1. Markdownファイルを作成
@@ -289,7 +307,30 @@ python scripts/cognee_migration.py --batch-size 10
 3. **オンボーディング改善**: 新規参加者が既存知識に素早くアクセス
 4. **品質向上**: ベストプラクティスや過去の教訓を確実に参照
 
+## 📚 高度運用・専門知識ガイド
+
+### 🚨 大規模移行・復旧プロトコル
+**緊急時・計画的移行時の必須参照:**
+- **cognee_reconstruction_successful_procedure.md** - S級・A級14ファイル45分復旧実証プロトコル
+  - 30GiBメモリ消費問題の完全回避手順
+  - 並列実行禁止・順次処理の安全プロトコル
+  - DATASET_PROCESSING_COMPLETED確認必須フロー
+
+### 🎯 システム最適化・戦略設計
+**検索性能問題・長期戦略立案時の必須参照:**
+- **search_speed_optimization_and_indexing_strategy.md** - 検索80%高速化統合戦略
+  - 3層キャッシュシステム設計（L1-L3）
+  - 段階的検索戦略（メタデータ→セマンティック→詳細）
+  - インデックス構造最適化・メタデータ戦略
+
+### 利用判断基準
+- **復旧・移行**: 10ファイル以上の登録 → cognee_reconstruction_successful_procedure.md参照必須
+- **性能問題**: 検索30秒以上 → search_speed_optimization_and_indexing_strategy.md戦略適用
+
+---
+
 ## 改訂履歴
 
 - 2025-06-11: 初版作成（Claude並列実行検証を契機に）
 - 2025-06-16: CODE検索タイプの注意事項を追加（codify事前処理要件）
+- 2025-06-16: 高度運用ガイド追加（復旧プロトコル・検索最適化戦略導線）

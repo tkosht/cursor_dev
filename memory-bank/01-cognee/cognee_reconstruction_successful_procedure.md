@@ -3,7 +3,39 @@
 **作成日**: 2025-06-17  
 **実行時間**: 約45分  
 **成果**: S・A級全14ファイル完全登録による復旧完了  
-**重要度**: ★★★★★ CRITICAL  
+**重要度**: ★★★★★ CRITICAL
+
+## 🔍 検索・利用ガイド
+
+### 🎯 **利用シーン**
+- **緊急時**: Cogneeが空/エラー/動作不良の復旧
+- **新規セットアップ**: 初期環境でのCognee構築
+- **災害復旧**: データ消失からの完全復旧
+- **手順標準化**: 再構築プロセスの教育・研修
+- **プロセス改善**: 復旧手順の最適化・改善
+
+### 🏷️ **検索キーワード**
+`cognee reconstruction`, `emergency recovery`, `knowledge database rebuild`, `S-grade A-grade files`, `45-minute protocol`, `14 files registration`, `mcp cognee prune`, `cognify sequence`, `parallel processing avoidance`, `memory safety protocol`
+
+### 📋 **関連ファイル**
+- **前提知識**: `memory-bank/01-cognee/mandatory_utilization_rules.md`
+- **戦略基盤**: `memory-bank/01-cognee/cognee_strategic_expansion_framework.md`
+- **性能最適化**: `memory-bank/01-cognee/search_speed_optimization_and_indexing_strategy.md`
+- **メモリ管理**: `memory-bank/01-cognee/memory_resource_management_critical_lessons.md`
+- **進捗記録**: `memory-bank/01-cognee/cognee_expansion_progress.md`
+
+### ⚡ **クイックアクセス**
+```bash
+# 緊急実行（コピペ用）
+mcp__cognee__prune && sleep 5 && \
+mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
+
+# 進捗確認
+mcp__cognee__search "user authorization" GRAPH_COMPLETION
+
+# 完了確認
+mcp__cognee__search "TDD implementation" GRAPH_COMPLETION
+```  
 
 ## 🎯 概要・背景
 
