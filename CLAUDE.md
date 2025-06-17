@@ -289,6 +289,11 @@ mypy app/ --show-error-codes
 make              # Start environment
 make bash         # Access container
 make clean        # Clean up
+
+# Progress Recording (Required)
+ls memory-bank/06-project/progress/           # View all progress files
+echo "📋 Rules: memory-bank/09-meta/progress_recording_mandatory_rules.md"
+echo "✅ Checklist: memory-bank/09-meta/session_start_checklist.md"
 ```
 
 ### Cognee Strategic Operations
