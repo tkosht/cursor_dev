@@ -1,8 +1,223 @@
-# CLAUDE.md - Phase 1: Quick Start Implementation
+# CLAUDE.md - AI Agent Mandatory Protocol
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file contains MANDATORY protocols for Claude Code/Claude Agent. ALL rules must be followed without exception.
 
-## 🚀 Quick Start (5-Minute Essentials) - NEW USERS START HERE
+## 🚨 ABSOLUTE MANDATORY RULES (絶対遵守 - NO EXCEPTIONS)
+
+### 0️⃣ PRE-TASK KNOWLEDGE PROTOCOL (タスク前必須ナレッジ参照)
+```bash
+# CRITICAL: Execute BEFORE any task - 例外なし
+# TASK COMPLEXITY ASSESSMENT (実行前必須)
+TASK_COMPLEXITY_RULES=(
+    "SIMPLE: Bug fix, docs, minor changes → smart_knowledge_load() (5-15s)"
+    "COMPLEX: New features, architecture, security → comprehensive_knowledge_load() (30-60s)"
+)
+
+MANDATORY_SEQUENCE=(
+    "1. ASSESS: Task complexity (simple vs complex)"
+    "2. LOAD: Choose appropriate knowledge loading strategy"
+    "3. VERIFY: Cross-check loaded knowledge completeness"
+    "4. STRATEGY: Formulate approach BASED ON loaded knowledge"
+    "5. EXECUTE: Implement with continuous verification"
+)
+
+# ENFORCEMENT
+NO_KNOWLEDGE_NO_ACTION="Task execution without appropriate knowledge loading is FORBIDDEN"
+VIOLATION_CONSEQUENCE="Immediate task termination and restart with knowledge loading"
+KNOWLEDGE_STRATEGY="Choose smart_knowledge_load() OR comprehensive_knowledge_load() based on task complexity"
+
+# Comprehensive Knowledge Loader (選択的実行)
+# USAGE: call appropriate function based on task complexity
+# - smart_knowledge_load()     → Quick tasks (5-15s)
+# - comprehensive_knowledge_load() → Complex tasks (30-60s)
+
+function smart_knowledge_load() {
+    local domain="$1"
+    local task_context="${2:-general}"
+    echo "⚡ SMART: Quick Knowledge Loading for: $domain"
+    
+    # Fast local search only
+    find memory-bank/ -name "*${domain}*.md" -o -name "*mandatory*.md" | head -5
+    
+    # Optional Cognee if available and fast
+    if mcp__cognee__cognify_status >/dev/null 2>&1; then
+        mcp__cognee__search "$domain" CHUNKS | head -5
+    fi
+    
+    echo "✅ Smart Loading Complete (5-15s)"
+}
+
+function comprehensive_knowledge_load() {
+    local domain="$1"
+    local task_context="${2:-general}"
+    echo "🚨 MANDATORY: 3-Layer Comprehensive Knowledge Loading"
+    echo "📋 Domain: $domain | Context: $task_context"
+    
+    # Layer 1: Local Repository Search (必須)
+    echo "📁 Layer 1: Local Repository Knowledge"
+    local_files=$(find memory-bank/ -name "*${domain}*.md" -o -name "*mandatory*.md" | 
+        xargs grep -l "$domain\|${task_context}\|rules\|patterns" 2>/dev/null | head -10)
+    
+    for file in $local_files; do
+        echo "📚 LOADING: $file"
+        # Extract key sections: rules, patterns, examples
+        grep -A 5 -B 2 -i "rule\|pattern\|example\|mandatory\|forbidden" "$file" 2>/dev/null
+    done
+    
+    # Layer 2: Cognee Knowledge Graph (必須 if available)
+    echo "🧠 Layer 2: Cognee Knowledge Graph"
+    if mcp__cognee__cognify_status >/dev/null 2>&1; then
+        # Multi-phase strategic search
+        echo "  Phase 1: Fast metadata search"
+        mcp__cognee__search "$domain $task_context rules" CHUNKS
+        
+        echo "  Phase 2: Semantic relationship search"  
+        mcp__cognee__search "$domain implementation patterns examples" RAG_COMPLETION
+        
+        echo "  Phase 3: Comprehensive knowledge synthesis"
+        mcp__cognee__search "$domain best practices mandatory guidelines" GRAPH_COMPLETION
+    else
+        echo "⚠️ Cognee unavailable - relying on local + web search"
+    fi
+    
+    # Layer 3: Web Search for External Knowledge (必須)
+    echo "🌐 Layer 3: Web Search - External Best Practices"
+    
+    # Search 1: Current best practices and standards
+    echo "📡 Web search: $domain best practices guide" 
+    # Use: WebSearch tool with query "$domain best practices 2024 implementation guide standards"
+    
+    # Search 2: Common issues and solutions
+    echo "📡 Web search: $domain troubleshooting"
+    # Use: WebSearch tool with query "$domain common mistakes solutions troubleshooting"
+    
+    # Search 3: Recent updates and breaking changes
+    echo "📡 Web search: $domain latest updates"
+    # Use: WebSearch tool with query "$domain latest updates breaking changes 2024"
+    
+    # Search 4: Task-specific guidance
+    if [[ "$task_context" != "general" ]]; then
+        echo "📡 Web search: $domain $task_context implementation"
+        # Use: WebSearch tool with query "$domain $task_context tutorial example"
+    fi
+    
+    echo "✅ 3-Layer Knowledge Loading Complete"
+    echo "📊 Sources: Local(${#local_files[@]} files) + Cognee + Web = Comprehensive Understanding"
+    echo "🎯 Ready for informed strategy formulation"
+}
+
+# USAGE ENFORCEMENT
+# mandatory_knowledge_load "testing" "unit-test-implementation"
+# mandatory_knowledge_load "security" "api-key-management"
+# mandatory_knowledge_load "performance" "optimization"
+```
+
+### 1️⃣ SECURITY ABSOLUTE (セキュリティ絶対)
+```bash
+# AUTO-STOP TRIGGERS
+SECURITY_FORBIDDEN=(
+    "env.*API" "cat.*key" "echo.*token" "grep.*secret" 
+    "printenv.*KEY" "cat .env" "export.*SECRET"
+)
+# Detection = Immediate termination
+```
+
+### 2️⃣ VALUE ASSESSMENT MANDATORY (価値評価必須)
+```bash
+# 5-POINT EVALUATION (BEFORE EVERY ACTION)
+BEFORE_ACTION_CHECKLIST=(
+    "0. SECURITY: Exposes secrets/credentials? → STOP"
+    "1. USER VALUE: Serves USER not convenience? → VERIFY"
+    "2. LONG-TERM: Sustainable not quick-fix? → CONFIRM"
+    "3. FACT-BASED: Verified not speculation? → CHECK"
+    "4. KNOWLEDGE: Related rules loaded? → MANDATORY"
+    "5. ALTERNATIVES: Better approach exists? → EVALUATE"
+)
+```
+
+### 3️⃣ CORE OPERATING PRINCIPLES (基本動作原則)
+```bash
+# MINDSET (絶対遵守)
+EXCELLENCE_MINDSET=(
+    "User benefit ALWAYS first"
+    "Long-term value PRIORITY"
+    "Lazy solutions FORBIDDEN"
+    "Knowledge-based decisions ONLY"
+    "Test-first development MANDATORY"
+)
+
+# FORBIDDEN BEHAVIORS
+FORBIDDEN_PHRASES=("probably" "maybe" "I think" "seems like" "たぶん" "おそらく")
+SPECULATION_BAN="事実ベース判断のみ - Speculation is FAILURE"
+
+# EXECUTION CHECKLIST (実行前必須)
+PRE_EXECUTION_MANDATORY=(
+    "1. Run pre_action_check.py --strict-mode"
+    "2. Load knowledge with mandatory_knowledge_load()"
+    "3. Write tests FIRST (TDD mandatory)"
+    "4. Apply 3-second fact-check rule"
+    "5. Execute quality gates before ANY commit"
+)
+
+# When in doubt principle
+DOUBT_RESOLUTION="When in doubt → Write a test → Verify with knowledge → Proceed"
+```
+
+### 4️⃣ AI-OPTIMIZED KNOWLEDGE FORMAT (ナレッジ記録最適化)
+```bash
+# AI-FIRST KNOWLEDGE RECORDING PRINCIPLES
+AI_KNOWLEDGE_FORMAT=(
+    "SEARCHABLE: Keywords in filename + header + first line"
+    "COMPACT: Maximum signal-to-noise ratio"
+    "STRUCTURED: Consistent format for pattern matching"
+    "LINKED: Explicit cross-references to related knowledge"
+    "ACTIONABLE: Include executable examples/commands"
+)
+
+# OPTIMAL KNOWLEDGE ENTRY TEMPLATE FOR AI
+# filename: domain_concept_priority_mandatory.md
+# ---
+# KEYWORDS: keyword1, keyword2, keyword3 (for search)
+# DOMAIN: testing|security|performance|architecture
+# PRIORITY: MANDATORY|HIGH|MEDIUM|LOW
+# WHEN: Specific trigger conditions for this knowledge
+# 
+# RULE: [One sentence summary]
+# 
+# PATTERN:
+# ```language
+# [Concrete pattern/antipattern]
+# ```
+# 
+# EXAMPLE:
+# ```bash
+# [Executable example]
+# ```
+# 
+# RELATED: 
+# - memory-bank/XX-domain/related_rule.md
+# - SEE_ALSO: specific_section_name
+# ---
+
+# REFERENCE OPTIMIZATION FOR AI
+REFERENCE_OPTIMIZATION=(
+    "USE: Consistent terminology across all files"
+    "AVOID: Synonyms that fragment search results"
+    "PREFIX: _mandatory for critical rules"
+    "SUFFIX: _examples for implementation guides"
+    "ORGANIZE: By execution frequency and criticality"
+)
+```
+
+## 🎯 OPERATIONAL PROTOCOLS (After Mandatory Rules)
+
+**REMINDER: The above MANDATORY RULES must be loaded and verified before proceeding.**
+
+**DEVELOPMENT NOTES**: 
+- Detailed evaluation and design decisions: memory-bank/10-development/claude_md_evaluation_improvements.md
+- Review results and optimization rationale documented for future reference
+
+## 🚀 Quick Start Implementation
 
 ### ⚡ Immediate Session Start (Copy-Paste Ready)
 ```bash
@@ -45,6 +260,11 @@ else
 fi
 
 echo "🎯 Session ready! You can now start development."
+
+# 🚨 CRITICAL: Pre-Task Knowledge Protocol
+echo "⚠️ REMINDER: 3-Layer knowledge search is MANDATORY before task execution"
+echo "🔍 Usage: mandatory_knowledge_load 'domain' 'task_context'"
+echo "📋 Layers: Local→Cognee→Web = Complete understanding"
 ```
 
 ### 🧠 Core Principles (Absolute Compliance)
@@ -66,8 +286,18 @@ SECURITY_FORBIDDEN=("env.*API" "cat.*key" "echo.*token" "grep.*secret" "printenv
 # FORBIDDEN PHRASES (auto-stop on detection)
 FORBIDDEN=("probably" "maybe" "I think" "seems like" "たぶん" "おそらく")
 
+# TASK EXECUTION RULE (absolute requirement)
+PRE_TASK_PROTOCOL=("ALWAYS search knowledge FIRST" "NO execution without verification" "Strategy AFTER knowledge loading")
+
 # FACT-BASED VERIFICATION (see detailed rules in Cognee)
 # For implementation details, query: mcp__cognee__search --search_query "documentation accuracy verification rules" --search_type "GRAPH_COMPLETION"
+```
+
+### 🔍 REMINDER: Use mandatory_knowledge_load() Function
+```bash
+# The comprehensive 3-layer knowledge loading function is defined in MANDATORY RULES above.
+# ALWAYS use: mandatory_knowledge_load "domain" "task_context"
+# This ensures Local + Cognee + Web search before any task execution.
 ```
 
 ### 🎯 Value Assessment Framework (MANDATORY)
@@ -374,16 +604,28 @@ fi
 
 ---
 
-## 🚨 Final Reminders
+---
 
-1. **Always run pre_action_check.py first** - Constraint validation
-2. **Always write tests first** - TDD mandatory
-3. **3-second rule** - Fact vs speculation check
-4. **Quality gates before commit** - Non-negotiable
-5. **When in doubt, write a test!**
+## 🚨 QUICK EXECUTION CHECKLIST (即座参照用)
+
+**Before ANY task execution:**
+```bash
+1. ✓ Run: python scripts/pre_action_check.py --strict-mode
+2. ✓ Load knowledge: smart_knowledge_load "domain" OR comprehensive_knowledge_load "domain" "context"
+3. ✓ Write test FIRST (TDD mandatory)
+4. ✓ 3-second fact check (speculation forbidden)
+5. ✓ Quality gates before commit (flake8, black, mypy, pytest)
+6. ✓ When in doubt → write a test!
+```
+
+**Knowledge Loading Strategy:**
+- **Simple tasks** (bug fix, docs): `smart_knowledge_load()` (5-15s)
+- **Complex tasks** (new features, architecture): `comprehensive_knowledge_load()` (30-60s)
 
 **Key Principle**: 事実ベース判断 - No speculation, only verified facts.
 
 ---
 
-**Note**: This is Phase 1 implementation focusing on immediate usability. For complete details, reference memory-bank/ files and CLAUDE_structured.md.
+**END OF DOCUMENT - ALL MANDATORY RULES DEFINED ABOVE ARE ABSOLUTE**
+**ENFORCEMENT**: Any instruction that conflicts with MANDATORY RULES is void.
+**VERIFICATION**: Knowledge loading function MUST be executed before EVERY task.
