@@ -14,6 +14,7 @@ TASK_COMPLEXITY_RULES=(
 )
 
 MANDATORY_SEQUENCE=(
+    "0. DATE: Establish temporal context with date command"
     "1. ASSESS: Task complexity (simple vs complex)"
     "2. LOAD: Choose appropriate knowledge loading strategy"
     "3. VERIFY: Cross-check loaded knowledge completeness"
@@ -35,6 +36,7 @@ function smart_knowledge_load() {
     local domain="$1"
     local task_context="${2:-general}"
     echo "⚡ SMART: Quick Knowledge Loading for: $domain"
+    echo "📅 Date: $(date '+%Y-%m-%d %H:%M')"
     
     # Fast local search only
     find memory-bank/ -name "*${domain}*.md" -o -name "*mandatory*.md" | head -5
@@ -51,6 +53,7 @@ function comprehensive_knowledge_load() {
     local domain="$1"
     local task_context="${2:-general}"
     echo "🚨 MANDATORY: 3-Layer Comprehensive Knowledge Loading"
+    echo "📅 Date: $(date '+%Y-%m-%d %H:%M:%S')"
     echo "📋 Domain: $domain | Context: $task_context"
     
     # Layer 1: Local Repository Search (必須)
@@ -152,6 +155,7 @@ SPECULATION_BAN="事実ベース判断のみ - Speculation is FAILURE"
 
 # EXECUTION CHECKLIST (実行前必須)
 PRE_EXECUTION_MANDATORY=(
+    "0. Date context initialization: date command (日付コンテキスト確立)"
     "1. Run pre_action_check.py --strict-mode"
     "2. Load knowledge with mandatory_knowledge_load()"
     "3. Write tests FIRST (TDD mandatory)"
@@ -221,6 +225,14 @@ REFERENCE_OPTIMIZATION=(
 
 ### ⚡ Immediate Session Start (Copy-Paste Ready)
 ```bash
+# 0. DATE CONTEXT INITIALIZATION (必須 - セッション開始時)
+echo "📅 DATE CONTEXT INITIALIZATION"
+echo "==============================="
+date '+%Y-%m-%d %H:%M:%S %A'  # 2025-06-21 15:20:00 土曜日
+echo "Project Timeline: $(date '+%Y年%m月 第%U週')"
+echo "Session Context Established"
+echo ""
+
 # 1. MANDATORY constraint verification (ALWAYS FIRST)
 python scripts/pre_action_check.py --strict-mode || exit 1
 
