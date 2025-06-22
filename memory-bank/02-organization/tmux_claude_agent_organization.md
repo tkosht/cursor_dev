@@ -753,7 +753,7 @@ Quarterly: 根本的見直し・戦略調整・組織最適化
 #### 品質管理関連
 - `memory-bank/testing_mandatory_rules.md`: 自動化機能テスト必須化ルール
 - `00-core/code_quality_anti_hacking.md`: 品質指標アンチハッキング・ルール
-- `memory-bank/user_authorization_mandatory_rules.md`: ユーザー承認必須ルール
+- `memory-bank/00-core/user_authorization_mandatory.md`: ユーザー承認必須ルール（統合版）
 
 ### 9.2 テンプレート・フォーム
 

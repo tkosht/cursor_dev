@@ -1,5 +1,7 @@
 # CLAUDE.md - AI Agent Mandatory Protocol
 
+**🤖 IMPORTANT: This is an AI AGENT-ONLY knowledge base. Human operators should NOT attempt to read or reference these files due to volume and AI-optimized formatting.**
+
 This file contains MANDATORY protocols for Claude Code/Claude Agent. ALL rules must be followed without exception.
 
 ## 🚨 ABSOLUTE MANDATORY RULES (絶対遵守 - NO EXCEPTIONS)
@@ -9,28 +11,28 @@ This file contains MANDATORY protocols for Claude Code/Claude Agent. ALL rules m
 # CRITICAL: Execute BEFORE any task - 例外なし
 # TASK COMPLEXITY ASSESSMENT (実行前必須)
 TASK_COMPLEXITY_RULES=(
-    "SIMPLE: Bug fix, docs, minor changes → smart_knowledge_load() (5-15s)"
-    "COMPLEX: New features, architecture, security → comprehensive_knowledge_load() (30-60s)"
+    "DEFAULT: All tasks → smart_knowledge_load() (5-15s) - Fast, efficient, covers 90% of needs"
+    "EXPLICIT_REQUEST_ONLY: User specifically requests comprehensive analysis → comprehensive_knowledge_load() (30-60s)"
 )
 
 MANDATORY_SEQUENCE=(
     "0. DATE: Establish temporal context with date command"
-    "1. ASSESS: Task complexity (simple vs complex)"
-    "2. LOAD: Choose appropriate knowledge loading strategy"
-    "3. VERIFY: Cross-check loaded knowledge completeness"
-    "4. STRATEGY: Formulate approach BASED ON loaded knowledge"
-    "5. EXECUTE: Implement with continuous verification"
+    "1. LOAD: Execute smart_knowledge_load() for domain context"
+    "2. VERIFY: Cross-check loaded knowledge completeness"
+    "3. STRATEGY: Formulate approach BASED ON loaded knowledge"
+    "4. EXECUTE: Implement with continuous verification"
+    "5. UPGRADE: Use comprehensive_knowledge_load() only if user explicitly requests detailed analysis"
 )
 
 # ENFORCEMENT
 NO_KNOWLEDGE_NO_ACTION="Task execution without appropriate knowledge loading is FORBIDDEN"
 VIOLATION_CONSEQUENCE="Immediate task termination and restart with knowledge loading"
-KNOWLEDGE_STRATEGY="Choose smart_knowledge_load() OR comprehensive_knowledge_load() based on task complexity"
+KNOWLEDGE_STRATEGY="Default: smart_knowledge_load() for all tasks. Auto-upgrade to comprehensive_knowledge_load() for: security, architecture, new-technology, troubleshooting. Manual upgrade on explicit user request"
 
-# Comprehensive Knowledge Loader (選択的実行)
-# USAGE: call appropriate function based on task complexity
-# - smart_knowledge_load()     → Quick tasks (5-15s)
-# - comprehensive_knowledge_load() → Complex tasks (30-60s)
+# Knowledge Loading Strategy (効率化実行)
+# USAGE: Default smart loading with optional comprehensive upgrade
+# - smart_knowledge_load()     → Default for all tasks (5-15s)
+# - comprehensive_knowledge_load() → Only on explicit user request (30-60s)
 
 function smart_knowledge_load() {
     local domain="$1"
@@ -38,15 +40,37 @@ function smart_knowledge_load() {
     echo "⚡ SMART: Quick Knowledge Loading for: $domain"
     echo "📅 Date: $(date '+%Y-%m-%d %H:%M')"
     
-    # Fast local search only
+    # Always check session continuity first
+    if [ -f "memory-bank/09-meta/session_continuity_task_management.md" ]; then
+        echo "📋 Loading session continuity..."
+        grep -A 20 "CURRENT.*STATUS" memory-bank/09-meta/session_continuity_task_management.md | head -10
+    fi
+    
+    # Auto-upgrade check for high-risk domains
+    case "$domain $task_context" in
+        *security*|*architecture*|*new-technology*|*troubleshooting*|*error*|*debug*|*vulnerability*|*performance*|*optimization*)
+            echo "🚨 HIGH-RISK DOMAIN DETECTED: Auto-upgrading to comprehensive_knowledge_load"
+            comprehensive_knowledge_load "$domain" "$task_context"
+            return
+            ;;
+    esac
+    
+    # Fast local search for domain-specific knowledge
+    echo "🔍 Domain search: $domain"
     find memory-bank/ -name "*${domain}*.md" -o -name "*mandatory*.md" | head -5
+    
+    # Essential core rules (always loaded)
+    echo "🚨 Core rules check:"
+    ls memory-bank/00-core/*mandatory*.md 2>/dev/null | head -3
     
     # Optional Cognee if available and fast
     if mcp__cognee__cognify_status >/dev/null 2>&1; then
+        echo "🧠 Cognee search: $domain"
         mcp__cognee__search "$domain" CHUNKS | head -5
     fi
     
     echo "✅ Smart Loading Complete (5-15s)"
+    echo "💡 Need more comprehensive analysis? Request comprehensive_knowledge_load()"
 }
 
 function comprehensive_knowledge_load() {
@@ -157,7 +181,7 @@ SPECULATION_BAN="事実ベース判断のみ - Speculation is FAILURE"
 PRE_EXECUTION_MANDATORY=(
     "0. Date context initialization: date command (日付コンテキスト確立)"
     "1. Run pre_action_check.py --strict-mode"
-    "2. Load knowledge with mandatory_knowledge_load()"
+    "2. Load knowledge with smart_knowledge_load() (default)"
     "3. Write tests FIRST (TDD mandatory)"
     "4. Apply 3-second fact-check rule"
     "5. Execute quality gates before ANY commit"
@@ -273,10 +297,17 @@ fi
 
 echo "🎯 Session ready! You can now start development."
 
-# 🚨 CRITICAL: Pre-Task Knowledge Protocol
-echo "⚠️ REMINDER: 3-Layer knowledge search is MANDATORY before task execution"
-echo "🔍 Usage: mandatory_knowledge_load 'domain' 'task_context'"
-echo "📋 Layers: Local→Cognee→Web = Complete understanding"
+# 🚨 CRITICAL: Pre-Task Knowledge Protocol  
+echo "⚠️ REMINDER: Smart knowledge loading is DEFAULT for all tasks"
+echo "🔍 Usage: smart_knowledge_load 'domain' 'task_context' (5-15s)"
+echo "📋 Layers: Local→Cognee (fast) = Efficient understanding"
+echo "🎯 Upgrade: Use comprehensive_knowledge_load only on explicit user request"
+
+# 📋 SESSION CONTINUITY CHECK
+if [ -f "memory-bank/09-meta/session_continuity_task_management.md" ]; then
+    echo "🔄 Session continuity available - check previous tasks"
+    echo "💡 Use: cat memory-bank/09-meta/session_continuity_task_management.md"
+fi
 ```
 
 ### 🧠 Core Principles (Absolute Compliance)
@@ -299,17 +330,18 @@ SECURITY_FORBIDDEN=("env.*API" "cat.*key" "echo.*token" "grep.*secret" "printenv
 FORBIDDEN=("probably" "maybe" "I think" "seems like" "たぶん" "おそらく")
 
 # TASK EXECUTION RULE (absolute requirement)
-PRE_TASK_PROTOCOL=("ALWAYS search knowledge FIRST" "NO execution without verification" "Strategy AFTER knowledge loading")
+PRE_TASK_PROTOCOL=("ALWAYS use smart_knowledge_load() FIRST" "NO execution without verification" "Strategy AFTER knowledge loading")
 
 # FACT-BASED VERIFICATION (see detailed rules in Cognee)
 # For implementation details, query: mcp__cognee__search --search_query "documentation accuracy verification rules" --search_type "GRAPH_COMPLETION"
 ```
 
-### 🔍 REMINDER: Use mandatory_knowledge_load() Function
+### 🔍 REMINDER: Use smart_knowledge_load() by Default
 ```bash
-# The comprehensive 3-layer knowledge loading function is defined in MANDATORY RULES above.
-# ALWAYS use: mandatory_knowledge_load "domain" "task_context"
-# This ensures Local + Cognee + Web search before any task execution.
+# The efficient knowledge loading function is defined in MANDATORY RULES above.
+# DEFAULT use: smart_knowledge_load "domain" "task_context" (5-15s)
+# This ensures Local + Cognee search for 90% of task needs.
+# UPGRADE only when user explicitly requests: comprehensive_knowledge_load (30-60s)
 ```
 
 ### 🎯 Value Assessment Framework (MANDATORY)
@@ -631,8 +663,8 @@ fi
 ```
 
 **Knowledge Loading Strategy:**
-- **Simple tasks** (bug fix, docs): `smart_knowledge_load()` (5-15s)
-- **Complex tasks** (new features, architecture): `comprehensive_knowledge_load()` (30-60s)
+- **Default for all tasks**: `smart_knowledge_load()` (5-15s) - Covers 90% of needs
+- **Explicit user request only**: `comprehensive_knowledge_load()` (30-60s) - When user specifically asks for detailed analysis
 
 **Key Principle**: 事実ベース判断 - No speculation, only verified facts.
 

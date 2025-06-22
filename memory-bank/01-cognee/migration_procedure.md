@@ -80,7 +80,7 @@ asyncio.run(setup_dev_rules())
 echo "Phase 2: 必須ルール移行中..."
 
 files=(
-    "memory-bank/user_authorization_mandatory_rules.md"
+    "memory-bank/00-core/user_authorization_mandatory.md"
     "memory-bank/testing_mandatory_rules.md"
     "00-core/code_quality_anti_hacking.md"
     "memory-bank/documentation_accuracy_verification_rules.md"

@@ -72,9 +72,10 @@
 ## 📂 記録ファイル管理
 
 ### 主要記録ファイル
-1. **cognee_expansion_progress.md**: Cognee拡張進捗の専用記録
-2. **session_activity_log.md**: セッション別活動記録（新規作成）
-3. **knowledge_learning_log.md**: 知見・学習事項の累積記録（新規作成）
+1. **memory-bank/06-project/progress/progress.md**: プロジェクト全体進捗記録
+2. **memory-bank/06-project/progress/critical_issues_tracker.md**: 重要課題追跡記録
+3. **memory-bank/09-meta/session_continuity_task_management.md**: セッション継続性タスク管理（AIエージェント用）
+4. **memory-bank/01-cognee/cognee_expansion_progress.md**: Cognee拡張進捗の専用記録（存在する場合）
 
 ### 更新ルール
 ```bash
@@ -170,6 +171,24 @@ EOF
 - **長期計画**: 111ファイル全体の段階的拡張
 - **リスク要因**: メモリ消費・処理時間の管理
 ```
+
+---
+
+## 🔗 関連ファイル・導線設計
+
+### 直接関連
+- **memory-bank/09-meta/session_continuity_task_management.md**: セッション継続性タスク管理（AIエージェント用）
+- **memory-bank/00-core/user_authorization_mandatory.md**: ユーザー承認必須ルール（統合版）
+
+### 参照方法
+1. **CLAUDE.md起動時**: セッション継続性ファイルが自動チェック
+2. **smart_knowledge_load()実行時**: 必須ファイルが自動ロード  
+3. **Cognee検索**: キーワード「session-continuity」「progress-recording」で発見
+
+### 導線設計
+- セッション開始 → CLAUDE.md → smart_knowledge_load() → session_continuity_check
+- 進捗記録時 → TodoWrite → session_continuity_task_management.md更新
+- セッション復帰 → session_continuity_task_management.md参照 → 作業継続
 
 ---
 
