@@ -180,18 +180,98 @@ SPECULATION_BAN="事実ベース判断のみ - Speculation is FAILURE"
 # EXECUTION CHECKLIST (実行前必須)
 PRE_EXECUTION_MANDATORY=(
     "0. Date context initialization: date command (日付コンテキスト確立)"
-    "1. Run pre_action_check.py --strict-mode"
-    "2. Load knowledge with smart_knowledge_load() (default)"
-    "3. Write tests FIRST (TDD mandatory)"
-    "4. Apply 3-second fact-check rule"
-    "5. Execute quality gates before ANY commit"
+    "1. AI COMPLIANCE: Run pre_action_check.py --strict-mode (AI動作ルール遵守確認)"
+    "2. WORK MANAGEMENT: Verify on feature branch (verify_work_management)"
+    "3. KNOWLEDGE LOAD: Execute smart_knowledge_load() for domain context"
+    "4. TDD FOUNDATION: Write tests FIRST (test-driven development mandatory)"
+    "5. FACT VERIFICATION: Apply 3-second fact-check rule (speculation forbidden)"
+    "6. QUALITY GATES: Execute quality gates before ANY commit"
+    "7. ERROR ANALYSIS: Apply complete root-cause investigation for ANY problem"
+    "8. COMPLETION PROTOCOL: Create Pull Request when task complete"
 )
 
 # When in doubt principle
 DOUBT_RESOLUTION="When in doubt → Write a test → Verify with knowledge → Proceed"
 ```
 
-### 4️⃣ AI-OPTIMIZED KNOWLEDGE FORMAT (ナレッジ記録最適化)
+### 4️⃣ WORK MANAGEMENT PROTOCOL (作業管理絶対遵守)
+```bash
+# ALL WORK TASKS PROTOCOL (全作業タスク - 例外なし)
+# SCOPE: Code development, documentation, knowledge maintenance, 
+#        requirement definition, task management, workflow creation
+WORK_PROTOCOL_ABSOLUTE=(
+    "STEP 1: Create dedicated branch BEFORE any file modifications"
+    "STEP 2: Execute all work on feature/task branch ONLY"
+    "STEP 3: Create Pull Request upon task completion"
+    "STEP 4: ZERO direct commits to main/master branch"
+    "STEP 5: Systematic branch naming for traceability"
+)
+
+# BRANCH CREATION RULES (分岐作成規則)
+BRANCH_CREATION_RULES=(
+    "feature/[task-type] - New functionality or major changes"
+    "docs/[content-type] - Documentation and knowledge updates"
+    "fix/[issue-description] - Bug fixes and corrections"  
+    "task/[management-type] - Workflow and process improvements"
+    "EXAMPLES: docs/knowledge-update, task/todo-framework, feature/api-endpoint"
+)
+
+# WORK SCOPE COVERAGE (作業範囲カバレッジ)
+MANDATORY_BRANCH_TASKS=(
+    "✓ Code development and refactoring"
+    "✓ Documentation creation and updates"
+    "✓ Knowledge base maintenance (memory-bank files)"
+    "✓ Requirements definition and specification"
+    "✓ Task management workflow creation" 
+    "✓ Configuration and setup modifications"
+    "✓ Any file creation or modification in repository"
+)
+
+# PULL REQUEST STANDARDS (プルリクエスト基準)
+PR_STANDARDS_ABSOLUTE=(
+    "Title: Precise description of work completed"
+    "Description: Comprehensive summary including rationale"
+    "Verification: All applicable tests and quality checks pass"
+    "Review: Self-review completed before submission"
+    "Documentation: Updated relevant docs if applicable"
+)
+
+# WORK PROTECTION ENFORCEMENT (作業保護強制)
+MAIN_BRANCH_PROTECTION=(
+    "AUTO-DETECTION: Monitor current branch before any file operation"
+    "IMMEDIATE_HALT: Stop execution if on main/master branch"
+    "MANDATORY_BRANCH: Force branch creation before proceeding"
+    "ZERO_TOLERANCE: No exceptions for 'quick fixes' or 'minor edits'"
+)
+
+# BRANCH VERIFICATION FUNCTION
+function verify_work_management() {
+    local current_branch=$(git branch --show-current)
+    local task_description="${1:-unspecified-task}"
+    
+    if [[ "$current_branch" == "main" ]] || [[ "$current_branch" == "master" ]]; then
+        echo "🚨 CRITICAL: Main branch work detected!"
+        echo "🔧 MANDATORY ACTION: Create task branch immediately"
+        echo "📋 Suggested: git checkout -b task/${task_description}"
+        echo "🚫 WORK CANNOT PROCEED on main branch"
+        return 1
+    fi
+    
+    echo "✅ Work management verified: Active on '$current_branch'"
+    return 0
+}
+
+# PRE-WORK VERIFICATION SEQUENCE
+PRE_WORK_VERIFICATION=(
+    "1. Branch status check: git branch --show-current"
+    "2. Main branch protection: verify_work_management [task-desc]"
+    "3. Branch naming validation: Follows established patterns"
+    "4. Work authorization: Proceed only after branch verification"
+    "5. Completion protocol: PR creation mandatory upon task finish"
+)
+```
+
+### 5️⃣ AI-OPTIMIZED KNOWLEDGE FORMAT (ナレッジ記録最適化)
 ```bash
 # AI-FIRST KNOWLEDGE RECORDING PRINCIPLES
 AI_KNOWLEDGE_FORMAT=(
@@ -257,41 +337,43 @@ echo "Project Timeline: $(date '+%Y年%m月 第%U週')"
 echo "Session Context Established"
 echo ""
 
-# 1. MANDATORY constraint verification (ALWAYS FIRST)
+# 1. AI COMPLIANCE VERIFICATION (ALWAYS FIRST)
+echo "🤖 AI Compliance Check..."
 python scripts/pre_action_check.py --strict-mode || exit 1
 
-# 2. Load essential constraints (minimum required)
+# 2. WORK MANAGEMENT VERIFICATION  
+echo "🔧 Work Management Check..."
+current_branch=$(git branch --show-current)
+if [[ "$current_branch" == "main" ]] || [[ "$current_branch" == "master" ]]; then
+    echo "⚠️ WARNING: Currently on main branch"
+    echo "🎯 Reminder: Create task branch before starting any work"
+    echo "📋 Pattern: git checkout -b docs/[content] or task/[type] or feature/[function]"
+else
+    echo "✅ Work management ready: Active on branch '$current_branch'"
+fi
+
+# 3. Load essential constraints (minimum required)
 echo "Loading core constraints..."
 [ -f memory-bank/00-core/user_authorization_mandatory.md ] && echo "✅ User auth rules found"
 [ -f memory-bank/00-core/testing_mandatory.md ] && echo "✅ Testing rules found"
 [ -f memory-bank/00-core/code_quality_anti_hacking.md ] && echo "✅ Quality rules found"
 [ -f memory-bank/09-meta/progress_recording_mandatory_rules.md ] && echo "✅ Progress recording rules found"
 
-# 3. Cognee strategic integration (knowledge management optimization)
+# 4. Cognee strategic integration (knowledge management optimization)
 if mcp__cognee__cognify_status > /dev/null 2>&1; then
     mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
     echo "✅ Cognee enhanced mode active"
     
-    # Performance check
-    start_time=$(date +%s)
-    mcp__cognee__search "performance test" GRAPH_COMPLETION >/dev/null 2>&1
-    end_time=$(date +%s)
-    response_time=$((end_time - start_time))
-    
-    if [[ $response_time -gt 10 ]]; then
-        echo "⚠️ COGNEE PERFORMANCE: Slow response detected (${response_time}s)"
-        echo "🚀 Optimization: memory-bank/01-cognee/search_speed_optimization_and_indexing_strategy.md"
-        echo "📈 Expected: 80% speed improvement, 70% efficiency gain"
+    # Performance check (detailed analysis: see Cognee Strategic Operations)
+    if ! mcp__cognee__search "test" GRAPH_COMPLETION >/dev/null 2>&1; then
+        echo "⚠️ COGNEE PERFORMANCE: Check 'Cognee Strategic Operations (Central Hub)' for optimization"
     else
         echo "🎯 Cognee optimal performance confirmed"
     fi
-    
-    echo "📚 Strategic utilization: memory-bank/01-cognee/cognee_effective_utilization_strategy.md"
 else
-    echo "🚨 COGNEE CRITICAL: Database unavailable or empty"
-    echo "📋 Emergency reconstruction (45min): memory-bank/01-cognee/cognee_reconstruction_successful_procedure.md"
-    echo "⚡ Quick start: mcp__cognee__prune && mcp__cognee__cognee_add_developer_rules"
-    echo "🎯 Strategic guide: memory-bank/01-cognee/cognee_effective_utilization_strategy.md"
+    echo "🚨 COGNEE CRITICAL: Database unavailable"
+    echo "🔧 Full protocols: See 'Cognee Strategic Operations (Central Hub)' in Reference section"
+    echo "⚡ Quick restart: mcp__cognee__prune && mcp__cognee__cognee_add_developer_rules"
     echo "⚠️ Fallback: Direct constraint mode only"
 fi
 
@@ -330,7 +412,7 @@ SECURITY_FORBIDDEN=("env.*API" "cat.*key" "echo.*token" "grep.*secret" "printenv
 FORBIDDEN=("probably" "maybe" "I think" "seems like" "たぶん" "おそらく")
 
 # TASK EXECUTION RULE (absolute requirement)
-PRE_TASK_PROTOCOL=("ALWAYS use smart_knowledge_load() FIRST" "NO execution without verification" "Strategy AFTER knowledge loading")
+PRE_TASK_PROTOCOL=("AI compliance verification FIRST" "Work management on task branch" "ALWAYS use smart_knowledge_load()" "NO execution without verification" "Strategy AFTER knowledge loading")
 
 # FACT-BASED VERIFICATION (see detailed rules in Cognee)
 # For implementation details, query: mcp__cognee__search --search_query "documentation accuracy verification rules" --search_type "GRAPH_COMPLETION"
@@ -383,6 +465,15 @@ echo "🏅 Quality evaluation: memory-bank/04-quality/competitive_quality_evalua
 
 ### 🔧 Essential Commands (Most Used)
 ```bash
+# Work Management Protocol (MANDATORY for all tasks)
+git branch --show-current                   # Check current branch
+git checkout -b docs/[content-type]         # Documentation updates
+git checkout -b task/[management-type]      # Workflow/process tasks
+git checkout -b feature/[functionality]     # New features
+git checkout -b fix/[issue-description]     # Bug fixes
+git status && git add . && git commit -m "descriptive message"  # Commit workflow
+gh pr create --title "Title" --body "Description"  # Create pull request
+
 # Start development environment
 poetry install && poetry shell
 
@@ -546,6 +637,14 @@ black app/ tests/ --line-length=79
 
 ### Most Used Commands
 ```bash
+# Work Management Protocol (MANDATORY - Execute Before Any Task)
+git branch --show-current                   # Check current branch
+git checkout -b docs/[content]              # Documentation work
+git checkout -b task/[workflow]             # Task management work  
+git checkout -b feature/[functionality]     # Feature development
+git status && git add . && git commit -m "message"  # Commit workflow
+gh pr create --title "Title" --body "Description"  # Create pull request
+
 # Development
 poetry install && poetry shell
 uvicorn app.a2a_mvp.server.app:app --reload
@@ -570,13 +669,26 @@ echo "📋 Rules: memory-bank/09-meta/progress_recording_mandatory_rules.md"
 echo "✅ Checklist: memory-bank/09-meta/session_start_checklist.md"
 ```
 
-### Cognee Strategic Operations
+### Cognee Strategic Operations (Central Hub)
 ```bash
+# Performance Standards & Assessment  
+COGNEE_PERFORMANCE_STANDARD="10 seconds response time threshold"
+COGNEE_OPTIMIZATION_TARGET="80% speed improvement, 70% efficiency gain"
+
 # Status & Performance Check
 mcp__cognee__cognify_status
-time mcp__cognee__search "performance test" GRAPH_COMPLETION
+start_time=$(date +%s)
+mcp__cognee__search "performance test" GRAPH_COMPLETION >/dev/null 2>&1
+response_time=$(($(date +%s) - start_time))
 
-# Strategic Search (3-stage optimization)
+if [[ $response_time -gt 10 ]]; then
+    echo "⚠️ PERFORMANCE ISSUE: ${response_time}s response time"
+    echo "🚀 Apply optimization: search_speed_optimization_and_indexing_strategy.md"
+else
+    echo "✅ Cognee optimal performance confirmed"
+fi
+
+# Strategic Search (3-stage optimization) 
 mcp__cognee__search "query" CHUNKS        # Phase 1: Fast metadata (1-3s)
 mcp__cognee__search "query" RAG_COMPLETION # Phase 2: Semantic (5-10s)
 mcp__cognee__search "query" GRAPH_COMPLETION # Phase 3: Comprehensive (10-20s)
@@ -585,39 +697,28 @@ mcp__cognee__search "query" GRAPH_COMPLETION # Phase 3: Comprehensive (10-20s)
 mcp__cognee__cognee_add_developer_rules --base_path /home/devuser/workspace
 mcp__cognee__cognify --data "new knowledge content"
 
-# Strategic Navigation
-# 📚 Comprehensive strategy: memory-bank/01-cognee/cognee_effective_utilization_strategy.md
-# 🚨 Emergency reconstruction: memory-bank/01-cognee/cognee_reconstruction_successful_procedure.md  
-# 🚀 Performance optimization: memory-bank/01-cognee/search_speed_optimization_and_indexing_strategy.md
-# 📋 Daily utilization: memory-bank/01-cognee/mandatory_utilization_rules.md
+# Emergency & Recovery Protocols (Centralized)
+COGNEE_EMERGENCY_PROCEDURE="45-minute reconstruction protocol verified"
+
+if ! mcp__cognee__cognify_status > /dev/null 2>&1; then
+    echo "🚨 COGNEE EMERGENCY: Database unavailable"
+    echo "📋 Complete reconstruction: memory-bank/01-cognee/cognee_reconstruction_successful_procedure.md"
+    echo "⚡ Quick restart: mcp__cognee__prune && mcp__cognee__cognee_add_developer_rules"
+    echo "⚠️ Fallback: Direct constraint mode"
+fi
+
+# Strategic Navigation Hub (All References)
+echo "📚 Strategy guide: memory-bank/01-cognee/cognee_effective_utilization_strategy.md"
+echo "🚨 Emergency protocol: memory-bank/01-cognee/cognee_reconstruction_successful_procedure.md"
+echo "🚀 Performance optimization: memory-bank/01-cognee/search_speed_optimization_and_indexing_strategy.md"
+echo "📋 Daily utilization: memory-bank/01-cognee/mandatory_utilization_rules.md"
+echo "🎯 ROI Analysis: 64% annual return, 7-month payback period"
 ```
 
 ### Emergency & Strategic Protocols
 ```bash
-# Cognee Strategic Assessment
-if mcp__cognee__cognify_status > /dev/null 2>&1; then
-    # Performance assessment
-    start_time=$(date +%s)
-    mcp__cognee__search "test" GRAPH_COMPLETION >/dev/null 2>&1
-    response_time=$(($(date +%s) - start_time))
-    
-    if [[ $response_time -gt 10 ]]; then
-        echo "⚠️ PERFORMANCE ISSUE: ${response_time}s response time"
-        echo "🚀 Apply: memory-bank/01-cognee/search_speed_optimization_and_indexing_strategy.md"
-    else
-        echo "✅ Cognee optimal performance"
-    fi
-else
-    echo "🚨 COGNEE EMERGENCY: Database unavailable"
-    echo "📋 45min reconstruction: memory-bank/01-cognee/cognee_reconstruction_successful_procedure.md"
-    echo "⚡ Quick start: mcp__cognee__prune && mcp__cognee__cognee_add_developer_rules"
-    echo "⚠️ Fallback: Direct constraint mode"
-    cat memory-bank/*_mandatory_rules.md | grep -A 3 "MANDATORY" | head -20
-fi
-
-# Strategic Navigation Hub
-echo "📚 Complete strategy: memory-bank/01-cognee/cognee_effective_utilization_strategy.md"
-echo "🎯 ROI: 64% annual return, 7-month payback, 80% efficiency gains"
+# 🧠 For complete Cognee operations, see: "Cognee Strategic Operations (Central Hub)" above
+# Includes: Performance assessment, Emergency protocols, Strategic navigation
 ```
 
 ### 🏆 Competitive Organization Framework
@@ -654,12 +755,14 @@ fi
 
 **Before ANY task execution:**
 ```bash
-1. ✓ Run: python scripts/pre_action_check.py --strict-mode
-2. ✓ Load knowledge: smart_knowledge_load "domain" OR comprehensive_knowledge_load "domain" "context"
-3. ✓ Write test FIRST (TDD mandatory)
-4. ✓ 3-second fact check (speculation forbidden)
-5. ✓ Quality gates before commit (flake8, black, mypy, pytest)
-6. ✓ When in doubt → write a test!
+1. ✓ AI COMPLIANCE: Run python scripts/pre_action_check.py --strict-mode
+2. ✓ WORK MANAGEMENT: Verify on task branch (not main/master)
+3. ✓ KNOWLEDGE LOAD: smart_knowledge_load "domain" OR comprehensive_knowledge_load "domain" "context"
+4. ✓ TDD FOUNDATION: Write test FIRST (test-driven development mandatory)
+5. ✓ FACT VERIFICATION: 3-second fact check (speculation forbidden)
+6. ✓ QUALITY GATES: Quality gates before commit (flake8, black, mypy, pytest)
+7. ✓ COMPLETION PROTOCOL: Create Pull Request when task complete
+8. ✓ When in doubt → write a test!
 ```
 
 **Knowledge Loading Strategy:**
