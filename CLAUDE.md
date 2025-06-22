@@ -180,18 +180,96 @@ SPECULATION_BAN="事実ベース判断のみ - Speculation is FAILURE"
 # EXECUTION CHECKLIST (実行前必須)
 PRE_EXECUTION_MANDATORY=(
     "0. Date context initialization: date command (日付コンテキスト確立)"
-    "1. Run pre_action_check.py --strict-mode"
-    "2. Load knowledge with smart_knowledge_load() (default)"
-    "3. Write tests FIRST (TDD mandatory)"
-    "4. Apply 3-second fact-check rule"
-    "5. Execute quality gates before ANY commit"
+    "1. AI COMPLIANCE: Run pre_action_check.py --strict-mode (AI動作ルール遵守確認)"
+    "2. WORK MANAGEMENT: Verify on feature branch (verify_work_management)"
+    "3. KNOWLEDGE LOAD: Execute smart_knowledge_load() for domain context"
+    "4. TDD FOUNDATION: Write tests FIRST (test-driven development mandatory)"
+    "5. FACT VERIFICATION: Apply 3-second fact-check rule (speculation forbidden)"
+    "6. QUALITY GATES: Execute quality gates before ANY commit"
+    "7. ERROR ANALYSIS: Apply complete root-cause investigation for ANY problem"
+    "8. COMPLETION PROTOCOL: Create Pull Request + Update session continuity record when task complete"
 )
 
 # When in doubt principle
 DOUBT_RESOLUTION="When in doubt → Write a test → Verify with knowledge → Proceed"
 ```
 
-### 4️⃣ AI-OPTIMIZED KNOWLEDGE FORMAT (ナレッジ記録最適化)
+### 4️⃣ WORK MANAGEMENT PROTOCOL (作業管理絶対遵守)
+```bash
+# ALL WORK TASKS PROTOCOL (全作業タスク - 例外なし)
+# SCOPE: Code development, documentation, knowledge maintenance, 
+#        requirement definition, task management, workflow creation
+WORK_PROTOCOL_ABSOLUTE=(
+    "STEP 1: Create dedicated branch BEFORE any file modifications"
+    "STEP 2: Execute all work on feature/task branch ONLY"
+    "STEP 3: Create Pull Request upon task completion"
+    "STEP 4: Update session continuity record upon task completion"
+    "STEP 5: ZERO direct commits to main/master branch"
+    "STEP 6: Systematic branch naming for traceability"
+)
+
+# BRANCH CREATION RULES (分岐作成規則)
+BRANCH_CREATION_RULES=(
+    "feature/[task-type] - New functionality or major changes"
+    "docs/[content-type] - Documentation and knowledge updates"
+    "fix/[issue-description] - Bug fixes and corrections"  
+    "task/[management-type] - Workflow and process improvements"
+    "EXAMPLES: docs/knowledge-update, task/todo-framework, feature/api-endpoint"
+)
+
+# SESSION RECORD INTEGRATION (セッション記録統合)
+SESSION_RECORD_MANDATORY=(
+    "TIMING: Update session continuity after each task completion"
+    "LOCATION: memory-bank/09-meta/session_continuity_task_management.md"
+    "CONTENT: Task description, results, completion status, next steps"
+    "ENFORCEMENT: No task considered complete without session record update"
+)
+
+# BRANCH VERIFICATION FUNCTION
+function verify_work_management() {
+    local current_branch=$(git branch --show-current)
+    local task_description="${1:-unspecified-task}"
+    
+    if [[ "$current_branch" == "main" ]] || [[ "$current_branch" == "master" ]]; then
+        echo "🚨 CRITICAL: Main branch work detected!"
+        echo "🔧 MANDATORY ACTION: Create task branch immediately"
+        echo "📋 Suggested: git checkout -b docs/${task_description}"
+        echo "🚫 WORK CANNOT PROCEED on main branch"
+        return 1
+    fi
+    
+    echo "✅ Work management verified: Active on '$current_branch'"
+    return 0
+}
+
+# SESSION RECORD UPDATE FUNCTION
+function update_session_record() {
+    local task_description="$1"
+    local completion_status="${2:-completed}"
+    local results="${3:-Task completed successfully}"
+    
+    echo "📝 Updating session continuity record..."
+    
+    if [ -f "memory-bank/09-meta/session_continuity_task_management.md" ]; then
+        # Append to session record
+        cat >> memory-bank/09-meta/session_continuity_task_management.md << EOF
+
+### $(date '+%Y-%m-%d %H:%M') Task Update
+- **Task**: ${task_description}
+- **Status**: ${completion_status}
+- **Results**: ${results}
+- **Branch**: $(git branch --show-current)
+
+EOF
+        echo "✅ Session record updated successfully"
+    else
+        echo "⚠️ Session continuity file not found"
+        return 1
+    fi
+}
+```
+
+### 5️⃣ AI-OPTIMIZED KNOWLEDGE FORMAT (ナレッジ記録最適化)
 ```bash
 # AI-FIRST KNOWLEDGE RECORDING PRINCIPLES
 AI_KNOWLEDGE_FORMAT=(
@@ -654,12 +732,14 @@ fi
 
 **Before ANY task execution:**
 ```bash
-1. ✓ Run: python scripts/pre_action_check.py --strict-mode
-2. ✓ Load knowledge: smart_knowledge_load "domain" OR comprehensive_knowledge_load "domain" "context"
-3. ✓ Write test FIRST (TDD mandatory)
-4. ✓ 3-second fact check (speculation forbidden)
-5. ✓ Quality gates before commit (flake8, black, mypy, pytest)
-6. ✓ When in doubt → write a test!
+1. ✓ AI COMPLIANCE: Run python scripts/pre_action_check.py --strict-mode
+2. ✓ WORK MANAGEMENT: Verify on feature branch (verify_work_management)
+3. ✓ KNOWLEDGE LOAD: smart_knowledge_load "domain" OR comprehensive_knowledge_load "domain" "context"
+4. ✓ TDD FOUNDATION: Write test FIRST (test-driven development mandatory)
+5. ✓ FACT VERIFICATION: 3-second fact check (speculation forbidden)
+6. ✓ QUALITY GATES: Quality gates before commit (flake8, black, mypy, pytest)
+7. ✓ COMPLETION PROTOCOL: Create Pull Request + Update session record when task complete
+8. ✓ When in doubt → write a test!
 ```
 
 **Knowledge Loading Strategy:**
