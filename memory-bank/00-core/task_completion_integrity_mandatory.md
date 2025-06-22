@@ -1,16 +1,17 @@
-# タスク完了整合性ルール（必須遵守）
+# タスク完了整合性ルール（必須遵守） - 拡張版
 
-## KEYWORDS: task-completion, integrity, background-tasks, continuation-tasks, completion-criteria, mandatory-rule
-## DOMAIN: meta-process|task-management|completion-verification
+## KEYWORDS: task-completion, integrity, background-tasks, continuation-tasks, completion-criteria, mandatory-rule, completion-drift-prevention
+## DOMAIN: meta-process|task-management|completion-verification|quality-management
 ## PRIORITY: MANDATORY
-## WHEN: 全タスク完了判断時、継続プロセス実行時、完了報告前
+## WHEN: 全タスク完了判断時、継続プロセス実行時、完了報告前、タスク開始時
 ## NAVIGATION: CLAUDE.md → PRE_TASK_PROTOCOL → task completion verification → this file
 
-## RULE: 継続中・バックグラウンドタスクが完了するまで、メインタスクは「未完了」とする
+## RULE 1: 継続中・バックグラウンドタスクが完了するまで、メインタスクは「未完了」とする
+## RULE 2: 完了条件ドリフト現象を防止し、初期完了基準を実行中に維持する
 
 ## ABSOLUTE COMPLETION CRITERIA (絶対完了基準)
 
-### 🚨 MANDATORY RULE: 継続タスク完了原則
+### 🚨 MANDATORY RULE 1: 継続タスク完了原則
 ```bash
 COMPLETION_DEFINITION=(
     "COMPLETE = ALL tasks including background/continuation tasks finished"
@@ -88,6 +89,121 @@ function verify_all_tasks_complete() {
         return 1
     fi
 }
+```
+
+### 🚨 MANDATORY RULE 2: 完了条件ドリフト防止プロトコル
+```bash
+# CRITICAL: タスク開始時に完了条件を明確化・記録し、実行中の変更を厳格管理
+COMPLETION_CONDITION_RULES=(
+    "MUST: 最低限の動作要件 (これが満たされないと未完了)"
+    "SHOULD: 品質要件 (通常期待される品質レベル)"
+    "COULD: 理想的実装 (時間・リソース許せば実現)"
+)
+
+COMPLETION_DRIFT_PREVENTION=(
+    "0. 完了条件事前定義: タスク開始前に必ず MUST/SHOULD/COULD を明確化"
+    "1. 継続的条件参照: 実行中は定期的に初期完了条件を確認"
+    "2. 変更管理厳格化: 完了条件変更時は明示的にユーザー承認を求める"
+    "3. 品質劣化阻止: MUST条件の緩和は絶対禁止"
+    "4. 受け入れテスト駆動: 完了条件を受け入れテストとして実装"
+)
+
+# ENFORCEMENT
+NO_COMPLETION_WITHOUT_CRITERIA="完了条件が不明確なタスク実行は禁止"
+DRIFT_DETECTION_MANDATORY="完了条件からの乖離を自動検出し警告"
+USER_APPROVAL_REQUIRED="完了条件変更は必ずユーザー承認を得る"
+```
+
+### 📋 3段階完了条件管理 (階層化品質基準)
+```bash
+# MUST条件 (絶対必須 - 未達成時は未完了)
+MUST_CONDITIONS=(
+    "基本動作要件: 指定機能が正常動作する"
+    "セキュリティ要件: セキュリティ問題が存在しない"
+    "テスト合格: 関連テストが全て合格する"
+    "品質ゲート: 最低品質基準をクリアする"
+)
+
+# SHOULD条件 (推奨レベル - 通常期待される品質)
+SHOULD_CONDITIONS=(
+    "コード品質: Clean Code原則準拠"
+    "ドキュメント: 必要な説明・コメントが存在"
+    "エラーハンドリング: 適切な例外処理"
+    "パフォーマンス: 許容範囲内の実行時間"
+)
+
+# COULD条件 (理想的実装 - 余裕があれば実現)
+COULD_CONDITIONS=(
+    "最適化: パフォーマンス最適化"
+    "拡張性: 将来の機能拡張を考慮"
+    "ユーザビリティ: 使いやすさの向上"
+    "イノベーション: 創造的な解決策"
+)
+
+# 完了判定基準
+COMPLETION_CRITERIA=(
+    "MUST条件: 100%達成必須 (1つでも未達成なら未完了)"
+    "SHOULD条件: 80%以上達成推奨"
+    "COULD条件: 達成すれば加点評価"
+)
+```
+
+### 🎯 受け入れテスト駆動完了 (ATDC: Acceptance Test Driven Completion)
+```bash
+# 受け入れテスト必須作成ルール
+ACCEPTANCE_TEST_RULES=(
+    "事前定義: タスク開始前に受け入れテストを作成"
+    "ユーザー合意: 受け入れテストについてユーザーと合意"
+    "合格基準明確化: 各テストの合格条件を明確に定義"
+    "継続的実行: 実装中は定期的にテストを実行"
+    "完了条件統合: 受け入れテスト合格を完了の必要条件とする"
+)
+
+# 受け入れテストパターン
+ACCEPTANCE_TEST_PATTERNS=(
+    "機能テスト: 指定機能が期待通りに動作する"
+    "品質テスト: コード品質基準を満たす"
+    "統合テスト: 既存システムとの連携が正常"
+    "ユーザビリティテスト: ユーザーが期待通りに使用できる"
+    "パフォーマンステスト: 性能要件を満たす"
+)
+
+# テスト駆動完了プロセス
+ATDC_PROCESS=(
+    "Red: 受け入れテストを作成（最初は失敗状態）"
+    "Green: 受け入れテストが合格する最小実装"
+    "Refactor: 品質向上のためのリファクタリング"
+    "Verify: 全受け入れテストの最終確認"
+    "Complete: 受け入れテスト合格による完了宣言"
+)
+```
+
+### 🔒 完了条件変更管理プロトコル
+```bash
+# 変更許可基準
+CHANGE_APPROVAL_CRITERIA=(
+    "MUST条件変更: ユーザー明示承認 + 理由文書化必須"
+    "SHOULD条件変更: ユーザー承認推奨 + 理由説明"
+    "COULD条件変更: 内部判断可能だが記録必須"
+    "スコープ拡大: 必ずユーザー承認 + 影響評価"
+)
+
+# 変更記録フォーマット
+CHANGE_RECORD_FORMAT=(
+    "変更対象: [MUST/SHOULD/COULD] [具体的条件]"
+    "変更理由: [技術的制約/要件変更/発見事項]"
+    "影響評価: [品質影響/時間影響/リスク評価]"
+    "承認状況: [ユーザー承認済み/内部判断/要承認]"
+    "代替案: [他の実現方法/品質確保策]"
+)
+
+# 変更防止ルール
+CHANGE_PREVENTION=(
+    "MUST条件緩和禁止: セキュリティ・基本動作は絶対維持"
+    "品質劣化阻止: 品質基準を下げる変更は禁止"
+    "スコープクリープ注意: 要求の膨張を適切に管理"
+    "時間プレッシャー回避: 急ぎを理由とした品質妥協禁止"
+)
 ```
 
 ## VIOLATION CONSEQUENCES (違反時の結果)

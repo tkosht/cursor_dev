@@ -63,6 +63,13 @@ function smart_knowledge_load() {
     echo "🚨 Core rules check:"
     ls memory-bank/00-core/*mandatory*.md 2>/dev/null | head -5
     
+    # Task Completion Integrity (mandatory for all tasks)
+    if [ -f "memory-bank/00-core/task_completion_integrity_mandatory.md" ]; then
+        echo "✅ Task Completion Integrity Protocol loaded"
+    else
+        echo "⚠️ WARNING: Task Completion Integrity Protocol missing"
+    fi
+    
     # Optional Cognee if available and fast
     if mcp__cognee__cognify_status >/dev/null 2>&1; then
         echo "🧠 Cognee search: $domain"
@@ -458,7 +465,16 @@ SECURITY_FORBIDDEN=("env.*API" "cat.*key" "echo.*token" "grep.*secret" "printenv
 FORBIDDEN=("probably" "maybe" "I think" "seems like" "たぶん" "おそらく")
 
 # TASK EXECUTION RULE (absolute requirement)
-PRE_TASK_PROTOCOL=("AI compliance verification FIRST" "Work management on task branch" "ALWAYS use smart_knowledge_load()" "NO execution without verification" "Strategy AFTER knowledge loading")
+PRE_TASK_PROTOCOL=(
+    "0. AI compliance verification FIRST"
+    "1. Work management on task branch"
+    "2. ALWAYS use smart_knowledge_load()"
+    "3. Task Completion Integrity: Define MUST/SHOULD/COULD conditions"
+    "4. Acceptance Test creation: Create tests BEFORE implementation"
+    "5. User agreement: Confirm completion criteria with user"
+    "6. NO execution without verification"
+    "7. Strategy AFTER knowledge loading and completion criteria"
+)
 
 # FACT-BASED VERIFICATION (see detailed rules in Cognee)
 # For implementation details, query: mcp__cognee__search --search_query "documentation accuracy verification rules" --search_type "GRAPH_COMPLETION"
