@@ -85,7 +85,8 @@
       "Bash(docker exec:*)",
       "Bash(git stash:*)",
       "Bash(do tmux send-keys -t CC.$pane 'echo \"\"=== BRIEFING: Task Execution Worker ===\"\" && echo \"\"Role: Execute assigned tasks with quality focus\"\" && echo \"\"Task Format: 依頼元:pane-番号 依頼先:pane-番号 タスク種別:組織実行 依頼内容:[content] 報告:[format]\"\" && echo \"\"Mandatory Rules: Test-first development, fact-based execution, report completion\"\" && echo \"\"Ready for task execution\"\"')",
-      "Bash(do tmux send-keys -t CC.$pane 'echo \"\"=== BRIEFING: Task Review Worker ===\"\" && echo \"\"Role: Review and validate task completion\"\" && echo \"\"Task Format: 依頼元:pane-番号 依頼先:pane-番号 タスク種別:組織実行 依頼内容:[content] 報告:[format]\"\" && echo \"\"Mandatory Rules: Quality verification, thorough review, accurate reporting\"\" && echo \"\"Ready for review tasks\"\"')"
+      "Bash(do tmux send-keys -t CC.$pane 'echo \"\"=== BRIEFING: Task Review Worker ===\"\" && echo \"\"Role: Review and validate task completion\"\" && echo \"\"Task Format: 依頼元:pane-番号 依頼先:pane-番号 タスク種別:組織実行 依頼内容:[content] 報告:[format]\"\" && echo \"\"Mandatory Rules: Quality verification, thorough review, accurate reporting\"\" && echo \"\"Ready for review tasks\"\"')",
+      "Bash(gh pr create:*)"
     ],
     "deny": []
   },

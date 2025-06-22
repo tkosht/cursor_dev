@@ -550,14 +550,20 @@ time mcp__cognee__search "test" CHUNKS      # Performance test
 
 ## 📖 Navigation Guide
 
-**Choose your path based on your needs:**
+**🤖 AI Agent Navigation - Choose your execution context:**
 
-| Your Role | Time Available | → Go To Section |
-|-----------|----------------|-----------------|
-| **New User** | 5 minutes | ✅ **You're done! Start coding above** |
-| **Need Setup Details** | 15 minutes | 📋 [Essential Protocols](#essential-protocols) |
-| **Implementing Features** | 30+ minutes | 🔧 [Detailed Implementation](#detailed-implementation) |
-| **Looking for Commands** | As needed | 📚 [Reference & Examples](#reference--examples) |
+| AI Context | Task Complexity | Time Available | → Go To Section |
+|------------|-----------------|----------------|-----------------|
+| **New Session** | Simple tasks | 2 minutes | ✅ **Quick Start above - Begin immediately** |
+| **Setup Required** | Medium complexity | 5-10 minutes | 📋 [Essential Protocols](#essential-protocols) |
+| **Complex Implementation** | Multi-phase projects | 15+ minutes | 🔧 [Detailed Implementation](#detailed-implementation) |
+| **Command Reference** | Context-dependent | As needed | 📚 [Reference & Examples](#reference--examples) |
+
+**🎯 AI Agent Decision Matrix:**
+- **Routine tasks**: Quick Start → direct execution
+- **Unknown domain**: Quick Start → smart_knowledge_load() → execution  
+- **Complex/strategic**: Essential Protocols → comprehensive planning
+- **Emergency/troubleshooting**: Reference section → specific protocols
 
 ---
 

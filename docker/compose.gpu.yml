@@ -36,13 +36,3 @@ services:
       - "18000:8000"    # cognee sse
       # - "8502:8501"   # streamlit
 
-#     networks:
-#       - default
-#       - cognee-network
-# 
-# 
-# networks:
-#   cognee-network:
-#     external: true
-#     name: cognee-network
-# 
