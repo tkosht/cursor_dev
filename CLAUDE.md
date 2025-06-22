@@ -61,7 +61,7 @@ function smart_knowledge_load() {
     
     # Essential core rules (always loaded)
     echo "🚨 Core rules check:"
-    ls memory-bank/00-core/*mandatory*.md 2>/dev/null | head -3
+    ls memory-bank/00-core/*mandatory*.md 2>/dev/null | head -5
     
     # Optional Cognee if available and fast
     if mcp__cognee__cognify_status >/dev/null 2>&1; then
@@ -271,7 +271,52 @@ PRE_WORK_VERIFICATION=(
 )
 ```
 
-### 5️⃣ AI-OPTIMIZED KNOWLEDGE FORMAT (ナレッジ記録最適化)
+### 5️⃣ KNOWLEDGE ACCESS PRINCIPLES (知識アクセス根本原則)
+```bash
+# FUNDAMENTAL KNOWLEDGE MANAGEMENT PRINCIPLES (知識管理根本原則)
+KNOWLEDGE_ACCESS_ABSOLUTE=(
+    "PURPOSE: Enable access to necessary knowledge when needed"
+    "OPTIMIZATION ≠ Deletion: Improve accessibility, NOT remove content"
+    "SUFFICIENCY: Maintain necessary and sufficient information"
+    "NAVIGATION: Establish clear access paths from CLAUDE.md"
+    "META-COGNITION: Enable automatic related knowledge discovery"
+)
+
+# OPTIMIZATION REDEFINITION (最適化再定義)
+CORRECT_OPTIMIZATION=(
+    "✅ Accessibility improvement through structure"
+    "✅ Search efficiency through better organization"
+    "✅ Navigation enhancement through clear paths"
+    "✅ Duplicate elimination with information preservation"
+    "✅ Context management for overflow situations"
+)
+
+FORBIDDEN_OPTIMIZATION=(
+    "❌ Content deletion for line count reduction"
+    "❌ Information removal without user approval"
+    "❌ Access path disconnection"
+    "❌ Essential knowledge elimination"
+    "❌ 'Simplification' through information loss"
+)
+
+# ACCESS METHODOLOGY ENFORCEMENT
+ACCESS_REQUIREMENTS=(
+    "PRIMARY: CLAUDE.md → smart_knowledge_load() → domain files"
+    "SECONDARY: Cognee search, file patterns, content search"
+    "META: Auto-discovery through domain/context relationships"
+    "VERIFICATION: All necessary information remains reachable"
+)
+
+# INFORMATION SUFFICIENCY STANDARDS
+SUFFICIENCY_CRITERIA=(
+    "COMPLETENESS: All task-execution information available"
+    "REFERENCE: Clear paths to related knowledge"
+    "CONTEXT: Background, rationale, examples included"
+    "MAINTENANCE: Update procedures and dependencies documented"
+)
+```
+
+### 6️⃣ AI-OPTIMIZED KNOWLEDGE FORMAT (ナレッジ記録最適化)
 ```bash
 # AI-FIRST KNOWLEDGE RECORDING PRINCIPLES
 AI_KNOWLEDGE_FORMAT=(
@@ -354,6 +399,7 @@ fi
 
 # 3. Load essential constraints (minimum required)
 echo "Loading core constraints..."
+[ -f memory-bank/00-core/knowledge_access_principles_mandatory.md ] && echo "✅ Knowledge access principles found"
 [ -f memory-bank/00-core/user_authorization_mandatory.md ] && echo "✅ User auth rules found"
 [ -f memory-bank/00-core/testing_mandatory.md ] && echo "✅ Testing rules found"
 [ -f memory-bank/00-core/code_quality_anti_hacking.md ] && echo "✅ Quality rules found"
@@ -524,11 +570,12 @@ time mcp__cognee__search "test" CHUNKS      # Performance test
 #### Phase 1A: Core Compliance Rules (MUST READ FIRST)
 ```bash
 # MANDATORY reading order - DO NOT skip or reorder
-1. memory-bank/00-core/user_authorization_mandatory.md        # User authorization + Security + Mindset (absolute compliance)
-2. memory-bank/00-core/value_assessment_mandatory.md          # Value evaluation framework (absolute compliance)
-3. memory-bank/00-core/testing_mandatory.md                  # Automated testing requirements  
-4. memory-bank/00-core/code_quality_anti_hacking.md          # Quality anti-hacking rules
-5. memory-bank/09-meta/progress_recording_mandatory_rules.md # Progress recording requirements
+1. memory-bank/00-core/knowledge_access_principles_mandatory.md # Knowledge access & optimization principles (absolute compliance)
+2. memory-bank/00-core/user_authorization_mandatory.md        # User authorization + Security + Mindset (absolute compliance)
+3. memory-bank/00-core/value_assessment_mandatory.md          # Value evaluation framework (absolute compliance)
+4. memory-bank/00-core/testing_mandatory.md                  # Automated testing requirements  
+5. memory-bank/00-core/code_quality_anti_hacking.md          # Quality anti-hacking rules
+6. memory-bank/09-meta/progress_recording_mandatory_rules.md # Progress recording requirements
 ```
 
 #### Phase 1B: Core Development Knowledge
