@@ -24,6 +24,10 @@ RUN ln -s /usr/bin/python3.10 /usr/bin/python \
     && ln -s /usr/bin/pdb3 /usr/bin/pdb
 
 
+COPY bin/install_gh.sh /tmp/install_gh.sh
+RUN sh /tmp/install_gh.sh
+
+
 # DinD
 # # c.f https://hub.docker.com/r/billyteves/ubuntu-dind/dockerfile
 # # Install Docker and wrapdocker
