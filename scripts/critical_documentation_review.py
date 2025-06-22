@@ -179,20 +179,28 @@ class CriticalDocumentationReviewer:
     
     def _check_file_paths(self, doc_path: Path, command: str, block_idx: int) -> None:
         """ファイルパスの検証"""
-        # 一般的なファイルパターンを検索
+        # Markdownリンクは除外（この関数はコードブロック内のコマンド専用）
+        if '](' in command or command.strip().startswith('- **['):
+            return
+            
+        # 一般的なファイルパターンを検索（より厳密なパターン）
         file_patterns = [
-            r'(app/[^\s]+\.py)',
-            r'(tests/[^\s]+\.py)', 
-            r'(docs/[^\s]+\.md)',
-            r'([^\s]+\.yml)',
-            r'([^\s]+\.yaml)',
-            r'([^\s]+\.json)',
-            r'([^\s]+\.toml)'
+            r'(app/[^\s\]\)]+\.py)',
+            r'(tests/[^\s\]\)]+\.py)', 
+            r'(docs/[^\s\]\)]+\.md)',
+            r'([^\s\]\)]+\.yml)',
+            r'([^\s\]\)]+\.yaml)',
+            r'([^\s\]\)]+\.json)',
+            r'([^\s\]\)]+\.toml)'
         ]
         
         for pattern in file_patterns:
             matches = re.findall(pattern, command)
             for file_path in matches:
+                # Markdownリンク構文の一部を除外
+                if '](' in file_path or file_path.endswith(']'):
+                    continue
+                    
                 full_path = self.project_root / file_path
                 if not full_path.exists():
                     self.findings.append(ReviewFinding(

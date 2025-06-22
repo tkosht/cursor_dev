@@ -136,7 +136,6 @@ TOTAL                             91.77%
 - **[TDDで作るA2Aエージェント](docs/05.articles/note_a2a_practice_level2.md)**: 実装の詳細解説
 
 ### 品質・セキュリティ
-- **[memory-bank/04-quality/quality_management_system.md](memory-bank/04-quality/quality_management_system.md)**: 品質管理システム
 - **[memory-bank/07-security/security_rules_enhancement.md](memory-bank/07-security/security_rules_enhancement.md)**: セキュリティルール
 - **[memory-bank/04-quality/accuracy_verification_rules.md](memory-bank/04-quality/accuracy_verification_rules.md)**: 正確性検証ルール
 
