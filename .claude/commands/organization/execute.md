@@ -1,16 +1,19 @@
 # Command Difinition
+- Step0. ルール・ナレッジのロード
+    - 今回の指示に関連すうるすべてのルール・ナレッジを読み込む
 - Step1. ブリーフィング
     - tmux 上のペインそれぞれ（すべて）に対して、以下を伝えること
         - 今回のタスク概要、指示系統、各自のロール、<タスク指示書のフォーマット/>、タスク完了後はtmux メッセージにて報告義務があることを伝える
-        - 必須ルールとtmux メッセージ送信の仕方・注意事項の具体的手順、tmux組織に関するルール、本タスクにかかわるルール、マインドセットを各自がを読み込むように指示します
+        - また、必須ルールとtmux メッセージ送信の仕方・注意事項(Enter!)の具体的手順、tmux組織に関するルール、本タスクにかかわるルール、マインドセットを各自がを読み込むように指示します
     - この時、指示系統に従ってClaude Agent 間でメッセージをやり取りさせること
         - Project Manager -> PMO/Consultant, 各Manager -> 各指示系統に即したWorker
         - Project Manager, PMO/Consultant, 各Manager は、指示先の Claude Agent (e.g. Manager, Worker)のタスク実行が完了したか否かを、`tmux capture-pane` とsleep 等で監視をし続けなければならない
+        - 特にあなた(Project Manager) が認識しているコンテキスト・ナレッジ・ルールのすべてを必ず正確に伝達すること (他のClaude Agent は何も知りません)
         - また、指示を受けたClaude Agent (e.g. Manager, Worker) は、指示元のClaude Agent (Project Manager, PMO/Consultant, 各Manager) にタスク完了後にタスク完了報告を実施しなければならない
     - 上記を完全に精緻に整理して、まとめて一つのtmuxメッセージとして送信します (そのために送信前に送信すべき具体的事項を洗い出して整理してください）
 - Step2. 役割分担
-    - tmux 上の 各Claude Agents に、適切に <タスク/> を分担実行するように tmux メッセージで指示します
-        - タスク指示書をまとめて一つのtmuxメッセージとして送信します
+    - tmux 上の 各Claude Agents に、役割を明確に指示し、適切に <タスク/> を分担実行するように tmux メッセージで指示します
+        - 各Claude Agent に対して、タスク指示書をまとめて1回のtmuxメッセージとして送信します
 - Step3. 実行管理
     - 各Worker は、
     - 各Manager は、役割分担したタスクが完了するのを一定時間間隔で監視し適宜、報告を催促すること(ポーリング）
