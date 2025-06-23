@@ -1,62 +1,97 @@
 ---
-description: "ルール体系とMemory Bank構造の定義"
+description: 
 globs: 
 alwaysApply: true
 ---
-# ルール体系定義 (rules.mdc)
+# ルール体系定義 (rules.md)
 
-このファイルは、プロジェクト全体のルール体系、特に Memory Bank と `.cursorrules` (`*.mdc`) の構造と目的を定義します。
+このファイルは、プロジェクト全体のルール体系、特に Memory Bank と `.cursorrules` (`*.mdc`または`.md`) の構造と目的を定義します。
 
-## 1. ルールファイルの階層と目的
+## 1. ルール参照の基本原則: `CLAUDE.md` を最上位プロトコルとする
 
-`.cursorrules` (`*.mdc`) ファイルは、AI アシスタントがプロジェクトを理解し、一貫した方法で作業するための指示を提供します。以下の階層構造を基本とします。
+本プロジェクトにおけるAIアシスタントの運用は、まず `CLAUDE.md` ([CLAUDE.md](mdc:CLAUDE.md)) に記述された**絶対遵守プロトコル**および**運用戦略**を最優先の行動指針とします。`.cursor/rules/` 配下の各ルールファイル（`core.md`, `project.md`, 本 `rules.md` を含む）は、`CLAUDE.md` の原則を具体的な開発ワークフローやプロジェクト固有のルールに落とし込むための補助的な役割を担います。
 
-1.  **`core.mdc` (必須):**
+AIアシスタントは、いかなるタスクの開始時においても、まず `CLAUDE.md` ([CLAUDE.md](mdc:CLAUDE.md)) に定義された `PRE-TASK KNOWLEDGE PROTOCOL` および `CORE OPERATING PRINCIPLES` を想起し、それに従った情報収集と行動計画立案を行わなければなりません。
+
+## 2. ルールファイルの階層と目的
+
+`.cursor/rules/` 配下のルールファイルは、上記の基本原則のもと、以下の階層構造でAIアシスタントの行動を具体化します。
+
+1.  **`core.md` (必須):**
     *   **目的:** プロジェクトの種類や技術スタックに依存しない、普遍的な開発原則、ベストプラクティス、思考法、AI アシスタントとの基本的な対話ルール、およびワークフロー定義を含みます。
     *   **スコープ:** ソフトウェア開発全般に適用可能な汎用ルール・ワークフロー。
     *   **編集:** 汎用的なルールやワークフローが確立・発見された場合に更新します。
 
-2.  **`project.mdc` (必須):**
-    *   **目的:** 特定のプロジェクトに固有のルール、設定、技術選択、運用手順などを定義します。`core.mdc` のルールを前提とし、それを具体化・上書き・補足します。
+2.  **`project.md` (必須):**
+    *   **目的:** 特定のプロジェクトに固有のルール、設定、技術選択、運用手順などを定義します。`core.md` のルールを前提とし、それを具体化・上書き・補足します。
     *   **スコープ:** 現在のプロジェクトにのみ適用されるルール。
     *   **編集:** プロジェクト固有の決定事項、環境設定、依存関係、運用ルールなどが変更・追加された場合に更新します。
 
-3.  **`rules.mdc` (必須):**
-    *   **目的:** ルール体系全体の構造と目的、Memory Bank との関係、編集ワークフローなどのメタ情報を定義します。
+3.  **`rules.md` (このファイル):**
+    *   **目的:** ルール体系全体の構造と目的、Memory Bank との関係、`CLAUDE.md` との連携、編集ワークフローなどのメタ情報を定義します。
     *   **スコープ:** ルールファイル群の管理・運用ルール。
     *   **編集:** ルール体系の構造や運用方法が変更された場合に更新します。
 
-4.  **その他の `.mdc` ファイル (特別な理由がある場合のみ):**
+4.  **その他のルールファイル (特別な理由がある場合のみ):**
     *   **原則:** 上記3つのファイルで十分なルール管理を目指します。
     *   **例外条件:** 特定の技術領域や側面について、分離することが保守性向上に明確に寄与し、かつチーム内で合意が得られた場合に限り、追加ファイル作成を検討できます。
-    *   **承認プロセス:** 新規 `.mdc` ファイル作成時は、その必要性と構造への影響を明確にした上で、チーム承認を得る必要があります。
+    *   **承認プロセス:** 新規ルールファイル作成時は、その必要性と構造への影響を明確にした上で、チーム承認を得る必要があります。
 
-### 1.4 ルールファイルの依存関係図
+### 2.1 ルールファイルの依存関係図
 
 ```mermaid
-graph LR
-    subgraph ".cursor/rules/"
-        RulesMDC["rules.mdc (ルール体系の定義)"]
-        CoreMDC["core.mdc (汎用ルール・ワークフロー)"]
-        ProjectMDC["project.mdc (プロジェクト固有ルール)"]
-
-        RulesMDC --> CoreMDC
-        RulesMDC --> ProjectMDC
-        CoreMDC --> ProjectMDC
+graph TD
+    subgraph "最上位プロトコル"
+        ClaudeMD["CLAUDE.md (絶対遵守プロトコル)"]
     end
 
-    classDef mdc fill:#eee,stroke:#333,stroke-width:2px;
-    class RulesMDC,CoreMDC,ProjectMDC mdc
+    subgraph ".cursor/rules/ (補助ルール)"
+        RulesMD["rules.md (ルール体系定義)"]
+        CoreMD["core.md (汎用ワークフロー)"]
+        ProjectMD["project.md (プロジェクト固有ルール)"]
+    end
+
+    ClaudeMD --> RulesMD
+    ClaudeMD --> CoreMD
+    ClaudeMD --> ProjectMD
+    
+    RulesMD --> CoreMD
+    RulesMD --> ProjectMD
+    CoreMD --> ProjectMD
+
+    classDef md fill:#eee,stroke:#333,stroke-width:2px;
+    class RulesMD,CoreMD,ProjectMD md
+    classDef protocol fill:#e6f3ff,stroke:#0066cc,stroke-width:2px;
+    class ClaudeMD protocol
 ```
 
 **依存関係の説明:**
-- `rules.mdc` は、ルール体系全体の定義として他のすべてのルールファイルの基盤となります
-- `core.mdc` は、普遍的なルールとワークフローを定義し、プロジェクト固有ルールの基盤となります  
-- `project.mdc` は、`core.mdc` のルールを前提として、プロジェクト固有の詳細を定義します
+- `CLAUDE.md` は、他の全てのルールファイルの前提となる最上位の運用プロトコルです。
+- `rules.md` は、ルール体系全体の定義として他の `.md` ファイルの基盤となります。
+- `core.md` は、`CLAUDE.md` の原則に基づき、普遍的なルールとワークフローを定義します。  
+- `project.md` は、`core.md` のルールを前提として、プロジェクト固有の詳細を定義します。
 
-## 2. Memory Bank 構造 (`/memory-bank/*.md`)
+## 3. Memory Bank 構造 (`/memory-bank/*.md`)
 
-Memory Bank は、AI アシスタントがプロジェクトのコンテキストを理解し、作業を引き継ぐための知識ベースです。以下のコアファイルを含みます。
+Memory Bank は、AI アシスタントがプロジェクトのコンテキストを理解し、作業を引き継ぐための知識ベースです。
+
+**`CLAUDE.md` との連携:**
+- [CLAUDE.md](mdc:CLAUDE.md) は、AIエージェントが本 Memory Bank 内の知識を体系的かつ効果的に活用するための運用ハブとしての役割を担います。
+- Memory Bank 内の全ての知識は、[CLAUDE.md](mdc:CLAUDE.md) の `KNOWLEDGE ACCESS PRINCIPLES` および `AI-OPTIMIZED KNOWLEDGE FORMAT` に従って管理・活用されます。AIアシスタントは、Memory Bank を参照する際には、これらの `CLAUDE.md` の指針を常に意識しなければなりません。
+
+**Memory Bank 運用における重要原則 (จาก [CLAUDE.md](mdc:CLAUDE.md))**:
+- **知識アクセス原則 ([KNOWLEDGE ACCESS PRINCIPLES](mdc:CLAUDE.md#KNOWLEDGE-ACCESS-PRINCIPLES-(知識アクセス根本原則))):**
+    - 知識は必要な時にアクセス可能であること。
+    - アクセシビリティの向上を目的とし、安易な情報削除は行わない。
+    - 十分な情報量を維持し、明確なアクセスパスを確保する。
+- **AI最適化知識フォーマット ([AI-OPTIMIZED KNOWLEDGE FORMAT](mdc:CLAUDE.md#AI-OPTIMIZED-KNOWLEDGE-FORMAT-(ナレッジ記録最適化))):**
+    - 検索性: ファイル名、ヘッダー、主要行にキーワードを含める。
+    - コンパクト性: 高いS/N比を意識する。
+    - 構造化: 一貫性のあるフォーマットでパターンマッチングを容易にする。
+    - 関連付け: 他の知識への明確なクロスリファレンスを設ける。
+    - 実用性: 実行可能なサンプルやコマンドを含む。
+- **ルール競合時の解決原則:**
+    - 複数のルールファイル (`core.md`, `project.md`, `CLAUDE.md`, Memory Bank内の特定ルール) 間で指示が競合する場合、`CLAUDE.md` の指示が常に最優先されます。解釈に迷う場合は、`CLAUDE.md` の記述を正としてください。
 
 ```mermaid
 flowchart TD
@@ -73,20 +108,23 @@ flowchart TD
 
 ### コアファイル (必須)
 
-1.  `projectbrief.md`: プロジェクトの根本的な目的、目標、スコープ。
-2.  `productContext.md`: プロジェクトが存在する理由、解決する問題、ユーザー体験。
-3.  `systemPatterns.md`: システムアーキテクチャ、主要な技術決定、デザインパターン。
-4.  `techContext.md`: 使用技術、開発セットアップ、技術的制約、依存関係。
-5.  `activeContext.md`: 現在の作業焦点、最近の変更、次のステップ、アクティブな決定事項。
-6.  `progress.md`: 実装済みの機能、残りのタスク、現在の状態、既知の問題。
+1.  `projectbrief.md`: ([memory-bank/06-project/progress/projectbrief.md](mdc:memory-bank/06-project/progress/projectbrief.md)) プロジェクトの根本的な目的、目標、スコープ。
+2.  `productContext.md`: ([memory-bank/06-project/context/product_context.md](mdc:memory-bank/06-project/context/product_context.md)) プロジェクトが存在する理由、解決する問題、ユーザー体験。
+3.  `systemPatterns.md`: ([memory-bank/06-project/context/system_patterns.md](mdc:memory-bank/06-project/context/system_patterns.md)) システムアーキテクチャ、主要な技術決定、デザインパターン。
+4.  `techContext.md`: ([memory-bank/06-project/context/tech_context.md](mdc:memory-bank/06-project/context/tech_context.md)) 使用技術、開発セットアップ、技術的制約、依存関係。
+5.  `activeContext.md`: ([memory-bank/06-project/context/active_context.md](mdc:memory-bank/06-project/context/active_context.md)) 現在の作業焦点、最近の変更、次のステップ、アクティブな決定事項。
+6.  `progress.md`: ([memory-bank/06-project/progress/progress.md](mdc:memory-bank/06-project/progress/progress.md)) 実装済みの機能、残りのタスク、現在の状態、既知の問題。
 
 ### 追加コンテキスト
 
 必要に応じて `/memory-bank/` 内にサブディレクトリや追加の `.md` ファイルを作成し、複雑な機能、API仕様、テスト戦略などを文書化します。
 
-## 3. `.mdc` ファイルの編集ワークフロー
+## 4. ルール更新のワークフロー
 
-*(ここに、ユーザー指定の `.md` 経由での編集ワークフローを記述)*
-*(例: "`.mdc` ファイルを更新する際は、まず対応する `/docs/rules_drafts/` 内の `.md` ファイルを編集し、レビュー後に `make update-rules` コマンドを実行して `.mdc` に反映させる。"など)*
+### 4.1. `CLAUDE.md` との同期
+`CLAUDE.md` が更新された場合、その変更が他のルールファイル (`core.md`, `project.md`) や関連する Memory Bank ドキュメントに与える影響をレビューし、必要に応じてこれらのファイルを修正して整合性を保つ必要があります。例えば、`CLAUDE.md` のプロトコルが変更されれば、`core.md` のワークフローもそれに追随して更新されなければなりません。
 
+### 4.2. ルールファイルの編集ワークフロー
+
+*(ここに、ユーザー指定の編集ワークフローを記述)*
 *(現時点ではワークフロー不明のためプレースホルダ)* 

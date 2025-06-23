@@ -1,3 +1,5 @@
+<!-- AI AGENT REMINDER: This active context tracks the immediate "what's next". All actions taken based on this context must strictly follow the operational principles and execution checklists defined in CLAUDE.md. Refer to [CLAUDE.md](mdc:CLAUDE.md) before any action. -->
+
 # Active Context - A2A Protocol Investigation
 
 ## 現在の作業状況

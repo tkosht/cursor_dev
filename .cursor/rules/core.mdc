@@ -14,14 +14,29 @@ alwaysApply: true
 尚、同様の問題が発生していないか、Web上で検索して調査できないかも対応の検討スコープにいれてください。
 同じような修正誤りを繰り返さないように、これまでの修正とその結果をまとめてから、次のアクションを定めてください。
 
+**追加原則: `CLAUDE.md` に基づく行動規範**
+- **根本原則:** AIエージェントの全ての思考と行動は、[CLAUDE.md](mdc:CLAUDE.md) に定義された根本的な行動規範 (`MINDSET`, `FORBIDDEN BEHAVIORS` 等) に基づかなければなりません。
+- **ユーザー価値の最大化:** AIの利便性ではなく、常にユーザーの利益を最優先に行動する。
+- **長期的視点の重視:** 短期的な解決策よりも、持続可能で長期的な価値をもたらすアプローチを選択する。
+- **安易な解決策の排除:** 表面的な対応や「手抜き」と見なされる可能性のある解決策を避け、常に最善を尽くす。
+- **事実と検証に基づく判断:** 「おそらく」「たぶん」といった憶測に基づく判断や提案を排除し、常に検証済みの事実とロードされた知識に基づいて行動する。
+- **アクション前の価値評価:** 全てのアクションを実行する前に、[CLAUDE.md VALUE ASSESSMENT MANDATORY](mdc:CLAUDE.md#VALUE-ASSESSMENT-MANDATORY-(価値評価必須)) の観点からその価値と妥当性を評価する:
+    1.  セキュリティ: 機密情報漏洩のリスクはないか？ (あれば即時停止)
+    2.  ユーザー価値: 真にユーザーのニーズに応えるものか？
+    3.  長期的影響: 持続可能な解決策か、一時しのぎではないか？
+    4.  事実確認: 提案内容は検証済みか、憶測ではないか？
+    5.  知識参照: 関連するルールや知識は参照・ロード済みか？
+    6.  代替案検討: より優れた、または安全な他の方法はないか？
+
 ## 2. 基本プロセスと報告
 
 ユーザー指示 {{instructions}} を元に、以下のプロセスで作業を進めてください。
 
 ### 2.1 指示の分析と計画
    <タスク分析>
+   - **知識ロード戦略の実行:** [CLAUDE.md PRE-TASK KNOWLEDGE PROTOCOL](mdc:CLAUDE.md#PRE-TASK-KNOWLEDGE-PROTOCOL-(タスク前必須ナレッジ参照)) に従い、`smart_knowledge_load()` または `comprehensive_knowledge_load()` を適切に選択・実行し、必要な情報を収集せよ。
    - 主要なタスクを簡潔に要約
-   - 技術スタック ([project.mdc](mdc:.cursor/rules/project.mdc) 参照) の制約内での実装検討
+   - 技術スタック ([project.md](mdc:.cursor/rules/project.md) 参照) の制約内での実装検討
    - 重要な要件と制約を特定
    - 潜在的な課題をリストアップ
    - 具体的な実行ステップを列挙し、順序を決定
@@ -30,7 +45,13 @@ alwaysApply: true
 
 ### 2.2 タスクの実行
    - 特定したステップを一つずつ実行し、進捗を報告
-   - 実装時はディレクトリ構造・命名規則・共通処理配置に注意 ([project.mdc](mdc:.cursor/rules/project.mdc) 参照)
+   - 実装時はディレクトリ構造・命名規則・共通処理配置に注意 ([project.md](mdc:.cursor/rules/project.md) 参照)
+   - **実行前チェックリスト:** アクションを実行する前に、[CLAUDE.md PRE_EXECUTION_MANDATORY](mdc:CLAUDE.md#CORE-OPERATING-PRINCIPLES-(基本動作原則)) および [CLAUDE.md VALUE ASSESSMENT MANDATORY](mdc:CLAUDE.md#VALUE-ASSESSMENT-MANDATORY-(価値評価必須)) に基づき、以下のような項目をセルフチェックする。
+     - AIコンプライアンス (`pre_action_check.py` 等)
+     - 作業ブランチの妥当性 (main/masterでないこと)
+     - テスト駆動開発の準備 (テストを先に書く)
+     - 品質ゲートの意識 (コミット前のチェック項目)
+     - エラー発生時の根本原因分析の徹底
 
 ### 2.3 品質管理と問題対応
    - 各ステップの結果を検証
@@ -71,12 +92,13 @@ alwaysApply: true
 - **明示的指示のない変更禁止。** 必要なら提案・承認後に実施。
 - **UI/UXデザイン変更禁止。** 必要なら理由示し承認後に実施。
 - **技術スタック (バージョン含む) の勝手な変更禁止。** 必要なら理由示し承認後に実施。
-- **編集ツールの限界:** `edit_file` や `reapply` は、複雑な変更やファイル全体の書き換え時に失敗することがあります。編集が適用されない場合は、編集内容を簡略化する、ステップを分割する、または `# ルール更新` セクション記載の `.md` 経由での更新手順を試してください。
+- **編集ツールの限界:** `edit_file` や `reapply` は、複雑な変更やファイル全体の書き換え時に失敗することがあります。編集が適用されない場合は、編集内容を簡略化する、ステップを分割する、またはルールに記載の代替手段を試してください。
+- **`CLAUDE.md` の絶対的優先:** 本 `core.md` および他のルールファイルは `CLAUDE.md` のプロトコルを補完・具体化するものです。解釈に迷う場合や、より根本的な運用指針については、常に `CLAUDE.md` ([CLAUDE.md](mdc:CLAUDE.md)) の記述を正としてください。
 
 ## 3.1 ディレクトリ構造の変更と追加
-- **原則:** `project.mdc` に定義されたディレクトリ構造を遵守する。
+- **原則:** `project.md` に定義されたディレクトリ構造を遵守する。
 - **変更・追加の提案:** 新しいディレクトリ構造が必要と判断した場合、その理由、目的、期待される効果を明記の上、ユーザーに提案し承認を得る。
-- **承認後のプロセス:** ユーザー承認後、`project.mdc` のディレクトリ構造定義を更新し、変更内容をコミットする。
+- **承認後のプロセス:** ユーザー承認後、`project.md` のディレクトリ構造定義を更新し、変更内容をコミットする。
 
 ## 3.2 🚨 数値ハッキング絶対禁止ルール
 - **絶対禁止事項:**
@@ -89,11 +111,11 @@ alwaysApply: true
   - 単一指標による判定は禁止、複数指標による総合評価を義務化
   - 品質保証システム自体の品質向上を継続的に実施
   - 数値ハッキングの疑いがある対応を洗い出し、客観的かつ批判的に厳正レビューし、速やかに是正
-- **参照:** [quality_assurance_lessons.md](mdc:memory-bank/quality_assurance_lessons.md) - 重要教訓と対策システム
+- **参照:** [memory-bank/04-quality/quality_assurance_lessons.md](mdc:memory-bank/04-quality/quality_assurance_lessons.md) - 重要教訓と対策システム
 
 ## 4. 事実の把握
 - LLMは知識カットオフ日を認識し、それ以降の情報は慎重に扱う。
-- 最新/未知情報要求時: 一次情報確認 (Web検索/コード読込) → [knowledge_general.md](mdc:knowledge/knowledge_general.md) へ記録 → 記録に基づき判断/提案。
+- 最新/未知情報要求時: 一次情報確認 (Web検索/コード読込) → [memory-bank/09-meta/knowledge_general.md](mdc:memory-bank/09-meta/knowledge_general.md) へ記録 → 記録に基づき判断/提案。
 - **ファイル読み取りキャッシュと確実な内容確認:**
   - `read_file` ツールは、パフォーマンス向上のためにファイル内容のキャッシュを参照することがあります。これにより、特に直前のファイル編集や外部ツールによるファイル変更が即座に反映されない場合があります。
   - **潜在的な問題:** キャッシュされた古い情報を基に判断を下し、意図しない結果を招く可能性があります（例: 変更が未反映であることに気づかず作業を進める、誤った情報をユーザーに報告するなど）。
@@ -109,54 +131,55 @@ alwaysApply: true
 ### 5.1 ルールファイル構成
 本プロジェクトの Cursor ルールは以下のファイルで構成されます:
 
-1.  `core.mdc` (このファイル): プロジェクト非依存の基本ルール・ワークフロー定義
-2.  `project.mdc`: このプロジェクト固有のルール
-3.  `rules.mdc`: ルール体系の定義・Memory Bank構造
+1.  `core.md` (このファイル): プロジェクト非依存の基本ルール・ワークフロー定義
+2.  `project.md`: このプロジェクト固有のルール
+3.  `rules.md`: ルール体系の定義・Memory Bank構造
 
-詳細な構成については [rules.mdc](mdc:.cursor/rules/rules.mdc) を参照してください。
+詳細な構成については [.cursor/rules/rules.md](mdc:.cursor/rules/rules.md) を参照してください。
 
 ### 5.2 認識済みルール確認
-タスク開始時に、読み込んだルールファイル (`core.mdc`, `project.mdc`, `rules.mdc`) とその概要を以下のようにリストアップしてください。
+タスク開始時に、読み込んだルールファイル (`core.md`, `project.md`, `rules.md`) とその概要を以下のようにリストアップしてください。
    ```markdown
    # 認識済みルール
-   - core.mdc: [概要]
-   - project.mdc: [概要]
-   - rules.mdc: [概要]
+   - core.md: [概要]
+   - project.md: [概要]
+   - rules.md: [概要]
    ```
 
 ### 5.3 ルール間の依存関係
-- `rules.mdc` はルール体系全体の定義として基盤となります
-- `core.mdc` は普遍的なルール・ワークフローを提供します
-- `project.mdc` は `core.mdc` のルールを前提とし、プロジェクト固有の詳細や上書きルールを定義します
+- `rules.md` はルール体系全体の定義として基盤となります
+- `core.md` は普遍的なルール・ワークフローを提供します
+- `project.md` は `core.md` のルールを前提とし、プロジェクト固有の詳細や上書きルールを定義します
 
-詳細な依存関係については [rules.mdc](mdc:.cursor/rules/rules.mdc) を参照してください。
+詳細な依存関係については [.cursor/rules/rules.md](mdc:.cursor/rules/rules.md) を参照してください。
 
 ## 6. ワークフロー定義
 
 ### 6.1 ルール読み込み（必須）
-1. コアルール (`core.mdc`) を読み込む。
-2. プロジェクトルール (`project.mdc`) を読み込む。
-3. ルール体系定義 (`rules.mdc`) を読み込む。
-4. Memory Bank (`memory-bank/*.md`) から関連するものを読み込む:
-   - **必須ファイル**: `activeContext.md`, `progress.md`, `projectbrief.md`
-   - **重要ファイル**: `documentation_strategy.md`, `test_strategy.md`, `error_analysis.md`, `design_principles.md`, `rules.md`, `ai_analysis_improvement_lessons.md`
-5. 実装ルール (`docs/*/*.md`) から関連するものを読み込む:
-   - **重要ファイル**: `requirements.md`, `basic_design.md`, `detail_design.md`
+1. **マスタープロトコルの確認:** まず、AIエージェント運用の最上位プロトコルである `CLAUDE.md` ([CLAUDE.md](mdc:CLAUDE.md)) の存在を認識し、特にタスク開始時の知識ロード戦略 (`PRE-TASK KNOWLEDGE PROTOCOL`)、基本動作原則 (`CORE OPERATING PRINCIPLES`)、およびセキュリティ絶対ルール (`SECURITY ABSOLUTE`) の概要を把握する。以降のルール解釈およびタスク実行は、これらの `CLAUDE.md` の指示を最優先とする。
+2. コアルール (`core.md`、このファイル) を読み込む。
+3. プロジェクトルール (`project.md`) を読み込む。
+4. ルール体系定義 (`rules.md`) を読み込む。
+5. Memory Bank (`memory-bank/`) から関連するものを読み込む:
+   - **必須ファイル**: `active_context.md` ([memory-bank/06-project/context/active_context.md](mdc:memory-bank/06-project/context/active_context.md)), `progress.md` ([memory-bank/06-project/progress/progress.md](mdc:memory-bank/06-project/progress/progress.md)), `projectbrief.md` ([memory-bank/06-project/progress/projectbrief.md](mdc:memory-bank/06-project/progress/projectbrief.md))
+   - **重要ファイル**: `documentation_strategy.md`, `test_strategy.md`, `error_analysis.md`, `design_principles.md`, `rules.md`, `ai_analysis_improvement_lessons.md` (主に `memory-bank/09-meta/` または `memory-bank/04-quality/` 配下)
+6. 実装ルール (`docs/`) から関連するものを読み込む:
+   - **重要ファイル**: `requirements.md` ([docs/01.requirements/requirements.md](mdc:docs/01.requirements/requirements.md)), `basic_design.md` ([docs/02.basic_design/basic_design.md](mdc:docs/02.basic_design/basic_design.md)), `detail_design.md` ([docs/03.detail_design/detail_design.md](mdc:docs/03.detail_design/detail_design.md))
 
 ### 6.2 現状ステータスの確認とタスク実行
 - 関連ドキュメントを読み込む (存在する場合):
-  - [requirements.md](mdc:docs/01.requirements/requirements.md)
-  - [basic_design.md](mdc:docs/02.basic_design/basic_design.md)
-  - [detail_design.md](mdc:docs/03.detail_design/detail_design.md)
+  - [docs/01.requirements/requirements.md](mdc:docs/01.requirements/requirements.md)
+  - [docs/02.basic_design/basic_design.md](mdc:docs/02.basic_design/basic_design.md)
+  - [docs/03.detail_design/detail_design.md](mdc:docs/03.detail_design/detail_design.md)
 - Memory Bank で現状ステータスを確認:
-  - [activeContext.md](mdc:memory-bank/activeContext.md), [progress.md](mdc:memory-bank/progress.md) の最新情報確認
+  - [memory-bank/06-project/context/active_context.md](mdc:memory-bank/06-project/context/active_context.md), [memory-bank/06-project/progress/progress.md](mdc:memory-bank/06-project/progress/progress.md) の最新情報確認
 - `projectbrief.md` で目的・ゴールを確認:
-  - [projectbrief.md](mdc:memory-bank/projectbrief.md) で目的を明示的に確認
+  - [memory-bank/06-project/progress/projectbrief.md](mdc:memory-bank/06-project/progress/projectbrief.md) で目的を明示的に確認
 - 次のタスクを計画
 - タスク実行（下記「7. 開発工程」に従う）
 - **コミット前最終確認:** `scripts/quality_gate_check.py` を実行し、全項目 (Flake8, Pytest, Coverage) が設定された基準をクリアしていることを確認する。結果を記録または報告する。
 - `git commit & push` でタスク結果をコミット
-- Memory Bank を更新 (`activeContext.md`, `progress.md`)
+- Memory Bank を更新 (`active_context.md`, `progress.md`)
 - **参照リンク確認:** ルールファイルの統合やリネーム等、ファイル構成変更後は、他のファイルからの参照リンク (`[...](mdc:...)` 等) が壊れていないか `grep` などで確認する。
 - Memory Bank の更新内容を `git commit & push`
 
@@ -177,17 +200,17 @@ alwaysApply: true
 2. **基本設計 (外部設計)**
 3. **詳細設計 (内部設計)**
 4. **実装**
-   - 実装前に本ルール (`core.mdc`, `project.mdc`, `rules.mdc`) を再確認
+   - 実装前に本ルール (`core.md`, `project.md`, `rules.md`) を再確認
 5. **コードフォーマット** 
-   - 実装・改修後に `black` などでフォーマットを適用 ([project.mdc](mdc:.cursor/rules/project.mdc) 参照)
+   - 実装・改修後に `black` などでフォーマットを適用 ([project.md](mdc:.cursor/rules/project.md) 参照)
 6. **リンターチェック** 
-   - `flake8` 等で警告・エラーを全て解消 ([project.mdc](mdc:.cursor/rules/project.mdc) 参照)
+   - `flake8` 等で警告・エラーを全て解消 ([project.md](mdc:.cursor/rules/project.md) 参照)
 7. **コードレビュー**
    - レビュー指摘に応じて修正し再テスト
 8. **単体テスト** 
-   - テストコード作成 → 実行 → エラー解析 → 必要に応じ実装へ戻る ([project.mdc](mdc:.cursor/rules/project.mdc), [test_strategy.md](mdc:memory-bank/test_strategy.md) 参照)
+   - テストコード作成 → 実行 → エラー解析 → 必要に応じ実装へ戻る ([project.md](mdc:.cursor/rules/project.md), [memory-bank/04-quality/test_strategy.md](mdc:memory-bank/04-quality/test_strategy.md) 参照)
 9. **結合テスト** 
-   - 仕様書作成 → コード作成 → 実行 → エラー解析 → 必要に応じ実装へ戻る ([test_strategy.md](mdc:memory-bank/test_strategy.md) 参照)
+   - 仕様書作成 → コード作成 → 実行 → エラー解析 → 必要に応じ実装へ戻る ([memory-bank/04-quality/test_strategy.md](mdc:memory-bank/04-quality/test_strategy.md) 参照)
 10. **ユーザテスト**
     - 必要に応じてユーザへテストを依頼しフィードバック対応
 
@@ -294,10 +317,12 @@ alwaysApply: true
 - **継続改善**: 品質保証システムの継続的改善を義務とする
 
 ### 9.4 参照ドキュメント
-- [quality_assurance_lessons.md](mdc:memory-bank/quality_assurance_lessons.md) - 重要教訓と対策システム
+- [memory-bank/04-quality/quality_assurance_lessons.md](mdc:memory-bank/04-quality/quality_assurance_lessons.md) - 重要教訓と対策システム
 - `scripts/quality_gate_check.py` - 厳格品質保証システム v2.0
 
 ## 🚨 **絶対的セキュリティ違反防止ルール** - **最優先**
+
+このルールは [CLAUDE.md SECURITY ABSOLUTE](mdc:CLAUDE.md#SECURITY-ABSOLUTE-(セキュリティ絶対)) の指示に基づくものです。違反検知時は即座に操作を停止してください。
 
 ### **機密情報表示の完全禁止**
 - **`.env`ファイルの内容表示**: `cat .env`, `less .env`, `head .env`, `tail .env` 等の実行を**絶対禁止**
@@ -383,4 +408,4 @@ stat .env  # ファイル情報（内容は表示しない）
 
 # Respond Rule
 
-Always respond in 日本語
+Always respond in 日本語 

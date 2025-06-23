@@ -1,3 +1,5 @@
+<!-- AI AGENT REMINDER: This project brief defines the "what" and "why". All execution strategies and operational decisions must align with the master protocols defined in CLAUDE.md. Refer to [CLAUDE.md](mdc:CLAUDE.md) for the "how". -->
+
 # A2A プロトコル調査プロジェクト
 
 ## プロジェクト概要

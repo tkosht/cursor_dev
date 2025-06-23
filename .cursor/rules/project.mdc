@@ -6,7 +6,7 @@ alwaysApply: true
 # プロジェクト固有ルール
 
 このファイルは、本プロジェクト特有の環境設定、技術スタック、ディレクトリ構成、Python開発ルール、セキュリティガイドラインなどを定義します。
-`core.mdc` に定義された普遍的なルールを前提とし、それを補完・具体化します。
+`core.md` に定義された普遍的なルールを前提とし、それを補完・具体化します。
 
 ## 1. 開発環境
 
@@ -17,10 +17,10 @@ alwaysApply: true
 - 作業ディレクトリ: ~/workspace
 
 ### 1.2 コンテナ環境詳細
-- ベースイメージ: python:3.12-slim （詳細は [techContext.md](mdc:memory-bank/techContext.md) 参照）
-- 公開ポート: 7860（Gradio用）（詳細は [techContext.md](mdc:memory-bank/techContext.md) 参照）
+- ベースイメージ: python:3.12-slim （詳細は [memory-bank/06-project/context/tech_context.md](mdc:memory-bank/06-project/context/tech_context.md) 参照）
+- 公開ポート: 7860（Gradio用）（詳細は [memory-bank/06-project/context/tech_context.md](mdc:memory-bank/06-project/context/tech_context.md) 参照）
 - Git操作はコンテナ内で実施
-- 環境変数は.devcontainer経由で管理（詳細は [techContext.md](mdc:memory-bank/techContext.md) 参照）
+- 環境変数は.devcontainer経由で管理（詳細は [memory-bank/06-project/context/tech_context.md](mdc:memory-bank/06-project/context/tech_context.md) 参照）
 
 ## 2. Python 開発ルール (本プロジェクト固有)
 
@@ -42,7 +42,7 @@ alwaysApply: true
 ```
 ./
 ├── .cursor/            # Cursor AI 設定
-│   └── rules/          # ルールファイル (*.mdc)
+│   └── rules/          # ルールファイル (*.md)
 ├── .devcontainer/      # Dev Container 設定
 ├── .ssh/               # SSH 設定
 ├── .specstory/         # Cursor上の会話履歴
@@ -69,7 +69,7 @@ alwaysApply: true
 └── README.md
 ```
 
-- 詳細: [systemPatterns.md](mdc:memory-bank/systemPatterns.md) も参照。
+- 詳細: [memory-bank/03-patterns/operational_patterns.md](mdc:memory-bank/03-patterns/operational_patterns.md) も参照。
 
 ## 4. コーディング規約
 
@@ -90,7 +90,7 @@ alwaysApply: true
 
 ### 5.1 コミットメッセージ規約
 - Conventional Commits 形式を推奨 (例: `feat: 新機能の追加`, `fix: バグ修正`, `docs: ドキュメント更新`)
-- 詳細は [commit_guideline.md](mdc:docs/development_rules/commit_guideline.md) 参照 (存在する場合)
+- 詳細は [memory-bank/04-quality/commit_quality_rules.md](mdc:memory-bank/04-quality/commit_quality_rules.md) 参照
 
 ### 5.2 ブランチ戦略
 - `main` (または `master`): 本番リリース用。直接コミット禁止。
@@ -106,6 +106,7 @@ alwaysApply: true
 ## 6. セキュリティ
 
 ### 6.1 機密情報の扱い
+- **`CLAUDE.md` の遵守:** セキュリティに関する全ての行動は [CLAUDE.md SECURITY ABSOLUTE](mdc:CLAUDE.md#SECURITY-ABSOLUTE-(セキュリティ絶対)) の指示に従うこと。
 - APIキー、パスワード等の機密情報はコードに直接記述しない。
 - 環境変数や `.env` ファイル (Git管理外) を使用する。
 - `.env` ファイルは `.gitignore` に追加する。
@@ -125,7 +126,23 @@ alwaysApply: true
 ### 6.6 git リポジトリの公開範囲
 - 本リポジトリは機密情報を含まない前提で、公開範囲は開発チーム内とする。 (もし public ならその旨を記載し、機密情報混入により一層注意)
 
-## 7. その他
+## 7. プロジェクト固有ツール・戦略と `CLAUDE.md` との連携
 
-- 既存コードのスタイルやパターンを尊重する。
-- 不明な点は自己判断せず、チームに確認する。
+### 7.1 Cognee 関連
+- **目的:** プロジェクトの知識ベースの管理と検索性向上。
+- **`CLAUDE.md` との連携:** Cogneeの利用戦略やマイグレーション手順は、[CLAUDE.md](mdc:CLAUDE.md) の `KNOWLEDGE ACCESS PRINCIPLES` を具現化する手段として位置づけられる。
+- **関連ドキュメント:** [memory-bank/01-cognee/](mdc:memory-bank/01-cognee)
+
+### 7.2 Competitive Organization 関連
+- **目的:** 複数のAIエージェントによる階層的・協調的なタスク実行フレームワーク。
+- **`CLAUDE.md` との連携:** この組織フレームワークは、[CLAUDE.md](mdc:CLAUDE.md) の `MINDSET` および `VALUE ASSESSMENT` に基づく高度な意思決定を自動化・スケールさせるための具体的な実装パターンである。
+- **関連ドキュメント:** [memory-bank/02-organization/](mdc:memory-bank/02-organization)
+
+### 7.3 品質・テスト戦略
+- **目的:** 高品質なソフトウェア開発の維持。
+- **`CLAUDE.md` との連携:** テスト駆動開発(TDD)や品質ゲート (`quality_gate_check.py`) の運用は、[CLAUDE.md](mdc:CLAUDE.md) の `TDD-MANDATORY` や `QUALITY COMMITMENT` の原則を遵守するための必須プラクティスである。
+- **関連ドキュメント:** [memory-bank/04-quality/](mdc:memory-bank/04-quality), [memory-bank/00-core/tdd_implementation_knowledge.md](mdc:memory-bank/00-core/tdd_implementation_knowledge.md)
+### 7.4 Git Worktree 並列開発
+- **目的:** 複数タスクの並行開発による効率化。
+- **`CLAUDE.md` との連携:** Git Worktreeの利用は、@CLAUDE.md が要求する迅速な価値提供と、安全な開発環境の分離を両立させるための技術的手段である。
+- **関連ドキュメント:** @memory-bank/08-automatio[n/git_work](mdc:CLAUDE.md)tree_parallel_development.md 
