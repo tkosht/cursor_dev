@@ -506,6 +506,35 @@ echo "================================="
 | Any | ≥30 min | Yes | **tmux + Claude CLI** |
 | <2000 tokens | <30 min | No | **Direct Execution** |
 
+### 🤖 AI Agent Coordination (Multi-Agent Scenarios)
+```bash
+# AI間協調における必須プロトコル
+# When: 複数AIエージェント協調が必要な場合
+
+# AI協調制約の理解（CRITICAL）
+AI_AGENT_CONSTRAINTS=(
+    "Stateless reasoning - persistent memory なし"
+    "Context isolation - 他AIエージェント状態観察不可" 
+    "Assumption-based failures - 検証なし推論は失敗"
+    "Programmatic verification required - 状態確認必須"
+)
+
+# 必須検証プロトコル
+function ai_coordination_check() {
+    # AIエージェント間通信検証
+    source memory-bank/02-organization/ai_agent_coordination_mandatory.md
+    
+    # Worker状態検証（仮定ベース報告禁止）
+    verify_ai_worker_status "Manager-Role" "${WORKER_PANES[@]}"
+    
+    # 通信配信確認（Enter送信漏れ防止）
+    ai_to_ai_message "Sender" "target_pane" "MESSAGE_TYPE" "content"
+}
+
+echo "🚨 MANDATORY: memory-bank/02-organization/ai_agent_coordination_mandatory.md"
+echo "📋 Core protocols: AI cognition constraints, verification standards, communication protocols"
+```
+
 ### 🏆 Competitive Organization (Advanced Mode)
 ```bash
 # 複雑・重要課題での競争的解決システム
