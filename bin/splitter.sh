@@ -25,8 +25,9 @@ do
 done
 
 
+
 ## 3分割目
-for i in $(seq 1 $(expr $n + 1))
+for i in $(seq 1 $(expr $n))
 do
     p=$(expr \( $i - 1 \) \* 3 + 2)
     tmux select-pane -t $p && tmux split-window -v
