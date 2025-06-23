@@ -7,5 +7,5 @@ cd $d/../
 cd dev-tools/external-repos/cognee/cognee-mcp
 . .venv/bin/activate
 . ../../.env
-uv run cognee
+python src/server.py --transport sse
 
