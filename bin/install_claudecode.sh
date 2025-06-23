@@ -1,33 +1,27 @@
 #!/usr/bin/sh
 
+# --- 1. nvmのインストールと有効化 ---
 curl -sSL -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # nvmをロードする推奨方法
 
-. $HOME/.nvm/nvm.sh
-
+# --- 2. Node.jsのインストールと使用 ---
+# 最新のLTS(長期サポート)版をインストールし、現在のセッションで使用する
+# 'nvm use'も内部的に実行されるため、別途'use'コマンドは不要
 nvm install --lts
+
+# --- 3. プロジェクトの依存関係をインストール ---
+# これはプロジェクトのローカルパッケージなので変更なし
 npm install
 
-# First, save a list of your existing global packages for later migration
-npm list -g --depth=0 > ~/workspace/.npm-global-packages.txt
-
-# Create a directory for your global packages
-mkdir -p ~/workspace/.npm-global
-
-# Configure npm to use the new directory path
-npm config set prefix ~/workspace/.npm-global
-
-# Note: Replace ~/.bashrc with ~/.zshrc, ~/.profile, or other appropriate file for your shell
-echo 'export PATH=~/workspace/.npm-global/bin:$PATH' >> ~/.bashrc
-
-# Apply the new PATH setting
-source ~/.bashrc
-
-# Now reinstall Claude Code in the new location
+# --- 4. グローバルパッケージのインストール ---
+# nvmが管理する場所にClaude Codeをグローバルインストールする
+echo "Installing @anthropic-ai/claude-code globally..."
 npm install -g @anthropic-ai/claude-code
 
-# Optional: Reinstall your previous global packages in the new location
-# Look at ~/workspace/.npm-global-packages.txt and install packages you want to keep
-
-export PATH=$HOME/workspace/.npm-global/bin:$PATH
+# --- 5. MCP追加スクリプトの実行 ---
 sh bin/add_cognee_mcp.sh
+
+
+echo "Installation complete."
 
