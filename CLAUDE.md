@@ -2,7 +2,7 @@
 
 **🤖 IMPORTANT: This is an AI AGENT-ONLY knowledge base. Human operators should NOT attempt to read or reference these files due to volume and AI-optimized formatting.**
 
-This file contains MANDATORY protocols for Claude Code/Claude Agent. ALL rules must be followed without exception.
+This file contains MANDATORY protocols for Claude/Gemini Code or Claude/Gemini Agent. ALL rules must be followed without exception.
 
 ## 🚨 ABSOLUTE MANDATORY RULES (絶対遵守 - NO EXCEPTIONS)
 
@@ -461,7 +461,7 @@ fi
 ```bash
 # The 5-Point Evaluation Rule (MANDATORY before ANY action)
 echo "🚨 0. SECURITY: Will this expose API keys, secrets, or credentials? → STOP if yes"
-echo "🎯 1. USER VALUE: Does this serve USER's interests, not Claude's convenience?"
+echo "🎯 1. USER VALUE: Does this serve USER's interests, not Claude/Gemini's convenience?"
 echo "⏰ 2. TIME HORIZON: Long-term value vs short-term convenience evaluated?"
 echo "🔍 3. FACT CHECK: Is this fact or speculation?"
 echo "📚 4. KNOWLEDGE: Have I verified related knowledge?"
@@ -515,7 +515,7 @@ echo "================================="
 | Context Size | Duration | State Required | → Use |
 |--------------|----------|----------------|-------|
 | >2000 tokens | <30 min | No | **Task Tool** |
-| Any | ≥30 min | Yes | **tmux + Claude CLI** |
+| Any | ≥30 min | Yes | **tmux + Claude/Gemini CLI** |
 | <2000 tokens | <30 min | No | **Direct Execution** |
 
 ### 🤖 AI Agent Coordination (Multi-Agent Scenarios)
