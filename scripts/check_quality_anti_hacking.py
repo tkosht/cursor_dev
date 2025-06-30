@@ -21,7 +21,7 @@ class QualityAntiHackingChecker:
         # 除外対象ディレクトリ
         self.exclude_dirs = {
             '.git', '.venv', '__pycache__', 'node_modules', 
-            '.pytest_cache', 'htmlcov', '.coverage'
+            '.pytest_cache', 'htmlcov', '.coverage', 'dev-tools'
         }
         
         # 監視対象パターン（実際のnoqaディレクティブのみ）

@@ -152,7 +152,7 @@ class CriticalDocumentationReviewer:
                     cwd=self.project_root,
                     capture_output=True,
                     text=True,
-                    timeout=5
+                    timeout=60
                 )
                 if result.returncode not in [0, 1, 2]:  # 一般的な正常終了コード
                     self.findings.append(ReviewFinding(

@@ -1,8 +1,8 @@
-# CLAUDE.md - AI Agent Mandatory Protocol
+# CLAUDE.md (and GEMINI.md) - AI Agent Mandatory Protocol
 
 **🤖 IMPORTANT: This is an AI AGENT-ONLY knowledge base. Human operators should NOT attempt to read or reference these files due to volume and AI-optimized formatting.**
 
-This file contains MANDATORY protocols for Claude Code/Claude Agent. ALL rules must be followed without exception.
+This file contains MANDATORY protocols for Claude/Gemini Code or Claude/Gemini Agent. ALL rules must be followed without exception.
 
 ## 🚨 ABSOLUTE MANDATORY RULES (絶対遵守 - NO EXCEPTIONS)
 
@@ -19,9 +19,10 @@ MANDATORY_SEQUENCE=(
     "0. DATE: Establish temporal context with date command"
     "1. LOAD: Execute smart_knowledge_load() for domain context"
     "2. VERIFY: Cross-check loaded knowledge completeness"
-    "3. STRATEGY: Formulate approach BASED ON loaded knowledge"
-    "4. EXECUTE: Implement with continuous verification"
-    "5. UPGRADE: Use comprehensive_knowledge_load() only if user explicitly requests detailed analysis"
+    "3. DEEP_ANALYSIS: Apply forced_depth_analysis_mandatory.md for complex tasks"
+    "4. STRATEGY: Use ai_strategic_thinking_framework_mandatory.md for strategic decisions"
+    "5. EXECUTE: Implement with continuous verification"
+    "6. UPGRADE: Use comprehensive_knowledge_load() only if user explicitly requests detailed analysis"
 )
 
 # ENFORCEMENT
@@ -68,6 +69,17 @@ function smart_knowledge_load() {
         echo "✅ Task Completion Integrity Protocol loaded"
     else
         echo "⚠️ WARNING: Task Completion Integrity Protocol missing"
+    fi
+    
+    # AI Cognitive Enhancement (mandatory for analysis tasks)
+    if [ -f "memory-bank/00-core/forced_depth_analysis_mandatory.md" ]; then
+        echo "🧠 Forced Depth Analysis Protocol loaded"
+        echo "💡 Use for complex analysis: enforce_analysis_quality [topic]"
+    fi
+    
+    if [ -f "memory-bank/00-core/ai_strategic_thinking_framework_mandatory.md" ]; then
+        echo "🎯 Strategic Thinking Framework loaded"
+        echo "💡 Use for strategic decisions: enforce_strategic_completeness [topic]"
     fi
     
     # Optional Cognee if available and fast
@@ -285,7 +297,7 @@ KNOWLEDGE_ACCESS_ABSOLUTE=(
     "PURPOSE: Enable access to necessary knowledge when needed"
     "OPTIMIZATION ≠ Deletion: Improve accessibility, NOT remove content"
     "SUFFICIENCY: Maintain necessary and sufficient information"
-    "NAVIGATION: Establish clear access paths from CLAUDE.md"
+    "NAVIGATION: Establish clear access paths from CLAUDE.md (and GEMINI.md)"
     "META-COGNITION: Enable automatic related knowledge discovery"
 )
 
@@ -449,7 +461,7 @@ fi
 ```bash
 # The 5-Point Evaluation Rule (MANDATORY before ANY action)
 echo "🚨 0. SECURITY: Will this expose API keys, secrets, or credentials? → STOP if yes"
-echo "🎯 1. USER VALUE: Does this serve USER's interests, not Claude's convenience?"
+echo "🎯 1. USER VALUE: Does this serve USER's interests, not Claude/Gemini's convenience?"
 echo "⏰ 2. TIME HORIZON: Long-term value vs short-term convenience evaluated?"
 echo "🔍 3. FACT CHECK: Is this fact or speculation?"
 echo "📚 4. KNOWLEDGE: Have I verified related knowledge?"
@@ -503,7 +515,7 @@ echo "================================="
 | Context Size | Duration | State Required | → Use |
 |--------------|----------|----------------|-------|
 | >2000 tokens | <30 min | No | **Task Tool** |
-| Any | ≥30 min | Yes | **tmux + Claude CLI** |
+| Any | ≥30 min | Yes | **tmux + Claude/Gemini CLI** |
 | <2000 tokens | <30 min | No | **Direct Execution** |
 
 ### 🤖 AI Agent Coordination (Multi-Agent Scenarios)
@@ -707,7 +719,7 @@ black app/ tests/ --line-length=79
 
 ## 🔧 Detailed Implementation (Full Guide)
 
-**For comprehensive implementation details, see CLAUDE_structured.md**
+**For comprehensive implementation details, see CLAUDE_structured.md (and GEMINI_structured.md)**
 
 ### Quick Reference: Project Architecture
 ```

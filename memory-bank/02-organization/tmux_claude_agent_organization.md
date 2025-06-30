@@ -1,8 +1,8 @@
-# tmux Claude Agent 組織体制ルール (Official Organization Rules)
+# tmux Claude/Gemini Agent 組織体制ルール (Official Organization Rules)
 
 **制定日**: 2025-06-14  
 **制定者**: user (最高権限者)  
-**適用範囲**: 全tmux Claude Agent セッション  
+**適用範囲**: 全tmux Claude/Gemini Agent セッション  
 **文書種別**: 正式組織運営規則  
 **更新権限**: user承認による変更のみ  
 **遵守レベル**: 絶対遵守 (MANDATORY COMPLIANCE)
@@ -611,7 +611,7 @@ Knowledge/Rule ↔ Execution:
 
 #### **ペイン (Pane)**
 ```
-定義: tmux内の個別作業領域、各Claude Agentの作業空間
+定義: tmux内の個別作業領域、各Claude/Gemini Agentの作業空間
 番号: 0-13 (合計14ペイン)
 識別: pane-index、pane-title、担当role
 ```
@@ -797,7 +797,7 @@ Quarterly: 根本的見直し・戦略調整・組織最適化
 ✅ 関連文書との整合性確認  
 
 ### 有効性宣言
-**この文書は、user承認により、全tmux Claude Agent組織において絶対的拘束力を持つ正式な組織運営規則として発効する。**
+**この文書は、user承認により、全tmux Claude/Gemini Agent組織において絶対的拘束力を持つ正式な組織運営規則として発効する。**
 
 ---
 
@@ -1073,24 +1073,24 @@ Complete Fallback: 全研究機能無効化時の安全復帰
 
 ---
 
-## 🔄 XII. Claude CLI Integration Extensions (Claude CLI統合拡張機能)
+## 🔄 XII. Claude/Gemini CLI Integration Extensions (Claude/Gemini CLI統合拡張機能)
 
 **拡張制定日**: 2025-06-14  
 **拡張根拠**: 3-Layer Delegation Architecture 統合戦略  
-**適用条件**: Task Tool + Claude CLI + tmux 完全統合運用  
+**適用条件**: Task Tool + Claude/Gemini CLI + tmux 完全統合運用  
 **統合文書**: `02-organization/task_tool_delegation_integration.md`
 
-### 12.1 Claude CLI統合原則
+### 12.1 Claude/Gemini CLI統合原則
 
 #### 基本統合戦略
 ```
 既存基盤: tmux 14-pane組織（実証済み安定性）
-技術統合: Task Tool（軽量・並列） + Claude CLI（継続・専門）
+技術統合: Task Tool（軽量・並列） + Claude/Gemini CLI（継続・専門）
 最適化: 3-Layer Delegation Architecture（動的判定）
 効果: 開発効率65%向上・品質40%改善（実証済み）
 ```
 
-#### Claude CLI技術特性
+#### Claude/Gemini CLI技術特性
 ```
 実行環境: tmux pane内外部プロセス
 状態管理: ステートフル（セッション継続）
@@ -1099,17 +1099,17 @@ Complete Fallback: 全研究機能無効化時の安全復帰
 専門化: 領域特化・知識継承
 ```
 
-### 12.2 Pane-Level Claude CLI Integration (ペイン別Claude CLI統合)
+### 12.2 Pane-Level Claude/Gemini CLI Integration (ペイン別Claude/Gemini CLI統合)
 
-#### 【Manager層Claude CLI活用】
+#### 【Manager層Claude/Gemini CLI活用】
 
-##### pane-0: Knowledge/Rule Manager + Claude CLI Orchestration
+##### pane-0: Knowledge/Rule Manager + Claude/Gemini CLI Orchestration
 ```bash
-# Claude CLI統合統制機能
+# Claude/Gemini CLI統合統制機能
 基本役割: 組織ルール・知見管理
-統合拡張: Claude CLI活用統制・品質保証
+統合拡張: Claude/Gemini CLI活用統制・品質保証
 
-# Claude CLI Orchestration Examples
+# Claude/Gemini CLI Orchestration Examples
 tmux send-keys -t 0 'claude -p "組織最適化: 現在の委譲戦略効果測定・改善提案"'
 tmux send-keys -t 0 Enter
 
@@ -1118,14 +1118,14 @@ tmux send-keys -t 0 'claude -p "組織進化: 前回分析結果に基づく組�
 tmux send-keys -t 0 Enter
 ```
 
-##### pane-1-4: Specialized Managers + Claude CLI Coordination
+##### pane-1-4: Specialized Managers + Claude/Gemini CLI Coordination
 ```bash
 # pane-1: Rule Implementation Manager
 tmux send-keys -t 1 'claude -p "ルール実装: 新規統合戦略の段階的組織実装"'
 tmux send-keys -t 1 Enter
 
 # pane-2: Task Execution Manager  
-tmux send-keys -t 2 'claude -p "実行統制: Task Tool + Claude CLI統合実行の監督・調整"'
+tmux send-keys -t 2 'claude -p "実行統制: Task Tool + Claude/Gemini CLI統合実行の監督・調整"'
 tmux send-keys -t 2 Enter
 
 # pane-3: Task Delegation Manager
@@ -1133,13 +1133,13 @@ tmux send-keys -t 3 'claude -p "委譲最適化: 3-Layer判定アルゴリズム
 tmux send-keys -t 3 Enter
 
 # pane-4: Analysis Manager
-tmux send-keys -t 4 'claude -p "統合分析: Task Tool vs Claude CLI効果測定・最適化分析"'
+tmux send-keys -t 4 'claude -p "統合分析: Task Tool vs Claude/Gemini CLI効果測定・最適化分析"'
 tmux send-keys -t 4 Enter
 ```
 
-#### 【Worker層Claude CLI活用】
+#### 【Worker層Claude/Gemini CLI活用】
 
-##### Task Execution Workers (pane-5, 8, 11) + Claude CLI Specialization
+##### Task Execution Workers (pane-5, 8, 11) + Claude/Gemini CLI Specialization
 ```bash
 # pane-5: Primary Task Execution Worker
 # 継続実装・段階的深化
@@ -1161,7 +1161,7 @@ tmux send-keys -t 11 'claude -p "最適化実装: 実装済み機能のパフォ
 tmux send-keys -t 11 Enter
 ```
 
-##### Task Review Workers (pane-6, 9, 12) + Claude CLI Quality Assurance
+##### Task Review Workers (pane-6, 9, 12) + Claude/Gemini CLI Quality Assurance
 ```bash
 # pane-6: Primary Task Review Worker
 # 継続品質監視・段階的改善提案
@@ -1179,7 +1179,7 @@ tmux send-keys -t 12 'claude -p "性能監査: 実装の性能基準・スケー
 tmux send-keys -t 12 Enter
 ```
 
-##### Knowledge/Rule Workers (pane-7, 10, 13) + Claude CLI Knowledge Management
+##### Knowledge/Rule Workers (pane-7, 10, 13) + Claude/Gemini CLI Knowledge Management
 ```bash
 # pane-7: Primary Knowledge/Rule Worker
 # 実装知識の体系化・ベストプラクティス抽出
@@ -1197,11 +1197,11 @@ tmux send-keys -t 13 'claude -p "組織学習: 統合運用の効果・改善点
 tmux send-keys -t 13 Enter
 ```
 
-### 12.3 Claude CLI Communication Protocols (Claude CLI通信プロトコル)
+### 12.3 Claude/Gemini CLI Communication Protocols (Claude/Gemini CLI通信プロトコル)
 
-#### Safe Claude CLI Send Protocol
+#### Safe Claude/Gemini CLI Send Protocol
 ```bash
-# 🚨 CRITICAL: Claude CLI Safe Send Pattern
+# 🚨 CRITICAL: Claude/Gemini CLI Safe Send Pattern
 function safe_claude_cli_send() {
     local pane=$1
     local message="$2"
@@ -1224,9 +1224,9 @@ function safe_claude_cli_send() {
         sleep 1
     fi
     
-    # 3. Claude CLI command sending
+    # 3. Claude/Gemini CLI command sending
     tmux send-keys -t $pane "claude -p \"$message\""
-    echo "✓ Claude CLI command sent"
+    echo "✓ Claude/Gemini CLI command sent"
     
     # 4. Enter sending (separate)
     tmux send-keys -t $pane Enter
@@ -1240,41 +1240,41 @@ function safe_claude_cli_send() {
     
     # 6. Success detection
     if echo "$response" | grep -q -E "(Thinking|思考中|Processing)"; then
-        echo "✅ Claude CLI processing started successfully"
+        echo "✅ Claude/Gemini CLI processing started successfully"
         return 0
     else
-        echo "⚠️ Claude CLI response uncertain - manual verification needed"
+        echo "⚠️ Claude/Gemini CLI response uncertain - manual verification needed"
         return 2
     fi
 }
 ```
 
-#### Claude CLI Session Management
+#### Claude/Gemini CLI Session Management
 ```bash
-# Claude CLI Session Lifecycle Management
+# Claude/Gemini CLI Session Lifecycle Management
 function manage_claude_cli_session() {
     local pane=$1
     local action="$2"  # start, continue, pause, resume, end
     
     case $action in
         "start")
-            echo "🚀 Starting Claude CLI session in pane $pane"
+            echo "🚀 Starting Claude/Gemini CLI session in pane $pane"
             safe_claude_cli_send $pane "セッション開始: 専門タスクの継続実行準備完了"
             ;;
         "continue")
-            echo "⏩ Continuing Claude CLI session in pane $pane"
+            echo "⏩ Continuing Claude/Gemini CLI session in pane $pane"
             # Previous context is preserved in the pane
             ;;
         "pause")
-            echo "⏸️ Pausing Claude CLI session in pane $pane"
+            echo "⏸️ Pausing Claude/Gemini CLI session in pane $pane"
             safe_claude_cli_send $pane "一時停止: 現在の進捗状況を保存・次回継続準備"
             ;;
         "resume")
-            echo "▶️ Resuming Claude CLI session in pane $pane"
+            echo "▶️ Resuming Claude/Gemini CLI session in pane $pane"
             safe_claude_cli_send $pane "再開: 前回中断箇所から継続実行"
             ;;
         "end")
-            echo "🏁 Ending Claude CLI session in pane $pane"
+            echo "🏁 Ending Claude/Gemini CLI session in pane $pane"
             safe_claude_cli_send $pane "完了報告: 実行結果・学習内容・次回引き継ぎ事項まとめ"
             ;;
     esac
@@ -1303,16 +1303,16 @@ function execute_optimal_delegation() {
         # Execute Task Tool delegation
         Task "$task_description" "$task_description の詳細調査・分析"
         
-    # Layer 2: Claude CLI判定
+    # Layer 2: Claude/Gemini CLI判定
     elif (( duration >= 30 )) && [ "$requires_state" = "true" ] && (( complexity >= 6 )); then
-        echo "✅ Layer 2: Claude CLI Delegation"
+        echo "✅ Layer 2: Claude/Gemini CLI Delegation"
         echo "Reason: Long duration + State required + High complexity"
         
         # Select optimal pane
         local optimal_pane=$(select_optimal_pane_for_task "$task_description")
         echo "Selected pane: $optimal_pane"
         
-        # Execute Claude CLI delegation
+        # Execute Claude/Gemini CLI delegation
         safe_claude_cli_send $optimal_pane "$task_description" "長期継続タスク・専門性蓄積"
         
     # Layer 3: Hybrid判定
@@ -1367,8 +1367,8 @@ function execute_hybrid_pipeline() {
     echo "Phase 2: Results Integration (manual)"
     echo "📋 Task Tool結果の統合・戦略策定を実行してください"
     
-    # Phase 3: Claude CLI専門実装
-    echo "Phase 3: Claude CLI Specialized Implementation"
+    # Phase 3: Claude/Gemini CLI専門実装
+    echo "Phase 3: Claude/Gemini CLI Specialized Implementation"
     safe_claude_cli_send 5 "実装開始: Phase1調査結果に基づく $task_description の段階実装"
     safe_claude_cli_send 6 "品質監視: $task_description 実装の継続的品質確認"
     safe_claude_cli_send 7 "知識記録: $task_description 実装過程の学習内容体系化"
@@ -1377,14 +1377,14 @@ function execute_hybrid_pipeline() {
 
 ### 12.5 Quality Assurance Integration (品質保証統合)
 
-#### Claude CLI Quality Monitoring
+#### Claude/Gemini CLI Quality Monitoring
 ```bash
-# Claude CLI品質監視プロトコル
+# Claude/Gemini CLI品質監視プロトコル
 function monitor_claude_cli_quality() {
     local pane=$1
     local expected_duration=$2  # minutes
     
-    echo "=== Claude CLI Quality Monitoring: pane $pane ==="
+    echo "=== Claude/Gemini CLI Quality Monitoring: pane $pane ==="
     
     local start_time=$(date +%s)
     local check_interval=300  # 5 minutes
@@ -1398,14 +1398,14 @@ function monitor_claude_cli_quality() {
         
         # Progress detection
         if echo "$output" | grep -q -E "(完了|完成|Completed|Done|✅)"; then
-            echo "✅ Claude CLI task completed in pane $pane"
+            echo "✅ Claude/Gemini CLI task completed in pane $pane"
             echo "Duration: $elapsed minutes"
             break
         fi
         
         # Stall detection
         if (( elapsed > expected_duration * 2 )); then
-            echo "⚠️ Claude CLI task potentially stalled in pane $pane"
+            echo "⚠️ Claude/Gemini CLI task potentially stalled in pane $pane"
             echo "Expected: $expected_duration min, Actual: $elapsed min"
             
             # Intervention protocol
@@ -1430,11 +1430,11 @@ function monitor_claude_cli_quality() {
 
 ### 12.6 Performance Metrics Integration (性能指標統合)
 
-#### Claude CLI Performance Tracking
+#### Claude/Gemini CLI Performance Tracking
 ```python
 class ClaudeCLIPerformanceTracker:
     """
-    Claude CLI統合性能追跡システム
+    Claude/Gemini CLI統合性能追跡システム
     """
     
     def __init__(self):
@@ -1447,7 +1447,7 @@ class ClaudeCLIPerformanceTracker:
         }
     
     def track_session(self, pane, start_time, end_time, task_complexity):
-        """Claude CLIセッション追跡"""
+        """Claude/Gemini CLIセッション追跡"""
         duration = (end_time - start_time) / 60  # minutes
         
         self.metrics['claude_cli_sessions'] += 1
@@ -1472,7 +1472,7 @@ class ClaudeCLIPerformanceTracker:
 
 #### Quantitative Benefits
 ```
-Claude CLI統合効果:
+Claude/Gemini CLI統合効果:
 - 専門性蓄積: 85%向上（継続セッションによる学習効果）
 - 作業効率: 60%改善（状態継承による再開時間短縮）
 - 状態管理: 90%成功率（pane独立環境による安定性）
@@ -1492,10 +1492,10 @@ Claude CLI統合効果:
 
 #### Backward Compatibility
 ```
-既存機能: 100%保持（Claude CLI統合は追加機能）
+既存機能: 100%保持（Claude/Gemini CLI統合は追加機能）
 既存プロトコル: 100%有効（通信プロトコル拡張のみ）
 既存組織: 100%機能（pane役割は不変・機能拡張）
-Rollback: 100%可能（Claude CLI機能無効化で元状態復帰）
+Rollback: 100%可能（Claude/Gemini CLI機能無効化で元状態復帰）
 ```
 
 #### Future Extensibility
@@ -1508,23 +1508,23 @@ Research機能: 完全統合済み（Anthropic手法）
 
 ---
 
-### Claude CLI統合制定・発効情報
+### Claude/Gemini CLI統合制定・発効情報
 
 **統合制定日**: 2025-06-14  
 **統合制定者**: user (最高権限者) + 3-Layer Delegation Architecture 統合プロトコル  
 **統合文書管理責任者**: Knowledge/Rule Manager (pane-0 enhanced)  
 **次回統合見直し日**: 2025-07-14 (月次レビューと最適化)
 
-### Claude CLI統合発効条件
+### Claude/Gemini CLI統合発効条件
 ✅ user による統合承認  
 ✅ 3-Layer Architecture統合完了  
 ✅ Task Tool統合との整合性確認  
 ✅ 運用プロトコル検証完了  
 
-### Claude CLI統合有効性宣言
-**このClaude CLI統合拡張により、Task Tool・Claude CLI・tmux組織の技術的特性を最大限活用し、継続性・専門性・効率性を革新的に向上させる正式な組織拡張として発効する。**
+### Claude/Gemini CLI統合有効性宣言
+**このClaude/Gemini CLI統合拡張により、Task Tool・Claude/Gemini CLI・tmux組織の技術的特性を最大限活用し、継続性・専門性・効率性を革新的に向上させる正式な組織拡張として発効する。**
 
-### 📋 Claude CLI統合ナビゲーション・マップ
+### 📋 Claude/Gemini CLI統合ナビゲーション・マップ
 
 #### **統合文書エコシステム**
 
@@ -1533,7 +1533,7 @@ graph TB
     subgraph "Primary Integration (主要統合)"
         A[CLAUDE.md<br/>3-Layer Delegation Architecture]
         B[Task Tool Integration Patterns<br/>技術実装詳細]
-        C[tmux Organization Rules<br/>本文書 - Claude CLI統合]
+        C[tmux Organization Rules<br/>本文書 - Claude/Gemini CLI統合]
     end
     
     subgraph "Advanced Extensions (高度拡張)"
@@ -1559,8 +1559,8 @@ graph TB
 | 用途 | 文書 | セクション | 内容 |
 |------|------|----------|------|
 | **即座判定** | [CLAUDE.md](../../CLAUDE.md) | 3-Layer Delegation | 3秒判定マトリクス・決定アルゴリズム |
-| **技術実装** | [Task Tool Integration](./task_tool_delegation_integration.md) | Claude CLI Integration | 技術比較・実装パターン・最適化 |
-| **運用実践** | 本文書 | XII章 | Claude CLI通信プロトコル・pane別運用 |
+| **技術実装** | [Task Tool Integration](./task_tool_delegation_integration.md) | Claude/Gemini CLI Integration | 技術比較・実装パターン・最適化 |
+| **運用実践** | 本文書 | XII章 | Claude/Gemini CLI通信プロトコル・pane別運用 |
 | **研究・調査** | [Research-Adaptive](../03-patterns/research_adaptive_multi_agent.md) | RAMAO | Progressive Research・LLM-as-judge |
 
 #### **実践的統合フロー**
@@ -1574,7 +1574,7 @@ case $decision in
     "Task Tool")
         echo "📚 参照: Task Tool Integration Patterns - Layer 1実装例"
         ;;
-    "Claude CLI")  
+    "Claude/Gemini CLI")  
         echo "🏗️ 参照: tmux Organization Rules - XII章運用プロトコル"
         ;;
     "Hybrid Pipeline")
@@ -1591,8 +1591,8 @@ fi
 #### **統合効果の相乗作用**
 
 **組織 × 技術 × 研究の3軸統合**:
-- **組織基盤（本文書）**: 安定した14-pane構造 + Claude CLI運用プロトコル
-- **技術最適化（Integration Patterns）**: Task Tool + Claude CLI技術特性活用
+- **組織基盤（本文書）**: 安定した14-pane構造 + Claude/Gemini CLI運用プロトコル
+- **技術最適化（Integration Patterns）**: Task Tool + Claude/Gemini CLI技術特性活用
 - **研究革新（Research-Adaptive）**: Anthropic手法 + Progressive Research
 
 **結果**: **Legacy Stability + Cutting-Edge Innovation = Next-Generation Multi-Agent System**
