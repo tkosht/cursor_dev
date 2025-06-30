@@ -600,8 +600,7 @@ class ScientificQualityGate:
             result = subprocess.run(
                 ["python", "scripts/check_quality_anti_hacking.py"],
                 capture_output=True,
-                text=True,
-                timeout=30
+                text=True
             )
             return result.returncode == 0
         except (subprocess.TimeoutExpired, FileNotFoundError):

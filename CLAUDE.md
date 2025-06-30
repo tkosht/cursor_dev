@@ -1,4 +1,4 @@
-# CLAUDE.md - AI Agent Mandatory Protocol
+# CLAUDE.md (and GEMINI.md) - AI Agent Mandatory Protocol
 
 **🤖 IMPORTANT: This is an AI AGENT-ONLY knowledge base. Human operators should NOT attempt to read or reference these files due to volume and AI-optimized formatting.**
 
@@ -297,7 +297,7 @@ KNOWLEDGE_ACCESS_ABSOLUTE=(
     "PURPOSE: Enable access to necessary knowledge when needed"
     "OPTIMIZATION ≠ Deletion: Improve accessibility, NOT remove content"
     "SUFFICIENCY: Maintain necessary and sufficient information"
-    "NAVIGATION: Establish clear access paths from CLAUDE.md"
+    "NAVIGATION: Establish clear access paths from CLAUDE.md (and GEMINI.md)"
     "META-COGNITION: Enable automatic related knowledge discovery"
 )
 
@@ -719,7 +719,7 @@ black app/ tests/ --line-length=79
 
 ## 🔧 Detailed Implementation (Full Guide)
 
-**For comprehensive implementation details, see CLAUDE_structured.md**
+**For comprehensive implementation details, see CLAUDE_structured.md (and GEMINI_structured.md)**
 
 ### Quick Reference: Project Architecture
 ```

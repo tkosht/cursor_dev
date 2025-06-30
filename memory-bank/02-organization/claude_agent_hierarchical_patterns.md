@@ -1,4 +1,4 @@
-# 階層型Claude Agent運用パターン
+# 階層型Claude/Gemini Agent運用パターン
 
 ## 概要
 tmux環境における階層型Claude Agent組織の設計・運用パターンを体系化。大規模タスクの効率的な分解・実行・品質管理を実現する。
