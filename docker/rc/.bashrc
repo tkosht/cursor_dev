@@ -126,4 +126,5 @@ export GOOGLE_CLOUD_PROJECT=gen-lang-client-0389906364
 alias auto_claude="claude --dangerously-skip-permissions"
 # alias claude="auto_claude"
 alias ccusage="npx ccusage@latest blocks --live"
+alias geminiflash="gemini -m gemini-2.5-flash"
 

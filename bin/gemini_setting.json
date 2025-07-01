@@ -1,0 +1,14 @@
+{
+  "theme": "Default",
+  "selectedAuthType": "oauth-personal",
+  "mcpServers": {
+    "cognee": {
+      "type": "stdio",
+      "command": "sh",
+      "args": [
+        "bin/run_cognee.sh"
+      ],
+      "env": {}
+    }
+  }
+}
