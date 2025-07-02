@@ -11,8 +11,9 @@ This file contains MANDATORY protocols for Claude/Gemini Code or Claude/Gemini A
 # CRITICAL: Execute BEFORE any task - 例外なし
 # TASK COMPLEXITY ASSESSMENT (実行前必須)
 TASK_COMPLEXITY_RULES=(
-    "DEFAULT: All tasks → smart_knowledge_load() (5-15s) - Fast, efficient, covers 90% of needs"
-    "EXPLICIT_REQUEST_ONLY: User specifically requests comprehensive analysis → comprehensive_knowledge_load() (30-60s)"
+    "DEFAULT: All tasks → smart_knowledge_load() (10-20s) - Enhanced Cognee integration, covers 95% of needs"
+    "AUTO_UPGRADE: Complex domains → comprehensive_knowledge_load() (30-60s) - Full 3-layer analysis"
+    "EXPLICIT_REQUEST: User specifically requests comprehensive analysis → comprehensive_knowledge_load() (30-60s)"
 )
 
 MANDATORY_SEQUENCE=(
@@ -28,12 +29,12 @@ MANDATORY_SEQUENCE=(
 # ENFORCEMENT
 NO_KNOWLEDGE_NO_ACTION="Task execution without appropriate knowledge loading is FORBIDDEN"
 VIOLATION_CONSEQUENCE="Immediate task termination and restart with knowledge loading"
-KNOWLEDGE_STRATEGY="Default: smart_knowledge_load() for all tasks. Auto-upgrade to comprehensive_knowledge_load() for: security, architecture, new-technology, troubleshooting. Manual upgrade on explicit user request"
+KNOWLEDGE_STRATEGY="Enhanced Cognee Integration: smart_knowledge_load() with dual-phase Cognee search for all tasks. Auto-upgrade to comprehensive_knowledge_load() for: security, architecture, testing, quality, implementation, workflow, integration, automation. Manual upgrade on explicit user request"
 
-# Knowledge Loading Strategy (効率化実行)
-# USAGE: Default smart loading with optional comprehensive upgrade
-# - smart_knowledge_load()     → Default for all tasks (5-15s)
-# - comprehensive_knowledge_load() → Only on explicit user request (30-60s)
+# Enhanced Knowledge Loading Strategy (Cognee積極活用)
+# USAGE: Cognee-enhanced smart loading with expanded auto-upgrade
+# - smart_knowledge_load()     → All tasks with CHUNKS + RAG_COMPLETION (10-20s)
+# - comprehensive_knowledge_load() → Complex domains + explicit requests (30-60s)
 
 function smart_knowledge_load() {
     local domain="$1"
@@ -47,10 +48,10 @@ function smart_knowledge_load() {
         grep -A 20 "CURRENT.*STATUS" memory-bank/09-meta/session_continuity_task_management.md | head -10
     fi
     
-    # Auto-upgrade check for high-risk domains
+    # Auto-upgrade check for complex domains (Expanded for Cognee utilization)
     case "$domain $task_context" in
-        *security*|*architecture*|*new-technology*|*troubleshooting*|*error*|*debug*|*vulnerability*|*performance*|*optimization*)
-            echo "🚨 HIGH-RISK DOMAIN DETECTED: Auto-upgrading to comprehensive_knowledge_load"
+        *security*|*architecture*|*new-technology*|*troubleshooting*|*error*|*debug*|*vulnerability*|*performance*|*optimization*|*testing*|*quality*|*implementation*|*workflow*|*integration*|*automation*|*deployment*|*configuration*)
+            echo "🚨 COMPLEX DOMAIN DETECTED: Auto-upgrading to comprehensive_knowledge_load"
             comprehensive_knowledge_load "$domain" "$task_context"
             return
             ;;
@@ -82,14 +83,26 @@ function smart_knowledge_load() {
         echo "💡 Use for strategic decisions: enforce_strategic_completeness [topic]"
     fi
     
-    # Optional Cognee if available and fast
+    # Enhanced Cognee Strategic Search (Mandatory when available)
     if mcp__cognee__cognify_status >/dev/null 2>&1; then
-        echo "🧠 Cognee search: $domain"
-        mcp__cognee__search "$domain" CHUNKS | head -5
+        echo "🧠 Cognee Strategic Search: $domain"
+        
+        # Phase 1: Structured knowledge chunks (high detail)
+        echo "  📚 Phase 1: Knowledge chunks..."
+        mcp__cognee__search "$domain" CHUNKS
+        
+        # Phase 2: Natural language synthesis (understanding)
+        echo "  💡 Phase 2: Knowledge synthesis..."
+        mcp__cognee__search "$domain" RAG_COMPLETION
+        
+        echo "🎯 Cognee enhanced understanding complete"
+    else
+        echo "⚠️ Cognee unavailable - using fallback local search only"
     fi
     
-    echo "✅ Smart Loading Complete (5-15s)"
-    echo "💡 Need more comprehensive analysis? Request comprehensive_knowledge_load()"
+    echo "✅ Enhanced Smart Loading Complete (10-20s) - Cognee Integrated"
+    echo "💡 For complex domains, auto-upgrade to comprehensive_knowledge_load() activated"
+    echo "🎯 Manual upgrade available: Request comprehensive_knowledge_load() for detailed 3-layer analysis"
 }
 
 function comprehensive_knowledge_load() {
@@ -444,11 +457,12 @@ fi
 
 echo "🎯 Session ready! You can now start development."
 
-# 🚨 CRITICAL: Pre-Task Knowledge Protocol  
-echo "⚠️ REMINDER: Smart knowledge loading is DEFAULT for all tasks"
-echo "🔍 Usage: smart_knowledge_load 'domain' 'task_context' (5-15s)"
-echo "📋 Layers: Local→Cognee (fast) = Efficient understanding"
-echo "🎯 Upgrade: Use comprehensive_knowledge_load only on explicit user request"
+# 🚨 CRITICAL: Enhanced Pre-Task Knowledge Protocol  
+echo "⚠️ REMINDER: Enhanced smart knowledge loading is DEFAULT for all tasks"
+echo "🔍 Usage: smart_knowledge_load 'domain' 'task_context' (10-20s)"
+echo "📋 Enhanced Layers: Local→Cognee(CHUNKS+RAG) = Superior understanding"
+echo "🎯 Auto-upgrade: Complex domains → comprehensive_knowledge_load() automatically"
+echo "🎯 Manual upgrade: Request comprehensive_knowledge_load() for detailed analysis"
 
 # 📋 SESSION CONTINUITY CHECK
 if [ -f "memory-bank/09-meta/session_continuity_task_management.md" ]; then
