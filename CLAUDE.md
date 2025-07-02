@@ -543,8 +543,8 @@ function ai_coordination_check() {
     ai_to_ai_message "Sender" "target_pane" "MESSAGE_TYPE" "content"
 }
 
-echo "🚨 MANDATORY: memory-bank/02-organization/ai_agent_coordination_mandatory.md"
-echo "📋 Core protocols: AI cognition constraints, verification standards, communication protocols"
+echo "🚨 COMPREHENSIVE GUIDE: memory-bank/02-organization/ai_coordination_comprehensive_guide.md"
+echo "📋 Complete protocols: Basic coordination → Structural solutions → Advanced implementation"
 ```
 
 ### 🏆 Competitive Organization (Advanced Mode)
@@ -599,6 +599,10 @@ mcp__cognee__cognee_add_developer_rules     # Load core knowledge
 # Cognee emergency & optimization  
 mcp__cognee__prune && sleep 5               # Emergency reset
 time mcp__cognee__search "test" CHUNKS      # Performance test
+
+# Enhanced integrated knowledge access (NEW)
+cat memory-bank/02-organization/ai_coordination_comprehensive_guide.md  # Complete AI coordination
+cat memory-bank/04-quality/enhanced_review_process_framework.md         # Complete review process
 ```
 
 **🎯 That's it! You're ready to develop. For detailed procedures, see sections below.**
@@ -619,8 +623,14 @@ time mcp__cognee__search "test" CHUNKS      # Performance test
 **🎯 AI Agent Decision Matrix:**
 - **Routine tasks**: Quick Start → direct execution
 - **Unknown domain**: Quick Start → smart_knowledge_load() → execution  
+- **Multi-agent coordination**: AI Coordination Comprehensive Guide → coordination protocols
+- **Review & Quality**: Enhanced Review Process Framework → quality assurance
 - **Complex/strategic**: Essential Protocols → comprehensive planning
 - **Emergency/troubleshooting**: Reference section → specific protocols
+
+**🆕 Enhanced Navigation (Post-Integration):**
+- **AI Coordination**: `/memory-bank/02-organization/ai_coordination_comprehensive_guide.md` - Complete coordination guide
+- **Quality & Review**: `/memory-bank/04-quality/enhanced_review_process_framework.md` - Complete review process
 
 ---
 
@@ -656,10 +666,11 @@ time mcp__cognee__search "test" CHUNKS      # Performance test
 ```bash
 # Architecture & Quality
 memory-bank/a2a_protocol_implementation_rules.md        # A2A protocol implementation
-memory-bank/critical_review_framework.md                # Critical review framework
+memory-bank/04-quality/enhanced_review_process_framework.md  # Comprehensive review process (NEW)
 memory-bank/accuracy_verification_rules.md              # Documentation accuracy verification
 
-# Advanced Patterns & Tools (For experienced users)
+# AI Coordination & Organization (For multi-agent projects)
+memory-bank/02-organization/ai_coordination_comprehensive_guide.md  # Complete AI coordination guide (NEW)
 memory-bank/tmux_claude_agent_organization_rules.md     # tmux organization rules
 memory-bank/agent_peer_review_protocol.md               # Agent peer review protocol
 ```
