@@ -30,8 +30,6 @@
       "Bash(rmdir:*)",
       "Bash(tree:*)",
       "Bash(sed:*)",
-      "Bash(# Update all file references in README.md and CLAUDE.md\nsed -i 's#docs/a2a_mvp_architecture\\.md#docs/02.basic_design/a2a_mvp_architecture.md#g' README.md CLAUDE.md\nsed -i 's#docs/a2a_mvp_tdd_implementation\\.md#docs/03.detail_design/a2a_mvp_tdd_implementation.md#g' README.md CLAUDE.md\nsed -i 's#docs/note_a2a_introduction_enhanced_v2\\.md#docs/05.articles/note_a2a_introduction_enhanced_v2.md#g' README.md CLAUDE.md\nsed -i 's#docs/note_a2a_implementation_practice_enhanced_v2\\.md#docs/05.articles/note_a2a_implementation_practice_enhanced_v2.md#g' README.md CLAUDE.md)",
-      "Bash(# Fix the references to use correct paths\nsed -i 's#docs/a2a_architecture\\.md#docs/02.basic_design/a2a_architecture.md#g' README.md\nsed -i 's#docs/a2a_tdd_implementation\\.md#docs/03.detail_design/a2a_tdd_implementation.md#g' README.md)",
       "Bash(touch:*)",
       "Bash(curl:*)",
       "Bash(pkill:*)",
@@ -48,51 +46,64 @@
       "Bash(git check-ignore:*)",
       "Bash(claude:*)",
       "Bash(git worktree:*)",
-      "WebFetch(domain:docs.cognee.ai)",
-      "Bash(git clone:*)",
-      "mcp__cognee__cognify_status",
-      "mcp__cognee__cognify",
-      "mcp__cognee__prune",
-      "mcp__cognee__search",
-      "mcp__cognee__codify",
-      "mcp__cognee__codify_status",
-      "mcp__cognee__cognee_add_developer_rules",
-      "WebFetch(domain:zenn.dev)",
-      "Bash(tmux list-panes:*)",
-      "Bash(tmux send-keys:*)",
-      "Bash(tmux capture-pane:*)",
-      "Bash(tmux display-message:*)",
-      "Bash(tmux new-session:*)",
-      "Bash(tmux split-window:*)",
-      "Bash(tmux list-sessions:*)",
-      "Bash(tmux send-keys:*)",
-      "Bash(tmux capture-pane:*)",
-      "Bash(tmux list-panes:*)",
-      "Bash(do tmux send-keys -t $pane '/clear')",
-      "Bash(SKIP_ACCURACY_CHECK=1 git commit -m \"$(cat <<'EOF'\nfeat: implement Task DAG-based constraint system with delegation optimization\n\n- Add Task DAG construction and analysis framework\n- Implement pre-action constraint validation script\n- Create delegation decision framework with automatic scoring\n- Add phased development methodology documentation\n- Update CLAUDE.md with Task DAG integration instructions\n- Add AI constraint system patterns and knowledge classification\n- Update poetry.lock with latest dependencies\n\nThis commit integrates Task DAG-based planning with the existing constraint\nsystem, enabling better task structure, delegation opportunities, and\nparallel execution strategies.\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(cp:*)",
-      "Bash(rm:*)",
-      "Bash(SKIP_ACCURACY_CHECK=1 git commit -m \"$(cat <<'EOF'\nrefactor: consolidate knowledge and implement Task DAG constraint system\n\n## Major Changes\n- **Task DAG Framework**: Add Task DAG construction and delegation optimization\n- **Knowledge Consolidation**: Integrate valuable knowledge into CLAUDE.md\n- **Complexity Reduction**: Remove defunct 13-pane hierarchical organization rules\n\n## Added Features\n- scripts/pre_action_check.py: Integrated constraint validation\n- scripts/task_dag.py: Task DAG construction and analysis\n- Task DAG design patterns and delegation decision framework\n- Phased development methodology documentation\n\n## Knowledge Integration (CLAUDE.md)\n- **tmux Safety**: Add safe_send() function and execution checklists\n- **Fact-based Judgment**: Enhance objective fact verification principles\n- **3-Layer Architecture**: Integrate Task DAG with existing constraint system\n\n## Removed Obsolete Files\n- memory-bank/knowledge_loading_optimization.md (superseded by 3-layer architecture)\n- memory-bank/objective_fact_verification_protocol.md (core principles integrated)\n- memory-bank/enter_key_prevention_critical_rules.md (tmux knowledge integrated)\n- memory-bank/optimized_claude_md_section.md (outdated optimization proposal)\n\n## Impact\n- Reduced accuracy check errors: 43 → 31 (12 resolved)\n- Consolidated scattered knowledge into maintainable structure\n- Eliminated complex rules that caused organizational dysfunction\n- Enhanced development workflow with Task DAG planning\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(echo:*)",
-      "Bash(uv run:*)",
-      "Bash(uv sync:*)",
-      "WebFetch(domain:www.anthropic.com)",
-      "Bash(poetry --version)",
-      "Bash(poetry run mypy:*)",
       "Bash(tmux:*)",
-      "Bash(poetry run:*)",
-      "Bash(mcp__cognee__search:*)",
-      "Bash(docker exec:*)",
-      "Bash(git stash:*)",
-      "Bash(do tmux send-keys -t CC.$pane 'echo \"\"=== BRIEFING: Task Execution Worker ===\"\" && echo \"\"Role: Execute assigned tasks with quality focus\"\" && echo \"\"Task Format: 依頼元:pane-番号 依頼先:pane-番号 タスク種別:組織実行 依頼内容:[content] 報告:[format]\"\" && echo \"\"Mandatory Rules: Test-first development, fact-based execution, report completion\"\" && echo \"\"Ready for task execution\"\"')",
-      "Bash(do tmux send-keys -t CC.$pane 'echo \"\"=== BRIEFING: Task Review Worker ===\"\" && echo \"\"Role: Review and validate task completion\"\" && echo \"\"Task Format: 依頼元:pane-番号 依頼先:pane-番号 タスク種別:組織実行 依頼内容:[content] 報告:[format]\"\" && echo \"\"Mandatory Rules: Quality verification, thorough review, accurate reporting\"\" && echo \"\"Ready for review tasks\"\"')",
-      "Bash(gh pr create:*)",
-      "Bash(gh pr edit:*)",
-      "Bash(mcp__cognee__cognee_add_developer_rules:*)"
-    ],
-    "deny": []
+      "Bash(date:*)",
+      "Bash(stat:*)",
+      "Bash(realpath:*)",
+      "Bash(unset:*)",
+      "Bash(source:*)",
+      "Bash(jq:*)",
+      "Bash(echo:*)",
+      "Bash(cp:*)",
+      "Bash(rm:*)"
+    ]
   },
-  "enabledMcpjsonServers": [
-    "cognee"
-  ]
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Auto review trigger - file-based state check",
+            "command": "/home/devuser/workspace/.claude/hooks/auto_review_trigger_wrapper.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Post-commit merge request - file-based state check",
+            "command": "/home/devuser/workspace/.claude/hooks/post_commit_wrapper.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Auto task report v2 - file-based state management",
+            "command": "/home/devuser/workspace/.claude/hooks/auto_task_report_wrapper.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Pre-commit worktree check - file-based state check",
+            "command": "/home/devuser/workspace/.claude/hooks/pre_commit_worktree_wrapper.sh"
+          }
+        ]
+      }
+    ]
+  }
 }

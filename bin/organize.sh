@@ -3,5 +3,5 @@
 d=$(cd $(dirname $0) && pwd)
 cd $d/../
 
-sh bin/splitter.sh auto_claude
+sh bin/splitter_13.sh auto_claude
 
