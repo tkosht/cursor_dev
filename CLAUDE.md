@@ -566,7 +566,8 @@ tmux --version && git --version
 ./scripts/tmux_session_start.sh issue-123
 
 # 体制: 14役割・4チーム・並列実行・多角評価
-echo "📚 Complete framework: memory-bank/02-organization/competitive_organization_framework.md"
+echo "📚 Implementation Guide: memory-bank/02-organization/competitive_ai_coordination_implementation_guide.md"
+echo "📖 Complete Documentation: docs/05.articles/competitive_ai_coordination_complete_guide.md"
 echo "🔧 Technical setup: memory-bank/02-organization/tmux_git_worktree_technical_specification.md"
 echo "👥 Roles & workflows: memory-bank/02-organization/competitive_roles_workflows_specification.md"
 echo "🏅 Quality evaluation: memory-bank/04-quality/competitive_quality_evaluation_framework.md"
