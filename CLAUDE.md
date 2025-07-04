@@ -60,6 +60,12 @@ function smart_knowledge_load() {
             echo "🎯 Quick Protocol: Team04 5-step success pattern (100% proven)"
             echo "💡 Use: team04_proven_success_protocol 'your_task_description'"
             ;;
+        *hooks*|*hook*|*claude-code*)
+            echo "🔧 CLAUDE CODE HOOKS DETECTED: Loading mandatory constraints"
+            echo "📚 Critical: memory-bank/00-core/claude_code_hooks_constraints_mandatory.md"
+            echo "🚨 CONSTRAINT: All hooks scripts MUST be POSIX sh-compatible"
+            echo "💡 Use: /bin/sh syntax only (no bash-specific features)"
+            ;;
     esac
     
     # Fast local search for domain-specific knowledge
@@ -428,6 +434,7 @@ echo "Loading core constraints..."
 [ -f memory-bank/00-core/user_authorization_mandatory.md ] && echo "✅ User auth rules found"
 [ -f memory-bank/00-core/testing_mandatory.md ] && echo "✅ Testing rules found"
 [ -f memory-bank/00-core/code_quality_anti_hacking.md ] && echo "✅ Quality rules found"
+[ -f memory-bank/00-core/claude_code_hooks_constraints_mandatory.md ] && echo "✅ Claude Code hooks constraints found"
 [ -f memory-bank/09-meta/progress_recording_mandatory_rules.md ] && echo "✅ Progress recording rules found"
 
 # 4. Cognee strategic integration (knowledge management optimization)
