@@ -55,7 +55,12 @@
       "Bash(jq:*)",
       "Bash(echo:*)",
       "Bash(cp:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(./hello)",
+      "Bash(.claude/commands/hello.sh:*)",
+      "Bash(/hello)",
+      "Bash(git pull:*)",
+      "Bash(git rm:*)"
     ]
   },
   "hooks": {
@@ -65,7 +70,6 @@
         "hooks": [
           {
             "type": "command",
-            "comment": "Auto review trigger - file-based state check",
             "command": "/home/devuser/workspace/.claude/hooks/auto_review_trigger_wrapper.sh"
           }
         ]
@@ -75,7 +79,6 @@
         "hooks": [
           {
             "type": "command",
-            "comment": "Post-commit merge request - file-based state check",
             "command": "/home/devuser/workspace/.claude/hooks/post_commit_wrapper.sh"
           }
         ]
@@ -87,7 +90,6 @@
         "hooks": [
           {
             "type": "command",
-            "comment": "Auto task report v2 - file-based state management",
             "command": "/home/devuser/workspace/.claude/hooks/auto_task_report_wrapper.sh"
           }
         ]
@@ -99,7 +101,6 @@
         "hooks": [
           {
             "type": "command",
-            "comment": "Pre-commit worktree check - file-based state check",
             "command": "/home/devuser/workspace/.claude/hooks/pre_commit_worktree_wrapper.sh"
           }
         ]
