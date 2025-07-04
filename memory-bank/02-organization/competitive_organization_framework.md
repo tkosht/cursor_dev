@@ -19,9 +19,10 @@
 
 ### 📋 **関連ファイル**
 - **tmux基盤**: `memory-bank/02-organization/tmux_claude_agent_organization.md`
+- **AI協調**: `memory-bank/02-organization/ai_coordination_comprehensive_guide.md` (統合版)
 - **委譲フレームワーク**: `memory-bank/02-organization/delegation_decision_framework.md`
 - **タスク統合**: `memory-bank/02-organization/task_tool_delegation_integration.md`
-- **品質管理**: `memory-bank/04-quality/critical_review_framework.md`
+- **品質管理**: `memory-bank/04-quality/enhanced_review_process_framework.md` (統合版)
 - **進捗管理**: `memory-bank/09-meta/progress_recording_mandatory_rules.md`
 
 ### ⚡ **クイックアクセス**
