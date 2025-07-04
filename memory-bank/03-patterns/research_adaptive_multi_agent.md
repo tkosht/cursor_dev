@@ -372,7 +372,7 @@ function research_quality_gate_check() {
 **既存14-pane組織の研究特化拡張**:
 
 ```markdown
-# tmux_claude_agent_organization_rules.md への統合内容
+# tmux_claude_agent_organization.md への統合内容
 
 ## Research-Adaptive Extensions
 

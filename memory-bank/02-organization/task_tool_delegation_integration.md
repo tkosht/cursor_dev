@@ -285,7 +285,7 @@ function monitor_tmux_delegation_quality() {
 ### tmux Organization Rules統合ポイント
 
 ```markdown
-# tmux_claude_agent_organization_rules.mdへの追加推奨
+# tmux_claude_agent_organization.mdへの追加推奨
 
 #### Task Tool Integration Protocol
 - Manager pane（pane-1～4）: Task Tool結果の統合・判定

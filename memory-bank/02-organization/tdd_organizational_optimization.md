@@ -857,7 +857,7 @@ def failure_learning_integration(failure_data, organizational_context):
 #### 🔗 直接関連文書
 ```markdown
 **組織運営関連**:
-- `memory-bank/tmux_claude_agent_organization_rules.md`: 正式組織体制ルール
+- `memory-bank/02-organization/tmux_claude_agent_organization.md`: 正式組織体制ルール
 - `memory-bank/organization_failure_analysis_and_solutions.md`: 組織運営失敗分析
 
 **開発手法関連**:
