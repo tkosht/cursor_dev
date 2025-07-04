@@ -62,7 +62,8 @@
       "Bash(git pull:*)",
       "Bash(git rm:*)",
       "WebFetch(domain:docs.anthropic.com)",
-      "Bash(ps:*)"
+      "Bash(ps:*)",
+      "Bash(gh pr create:*)"
     ]
   },
   "hooks": {
