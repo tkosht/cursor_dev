@@ -125,6 +125,13 @@ TOTAL                             91.77%
 
 ## 📖 ドキュメント
 
+### 開発方法論
+- **[チェックリスト駆動実行（CDTE）](memory-bank/11-checklist-driven/README.md)**: TDD拡張による体系的タスク実行管理
+  - **[フレームワーク](memory-bank/11-checklist-driven/checklist_driven_execution_framework.md)**: MUST/SHOULD/COULD条件階層とRed-Green-Refactorサイクル
+  - **[テンプレート集](memory-bank/11-checklist-driven/templates_collection.md)**: 実用的なチェックリストテンプレート
+  - **[実装例](memory-bank/11-checklist-driven/implementation_examples.md)**: リアルワールドでの適用事例
+  - **[検証システム](memory-bank/11-checklist-driven/verification_evaluation_mechanisms.md)**: 品質保証と継続改善
+
 ### 開発ガイド
 - **[CLAUDE.md (and GEMINI.md)](CLAUDE.md)**: AI支援開発のためのプロジェクトガイド
 - **[docs/01.requirements/target_personas.md](docs/01.requirements/target_personas.md)**: ターゲット層（想定読者）の定義

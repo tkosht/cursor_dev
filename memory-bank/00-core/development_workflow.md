@@ -9,6 +9,7 @@
 **開発前に必ず確認すること:**
 - **[cognee_mandatory_utilization_rules.md](../01-cognee/mandatory_utilization_rules.md)** - Cogneeナレッジ必須利活用ルール
 - **[code_quality_anti_hacking.md](code_quality_anti_hacking.md)** - 品質指標への誠実性を保つ絶対ルール
+- **[チェックリスト駆動実行フレームワーク](../11-checklist-driven/README.md)** - 複雑なタスクの体系的実行管理
 
 ## 📋 開発フロー全体像
 

@@ -66,6 +66,13 @@ function smart_knowledge_load() {
             echo "🚨 CONSTRAINT: All hooks scripts MUST be POSIX sh-compatible"
             echo "💡 Use: /bin/sh syntax only (no bash-specific features)"
             ;;
+        *checklist*|*driven*|*execution*|*task*|*completion*)
+            echo "📋 CHECKLIST-DRIVEN EXECUTION DETECTED: Loading systematic execution methodology"
+            echo "📚 Framework: memory-bank/11-checklist-driven/checklist_driven_execution_framework.md"
+            echo "📝 Templates: memory-bank/11-checklist-driven/templates_collection.md"
+            echo "🎯 Quick Start: MUST/SHOULD/COULD condition hierarchy + Red-Green-Refactor cycle"
+            echo "💡 Use: Create verification checklist FIRST, then execute systematically"
+            ;;
     esac
     
     # Fast local search for domain-specific knowledge
@@ -170,7 +177,50 @@ function comprehensive_knowledge_load() {
 # mandatory_knowledge_load "performance" "optimization"
 ```
 
-### 1️⃣ SECURITY ABSOLUTE (セキュリティ絶対)
+### 1️⃣ MANDATORY RULES VERIFICATION (必須ルール検証絶対)
+```bash
+# TASK BOUNDARY RULE VERIFICATION (タスク区切り必須ルール検証)
+TASK_BOUNDARY_MANDATORY_VERIFICATION=(
+    "BEFORE_TASK_START: Display all mandatory rules checklist immediately before task execution"
+    "TASK_INITIATION_ONLY: Mandatory rules verification required at task initiation, not completion"
+    "BETWEEN_TASKS: Complete mandatory rules verification between any task transitions"
+    "NO_SKIP_ALLOWED: Mandatory rules verification cannot be skipped or abbreviated"
+    "VIOLATION_HALT: Any rule violation must halt execution until resolved"
+)
+
+# MANDATORY RULES CHECKLIST DISPLAY (必須ルール群チェックリスト表示)
+function display_mandatory_rules_checklist() {
+    echo "🚨 MANDATORY RULES VERIFICATION CHECKLIST"
+    echo "========================================="
+    echo "□ 1️⃣ SECURITY ABSOLUTE: No secrets/credentials exposure"
+    echo "□ 2️⃣ VALUE ASSESSMENT: 5-point evaluation completed"  
+    echo "□ 3️⃣ CORE PRINCIPLES: Excellence mindset maintained"
+    echo "□ 4️⃣ WORK MANAGEMENT: Feature branch verification"
+    echo "□ 5️⃣ KNOWLEDGE ACCESS: Proper knowledge loading"
+    echo "□ 6️⃣ AI-OPTIMIZED FORMAT: Structured knowledge recording"
+    echo "□ 7️⃣ CHECKLIST-DRIVEN: CDTE framework applied when applicable"
+    echo "□ 8️⃣ TASK COMPLETION: Integrity verification completed"
+    echo "□ 9️⃣ QUALITY GATES: All quality checks passed"
+    echo "□ 🔟 FACT-BASED: No speculation, verified facts only"
+    echo ""
+    echo "📚 MANDATORY REFERENCES:"
+    echo "   • CLAUDE.md sections 1️⃣-6️⃣"
+    echo "   • memory-bank/00-core/*mandatory*.md"
+    echo "   • memory-bank/11-checklist-driven/checklist_driven_execution_framework.md"
+    echo "   • memory-bank/00-core/task_completion_integrity_mandatory.md"
+    echo "   • memory-bank/00-core/development_workflow.md"
+    echo ""
+    read -p "❓ Confirm ALL mandatory rules verified before starting task (y/N): " confirmation
+    if [[ "$confirmation" != "y" && "$confirmation" != "Y" ]]; then
+        echo "❌ MANDATORY RULES VERIFICATION FAILED - TASK EXECUTION HALTED"
+        return 1
+    fi
+    echo "✅ MANDATORY RULES VERIFICATION COMPLETED - READY TO START TASK"
+    return 0
+}
+```
+
+### 2️⃣ SECURITY ABSOLUTE (セキュリティ絶対)
 ```bash
 # AUTO-STOP TRIGGERS
 SECURITY_FORBIDDEN=(
@@ -180,7 +230,7 @@ SECURITY_FORBIDDEN=(
 # Detection = Immediate termination
 ```
 
-### 2️⃣ VALUE ASSESSMENT MANDATORY (価値評価必須)
+### 3️⃣ VALUE ASSESSMENT MANDATORY (価値評価必須)
 ```bash
 # 5-POINT EVALUATION (BEFORE EVERY ACTION)
 BEFORE_ACTION_CHECKLIST=(
@@ -193,7 +243,7 @@ BEFORE_ACTION_CHECKLIST=(
 )
 ```
 
-### 3️⃣ CORE OPERATING PRINCIPLES (基本動作原則)
+### 4️⃣ CORE OPERATING PRINCIPLES (基本動作原則)
 ```bash
 # MINDSET (絶対遵守)
 EXCELLENCE_MINDSET=(
@@ -210,22 +260,24 @@ SPECULATION_BAN="事実ベース判断のみ - Speculation is FAILURE"
 
 # EXECUTION CHECKLIST (実行前必須)
 PRE_EXECUTION_MANDATORY=(
-    "0. Date context initialization: date command (日付コンテキスト確立)"
-    "1. AI COMPLIANCE: Run pre_action_check.py --strict-mode (AI動作ルール遵守確認)"
-    "2. WORK MANAGEMENT: Verify on feature branch (verify_work_management)"
-    "3. KNOWLEDGE LOAD: Execute smart_knowledge_load() for domain context"
-    "4. TDD FOUNDATION: Write tests FIRST (test-driven development mandatory)"
-    "5. FACT VERIFICATION: Apply 3-second fact-check rule (speculation forbidden)"
-    "6. QUALITY GATES: Execute quality gates before ANY commit"
-    "7. ERROR ANALYSIS: Apply complete root-cause investigation for ANY problem"
-    "8. COMPLETION PROTOCOL: Create Pull Request when task complete"
+    "0. MANDATORY RULES VERIFICATION: display_mandatory_rules_checklist() (必須ルール群検証)"
+    "1. Date context initialization: date command (日付コンテキスト確立)"
+    "2. AI COMPLIANCE: Run pre_action_check.py --strict-mode (AI動作ルール遵守確認)"
+    "3. WORK MANAGEMENT: Verify on feature branch (verify_work_management)"
+    "4. KNOWLEDGE LOAD: Execute smart_knowledge_load() for domain context"
+    "5. CHECKLIST-DRIVEN: Apply CDTE framework for complex tasks (memory-bank/11-checklist-driven/)"
+    "6. TDD FOUNDATION: Write tests FIRST (test-driven development mandatory)"
+    "7. FACT VERIFICATION: Apply 3-second fact-check rule (speculation forbidden)"
+    "8. QUALITY GATES: Execute quality gates before ANY commit"
+    "9. ERROR ANALYSIS: Apply complete root-cause investigation for ANY problem"
+    "10. COMPLETION PROTOCOL: Create Pull Request when task complete"
 )
 
 # When in doubt principle
 DOUBT_RESOLUTION="When in doubt → Write a test → Verify with knowledge → Proceed"
 ```
 
-### 4️⃣ WORK MANAGEMENT PROTOCOL (作業管理絶対遵守)
+### 5️⃣ WORK MANAGEMENT PROTOCOL (作業管理絶対遵守)
 ```bash
 # ALL WORK TASKS PROTOCOL (全作業タスク - 例外なし)
 # SCOPE: Code development, documentation, knowledge maintenance, 
@@ -302,7 +354,7 @@ PRE_WORK_VERIFICATION=(
 )
 ```
 
-### 5️⃣ KNOWLEDGE ACCESS PRINCIPLES (知識アクセス根本原則)
+### 6️⃣ KNOWLEDGE ACCESS PRINCIPLES (知識アクセス根本原則)
 ```bash
 # FUNDAMENTAL KNOWLEDGE MANAGEMENT PRINCIPLES (知識管理根本原則)
 KNOWLEDGE_ACCESS_ABSOLUTE=(
@@ -347,7 +399,7 @@ SUFFICIENCY_CRITERIA=(
 )
 ```
 
-### 6️⃣ AI-OPTIMIZED KNOWLEDGE FORMAT (ナレッジ記録最適化)
+### 7️⃣ AI-OPTIMIZED KNOWLEDGE FORMAT (ナレッジ記録最適化)
 ```bash
 # AI-FIRST KNOWLEDGE RECORDING PRINCIPLES
 AI_KNOWLEDGE_FORMAT=(
@@ -462,6 +514,13 @@ echo "⚠️ REMINDER: Smart knowledge loading is DEFAULT for all tasks"
 echo "🔍 Usage: smart_knowledge_load 'domain' 'task_context' (5-15s)"
 echo "📋 Layers: Local→Cognee (fast) = Efficient understanding"
 echo "🎯 Upgrade: Use comprehensive_knowledge_load only on explicit user request"
+
+# 📋 CHECKLIST-DRIVEN EXECUTION FRAMEWORK
+echo "🎯 CHECKLIST-DRIVEN EXECUTION AVAILABLE:"
+echo "📚 Framework: memory-bank/11-checklist-driven/checklist_driven_execution_framework.md"
+echo "📝 Templates: memory-bank/11-checklist-driven/templates_collection.md"
+echo "🛠️ Implementation: memory-bank/11-checklist-driven/implementation_examples.md"
+echo "💡 Use for: Complex tasks, quality assurance, systematic execution"
 
 # 📋 SESSION CONTINUITY CHECK
 if [ -f "memory-bank/09-meta/session_continuity_task_management.md" ]; then
