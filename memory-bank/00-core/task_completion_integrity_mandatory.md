@@ -5,6 +5,7 @@
 ## PRIORITY: MANDATORY
 ## WHEN: 全タスク完了判断時、継続プロセス実行時、完了報告前、タスク開始時
 ## NAVIGATION: CLAUDE.md → PRE_TASK_PROTOCOL → task completion verification → this file
+## RELATED: memory-bank/11-checklist-driven/ - CDTE framework for systematic task execution
 
 ## RULE 1: 継続中・バックグラウンドタスクが完了するまで、メインタスクは「未完了」とする
 ## RULE 2: 完了条件ドリフト現象を防止し、初期完了基準を実行中に維持する

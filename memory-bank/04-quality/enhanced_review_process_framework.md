@@ -6,6 +6,7 @@
 ## PRIORITY: MANDATORY
 ## WHEN: すべてのプロジェクトレビュー実行時、品質ゲート通過判定、統合作業前の必須確認
 ## NAVIGATION: CLAUDE.md → quality gates → enhanced review process → this file
+## RELATED: memory-bank/11-checklist-driven/verification_evaluation_mechanisms.md - CDTE verification systems
 
 ## RULE: すべてのレビューは体系的な批判的分析と100%のフィードバック反映により実施されなければならない
 
