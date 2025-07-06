@@ -7,7 +7,7 @@
 
 - Step0. 組織活動自動開始 & ルール・ナレッジのロード
     - 🤖 AUTOMATIC: 組織活動状態を自動開始 (source /home/devuser/workspace/.claude/hooks/organization_state_manager.sh && start_organization_state team4-$(date +%Y%m%d-%H%M%S) 0)
-    - 🤖 AUTOMATIC: Hooks設定をv2に自動切り替え (cp /home/devuser/workspace/.claude/settings.integrated.v2.json /home/devuser/workspace/.claude/settings.local.json)
+    - 🤖 AUTOMATIC: Hooks設定確認 (現在のsettings.json設定を使用 - 追加設定不要)
     - 今回の指示に関連すうるすべてのルール・ナレッジを読み込む
 - Step1. ブリーフィング
     - tmux 上のペインそれぞれ（すべて）に対して、あなたと同等のコンテキスト(目的やナレッジ、ルール等すべて)を共有するように、内容をまとめてメッセージを送信します

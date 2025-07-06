@@ -190,3 +190,8 @@ dmypy.json
 
 # 開発ツール・外部リポジトリ（永続化のためworkspace内に配置）
 /dev-tools/
+
+# Claude Code runtime state files
+.claude/organization_state.json
+.claude/organization_activity.log
+.claude/settings.local.json.backup
