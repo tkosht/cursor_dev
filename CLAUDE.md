@@ -175,6 +175,7 @@ FORBIDDEN=("probably" "maybe" "I think" "seems like")
 | **Cognee Ops** | Strategic hub | `memory-bank/01-cognee/cognee_strategic_operations_hub.md` |
 | **AI Coordination** | Complete guide | `memory-bank/02-organization/ai_coordination_comprehensive_guide.md` |
 | **tmux Organization** | SUCCESS PATTERNS | `memory-bank/02-organization/tmux_organization_success_patterns.md` |
+| **Competitive Method** | TEAM04 HUB | `memory-bank/02-organization/team04_competitive_methodology_knowledge_hub.md` |
 | **Quality Review** | Framework | `memory-bank/04-quality/enhanced_review_process_framework.md` |
 | **Detailed Impl** | Full guide | `CLAUDE_structured.md` |
 
