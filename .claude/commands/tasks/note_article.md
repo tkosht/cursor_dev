@@ -78,6 +78,56 @@ verify_tmux_competition_mode || {
 }
 ```
 
+## 🚨 AIエージェント向け絶対実行制約
+
+### ❌ 絶対禁止事項
+```bash
+# 以下のツールは note_article では使用禁止
+FORBIDDEN_TOOLS=("Write" "Edit" "MultiEdit" "NotebookEdit")
+
+# 禁止理由: tmux ペインでの作業が技術的強制事項
+# 違反時: 即座に停止・修正が必要
+```
+
+### ✅ 必須実行パターン
+```bash
+# 1. 環境確認・自動セットアップ
+tmux list-sessions | grep team04 || auto_setup_team04
+git worktree list | grep competitive || auto_setup_competitive
+
+# 2. Project Manager としてのブリーフィング実行
+tmux send-keys -t team04:0.0 "cd /home/devuser/workspace/competitive-work"
+tmux send-keys -t team04:0.0 Enter
+tmux send-keys -t team04:0.0 "echo 'PM: note_article タスク開始 - 4役割体制実行'"
+tmux send-keys -t team04:0.0 Enter
+
+# 3. 各ワーカーへのタスク配布（Enter別送信遵守）
+tmux send-keys -t team04:0.1 "cd /home/devuser/workspace/competitive-work"
+tmux send-keys -t team04:0.1 Enter
+tmux send-keys -t team04:0.1 "vim section_A_basics.md"
+tmux send-keys -t team04:0.1 Enter
+
+tmux send-keys -t team04:0.2 "cd /home/devuser/workspace/competitive-work"
+tmux send-keys -t team04:0.2 Enter
+tmux send-keys -t team04:0.2 "vim section_B_examples.md"
+tmux send-keys -t team04:0.2 Enter
+
+tmux send-keys -t team04:0.3 "cd /home/devuser/workspace/competitive-work"
+tmux send-keys -t team04:0.3 Enter
+tmux send-keys -t team04:0.3 "vim section_C_technical.md"
+tmux send-keys -t team04:0.3 Enter
+
+# 4. 各ペインでの実際の記事作成作業
+# Project Manager: 全体調整とレビュー
+# Task Worker 1: 基礎概念部分
+# Task Worker 2: 実践事例部分  
+# Task Worker 3: 技術詳細部分
+
+# 5. 統合と完成
+tmux send-keys -t team04:0.0 "cat section_A_basics.md section_B_examples.md section_C_technical.md > final_note_article.md"
+tmux send-keys -t team04:0.0 Enter
+```
+
 ## 🔒 EXECUTION ENFORCEMENT
 
 **実行条件（技術的検証）：**
@@ -91,8 +141,14 @@ verify_tmux_competition_mode || {
 if [[ $TMUX_COMPETITION_MODE != "ACTIVE" ]]; then
     echo "🚨 CONSTRAINT VIOLATION DETECTED"
     echo "🔧 AUTO-SETUP: tmux組織活動コンペ方式を自動構築中..."
-    source memory-bank/02-organization/tmux_organization_success_patterns.md
-    setup_team04_competition_mode
+    auto_setup_team04_competition_mode
+fi
+
+# 禁止ツール使用検出
+if [[ $TOOL_NAME == "Write" || $TOOL_NAME == "Edit" || $TOOL_NAME == "MultiEdit" ]]; then
+    echo "🚨 VIOLATION DETECTED: $TOOL_NAME は note_article では使用禁止"
+    echo "📋 CORRECTION: tmux ペインでの作業に切り替えてください"
+    exit 1
 fi
 ```
 
@@ -109,6 +165,7 @@ EXECUTION_ORDER=(
     "2. /team04コンペ方式初期化"
     "3. git worktree競争環境準備"
     "4. 4役割体制での並列タスク実行"
+    "5. tmux ペイン内での実際の記事作成"
 )
 ```
 
@@ -140,7 +197,6 @@ $ARGUMENTS
 - [ ] 作業用の worktree を削除します
 </meta-checklist>
 
-
 ## 🚨 MANDATORY EXECUTION MODE
 
 **実行方式（変更不可）：**
@@ -161,6 +217,8 @@ $ARGUMENTS
 - [ ] **ABSOLUTE REQUIREMENT**: Project Manager として/team04 のtmux組織のコンペ方式 及び /worktree 方式で実行（技術的強制）
     - [ ] **TECHNICAL ENFORCEMENT**: 既存tmux を活用したコンペ方式で実施（検証関数による確認）
     - [ ] **AUTO-SETUP**: 環境不備時は自動セットアップ実行後に再開
+    - [ ] **FORBIDDEN TOOLS**: Write/Edit/MultiEdit ツールの使用禁止
+    - [ ] **MANDATORY TMUX WORK**: 全作業を tmux ペイン内で実行
 - [ ] **EFFICIENCY ENHANCEMENT**: cognee MCP ツールを活用して情報収集の効率化を図る
 - [ ] **CHECKLIST COMPLIANCE**: 本制約をチェックリスト化する
 </constraints>
@@ -174,3 +232,15 @@ $ARGUMENTS
 4. ✅ 品質レビューとプルリクエスト発行
 5. ✅ 作業用worktreeの適切な削除
 
+**成功確認：**
+```bash
+# 作業完了の確認
+tmux capture-pane -t team04:0.0 -p | tail -5
+tmux capture-pane -t team04:0.1 -p | tail -5
+tmux capture-pane -t team04:0.2 -p | tail -5
+tmux capture-pane -t team04:0.3 -p | tail -5
+
+# ファイル作成確認
+ls -la competitive-work/section_*.md
+ls -la competitive-work/final_note_article.md
+```
