@@ -70,7 +70,7 @@ EXECUTION_ORDER=(
 
 ## 📋 TASK SPECIFICATION
 
-<theme/> に関する 本リポジトリのナレッジ・ルール・文書を洗い出し、内容を整理して <constraints/> を厳守し note 記事として作成します。
+{TASK_DESCRIPTION}
 
 <theme>
 $ARGUMENTS
@@ -80,22 +80,10 @@ $ARGUMENTS
 - [ ] /team04 組織のコンペ方式 及び /worktree 方式の内容を精緻にかつ正確に確認
 - [ ] Project Manager として `既存のtmux ペインを活用して` /team04 組織のコンペ方式 及び /worktree 方式で以降のタスクを実行するためにブリーフィングを実行
 - [ ] Project Manager として `既存のtmux ペインを活用して` /team04 組織のコンペ方式で以下を実行
-    - [ ] note 記事の書き方について、ナレッジ・ルール・文書を洗い出し内容を精緻かつ正確に整理
-        - [ ] ターゲットが特に指定されていない場合は、ビジネスユーザを対象として、該当テーマについては初学者～中級者の間の層を対象
-        - [ ] どうしても高度な内容を説明する必要がある場合は、ターゲットユーザに配慮した記述とすること
-    - [ ] <theme/> に関連するナレッジ・ルール・文書を洗い出し内容を精緻かつ正確に整理
-    - [ ] <theme/> に関連して、Web 上を精緻に検索し一般的な情報を精緻かつ正確に整理
-    - [ ] チェックリストドリブンで実行するためのチェックリストを精緻に設計し作成
-        - [ ] レビュー観点も洗い出し、レビュー観点についてもチェックリストに含める
-        - [ ] 特に、ターゲットユーザ視点で読みたくなるか、わくわくして続きをどんどん読みたくなる構成になっているか評価してください
-        - [ ] また、本コマンド説明の <constraints/> をチェックリスト化してください
-    - [ ] チェックリストドリブンで実行するためのチェックリストを精緻に設計し作成
-    - [ ] /do_task 方式に従いタスクを実行
-    - [ ] レビュー観点に従いレビューを行い改善サイクルを回す
+{SPECIFIC_TASKS}
 - [ ] レビューを誠実にクリアしたら、コミット、プッシュし、プルリクエストを発行
 - [ ] 作業用の worktree を削除します
 </meta-checklist>
-
 
 ## 🚨 MANDATORY EXECUTION MODE
 
@@ -119,6 +107,7 @@ $ARGUMENTS
     - [ ] **AUTO-SETUP**: 環境不備時は自動セットアップ実行後に再開
 - [ ] **EFFICIENCY ENHANCEMENT**: cognee MCP ツールを活用して情報収集の効率化を図る
 - [ ] **CHECKLIST COMPLIANCE**: 本制約をチェックリスト化する
+{ADDITIONAL_CONSTRAINTS}
 </constraints>
 
 ## 🎯 SUCCESS CRITERIA
@@ -129,4 +118,37 @@ $ARGUMENTS
 3. ✅ git worktree競争環境での成果物作成
 4. ✅ 品質レビューとプルリクエスト発行
 5. ✅ 作業用worktreeの適切な削除
+{ADDITIONAL_SUCCESS_CRITERIA}
 
+## 📝 TEMPLATE VARIABLES
+
+**置換変数：**
+- `{TASK_DESCRIPTION}` = タスクの概要説明
+- `{SPECIFIC_TASKS}` = 具体的なタスク項目（meta-checklist内）
+- `{ADDITIONAL_CONSTRAINTS}` = 追加の制約条件
+- `{ADDITIONAL_SUCCESS_CRITERIA}` = 追加の成功基準
+
+## 🛠️ USAGE GUIDELINES
+
+**テンプレート使用方法：**
+1. **基本構造の維持**: 🚨 MANDATORY PRE-EXECUTION CHECK は必須
+2. **制約の強化**: 技術的検証機能は削除・変更不可
+3. **カスタマイズ**: `{VARIABLE}` を具体的な内容に置換
+4. **品質保証**: SUCCESS CRITERIA は必ず5項目以上設定
+
+**命名規則：**
+- ファイル名: `{command_name}.md`
+- 配置場所: `.claude/commands/tasks/`
+- ブランチ: `feature/slash-command-{command_name}`
+
+## 🔧 QUALITY CHECKLIST
+
+**テンプレート品質確認：**
+- [ ] 🚨 MANDATORY PRE-EXECUTION CHECK の完全性
+- [ ] 🔒 EXECUTION ENFORCEMENT の技術的強制力
+- [ ] ⚡ EXECUTION PRIORITY OVERRIDE の明確性
+- [ ] 📋 TASK SPECIFICATION の具体性
+- [ ] 🚨 MANDATORY EXECUTION MODE の強制力
+- [ ] 🎯 SUCCESS CRITERIA の明確性
+- [ ] 制約の技術的検証可能性
+- [ ] エラーハンドリングの完全性
