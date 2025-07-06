@@ -11,6 +11,11 @@
 
 ```
 ./
+├── .claude/            # Claude Code設定・コマンド
+│   ├── commands/       # カスタムコマンド定義
+│   │   ├── organization/   # 組織・管理コマンド
+│   │   └── tasks/          # タスク実行コマンド
+│   └── hooks/          # Git hook設定
 ├── .cursor/            # Cursor AI 設定
 │   └── rules/          # ルールファイル (*.mdc)
 ├── .devcontainer/      # Dev Container 設定
@@ -52,6 +57,18 @@
 ```
 
 ## 📁 ディレクトリ別ガイドライン
+
+### `/.claude/`
+- **用途**: Claude Code設定・カスタムコマンド定義
+- **ルール**:
+  - `/commands/`: カスタムスラッシュコマンド定義
+    - `/organization/`: 組織・管理系コマンド
+    - `/tasks/`: タスク実行系コマンド
+  - `/hooks/`: Git hook設定とREADME
+  - 実行時状態ファイルは`.gitignore`で除外
+- **注意**: 
+  - 設定ファイルのみVersionControl管理
+  - ランタイム生成ファイル（`*.log`, `*.json`）は除外
 
 ### `/app/`
 - **用途**: プロダクションコード
