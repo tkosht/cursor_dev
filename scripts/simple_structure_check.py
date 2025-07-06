@@ -46,6 +46,8 @@ class SimpleStructureChecker:
                     'docs', 'scripts', 'memory-bank', 'templates', 'docker', 'bin',
                     # 作業結果・生成物ディレクトリ
                     'output',
+                    # Claude Code設定ディレクトリ
+                    '.claude',
                     # 自動生成ディレクトリ
                     'node_modules', 'htmlcov', '.git', '.venv', '__pycache__', 
                     '.pytest_cache', '.mypy_cache', '.specstory'
