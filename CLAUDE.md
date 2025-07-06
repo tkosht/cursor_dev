@@ -47,6 +47,7 @@ function display_mandatory_rules_checklist() {
     echo "📚 MANDATORY REFERENCES:"
     echo "   • memory-bank/00-core/*mandatory*.md"
     echo "   • memory-bank/11-checklist-driven/checklist_driven_execution_framework.md"
+    echo "   • memory-bank/02-organization/tmux_organization_success_patterns.md (for tmux activities)"
     echo ""
     read -p "❓ Confirm ALL mandatory rules verified before starting task (y/N): " confirmation
     [[ "$confirmation" != "y" && "$confirmation" != "Y" ]] && return 1
@@ -89,7 +90,8 @@ PRE_EXECUTION_MANDATORY=(
     "2. AI COMPLIANCE: Run pre_action_check.py --strict-mode"
     "3. WORK MANAGEMENT: Verify on feature branch (verify_work_management)"
     "4. KNOWLEDGE LOAD: Execute smart_knowledge_load() for domain context"
-    "5. QUALITY GATES: Execute before ANY commit"
+    "5. TMUX PROTOCOLS: For tmux activities, ensure Enter別送信 compliance"
+    "6. QUALITY GATES: Execute before ANY commit"
 )
 ```
 
@@ -172,6 +174,7 @@ FORBIDDEN=("probably" "maybe" "I think" "seems like")
 | **Commands** | Essential reference | `memory-bank/09-meta/essential_commands_reference.md` |
 | **Cognee Ops** | Strategic hub | `memory-bank/01-cognee/cognee_strategic_operations_hub.md` |
 | **AI Coordination** | Complete guide | `memory-bank/02-organization/ai_coordination_comprehensive_guide.md` |
+| **tmux Organization** | SUCCESS PATTERNS | `memory-bank/02-organization/tmux_organization_success_patterns.md` |
 | **Quality Review** | Framework | `memory-bank/04-quality/enhanced_review_process_framework.md` |
 | **Detailed Impl** | Full guide | `CLAUDE_structured.md` |
 
@@ -182,10 +185,11 @@ FORBIDDEN=("probably" "maybe" "I think" "seems like")
 1. ✓ AI COMPLIANCE: python scripts/pre_action_check.py --strict-mode
 2. ✓ WORK MANAGEMENT: Verify on task branch (not main/master)
 3. ✓ KNOWLEDGE LOAD: smart_knowledge_load "domain"
-4. ✓ TDD FOUNDATION: Write test FIRST
-5. ✓ FACT VERIFICATION: No speculation allowed
-6. ✓ QUALITY GATES: Before commit
-7. ✓ COMPLETION: Create Pull Request when done
+4. ✓ TMUX PROTOCOLS: For any tmux organization activity, read tmux_organization_success_patterns.md
+5. ✓ TDD FOUNDATION: Write test FIRST
+6. ✓ FACT VERIFICATION: No speculation allowed
+7. ✓ QUALITY GATES: Before commit
+8. ✓ COMPLETION: Create Pull Request when done
 ```
 
 **Key Principle**: 事実ベース判断 - No speculation, only verified facts.
