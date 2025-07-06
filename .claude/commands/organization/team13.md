@@ -31,13 +31,13 @@ ENFORCEMENT="実行前に必ず既存ペイン確認を実施すること"
 
 
 - Step0. ルール・ナレッジのロード
-    - 今回の指示に関連すうるすべてのルール・ナレッジを読み込む
+    - **メタプロンプト**: 「タスクに関連する必須ルール、ナレッジ、制約事項を検索し、理解してから作業を開始すること。特にmandatory、required、必須、絶対などのキーワードを含むルールは例外なく遵守」
     - **🚨 MANDATORY**: 既存tmuxペイン確認を必須実行 `tmux list-panes -a`
     - **🚨 MANDATORY**: 利用可能リソースの事前確認と計画策定
 - Step1. ブリーフィング
     - tmux 上のペインそれぞれ（すべて）に対して、あなたと同等のコンテキスト(目的やナレッジ、ルール等すべて)を共有するように、内容をまとめてメッセージを送信します
         - 今回のタスク概要、指示系統、各自のロール、<タスク指示書のフォーマット/>、タスク完了後はtmux メッセージにて報告義務があること
-        - 必須ルールとtmux メッセージ送信の仕方・注意事項(Enterの別送信)の具体的手順、tmux組織に関するルール、本タスクにかかわるルール、マインドセットを各自がを読み込むこと
+        - **メタ指示**: 「必須ルール、tmuxメッセージプロトコル（Enter別送信含む）、組織運営パターン、タスク関連ルール、マインドセットについて、関連ドキュメントを自律的に検索・学習して実行すること」
         - この文書の内容も伝えること
     - この時、指示系統に従ってClaude Agent 間でメッセージをやり取りさせること
         - Project Manager -> PMO/Consultant, 各Manager -> 各指示系統に即したWorker
@@ -75,11 +75,66 @@ echo "⚠️ Utilize existing panes before creating new ones"
 - Task Worker が同時に作業する際には、git worktree を使って作業し、最後にマージするように各Manager が完全に制御すること
 
 **4️⃣ DIRECTORY STRUCTURE COMPLIANCE (ディレクトリ構造遵守)**
-- ディレクトリ構造のルールを厳守すること。つまり、勝手にその辺に .md ファイルを作成したり、新規ディレクトリを作成してはいけない
+
+**🚨 DIRECTORY STRUCTURE PRINCIPLES (基本原則)**
+- 既存のディレクトリ構造を必ず確認してから作業
+- 新規ディレクトリの無断作成は禁止
+- ファイルは既存の適切なディレクトリに配置
+- 構造変更にはユーザー承認が必須
+
+**📋 FILE CREATION PROTOCOL (ファイル作成プロトコル)**
+```bash
+# Step 1: 既存構造の確認
+ls -la docs/
+ls -la memory-bank/
+
+# Step 2: 類似ファイルの配置場所を参考に
+find . -name "*.md" -type f | grep -E "(article|guide|note)"
+
+# Step 3: 適切な既存ディレクトリに配置
+# 例: 記事なら既存の記事が置かれている場所
+```
+
+**🔍 VIOLATION PREVENTION (違反防止策)**
+- [ ] `ls`コマンドで既存ディレクトリ構造を確認
+- [ ] 類似ファイルの配置場所を`find`で調査
+- [ ] 新規ディレクトリは作成せず既存ディレクトリを使用
+- [ ] ルートディレクトリへの直接配置は禁止
+- [ ] 不明な場合はユーザーに配置場所を確認
+
+**⚠️ META-PROMPT (メタプロンプト)**
+AI Agentへの指示：
+「プロジェクトのディレクトリ構造ルールと承認要件を必ず確認してから作業を開始すること。ルールは通常、references、core、mandatoryなどのキーワードを含むドキュメントに記載されている」
 
 **5️⃣ COMMUNICATION PROTOCOL (通信プロトコル)**
 - Enter の別メッセージでの送信忘れ禁止
 - tmux メッセージとEnterキーの分離送信必須
+
+**🚨 ENTER送信忘れ防止策 (MANDATORY)**
+
+**📋 必須実行パターン - 全てのtmuxメッセージで例外なく実行**
+```
+1. tmux send-keys -t [pane] "[message]"
+2. tmux send-keys -t [pane] Enter  ← 必須！別コマンドで実行
+3. sleep 3 (送信確認待機)
+```
+
+**⚠️ 絶対禁止パターン**
+```bash
+❌ FORBIDDEN: 
+tmux send-keys -t 0:0.1 "message" Enter  # 同時送信は禁止
+
+✅ MANDATORY:
+tmux send-keys -t 0:0.1 "message"
+tmux send-keys -t 0:0.1 Enter            # 別コマンドで送信
+```
+
+**🔍 ENTER送信忘れ検出方法**
+AI Agentは以下をチェック：
+- Bashツール使用時、tmux send-keysが2回実行されているか？
+- 1回目：メッセージ送信
+- 2回目：Enter送信（必須）
+- 2回目が欠けている場合は送信失敗とみなす
 
 
 <タスク>
