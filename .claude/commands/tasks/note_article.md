@@ -1,5 +1,69 @@
 # Command Definition
 
+## 🔒 MANDATORY BLOCKING SYSTEM (必須ブロッキングシステム)
+
+**⚠️ CRITICAL: 以下の関数を最初に実行しない限り、後続処理は一切実行禁止**
+
+```bash
+# 🚨 BLOCKING EXECUTION: Worktree競争的開発の強制実行
+MANDATORY_WORKTREE_EXECUTION() {
+    echo "🔒 BLOCKING SYSTEM: Worktree competitive development MUST be executed"
+    
+    # 環境チェック
+    command -v git >/dev/null || { echo "❌ BLOCKING: git not available"; return 1; }
+    git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "❌ BLOCKING: not in git repo"; return 1; }
+    
+    # 強制実行: worktree競争的開発
+    echo "🏁 MANDATORY EXECUTION: Creating competitive development environment"
+    
+    APPROACHES=("structure_first" "content_first" "examples_first")
+    SUCCESS_COUNT=0
+    
+    for approach in "${APPROACHES[@]}"; do
+        worktree_path="/tmp/note_${approach}_$(date +%Y%m%d_%H%M%S)"
+        branch_name="note_${approach}_$(date +%Y%m%d_%H%M%S)"
+        
+        if git worktree add "$worktree_path" -b "$branch_name" 2>/dev/null; then
+            echo "✅ MANDATORY SATISFIED: $approach worktree created at $worktree_path"
+            echo "$approach:$worktree_path" >> /tmp/worktree_evidence.txt
+            ((SUCCESS_COUNT++))
+        else
+            echo "❌ MANDATORY FAILED: $approach worktree creation failed"
+        fi
+    done
+    
+    # 成功判定
+    if [[ $SUCCESS_COUNT -eq 3 ]]; then
+        export WORKTREE_MANDATORY_COMPLETED="TRUE"
+        echo "🎯 MANDATORY REQUIREMENT SATISFIED: All 3 worktrees created successfully"
+        echo "WORKTREE_EXECUTION_TIMESTAMP: $(date)" >> /tmp/worktree_evidence.txt
+        return 0
+    else
+        echo "❌ MANDATORY FAILED: Only $SUCCESS_COUNT/3 worktrees created"
+        echo "🛑 CANNOT PROCEED: Fix worktree issues before continuing"
+        return 1
+    fi
+}
+
+# 🚨 ENFORCEMENT: 実行確認チェック
+VERIFY_MANDATORY_EXECUTION() {
+    if [[ "${WORKTREE_MANDATORY_COMPLETED:-FALSE}" != "TRUE" ]]; then
+        echo "🛑 EXECUTION BLOCKED: MANDATORY_WORKTREE_EXECUTION() not completed"
+        echo "📋 REQUIRED ACTION: Run MANDATORY_WORKTREE_EXECUTION() first"
+        return 1
+    fi
+    
+    if [[ ! -f /tmp/worktree_evidence.txt ]]; then
+        echo "🛑 EXECUTION BLOCKED: No evidence of worktree execution"
+        return 1
+    fi
+    
+    echo "✅ MANDATORY VERIFICATION PASSED: Worktree execution confirmed"
+}
+```
+
+---
+
 ## 🚨 MANDATORY PRE-EXECUTION CHECK (実行前必須検証)
 
 **⚠️ Note Article Creation Rules: 以下は絶対遵守**
@@ -53,7 +117,14 @@ CHECKLIST_EOF
 
 あなたは、Note Article Creator です。
 
-### 実行プロセス
+### 🚨 MANDATORY実行プロセス (絶対実行)
+
+- **Step -1. BLOCKING SYSTEM**:
+  - **🚨 MANDATORY**: `MANDATORY_WORKTREE_EXECUTION()` 実行・成功確認
+  - **🚨 MANDATORY**: `VERIFY_MANDATORY_EXECUTION()` 検証合格
+  - **🚨 MANDATORY**: worktree競争的開発環境作成完了
+
+### 🔒 EXECUTION GATE: 上記Step -1が100%完了するまで次段階進行禁止
 
 - **Step0. 品質保証体制構築**
   - **🚨 MANDATORY**: チェックリストテンプレート確認・作成
@@ -185,6 +256,7 @@ worktree を使ったコンペ方式、及び、各AI Agent によるチェッ�
 
 ### 📋 実行チェックリスト
 
+- [ ] **Step -1**: MANDATORY実行（worktree競争的開発環境作成・検証）
 - [ ] **Step0**: 品質保証体制構築（チェックリスト・検証スクリプト準備）
 - [ ] **Step1**: CDTE実行（要件分類・成功基準設定・合意確認）
 - [ ] **Step2**: 競争的品質開発（複数アプローチ・評価・選定）
@@ -242,3 +314,40 @@ note記事の書き方もナレッジに記録があるはずなので、必ず�
 2. **自動検証**: 事実ベース・技術精度の自動確認
 3. **効率化**: チェックリストドリブンによる作業効率向上
 4. **再現性**: 同品質の記事を安定的に量産可能
+
+---
+
+## 🎯 FINAL BLOCKING VERIFICATION (最終必須検証)
+
+**⚠️ CRITICAL: タスク完了報告前に以下の検証が必須**
+
+```bash
+# 完了前必須確認
+FINAL_BLOCKING_CHECK() {
+    echo "🎯 FINAL BLOCKING VERIFICATION: Task completion check"
+    
+    # 必須実行証跡確認
+    if [[ "${WORKTREE_MANDATORY_COMPLETED:-FALSE}" != "TRUE" ]]; then
+        echo "❌ BLOCKING: Worktree execution not completed"
+        return 1
+    fi
+    
+    if [[ ! -f /tmp/worktree_evidence.txt ]]; then
+        echo "❌ BLOCKING: No worktree execution evidence"
+        return 1
+    fi
+    
+    local worktree_count=$(grep -c ":" /tmp/worktree_evidence.txt 2>/dev/null || echo 0)
+    if [[ $worktree_count -lt 3 ]]; then
+        echo "❌ BLOCKING: Insufficient worktree evidence ($worktree_count/3)"
+        return 1
+    fi
+    
+    echo "✅ FINAL VERIFICATION PASSED: All mandatory requirements satisfied"
+    echo "📋 WORKTREE EXECUTION EVIDENCE:"
+    cat /tmp/worktree_evidence.txt
+}
+```
+
+### 🚨 COMPLETION RULE: 
+**タスク完了報告前に`FINAL_BLOCKING_CHECK()`の成功実行が必須**
