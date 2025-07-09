@@ -6,7 +6,7 @@
 
 
 - [ ] Step0. 開始準備：組織活動自動開始 & ルール・ナレッジのロード & ブランチ切り替え
-    - [ ] 🤖 AUTOMATIC: 組織活動状態を自動開始 (source ./.claude/hooks/organization_state_manager.sh && start_organization_state team4-$(date +%Y%m%d-%H%M%S) 0)
+    - [ ] 🤖 AUTOMATIC: 組織活動状態を自動開始 (source ./.claude/hooks/organization_state_manager.sh && start_organization_state team05-$(date +%Y%m%d-%H%M%S) 0)
     - [ ] 🤖 AUTOMATIC: Hooks設定確認 (現在の ./.claude/settings.json設定を使用 - 追加設定不要)
     - [ ] 今回の指示に関連すうるすべてのルール・ナレッジを読み込む
     - [ ] 今回の組織タスクを実行しプルリクエストを発行できるように main ブランチから新規にブランチを作成し切り替える
