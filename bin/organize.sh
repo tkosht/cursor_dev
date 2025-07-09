@@ -3,5 +3,9 @@
 d=$(cd $(dirname $0) && pwd)
 cd $d/../
 
-sh bin/splitter_13.sh auto_claude
+if [ "$1" = "large" ]; then
+    sh bin/splitter_13.sh auto_claude
+else
+    sh bin/splitter.sh auto_claude
+fi
 
