@@ -40,11 +40,12 @@
 
 
 <重要事項>
-- Task Review Manager への指示は、Task Execution Team のタスク実行のすべてが完了してから伝達すること
-- Task Knowledge/Rule Manager への指示は、Task Execution Team 及び Task Review Team の両チームのタスク実行のすべてが完了してから伝達すること
-- Task Worker が同時に作業する際には、git worktree を使って作業し、最後にマージするように各Manager が完全に制御すること
-- ディレクトリ構造のルールを厳守すること。つまり、勝手にその辺に .md ファイルを作成したり、新規ディレクトリを作成してはいけない
-- Enter の別メッセージでの送信遵守
+- [ ] Task Review Manager への指示は、Task Execution Team のタスク実行のすべてが完了してから伝達すること
+- [ ] Task Knowledge/Rule Manager への指示は、Task Execution Team 及び Task Review Team の両チームのタスク実行のすべてが完了してから伝達すること
+- [ ] Task Worker が同時に作業する際には、git worktree を使って作業し、最後にマージするように各Manager が完全に制御すること
+- [ ] ディレクトリ構造のルールを厳守すること。つまり、勝手にその辺に .md ファイルを作成したり、新規ディレクトリを作成してはいけない
+- [ ] Cognee MCP が使える場合は、Cognee 検索を活用し効率的に検索必須 / 全ペインで遵守
+- [ ] Enter の別メッセージでの送信遵守
 </重要事項>
 
 
