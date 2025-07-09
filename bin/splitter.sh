@@ -4,8 +4,7 @@ d=$(cd $(dirname $0) && pwd)
 cd $d/../
 
 # 縦の数
-n=3
-
+n=4
 
 # 縦に分割
 for _ in $(seq 1 $n)
@@ -22,15 +21,16 @@ tmux select-pane -t 0
 tmux set -g pane-border-status top
 tmux set -g pane-border-format "#{pane_index}: #{pane_title}"
 
-tmux select-pane -t "0" -T "Project Manager/Task Manager"
+tmux select-pane -t "0" -T "Project/Task Manager"
 tmux select-pane -t "1" -T "Task Worker"
 tmux select-pane -t "2" -T "Task Worker"
 tmux select-pane -t "3" -T "Task Worker"
+tmux select-pane -t "4" -T "Task Worker"
 tmux send-keys -t 0 'clear' Enter
 
 # Window名を変更
-tmux rename-session "CLI PJ"
-tmux rename-window "AI Agents Team"
+tmux rename-session "AI PJ"
+tmux rename-window "AI Agent Team"
 
 
 # 引数からコマンド設定
