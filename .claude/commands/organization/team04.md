@@ -6,8 +6,8 @@
 
 
 - [ ] Step0. 組織活動自動開始 & ルール・ナレッジのロード
-    - 🤖 AUTOMATIC: 組織活動状態を自動開始 (source /home/devuser/workspace/.claude/hooks/organization_state_manager.sh && start_organization_state team4-$(date +%Y%m%d-%H%M%S) 0)
-    - 🤖 AUTOMATIC: Hooks設定確認 (現在のsettings.json設定を使用 - 追加設定不要)
+    - 🤖 AUTOMATIC: 組織活動状態を自動開始 (source ./.claude/hooks/organization_state_manager.sh && start_organization_state team4-$(date +%Y%m%d-%H%M%S) 0)
+    - 🤖 AUTOMATIC: Hooks設定確認 (現在の ./.claude/settings.json設定を使用 - 追加設定不要)
     - 今回の指示に関連すうるすべてのルール・ナレッジを読み込む
 - [ ] Step1. ブリーフィング
     - tmux 上のペインそれぞれ（すべて）に対して、あなたと同等のコンテキスト(目的やナレッジ、ルール等すべて)を共有するように、内容をまとめてメッセージを送信します
@@ -43,9 +43,10 @@
 - [ ] Task Review Manager への指示は、Task Execution Team のタスク実行のすべてが完了してから伝達すること
 - [ ] Task Knowledge/Rule Manager への指示は、Task Execution Team 及び Task Review Team の両チームのタスク実行のすべてが完了してから伝達すること
 - [ ] Task Worker が同時に作業する際には、git worktree を使って作業し、最後にマージするように各Manager が完全に制御すること
-- [ ] ディレクトリ構造のルールを厳守すること。つまり、勝手にその辺に .md ファイルを作成したり、新規ディレクトリを作成してはいけない
+- [ ] ディレクトリ構造のルールを厳守すること。つまり、勝手にその辺に .md ファイルを作成したり、新規ディレクトリを作成してはいけない。既存ディレクトリ構成に完全準拠
 - [ ] Cognee MCP が使える場合は、Cognee 検索を活用し効率的に検索必須 / 全ペインで遵守
 - [ ] Enter の別メッセージでの送信遵守
+- [ ] 上記、Stepをすべて適切に実施するまでは、ユーザにプロンプトを返すことなく完遂遵守
 </重要事項>
 
 
