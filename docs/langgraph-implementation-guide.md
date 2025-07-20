@@ -427,7 +427,7 @@ team_requirements = {
     },
     "report_writer": {
         "tools": [document_formatter, chart_generator],
-        "model": "gpt-3.5-turbo"
+        "model": "gpt-4.1-mini"
     }
 }
 
