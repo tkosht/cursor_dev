@@ -1,4 +1,4 @@
-# LangGraph使用戦略 - 動的ペルソナ生成システム
+# Article Market Simulator - LangGraph使用戦略
 
 ## 1. 概要
 

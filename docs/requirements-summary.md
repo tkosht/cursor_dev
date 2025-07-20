@@ -152,7 +152,7 @@
 
 ## 関連ドキュメント
 
-1. [要件定義書](./multi-agent-review-system-requirements.md)
+1. [要件定義書](./article-market-simulator-requirements.md)
 2. [LangGraphエージェント間通信設計](./langgraph-agent-communication-design.md)
 3. [MVP詳細仕様](./mvp-detailed-specifications.md)
 4. [開発プロセス定義](./checklist-and-test-driven-development-process.md)
