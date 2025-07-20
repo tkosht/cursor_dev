@@ -3,52 +3,58 @@
 ## 1. システム概要
 
 ### 1.1 目的
-記事に対する市場の反応を、動的に生成された仮想ペルソナ群による集団行動シミュレーションを通じて予測・評価するシステム。各ペルソナは実在の人間のように振る舞い、記事の評価、共有、拡散といった一連の行動をシミュレートする。
+記事に対する市場の反応を、**記事内容に完全に適応して動的生成される**仮想ペルソナ群による集団行動シミュレーションを通じて予測・評価するシステム。
+
+#### 動的生成の核心
+- **記事ごとに異なるペルソナ群**: 健康記事なら医療従事者や健康志向の主婦、テック記事ならエンジニアやスタートアップ関係者など、記事内容に応じて全く異なるペルソナ群をLLMが自動生成
+- **固定的な役割からの脱却**: 「技術専門家」「ビジネスユーザー」といった固定カテゴリーではなく、記事のトピック、複雑さ、文体から導き出される実在感のある個人を生成
+- **LLMによる創造的生成**: オーケストレーターがLLMに対して「この記事を読む可能性のある多様な人物像」を生成させ、現実的な属性と行動パターンを付与
 
 ### 1.2 コンセプトの変更点
-- **v1**: 役割ベース（技術専門家、ビジネスユーザー等）の静的評価
-- **v2**: 個人ベース（具体的な属性を持つ仮想人物）の動的シミュレーション
+- **v1**: 役割ベース（技術専門家、ビジネスユーザー等）の**固定的**評価
+- **v2**: 個人ベース（記事に応じて動的生成される仮想人物）の**適応的**シミュレーション
 
 ### 1.3 システムアーキテクチャ
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                Market Response Simulation System                  │
+│          Dynamic Market Response Simulation System               │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                   │
-│  【Phase 1: ペルソナ生成】                                       │
+│  【Phase 1: 動的ペルソナ生成】                                   │
 │  ┌─────────────────┐      ┌──────────────────────────┐        │
 │  │  Article Input   │ ───> │  Target Audience Analyzer │        │
-│  └─────────────────┘      └──────────┬───────────────┘        │
+│  └─────────────────┘      │    (LLM-based Analysis)   │        │
+│                            └──────────┬───────────────┘          │
 │                                       ↓                          │
 │                        ┌──────────────────────────────┐         │
-│                        │  Hierarchical Persona Design  │         │
-│                        │         System                │         │
+│                        │   Dynamic Persona Design      │         │
+│                        │      Orchestrator             │         │
 │                        ├──────────────────────────────┤         │
-│                        │ • Market Segmentation Agent  │         │
-│                        │ • Demographics Designer      │         │
-│                        │ • Psychographics Designer    │         │
-│                        │ • Behavior Pattern Designer  │         │
-│                        │ • Social Network Designer    │         │
+│                        │ • 記事内容に基づく動的設計    │         │
+│                        │ • LLMによる属性生成          │         │
+│                        │ • 多様性と現実性の確保       │         │
+│                        │ • ネットワーク関係の構築     │         │
 │                        └──────────┬───────────────────┘         │
 │                                   ↓                              │
 │                        ┌──────────────────────────────┐         │
-│                        │    Persona Population        │         │
-│                        │      (20-50 personas)        │         │
+│                        │  Adaptive Persona Population   │         │
+│                        │   (記事に最適化された20-50人)  │         │
 │                        └──────────┬───────────────────┘         │
 │                                   ↓                              │
 │  【Phase 2: 集団行動シミュレーション】                           │
 │  ┌─────────────────────────────────────────────────────┐       │
-│  │               Social Behavior Simulation              │       │
+│  │          Dynamic Social Behavior Simulation          │       │
 │  ├─────────────────────────────────────────────────────┤       │
-│  │  T=0: Initial Reading & Reaction                     │       │
-│  │  T=1: Sharing Decision & Action                      │       │
-│  │  T=2: Network Effect & Propagation                   │       │
-│  │  T=n: Long-term Impact & Saturation                  │       │
+│  │  T=0: 個別の初期反応（記事内容に応じた評価）        │       │
+│  │  T=1: 共有判断（ペルソナ特性に基づく意思決定）     │       │
+│  │  T=2: ネットワーク伝播（動的な影響関係）           │       │
+│  │  T=n: 長期的影響（収束または拡散）                 │       │
 │  └──────────┬──────────────────────────────────────────┘       │
 │             ↓                                                    │
 │  【Phase 3: 分析・レポート生成】                                 │
 │  ┌─────────────────────────────────────────────────────┐       │
-│  │          Market Response Analysis & Report           │       │
+│  │     Contextualized Market Response Analysis          │       │
+│  │        (記事特性を反映した市場予測)                  │       │
 │  └─────────────────────────────────────────────────────┘       │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -60,170 +66,215 @@
 #### 2.1.1 ターゲットオーディエンス分析エージェント
 ```python
 class TargetAudienceAnalyzer:
-    """記事の内容から想定読者層を分析"""
+    """記事の内容から想定読者層を動的に分析"""
     
-    def analyze(self, article: str) -> Dict:
+    async def analyze(self, article: str) -> Dict:
         """
-        Returns:
-        {
-            "primary_segments": ["tech_professionals", "startup_founders"],
-            "secondary_segments": ["students", "researchers"],
-            "content_complexity": "intermediate",
-            "domain": "AI/ML",
-            "tone": "technical_but_accessible",
-            "estimated_audience_size": "50K-100K"
-        }
+        LLMを使用して記事の内容を分析し、
+        適切なターゲットオーディエンスを特定
         """
+        prompt = f"""
+        以下の記事を分析し、想定される読者層を特定してください:
+        
+        {article[:1000]}...
+        
+        以下の観点で分析してください：
+        1. 記事のトピックとドメイン
+        2. 内容の複雑さと前提知識
+        3. 文体とトーン
+        4. 想定される読者の興味・関心
+        5. 読者層の規模と特徴
+        """
+        
+        # LLMが記事内容に基づいて動的に読者層を分析
+        audience_analysis = await self.llm.ainvoke(prompt)
+        return self.parse_audience_analysis(audience_analysis)
 ```
 
-#### 2.1.2 市場セグメンテーションエージェント
+#### 2.1.2 動的ペルソナ設計オーケストレーター
 ```python
-class MarketSegmentationAgent:
-    """市場を適切なセグメントに分割"""
+class PersonaDesignOrchestrator:
+    """記事に適したペルソナ群を動的に設計・生成"""
     
-    segments = {
-        "tech_professionals": {
-            "size_ratio": 0.3,
-            "subtypes": ["frontend_dev", "backend_dev", "data_scientist", "devops"],
-            "age_range": (22, 45),
-            "education": ["bachelor", "master", "phd"]
-        },
-        "business_leaders": {
-            "size_ratio": 0.2,
-            "subtypes": ["startup_founder", "product_manager", "executive"],
-            "age_range": (28, 55),
-            "focus": ["roi", "innovation", "competitive_advantage"]
-        }
-        # ... 他のセグメント
-    }
+    async def design_persona_population(
+        self, 
+        article: str,
+        target_audience_analysis: Dict
+    ) -> List[Dict]:
+        """
+        記事とターゲット分析に基づいて、
+        適切なペルソナ群の設計を動的に生成
+        """
+        prompt = f"""
+        記事のターゲット分析結果:
+        {json.dumps(target_audience_analysis, ensure_ascii=False)}
+        
+        この記事に対する市場反応をシミュレートするため、
+        20-30名の多様なペルソナ群を設計してください。
+        
+        各ペルソナには以下の属性を含めてください：
+        - 基本属性（年齢、性別、職業、居住地など）
+        - 心理的特性（価値観、興味、ライフスタイルなど）
+        - 行動パターン（メディア利用、情報共有習慣など）
+        - 社会的ネットワーク（影響力、つながりの強さなど）
+        
+        記事の内容に応じて、適切な分布と多様性を持つ
+        ペルソナ群を生成してください。
+        """
+        
+        # LLMが記事に適したペルソナ群を動的に設計
+        persona_designs = await self.llm.ainvoke(prompt)
+        return self.parse_persona_designs(persona_designs)
 ```
 
-#### 2.1.3 ペルソナ属性設計エージェント
+#### 2.1.3 動的ペルソナ属性生成システム
 
-##### デモグラフィック設計
 ```python
-class DemographicsDesigner:
-    """人口統計学的属性を設計"""
+class DynamicPersonaAttributeGenerator:
+    """LLMによる動的なペルソナ属性生成"""
     
-    attributes = {
-        "name": str,           # 例: "田中太郎"
-        "age": int,            # 例: 32
-        "gender": str,         # 例: "male"
-        "location": str,       # 例: "東京都渋谷区"
-        "occupation": str,     # 例: "ソフトウェアエンジニア"
-        "company_type": str,   # 例: "スタートアップ"
-        "income_level": str,   # 例: "600-800万円"
-        "education": str,      # 例: "情報工学修士"
-        "family_status": str   # 例: "既婚・子供1人"
-    }
-```
-
-##### サイコグラフィック設計
-```python
-class PsychographicsDesigner:
-    """心理的・価値観的属性を設計"""
-    
-    attributes = {
-        "personality_type": str,     # 例: "INTJ"
-        "values": List[str],         # 例: ["効率性", "革新", "学習"]
-        "interests": List[str],      # 例: ["AI", "起業", "投資"]
-        "lifestyle": str,            # 例: "ワークライフバランス重視"
-        "tech_adoption": str,        # 例: "early_adopter"
-        "risk_tolerance": float,     # 例: 0.7 (0-1)
-        "influence_susceptibility": float,  # 例: 0.4 (0-1)
-        "opinion_leader": bool       # 例: True
-    }
-```
-
-##### 行動特性設計
-```python
-class BehaviorPatternDesigner:
-    """行動パターンと習慣を設計"""
-    
-    attributes = {
-        "reading_habits": {
-            "preferred_length": "medium",  # short/medium/long
-            "reading_time": ["morning_commute", "lunch_break"],
-            "devices": ["smartphone", "laptop"],
-            "attention_span": 15  # minutes
-        },
-        "sharing_behavior": {
-            "platforms": ["twitter", "linkedin", "slack"],
-            "frequency": "moderate",  # rare/moderate/frequent
-            "motivation": ["help_others", "show_expertise"],
-            "follower_count": {
-                "twitter": 850,
-                "linkedin": 1200
-            }
-        },
-        "content_preferences": {
-            "topics": ["AI", "productivity", "career"],
-            "formats": ["how-to", "case_study", "analysis"],
-            "depth": "detailed"
-        }
-    }
-```
-
-##### ソーシャルネットワーク設計
-```python
-class SocialNetworkDesigner:
-    """社会的つながりとネットワーク構造を設計"""
-    
-    attributes = {
-        "network_size": int,           # 例: 150 (ダンバー数)
-        "strong_ties": int,            # 例: 15 (親密な関係)
-        "weak_ties": int,              # 例: 135 (緩い関係)
-        "communities": List[str],      # 例: ["AI研究会", "起業家コミュニティ"]
-        "influence_score": float,      # 例: 0.65 (0-1)
-        "network_position": str,       # 例: "bridge" (hub/bridge/peripheral)
-        "professional_connections": {
-            "same_company": 30,
-            "same_industry": 80,
-            "cross_industry": 40
-        }
-    }
-```
-
-### 2.2 ペルソナ群生成エージェント
-
-#### 2.2.1 ペルソナ生成ロジック
-```python
-class PersonaPopulationGenerator:
-    """記事に適したペルソナ群を動的に生成"""
-    
-    def generate_population(
+    async def generate_persona_attributes(
         self,
-        target_audience: Dict,
+        persona_profile: str,
+        article_context: Dict
+    ) -> Dict:
+        """
+        オーケストレーターから指定されたペルソナプロファイルに基づいて、
+        具体的な属性をLLMが動的に生成
+        """
+        prompt = f"""
+        ペルソナプロファイル: {persona_profile}
+        記事コンテキスト: {json.dumps(article_context, ensure_ascii=False)}
+        
+        このプロファイルに基づいて、リアルな個人属性を生成してください：
+        
+        1. デモグラフィック属性
+           - 年齢、性別、居住地、職業、教育レベルなど
+           - 記事のターゲット層に応じた現実的な分布
+        
+        2. サイコグラフィック属性
+           - 価値観、興味関心、ライフスタイル
+           - 記事への関心度に影響する心理的特性
+        
+        3. 行動パターン
+           - メディア消費習慣、情報共有行動
+           - SNS利用パターン、影響を受けやすさ
+        
+        4. ソーシャルネットワーク
+           - 社会的つながりの強さと範囲
+           - 情報拡散における役割（ハブ、ブリッジ、周辺）
+        """
+        
+        # LLMが記事とプロファイルに適した属性を動的生成
+        attributes = await self.llm.ainvoke(prompt)
+        return self.parse_persona_attributes(attributes)
+```
+
+##### ペルソナ属性スキーマ（動的生成の参考構造）
+```python
+# 注：これは固定的な定義ではなく、LLMが生成する属性の参考構造
+PersonaAttributeSchema = {
+    "demographics": {
+        "age": "記事内容により変動（例：健康記事なら中高年、テック記事なら若年層）",
+        "occupation": "記事トピックに関連する多様な職業",
+        "location": "記事の地域性や言語に応じた分布",
+        # その他、記事に応じて動的に決定
+    },
+    
+    "psychographics": {
+        "values": "記事テーマに共感する価値観のスペクトラム",
+        "interests": "記事と関連性の高い興味分野",
+        "personality_traits": "情報処理と意思決定に影響する特性",
+        # 記事内容により柔軟に調整
+    },
+    
+    "behavior_patterns": {
+        "information_consumption": "記事タイプに適した消費パターン",
+        "sharing_tendency": "コンテンツと読者層による共有行動",
+        "influence_network": "記事の拡散に影響するネットワーク特性",
+        # 動的に最適化
+    },
+    
+    "social_network": {
+        "connection_strength": "記事の性質による繋がりの重要度",
+        "network_role": "情報伝播における個人の役割",
+        "community_membership": "記事に関心を持つコミュニティ",
+        # ネットワーク効果のシミュレーションに使用
+    }
+}
+```
+
+### 2.2 適応的ペルソナ群生成システム
+
+#### 2.2.1 記事適応型ペルソナ生成
+```python
+class AdaptivePersonaPopulationGenerator:
+    """記事内容に完全に適応したペルソナ群を動的生成"""
+    
+    async def generate_population(
+        self,
+        article: str,
+        audience_analysis: Dict,
         population_size: int = 30
     ) -> List[Persona]:
         """
-        ターゲットオーディエンス分析に基づいて、
-        統計的に妥当な分布を持つペルソナ群を生成
+        記事とオーディエンス分析から、
+        完全に動的なペルソナ群を生成
         """
+        # Step 1: 記事に適したペルソナ分布をLLMが決定
+        distribution_prompt = f"""
+        記事内容の要約: {article[:500]}...
+        想定読者分析: {json.dumps(audience_analysis, ensure_ascii=False)}
+        
+        この記事の市場反応をシミュレートするため、
+        {population_size}名のペルソナ群の構成を設計してください。
+        
+        以下を考慮して多様な分布を作成：
+        - 記事に強い関心を持つコア層
+        - 部分的に関心を持つ周辺層  
+        - 偶然接触する可能性のある層
+        - 影響力を持つインフルエンサー層
+        - 懐疑的・批判的な視点を持つ層
+        
+        各層の人数配分と特徴を定義してください。
+        """
+        
+        persona_distribution = await self.llm.ainvoke(distribution_prompt)
+        
+        # Step 2: 各ペルソナを個別に生成
         personas = []
-        
-        # セグメント別の人数配分
-        for segment, ratio in self.calculate_segment_distribution(target_audience):
-            segment_size = int(population_size * ratio)
+        for persona_spec in self.parse_distribution(persona_distribution):
+            # 個々のペルソナをLLMが詳細に生成
+            persona_prompt = f"""
+            ペルソナタイプ: {persona_spec['type']}
+            記事との関係性: {persona_spec['relationship_to_article']}
             
-            for i in range(segment_size):
-                # 各属性を相関を考慮して生成
-                demographics = self.generate_demographics(segment)
-                psychographics = self.generate_psychographics(demographics, segment)
-                behavior = self.generate_behavior(demographics, psychographics)
-                network = self.generate_network(demographics, behavior)
-                
-                persona = Persona(
-                    id=f"persona_{segment}_{i}",
-                    demographics=demographics,
-                    psychographics=psychographics,
-                    behavior=behavior,
-                    network=network
-                )
-                personas.append(persona)
+            このタイプの実在感のある個人を1名生成してください。
+            以下を含む詳細なプロファイルを作成：
+            - 具体的な背景ストーリー
+            - 記事に対する初期反応の予測
+            - 情報共有の可能性と動機
+            - 他者への影響力
+            """
+            
+            persona_details = await self.llm.ainvoke(persona_prompt)
+            persona = self.create_persona_instance(persona_details)
+            personas.append(persona)
         
-        # ネットワーク関係の構築
-        self.establish_network_connections(personas)
+        # Step 3: ペルソナ間のネットワーク関係を動的構築
+        network_prompt = f"""
+        生成された{len(personas)}名のペルソナ間の
+        現実的な社会的つながりを設計してください。
+        
+        考慮事項：
+        - 同じコミュニティや職場の関係
+        - SNS上でのフォロー関係
+        - 影響力の方向性
+        - 情報伝播の経路
+        """
+        
+        network_structure = await self.llm.ainvoke(network_prompt)
+        self.establish_dynamic_connections(personas, network_structure)
         
         return personas
 ```
