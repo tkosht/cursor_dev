@@ -125,13 +125,13 @@ from langchain_openai import ChatOpenAI
 
 # エージェントの作成
 research_agent = create_react_agent(
-    ChatOpenAI(model="gpt-4"),
+    ChatOpenAI(model="gpt-4.1"),
     tools=[web_search_tool, arxiv_tool],
     system_message="You are a research specialist."
 )
 
 writer_agent = create_react_agent(
-    ChatOpenAI(model="gpt-4"),
+    ChatOpenAI(model="gpt-4.1"),
     tools=[format_tool, grammar_check_tool],
     system_message="You are a technical writer."
 )
@@ -269,13 +269,13 @@ def create_research_team():
     
     # チームメンバー
     paper_finder = create_react_agent(
-        ChatOpenAI(model="gpt-4"),
+        ChatOpenAI(model="gpt-4.1"),
         tools=[arxiv_search, google_scholar],
         name="paper_finder"
     )
     
     summarizer = create_react_agent(
-        ChatOpenAI(model="gpt-4"),
+        ChatOpenAI(model="gpt-4.1"),
         tools=[text_summarization],
         name="summarizer"
     )
@@ -300,19 +300,19 @@ def create_engineering_team():
     
     # チームメンバー
     architect = create_react_agent(
-        ChatOpenAI(model="gpt-4"),
+        ChatOpenAI(model="gpt-4.1"),
         tools=[design_pattern_db],
         name="architect"
     )
     
     developer = create_react_agent(
-        ChatOpenAI(model="gpt-4"),
+        ChatOpenAI(model="gpt-4.1"),
         tools=[code_generator, syntax_checker],
         name="developer"
     )
     
     tester = create_react_agent(
-        ChatOpenAI(model="gpt-4"),
+        ChatOpenAI(model="gpt-4.1"),
         tools=[test_generator, test_runner],
         name="tester"
     )
@@ -376,7 +376,7 @@ class AgentFactory:
     def create_specialist_agent(
         specialty: str,
         tools: list,
-        model: str = "gpt-4"
+        model: str = "gpt-4.1"
     ) -> Callable:
         """特定の専門性を持つエージェントを動的に生成"""
         
@@ -400,7 +400,7 @@ class AgentFactory:
             agent = AgentFactory.create_specialist_agent(
                 specialty=role,
                 tools=config["tools"],
-                model=config.get("model", "gpt-4")
+                model=config.get("model", "gpt-4.1")
             )
             team.add_node(role, agent)
         
@@ -419,11 +419,11 @@ class AgentFactory:
 team_requirements = {
     "data_analyst": {
         "tools": [sql_query_tool, data_viz_tool],
-        "model": "gpt-4"
+        "model": "gpt-4.1"
     },
     "ml_engineer": {
         "tools": [model_training_tool, hyperparameter_tuning_tool],
-        "model": "gpt-4"
+        "model": "gpt-4.1"
     },
     "report_writer": {
         "tools": [document_formatter, chart_generator],
@@ -479,7 +479,7 @@ class CooperativeAgentSystem:
         ]
         
         agent = create_react_agent(
-            ChatOpenAI(model="gpt-4"),
+            ChatOpenAI(model="gpt-4.1"),
             tools=tools + handoff_tools,
             system_message=f"You are {name}. You can collaborate with: {', '.join(other_agents)}"
         )
@@ -795,7 +795,7 @@ class DynamicProjectManager:
     def _create_project_manager(self):
         """プロジェクトマネージャーエージェントを作成"""
         return create_react_agent(
-            ChatOpenAI(model="gpt-4"),
+            ChatOpenAI(model="gpt-4.1"),
             tools=[],
             system_message="""You are a project manager responsible for:
             1. Understanding project requirements
@@ -810,7 +810,7 @@ class DynamicProjectManager:
         requirements = state["project_requirements"]
         
         # LLMを使用してタスクを分解
-        llm = ChatOpenAI(model="gpt-4")
+        llm = ChatOpenAI(model="gpt-4.1")
         
         # タスク分解プロンプト
         breakdown_prompt = f"""
@@ -881,7 +881,7 @@ class DynamicProjectManager:
         
         # 動的にエージェントを作成
         task_agent = create_react_agent(
-            ChatOpenAI(model="gpt-4"),
+            ChatOpenAI(model="gpt-4.1"),
             tools=tools,
             system_message=f"Execute the following task: {task['description']}"
         )
@@ -898,7 +898,7 @@ class DynamicProjectManager:
     def _create_reviewer(self):
         """レビュアーエージェントを作成"""
         return create_react_agent(
-            ChatOpenAI(model="gpt-4"),
+            ChatOpenAI(model="gpt-4.1"),
             tools=[],
             system_message="""You are a quality reviewer. Review completed tasks and provide feedback.
             Ensure all requirements are met and suggest improvements if needed."""
@@ -1000,7 +1000,7 @@ class SelfOrganizingNetwork:
         
         # エージェントノードを作成
         agent = create_react_agent(
-            ChatOpenAI(model="gpt-4"),
+            ChatOpenAI(model="gpt-4.1"),
             tools=template['tools'],
             system_message=f"You are a {agent_type} agent with capabilities: {template['capabilities']}"
         )
