@@ -1,5 +1,7 @@
 # マルチエージェント記事評価・市場反応シミュレーションシステム要件定義書
 
+> **関連文書**: [LangGraph使用戦略](./langgraph-usage-strategy.md) - LangGraphの具体的な適用方法と設計思想
+
 ## 1. システム概要
 
 ### 1.1 目的
@@ -652,112 +654,199 @@ class VisualizationGenerator:
 
 ## 4. 技術仕様
 
-### 4.1 LangGraphによる階層的エージェント構造
+### 4.1 LangGraphによる動的プロセス制御
 
-#### 4.1.1 ペルソナ生成グラフ
+#### 4.1.1 メイン制御グラフ
 ```python
-def build_persona_generation_graph() -> CompiledGraph:
-    """ペルソナ生成のための階層的グラフ構造"""
+def build_market_simulation_graph() -> CompiledGraph:
+    """市場反応シミュレーションのメイン制御グラフ"""
     
-    workflow = StateGraph(PersonaGenerationState)
+    workflow = StateGraph(MarketSimulationState)
     
-    # レベル1: 市場分析
-    workflow.add_node("market_analyzer", MarketAnalyzer())
+    # Phase 1: 記事分析とコンテキスト理解
+    workflow.add_node("analyze_article", ArticleAnalyzer())
     
-    # レベル2: セグメント設計（並列実行）
-    workflow.add_node("segment_designers", segment_design_handler)
+    # Phase 2: 動的ペルソナ設計・生成（並列実行）
+    workflow.add_node("design_personas", PersonaDesignOrchestrator())
+    workflow.add_node("generate_personas", dynamic_persona_generator)
     
-    # レベル3: 属性設計（並列実行）
-    workflow.add_node("attribute_designers", attribute_design_handler)
+    # Phase 3: 市場反応シミュレーション
+    workflow.add_node("simulate_reactions", MarketReactionSimulator())
     
-    # レベル4: ペルソナ組み立て
-    workflow.add_node("persona_assembler", PersonaAssembler())
-    
-    # レベル5: ネットワーク構築
-    workflow.add_node("network_builder", NetworkBuilder())
+    # Phase 4: 結果分析とレポート生成
+    workflow.add_node("analyze_results", ResultAnalyzer())
+    workflow.add_node("generate_report", ReportGenerator())
     
     # フロー定義
-    workflow.add_edge(START, "market_analyzer")
-    workflow.add_edge("market_analyzer", "segment_designers")
-    workflow.add_edge("segment_designers", "attribute_designers")
-    workflow.add_edge("attribute_designers", "persona_assembler")
-    workflow.add_edge("persona_assembler", "network_builder")
-    workflow.add_edge("network_builder", END)
+    workflow.add_edge(START, "analyze_article")
+    workflow.add_edge("analyze_article", "design_personas")
+    workflow.add_edge("design_personas", "generate_personas")
+    workflow.add_edge("generate_personas", "simulate_reactions")
+    
+    # 条件付きルーティング
+    workflow.add_conditional_edges(
+        "simulate_reactions",
+        check_simulation_complete,
+        {
+            "continue": "simulate_reactions",
+            "complete": "analyze_results"
+        }
+    )
+    
+    workflow.add_edge("analyze_results", "generate_report")
+    workflow.add_edge("generate_report", END)
     
     return workflow.compile()
 ```
 
-#### 4.1.2 シミュレーショングラフ
+#### 4.1.2 動的ペルソナ生成の並列処理
 ```python
-def build_simulation_graph() -> CompiledGraph:
-    """集団行動シミュレーションのグラフ構造"""
+async def dynamic_persona_generator(state: MarketSimulationState) -> Dict:
+    """Send APIを使用した動的ペルソナの並列生成"""
     
-    workflow = StateGraph(SimulationState)
+    # 記事に基づいて生成されたペルソナ設計を取得
+    persona_specs = state["persona_specifications"]
+    article_context = state["article_analysis"]
     
-    # 初期評価フェーズ
-    workflow.add_node("initial_evaluation", initial_evaluation_handler)
+    # 並列生成タスクを作成
+    sends = []
+    for spec in persona_specs:
+        sends.append(Send(
+            "llm_persona_creator",  # LLMベースのペルソナ生成器
+            {
+                "persona_id": spec["id"],
+                "design_prompt": f"""
+                記事コンテキスト: {article_context["summary"]}
+                ペルソナタイプ: {spec["type"]}
+                関係性: {spec["relationship_to_article"]}
+                
+                この設定に基づいて、リアルで詳細な個人プロファイルを生成してください。
+                具体的な背景、価値観、行動パターン、ソーシャルネットワークを含めてください。
+                """,
+                "constraints": spec.get("constraints", {}),
+                "target_attributes": spec.get("target_attributes", {})
+            }
+        ))
     
-    # アーリーアダプター特定
-    workflow.add_node("early_adopter_identification", identify_early_adopters)
+    # Command APIで並列実行を制御
+    return Command(
+        goto="wait_for_personas",
+        update={"pending_personas": sends}
+    )
+```
+
+#### 4.1.3 時系列シミュレーション制御
+```python
+def build_propagation_simulation_graph() -> CompiledGraph:
+    """情報伝播シミュレーションのサブグラフ"""
     
-    # 伝播シミュレーション（時系列ループ）
-    workflow.add_node("propagation_loop", propagation_simulator)
+    workflow = StateGraph(PropagationState)
     
-    # 分析フェーズ
-    workflow.add_node("analysis", market_response_analyzer)
+    # 時刻別処理ノード
+    workflow.add_node("initialize_time_step", init_time_step)
+    workflow.add_node("process_interactions", process_persona_interactions)
+    workflow.add_node("update_network_state", update_social_network)
+    workflow.add_node("calculate_metrics", calculate_propagation_metrics)
     
-    # 条件付きルーティング（収束判定）
+    # 時系列ループ
+    workflow.add_edge("initialize_time_step", "process_interactions")
+    workflow.add_edge("process_interactions", "update_network_state")
+    workflow.add_edge("update_network_state", "calculate_metrics")
+    
+    # 条件付きループ制御
     workflow.add_conditional_edges(
-        "propagation_loop",
-        convergence_check,
+        "calculate_metrics",
+        check_propagation_status,
         {
-            "continue": "propagation_loop",
-            "converged": "analysis"
+            "next_step": "initialize_time_step",
+            "converged": END,
+            "max_time_reached": END
         }
     )
     
     return workflow.compile()
 ```
 
-### 4.2 データモデル
+### 4.2 動的データモデル
 
-#### 4.2.1 ペルソナデータ構造
+#### 4.2.1 ペルソナデータ構造（動的生成）
 ```python
-@dataclass
-class Persona:
-    """個別ペルソナの完全なデータ構造"""
-    id: str
-    demographics: Demographics
-    psychographics: Psychographics
-    behavior_patterns: BehaviorPatterns
-    social_network: SocialNetwork
+# ペルソナは記事に応じて動的に生成されるため、
+# 固定的なクラスではなく、柔軟なスキーマとして定義
+
+PersonaSchema = {
+    "id": str,  # 一意の識別子
     
-    # 動的状態
-    current_state: PersonaState
-    interaction_history: List[Interaction]
-    influence_received: List[Influence]
-    content_shared: List[SharedContent]
+    # LLMが記事に応じて生成する属性
+    "profile": {
+        "generated_by_llm": True,
+        "attributes": {
+            # 記事が健康関連なら: 年齢、健康状態、運動習慣など
+            # 記事がテック関連なら: 技術レベル、使用ツール、興味分野など
+            # 記事が金融関連なら: 収入、投資経験、リスク許容度など
+        }
+    },
+    
+    # 記事との関係性（LLMが定義）
+    "article_relationship": {
+        "interest_level": float,  # 0-1
+        "relevance_reasons": List[str],
+        "potential_actions": List[str]
+    },
+    
+    # シミュレーション用の動的状態
+    "simulation_state": {
+        "has_read": bool,
+        "evaluation": Optional[Dict],
+        "sharing_decision": Optional[Dict],
+        "influenced_by": List[str]  # 他のペルソナID
+    }
+}
+
+def validate_generated_persona(persona_data: Dict) -> Dict:
+    """LLMが生成したペルソナデータの検証と正規化"""
+    # 必須フィールドの確認
+    # 記事コンテキストとの整合性チェック
+    # 数値範囲の正規化
+    return normalized_persona
 ```
 
-#### 4.2.2 シミュレーション状態
+#### 4.2.2 市場シミュレーション状態
 ```python
-class SimulationState(TypedDict):
-    """シミュレーション全体の状態管理"""
-    article: ArticleData
-    personas: List[Persona]
+class MarketSimulationState(TypedDict):
+    """LangGraphで管理する動的シミュレーション状態"""
+    
+    # 入力
+    article: str
+    article_analysis: Dict  # LLMによる記事分析結果
+    
+    # 動的生成されるデータ
+    target_audience_profile: Dict  # LLMが特定した想定読者層
+    persona_specifications: List[Dict]  # LLMが設計したペルソナ仕様
+    generated_personas: List[Dict]  # 実際に生成されたペルソナ
+    
+    # シミュレーション進行状態
+    current_phase: str
     time_step: int
+    simulation_config: Dict
     
-    # 評価結果
-    evaluations: Dict[str, PersonaEvaluation]
+    # 時系列データ
+    propagation_timeline: List[{
+        "time": int,
+        "new_readers": List[str],
+        "new_sharers": List[str],
+        "network_state": Dict
+    }]
     
-    # 共有状態
-    sharing_decisions: Dict[str, SharingDecision]
-    propagation_network: NetworkGraph
+    # 結果と分析
+    market_response_metrics: Dict
+    segment_analysis: Dict  # 動的に特定されたセグメント別分析
+    influence_map: Dict  # 影響関係のネットワーク
     
-    # 分析結果
-    reach_metrics: ReachMetrics
-    engagement_metrics: EngagementMetrics
-    virality_metrics: ViralityMetrics
+    # エラーとログ
+    generation_logs: List[Dict]
+    simulation_logs: List[Dict]
+    errors: List[Dict]
 ```
 
 ### 4.3 モデル切り替え設定（v1から継承）
