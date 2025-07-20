@@ -370,16 +370,16 @@ erDiagram
         string id PK
         string content
         string title
-        datetime created_at
-        json metadata
+        string created_at
+        string metadata
     }
     
     ArticleAnalysis {
         string id PK
         string article_id FK
-        json topics
+        string topics
         string complexity_level
-        json target_keywords
+        string target_keywords
         string tone
         float estimated_reading_time
     }
@@ -387,28 +387,28 @@ erDiagram
     TargetAudience {
         string id PK
         string analysis_id FK
-        json primary_segments
-        json secondary_segments
+        string primary_segments
+        string secondary_segments
         int estimated_size
-        json characteristics
+        string characteristics
     }
     
     PersonaSpecification {
         string id PK
         string audience_id FK
         string persona_type
-        json design_guidelines
-        json target_attributes
+        string design_guidelines
+        string target_attributes
         float weight_in_population
     }
     
     GeneratedPersona {
         string id PK
         string spec_id FK
-        json profile
-        json demographics
-        json psychographics
-        json behavior_patterns
+        string profile
+        string demographics
+        string psychographics
+        string behavior_patterns
         float influence_score
     }
     
@@ -417,16 +417,16 @@ erDiagram
         string persona_id FK
         string attribute_type
         string attribute_name
-        json attribute_value
+        string attribute_value
     }
     
     SimulationState {
         string persona_id PK_FK
         boolean has_read
-        json evaluation
-        json sharing_decision
+        string evaluation
+        string sharing_decision
         int influenced_by_count
-        datetime last_updated
+        string last_updated
     }
     
     TimeStepData {
@@ -435,7 +435,7 @@ erDiagram
         int new_readers
         int new_sharers
         float viral_coefficient
-        json network_snapshot
+        string network_snapshot
     }
     
     InteractionEvent {
@@ -443,8 +443,8 @@ erDiagram
         int time_step FK
         string actor_persona_id FK
         string action_type
-        json action_details
-        datetime timestamp
+        string action_details
+        string timestamp
     }
 ```
 
