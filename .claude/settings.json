@@ -109,8 +109,8 @@
         ]
       }
     ]
-  }
+  },
   "env": {
-    "MAX_THINKING_TOKENS": "31999"  // 1024 - 200000
+    "MAX_THINKING_TOKENS": "31999"
   }
 }

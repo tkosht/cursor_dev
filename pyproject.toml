@@ -22,7 +22,12 @@ pydantic = "*"
 python-multipart = "*"
 starlette = "*"
 a2a-sdk = "*"
-google-generativeai = "*"
+claude-code-sdk = "^0.0.14"
+langgraph = "^0.5.3"
+langchain-openai = "^0.3.28"
+langchain-google-genai = "^2.1.8"
+langchain-tavily = "^0.2.10"
+langchain-experimental = "^0.3.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
