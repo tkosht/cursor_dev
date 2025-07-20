@@ -1,6 +1,8 @@
 # マルチエージェント記事評価・市場反応シミュレーションシステム要件定義書
 
-> **関連文書**: [LangGraph使用戦略](./langgraph-usage-strategy.md) - LangGraphの具体的な適用方法と設計思想
+> **関連文書**: 
+> - [LangGraph使用戦略](./langgraph-usage-strategy.md) - LangGraphの具体的な適用方法と設計思想
+> - [システム設計図](./system-design-diagrams.md) - 構成図、シーケンス図、フロー図（Mermaid形式）
 
 ## 1. システム概要
 
