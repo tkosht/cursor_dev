@@ -1,237 +1,202 @@
-# A2A MVP Project - Test-Driven Development
+# Multi-Agent Article Review System
 
-Google A2A（Agent-to-Agent）プロトコルの実装研究プロジェクト。TDD手法により、テストカバレッジ90%以上、Flake8 0違反、Black/isort適用済みのエージェントシステムを構築。
+記事の品質を多角的に評価し、改善提案を生成するマルチエージェントシステム。LangGraphを活用し、複数の仮想ペルソナが並列で記事を評価します。
 
-## 🎯 プロジェクト概要
+## 主な機能
 
-### 現在のステータス
-- **✅ A2A MVP実装完了**: TDD手法による本格的実装
-- **📊 テストカバレッジ**: 91.77%（目標85%を大幅超過）
-- **🧪 テスト数**: 84個（全て合格）
-- **⚡ ビルド時間**: 45秒（CI/CD最適化済み）
-- **📝 コード品質**: Flake8 0違反、Black/isort適用済み
+- **多角的評価**: 技術専門家、ビジネスユーザー、一般読者、ドメイン専門家の視点で評価
+- **非同期並列実行**: 最大4エージェント同時実行による高速処理
+- **マルチLLM対応**: Gemini 2.5 Flash（デフォルト）、OpenAI、Claude をサポート
+- **包括的レポート**: 評価結果と優先順位付き改善提案を生成
+- **エラー耐性**: 自動リトライとフォールバック機構
 
-### 主な成果
-| 指標 | 達成値 | 備考 |
-|------|--------|------|
-| 開発期間 | 3日間 | TDD採用により高速開発 |
-| テストカバレッジ | 91.77% | 業界平均60-70%を大幅超過 |
-| 応答速度 | 12ms/リクエスト | 本番環境レベルの性能 |
-| コード行数 | 約1,200行 | シンプルで保守しやすい設計 |
+## 前提条件
+
+- Python 3.10以上
+- LLMプロバイダーのAPIキー（以下のいずれか）
+  - Google AI (Gemini)
+  - OpenAI
+  - Anthropic (Claude)
 
 ## インストール
 
-### 必要な環境
-- Python 3.10-3.12
-- Poetry
-- Docker（オプション）
+```bash
+# リポジトリのクローン
+git clone <repository-url>
+cd multi-agent-review-system
 
-### セットアップ
+# 仮想環境の作成と有効化
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 依存関係のインストール
+pip install -r requirements.txt
+```
+
+## 設定
+
+`.env`ファイルを作成し、使用するLLMプロバイダーの設定を記述：
 
 ```bash
-# 1. リポジトリのクローン
-git clone https://github.com/yourusername/a2a-mvp.git
-cd a2a-mvp
+# LLMプロバイダー選択（gemini | openai | claude）
+LLM_PROVIDER=gemini
 
-# 2. 依存関係のインストール
-poetry install
+# APIキー（使用するプロバイダーのもののみ必須）
+GOOGLE_API_KEY=your_google_api_key
+OPENAI_API_KEY=your_openai_api_key
+ANTHROPIC_API_KEY=your_anthropic_api_key
 
-# 3. 仮想環境の有効化
-poetry shell
-
-# 4. 品質チェックの実行
-python scripts/quality_gate_check.py
-
-# 5. テストの実行
-pytest --cov=app --cov-report=html
-```
-
-### Docker環境（推奨）
-
-```bash
-# 開発環境の起動
-make up
-
-# 開発環境へのアクセス
-make bash
-
-# 環境のクリーンアップ
-make clean
-```
-
-注：テスト実行は `pytest` コマンドを直接使用してください。
-
-## 📁 プロジェクト構造
-
-```
-app/a2a/
-├── core/           # ビジネスエンティティ（Task, Request, Response）
-├── storage/        # データ永続化層（インターフェース + 実装）
-├── skills/         # ビジネスロジック（タスク管理スキル）
-├── agents/         # A2Aエージェント実装
-└── server/         # FastAPIサーバー
-
-tests/
-├── unit/           # ユニットテスト（各層ごと）
-├── integration/    # 統合テスト
-└── e2e/           # エンドツーエンドテスト
+# オプション設定
+LLM_TEMPERATURE=0.7
+LLM_MAX_TOKENS=2000
+MAX_CONCURRENT_AGENTS=4
+LOG_LEVEL=INFO
 ```
 
 ## 使用方法
 
-### TaskAgent - タスク管理エージェント
-完全なCRUD操作を備えたタスク管理システム。A2Aプロトコル準拠。
+### 基本的な使用
 
-**主な機能:**
-- ✅ タスクの作成・取得・更新・削除
-- ✅ タスク完了状態の切り替え
-- ✅ タスク一覧表示
-- ✅ 全タスククリア
+```bash
+# 記事ファイルを評価
+python -m src.main evaluate path/to/article.md
 
-**使用例:**
-```python
-# エージェントへのメッセージ送信
-message = {
-    "action": "create",
-    "data": {
-        "title": "A2Aプロトコルを学ぶ",
-        "description": "実装を通じて理解を深める"
+# 標準入力から評価
+echo "Your article content" | python -m src.main evaluate -
+
+# 出力形式を指定（json | markdown）
+python -m src.main evaluate article.md --output-format json
+```
+
+### 高度な使用
+
+```bash
+# 特定のペルソナのみで評価
+python -m src.main evaluate article.md --personas tech_expert,general_reader
+
+# タイムアウトを設定
+python -m src.main evaluate article.md --timeout 120
+
+# 詳細ログを出力
+python -m src.main evaluate article.md --log-level DEBUG
+```
+
+## 出力例
+
+```json
+{
+  "overall_score": 82.5,
+  "evaluations": {
+    "tech_expert": {
+      "score": 85,
+      "strengths": ["技術的に正確", "ベストプラクティスに準拠"],
+      "weaknesses": ["エラーハンドリングが不十分"]
+    },
+    "business_user": {
+      "score": 80,
+      "strengths": ["実用的な内容", "ROIが明確"],
+      "weaknesses": ["実装コストの言及なし"]
     }
+  },
+  "improvement_suggestions": [
+    {
+      "suggestion": "エラーハンドリングの例を追加",
+      "priority": 0.8,
+      "supported_by": ["tech_expert", "domain_expert"]
+    }
+  ]
 }
-response = agent.handle_message(message)
-# => {"success": true, "data": {"task": {...}}}
 ```
 
 ## テスト
 
-### テストカバレッジ詳細
+### テストの実行
+
+```bash
+# 全テスト実行
+pytest
+
+# カバレッジレポート生成
+pytest --cov=src --cov-report=html
+
+# 特定のテストのみ
+pytest tests/unit  # 単体テストのみ
+pytest -m "not integration"  # 統合テスト以外
 ```
-app/a2a/core/types.py          100%
-app/a2a/core/exceptions.py     100%
-app/a2a/storage/interface.py   100%
-app/a2a/storage/memory.py      100%
-app/a2a/skills/task_skills.py   96%
-app/a2a/agents/task_agent.py    92%
-app/a2a/server/app.py           87%
--------------------------------------------
-TOTAL                             91.77%
-```
-
-### CI/CDパイプライン
-- **GitHub Actions**: 自動テスト・品質チェック
-- **マルチバージョンテスト**: Python 3.10, 3.11, 3.12
-- **依存関係キャッシュ**: 高速ビルド（45秒）
-- **自動デプロイ**: main ブランチへのマージで自動デプロイ
-
-## 📖 ドキュメント
-
-### 開発方法論
-- **[チェックリスト駆動実行（CDTE）](memory-bank/11-checklist-driven/README.md)**: TDD拡張による体系的タスク実行管理
-  - **[フレームワーク](memory-bank/11-checklist-driven/checklist_driven_execution_framework.md)**: MUST/SHOULD/COULD条件階層とRed-Green-Refactorサイクル
-  - **[テンプレート集](memory-bank/11-checklist-driven/templates_collection.md)**: 実用的なチェックリストテンプレート
-  - **[実装例](memory-bank/11-checklist-driven/implementation_examples.md)**: リアルワールドでの適用事例
-  - **[検証システム](memory-bank/11-checklist-driven/verification_evaluation_mechanisms.md)**: 品質保証と継続改善
-
-### 開発ガイド
-- **[CLAUDE.md (and GEMINI.md)](CLAUDE.md)**: AI支援開発のためのプロジェクトガイド
-- **[docs/01.requirements/target_personas.md](docs/01.requirements/target_personas.md)**: ターゲット層（想定読者）の定義
-- **[docs/02.basic_design/a2a_architecture.md](docs/02.basic_design/a2a_architecture.md)**: アーキテクチャ設計書
-- **[docs/03.detail_design/a2a_tdd_implementation.md](docs/03.detail_design/a2a_tdd_implementation.md)**: TDD実装の詳細
-
-### Note記事（実践的解説）
-- **[A2Aプロトコル入門](docs/05.articles/note_a2a_introduction_level1.md)**: 初心者向け解説
-- **[TDDで作るA2Aエージェント](docs/05.articles/note_a2a_practice_level2.md)**: 実装の詳細解説
-
-### 品質・セキュリティ
-- **[memory-bank/07-security/security_rules_enhancement.md](memory-bank/07-security/security_rules_enhancement.md)**: セキュリティルール
-- **[memory-bank/04-quality/accuracy_verification_rules.md](memory-bank/04-quality/accuracy_verification_rules.md)**: 正確性検証ルール
 
 ## 開発
 
-### 日常的な開発
+### コード品質チェック
+
 ```bash
-# 品質ゲートチェック（コミット前に実行推奨）
-python scripts/quality_gate_check.py
+# フォーマット
+black src tests
 
-# ドキュメント正確性チェック（推奨: コミット前実行）
-python scripts/verify_accuracy.py
+# Lintチェック
+flake8 src tests
 
-# テスト実行
-pytest                          # 全テスト
-pytest tests/unit/             # ユニットテストのみ
-pytest -k "test_name"          # 特定のテスト
-pytest --cov=app               # カバレッジ付き
-
-# コード品質
-black app/                     # フォーマット
-flake8 app/                    # Lintチェック
-mypy app/ --ignore-missing-imports  # 型チェック
-
-# サーバー起動
-uvicorn app.a2a.server.app:app --reload
+# 型チェック
+mypy src
 ```
 
-### Docker環境
+### 開発用インストール
+
 ```bash
-make              # 環境構築・起動
-make up           # コンテナ起動
-make bash         # コンテナ内シェルアクセス
-make clean        # クリーンアップ
-# テスト実行（pytestを直接使用）
+pip install -r requirements-dev.txt
+pre-commit install
 ```
 
-## 🔒 セキュリティ
+## プロジェクト構造
 
-### 実装されたセキュリティ対策
-1. **入力検証**: Pydanticによる厳格な型チェック（実装予定）
-2. **レート制限**: 過剰なリクエストを制限（実装予定）
-3. **エラーハンドリング**: 内部情報の漏洩防止
-4. **依存関係管理**: Poetry による厳格なバージョン管理
-
-### セキュリティチェック
-```bash
-# 依存関係の脆弱性チェック
-poetry show --outdated
-
-# セキュリティ監査（要pip-audit）
-# pip-audit
+```
+multi-agent-review-system/
+├── src/
+│   ├── agents/         # エージェント実装
+│   ├── graph/          # LangGraphワークフロー
+│   ├── utils/          # ユーティリティ
+│   └── main.py         # エントリーポイント
+├── tests/
+│   ├── unit/           # 単体テスト
+│   └── integration/    # 統合テスト
+├── docs/               # ドキュメント
+└── config/             # 設定ファイル
 ```
 
-## 🤝 貢献方法
+## 貢献
 
-1. **Issue作成**: バグ報告や機能提案
-2. **Pull Request**: 
-   - feature/ブランチで開発
-   - 品質ゲートチェックをパス
-   - テストカバレッジ85%以上を維持
-   - ドキュメント正確性チェックをパス
+1. このリポジトリをフォーク
+2. フィーチャーブランチを作成 (`git checkout -b feature/amazing-feature`)
+3. 変更をコミット (`git commit -m 'Add amazing feature'`)
+4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
+5. プルリクエストを作成
 
-## 📋 今後の計画
+### 開発ガイドライン
 
-### 短期（1-2週間）
-- [ ] WebSocketサポート追加
-- [ ] 認証・認可機能の実装
-- [ ] PostgreSQLストレージ実装
-- [ ] Pydantic導入による入力検証強化
-
-### 中期（1-2ヶ月）
-- [ ] マルチエージェント連携
-- [ ] 非同期処理の最適化
-- [ ] Kubernetes対応
-- [ ] パフォーマンステストの追加
-
-### 長期（3-6ヶ月）
-- [ ] エージェントマーケットプレイス
-- [ ] LLM統合（自然言語理解）
-- [ ] エンタープライズ機能
-- [ ] 汎用エージェントフレームワーク化
-
----
-
-**開発者**: [Your Name]  
-**ライセンス**: MIT  
-**最終更新**: 2024年12月
+- テストファーストで実装（TDD）
+- チェックリストに従って開発
+- コミットメッセージは明確に
+- PRには必ずテストを含める
 
 ## ライセンス
 
-本プロジェクトはMITライセンスの下で公開されています。詳細については、プロジェクトルートにある `LICENSE` ファイルを参照してください。
+このプロジェクトはMITライセンスの下で公開されています。詳細は[LICENSE](LICENSE)ファイルを参照してください。
+
+## 関連情報
+
+- [要件定義書](docs/requirements-summary.md)
+- [アーキテクチャ設計](docs/langgraph-agent-communication-design.md)
+- [開発プロセス](docs/checklist-and-test-driven-development-process.md)
+- [LangGraph公式ドキュメント](https://langchain-ai.github.io/langgraph/)
+
+## 注意事項
+
+- APIキーは絶対にコミットしないでください
+- 大量の記事を評価する場合はAPI利用料金に注意してください
+- 本番環境では適切なレート制限を設定してください
+
+## サポート
+
+問題や質問がある場合は、[Issues](https://github.com/yourusername/multi-agent-review-system/issues)で報告してください。
+
+---
+最終更新: 2025年1月
