@@ -367,7 +367,7 @@ erDiagram
     MarketMetrics ||--|| FinalReport : summarized_in
     
     Article {
-        string id PK
+        string id
         string content
         string title
         string created_at
@@ -375,8 +375,8 @@ erDiagram
     }
     
     ArticleAnalysis {
-        string id PK
-        string article_id FK
+        string id
+        string article_id
         string topics
         string complexity_level
         string target_keywords
@@ -385,8 +385,8 @@ erDiagram
     }
     
     TargetAudience {
-        string id PK
-        string analysis_id FK
+        string id
+        string analysis_id
         string primary_segments
         string secondary_segments
         int estimated_size
@@ -394,8 +394,8 @@ erDiagram
     }
     
     PersonaSpecification {
-        string id PK
-        string audience_id FK
+        string id
+        string audience_id
         string persona_type
         string design_guidelines
         string target_attributes
@@ -403,8 +403,8 @@ erDiagram
     }
     
     GeneratedPersona {
-        string id PK
-        string spec_id FK
+        string id
+        string spec_id
         string profile
         string demographics
         string psychographics
@@ -413,15 +413,16 @@ erDiagram
     }
     
     PersonaAttribute {
-        string id PK
-        string persona_id FK
+        string id
+        string persona_id
         string attribute_type
         string attribute_name
         string attribute_value
     }
     
     SimulationState {
-        string persona_id PK_FK
+        string id
+        string persona_id
         boolean has_read
         string evaluation
         string sharing_decision
@@ -430,8 +431,9 @@ erDiagram
     }
     
     TimeStepData {
-        int time_step PK
-        string simulation_id PK
+        string id
+        int time_step
+        string simulation_id
         int new_readers
         int new_sharers
         float viral_coefficient
@@ -439,9 +441,9 @@ erDiagram
     }
     
     InteractionEvent {
-        string id PK
-        int time_step FK
-        string actor_persona_id FK
+        string id
+        string timestep_id
+        string actor_persona_id
         string action_type
         string action_details
         string timestamp
