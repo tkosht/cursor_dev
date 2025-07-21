@@ -11,8 +11,7 @@ async def main():
     )
 
     async for message in query(
-        prompt="foo.pyについての俳句を書いて",
-        options=options
+        prompt="foo.pyについての俳句を書いて", options=options
     ):
         messages.append(message)
 
