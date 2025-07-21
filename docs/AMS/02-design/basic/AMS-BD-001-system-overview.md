@@ -1,4 +1,4 @@
-# Article Market Simulator 基本設計書
+# AMS-BD-001: Article Market Simulator システム基本設計書
 
 ## 1. システム概要
 

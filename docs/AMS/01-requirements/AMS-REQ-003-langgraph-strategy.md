@@ -1,4 +1,4 @@
-# Article Market Simulator - LangGraph使用戦略
+# AMS-REQ-003: Article Market Simulator LangGraph使用戦略
 
 ## 1. 概要
 

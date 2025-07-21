@@ -1,4 +1,4 @@
-# Generalized Multi-Agent Simulation Framework Design
+# AMS-BD-003: マルチエージェントシミュレーションフレームワーク設計
 
 ## Overview
 

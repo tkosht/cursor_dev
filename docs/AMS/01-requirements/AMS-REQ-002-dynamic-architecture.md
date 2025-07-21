@@ -1,4 +1,4 @@
-# Article Market Simulator - 動的アーキテクチャ設計思想
+# AMS-REQ-002: Article Market Simulator 動的アーキテクチャ設計思想
 
 ## 設計の基本原則
 

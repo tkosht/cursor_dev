@@ -1,8 +1,8 @@
-# Article Market Simulator 要件定義書
+# AMS-REQ-001: Article Market Simulator システム要件定義書
 
 > **関連文書**: 
-> - [LangGraph使用戦略](./article-market-simulator-langgraph-strategy.md) - LangGraphの具体的な適用方法と設計思想
-> - [システム設計書](./article-market-simulator-design.md) - 構成図、シーケンス図、フロー図（Mermaid形式）
+> - [LangGraph使用戦略](./AMS-REQ-003-langgraph-strategy.md) - LangGraphの具体的な適用方法と設計思想
+> - [システム設計書](./AMS-REQ-004-initial-design.md) - 構成図、シーケンス図、フロー図（Mermaid形式）
 
 ## 1. システム概要
 

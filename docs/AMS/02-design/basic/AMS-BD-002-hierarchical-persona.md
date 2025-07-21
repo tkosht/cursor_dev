@@ -1,4 +1,4 @@
-# Hierarchical Persona Generation System - Technical Design
+# AMS-BD-002: 階層的ペルソナ生成システム設計
 
 ## Executive Summary
 

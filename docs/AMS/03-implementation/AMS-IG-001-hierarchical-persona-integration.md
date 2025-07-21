@@ -1,4 +1,4 @@
-# Hierarchical Persona Generation - Integration Guide
+# AMS-IG-001: 階層的ペルソナ生成システム統合ガイド
 
 ## Quick Start
 
