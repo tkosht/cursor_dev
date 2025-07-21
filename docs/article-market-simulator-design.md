@@ -350,102 +350,93 @@ erDiagram
     Article ||--|| ArticleAnalysis : has
     ArticleAnalysis ||--|| TargetAudience : identifies
     TargetAudience ||--|{ PersonaSpecification : generates
-    
     PersonaSpecification ||--|| GeneratedPersona : creates
     GeneratedPersona ||--o{ PersonaAttribute : has
     GeneratedPersona ||--|| SimulationState : maintains
     GeneratedPersona }o--o{ GeneratedPersona : influences
-    
     SimulationState ||--|{ TimeStepData : records
     TimeStepData ||--|{ InteractionEvent : contains
-    InteractionEvent ||--|| PersonaDecision : represents
-    
-    PersonaDecision ||--o| SharingAction : may_result_in
-    SharingAction ||--|{ NetworkPropagation : triggers
-    
-    NetworkPropagation ||--|| MarketMetrics : produces
-    MarketMetrics ||--|| FinalReport : summarized_in
-    
+
     Article {
         string id
         string content
         string title
-        string created_at
+        string createdAt
         string metadata
     }
-    
+
     ArticleAnalysis {
         string id
-        string article_id
+        string articleId
         string topics
-        string complexity_level
-        string target_keywords
+        string complexityLevel
+        string targetKeywords
         string tone
-        float estimated_reading_time
+        float estimatedReadingTime
     }
-    
+
     TargetAudience {
         string id
-        string analysis_id
-        string primary_segments
-        string secondary_segments
-        int estimated_size
+        string analysisId
+        string primarySegments
+        string secondarySegments
+        int estimatedSize
         string characteristics
     }
-    
+
     PersonaSpecification {
         string id
-        string audience_id
-        string persona_type
-        string design_guidelines
-        string target_attributes
-        float weight_in_population
+        string audienceId
+        string personaType
+        string designGuidelines
+        string targetAttributes
+        float weightInPopulation
     }
-    
+
     GeneratedPersona {
         string id
-        string spec_id
+        string specId
         string profile
         string demographics
         string psychographics
-        string behavior_patterns
-        float influence_score
+        string behaviorPatterns
+        float influenceScore
     }
-    
+
     PersonaAttribute {
         string id
-        string persona_id
-        string attribute_type
-        string attribute_name
-        string attribute_value
+        string personaId
+        string attributeType
+        string attributeName
+        string attributeValue
     }
-    
+
     SimulationState {
         string id
-        string persona_id
-        boolean has_read
+        string personaId
+        string hasRead
         string evaluation
-        string sharing_decision
-        int influenced_by_count
-        string last_updated
+        string sharingDecision
+        int influencedByCount
+        string lastUpdated
     }
-    
+
     TimeStepData {
         string id
-        int time_step
-        string simulation_id
-        int new_readers
-        int new_sharers
-        float viral_coefficient
-        string network_snapshot
+        int timeStep
+        string simulationId
+        int newReaders
+        int newSharers
+        float viralCoefficient
+        string networkSnapshot
     }
-    
+
     InteractionEvent {
         string id
-        string timestep_id
-        string actor_persona_id
-        string action_type
-        string action_details
+        string timestepId
+        string actorPersonaId
+        string actionType
+        string actionDetails
         string timestamp
     }
 ```
