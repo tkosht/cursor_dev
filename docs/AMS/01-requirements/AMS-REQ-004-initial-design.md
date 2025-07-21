@@ -1,4 +1,4 @@
-# Article Market Simulator システム設計書
+# AMS-REQ-004: Article Market Simulator 初期システム設計書
 
 ## 1. システム構成図
 
