@@ -1,6 +1,6 @@
 import os
 
-from langchain_core.messages import BaseMessage  # AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import BaseMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 os.environ["GOOGLE_API_KEY"] = os.environ["GEMINI_API_KEY"]
