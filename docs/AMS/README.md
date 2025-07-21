@@ -26,7 +26,7 @@ Article Market Simulatorは、記事やコンテンツに対する市場反応�
 ※ 詳細設計は今後追加予定
 
 ### 🛠️ 03-implementation（実装）
-- [AMS-IG-001-hierarchical-persona-integration.md](03-implementation/AMS-IG-001-hierarchical-persona-integration.md) - 階層的ペルソナ統合ガイド
+※ 実装フェーズで追加予定
 
 ## 命名規則
 
@@ -48,8 +48,8 @@ Article Market Simulatorは、記事やコンテンツに対する市場反応�
 ## 読み進め方
 
 1. **新規読者**: `01-requirements/AMS-REQ-001-system-requirements.md` から開始
-2. **実装者**: `02-design/basic/AMS-BD-001-system-overview.md` から各設計書を確認
-3. **開発者**: `03-implementation/` の実装ガイドを参照
+2. **設計者**: `02-design/basic/AMS-BD-001-system-overview.md` から各設計書を確認
+3. **開発者**: 実装フェーズ開始時に実装ガイドを追加予定
 
 ## 更新履歴
 
