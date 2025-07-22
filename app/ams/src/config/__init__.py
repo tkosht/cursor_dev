@@ -14,6 +14,7 @@ from .config import (
 from .llm_selector import (
     LLMSelector,
     LLMProvider,
+    TaskType,
     select_optimal_llm,
 )
 
@@ -27,5 +28,6 @@ __all__ = [
     "load_config",
     "LLMSelector",
     "LLMProvider",
+    "TaskType",
     "select_optimal_llm",
 ]

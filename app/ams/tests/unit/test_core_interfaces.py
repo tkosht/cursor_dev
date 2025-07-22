@@ -11,6 +11,30 @@ from core.base import BaseAction, BaseAgent, BaseEnvironment, BasePlugin, BaseSi
 from core.types import AgentID, PersonaAttributes, ActionResult, SimulationState
 
 
+# テスト用の具体的な実装クラス
+class ConcreteTestAgent(BaseAgent):
+    """テスト用のエージェント実装"""
+    
+    async def decide(self, perception: dict) -> IAction:
+        """テスト用の決定ロジック"""
+        # 最小限の実装：常に同じアクションを返す
+        return BaseAction("test_action", {"decided": True})
+
+
+class ConcreteTestEnvironment(BaseEnvironment):
+    """テスト用の環境実装"""
+    
+    async def apply_action(self, agent_id: AgentID, action: IAction) -> ActionResult:
+        """テスト用のアクション適用"""
+        # 最小限の実装：常に成功を返す
+        return ActionResult(
+            success=True,
+            action_type=action.action_type,
+            agent_id=agent_id,
+            effects={"test": "applied"}
+        )
+
+
 class TestBaseAction:
     """Test BaseAction implementation"""
     
@@ -45,7 +69,7 @@ class TestBaseAgent:
     
     def test_agent_creation(self):
         """Test creating a basic agent"""
-        agent = BaseAgent()
+        agent = ConcreteTestAgent()
         
         assert isinstance(agent.agent_id, str)
         assert isinstance(agent.attributes, PersonaAttributes)
@@ -57,7 +81,7 @@ class TestBaseAgent:
             occupation="Engineer",
             values=["innovation", "quality"]
         )
-        agent = BaseAgent(agent_id="test-123", attributes=attrs)
+        agent = ConcreteTestAgent(agent_id="test-123", attributes=attrs)
         
         assert agent.agent_id == "test-123"
         assert agent.attributes.age == 30
@@ -66,7 +90,7 @@ class TestBaseAgent:
     @pytest.mark.asyncio
     async def test_agent_perceive(self):
         """Test agent perception"""
-        agent = BaseAgent()
+        agent = ConcreteTestAgent()
         mock_env = MagicMock(spec=IEnvironment)
         mock_env.get_observable_state = AsyncMock(return_value={"test": "data"})
         
@@ -78,7 +102,7 @@ class TestBaseAgent:
     @pytest.mark.asyncio
     async def test_agent_act(self):
         """Test agent action execution"""
-        agent = BaseAgent()
+        agent = ConcreteTestAgent()
         action = BaseAction("test_action", {})
         
         mock_env = MagicMock(spec=IEnvironment)
@@ -98,7 +122,7 @@ class TestBaseAgent:
     @pytest.mark.asyncio
     async def test_agent_update(self):
         """Test agent state update"""
-        agent = BaseAgent()
+        agent = ConcreteTestAgent()
         result = ActionResult(
             success=True,
             action_type="test_action",
@@ -117,7 +141,7 @@ class TestBaseEnvironment:
     
     def test_environment_creation(self):
         """Test creating a basic environment"""
-        env = BaseEnvironment()
+        env = ConcreteTestEnvironment()
         
         assert isinstance(env.state, SimulationState)
         assert env.state.timestep == 0
@@ -125,9 +149,9 @@ class TestBaseEnvironment:
     
     def test_add_remove_agents(self):
         """Test adding and removing agents"""
-        env = BaseEnvironment()
-        agent1 = BaseAgent(agent_id="agent-1")
-        agent2 = BaseAgent(agent_id="agent-2")
+        env = ConcreteTestEnvironment()
+        agent1 = ConcreteTestAgent(agent_id="agent-1")
+        agent2 = ConcreteTestAgent(agent_id="agent-2")
         
         # Add agents
         env.add_agent(agent1)
@@ -147,8 +171,8 @@ class TestBaseEnvironment:
     @pytest.mark.asyncio
     async def test_get_observable_state(self):
         """Test getting observable state for agent"""
-        env = BaseEnvironment()
-        agent = BaseAgent(agent_id="test-agent")
+        env = ConcreteTestEnvironment()
+        agent = ConcreteTestAgent(agent_id="test-agent")
         env.add_agent(agent)
         
         env.state.article_metadata = {"title": "Test Article"}
@@ -162,7 +186,7 @@ class TestBaseEnvironment:
     @pytest.mark.asyncio
     async def test_update_state(self):
         """Test environment state update"""
-        env = BaseEnvironment()
+        env = ConcreteTestEnvironment()
         initial_timestep = env.state.timestep
         
         await env.update_state()
@@ -218,7 +242,7 @@ class TestBaseSimulation:
     
     def test_simulation_creation(self):
         """Test creating a basic simulation"""
-        env = BaseEnvironment()
+        env = ConcreteTestEnvironment()
         sim = BaseSimulation(env)
         
         assert isinstance(sim.simulation_id, str)
@@ -229,7 +253,7 @@ class TestBaseSimulation:
     @pytest.mark.asyncio
     async def test_add_plugin(self):
         """Test adding plugins to simulation"""
-        env = BaseEnvironment()
+        env = ConcreteTestEnvironment()
         sim = BaseSimulation(env)
         plugin = BasePlugin("TestPlugin")
         
@@ -240,7 +264,7 @@ class TestBaseSimulation:
     @pytest.mark.asyncio 
     async def test_simulation_step(self):
         """Test single simulation step"""
-        env = BaseEnvironment()
+        env = ConcreteTestEnvironment()
         sim = BaseSimulation(env)
         
         # Add a mock agent
@@ -265,7 +289,7 @@ class TestBaseSimulation:
     @pytest.mark.asyncio
     async def test_simulation_run(self):
         """Test running simulation for multiple steps"""
-        env = BaseEnvironment()
+        env = ConcreteTestEnvironment()
         sim = BaseSimulation(env)
         
         # Add plugin to track steps
@@ -289,7 +313,7 @@ class TestBaseSimulation:
     
     def test_get_results(self):
         """Test getting simulation results"""
-        env = BaseEnvironment()
+        env = ConcreteTestEnvironment()
         sim = BaseSimulation(env)
         sim._start_time = datetime.now()
         sim._current_timestep = 5

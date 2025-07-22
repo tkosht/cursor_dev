@@ -205,7 +205,7 @@ class TestLLMSelector:
 class TestLLMSelectorIntegration:
     """Test LLM selector integration with config"""
     
-    @patch('config.llm_selector.get_config')
+    @patch('config.config.get_config')
     def test_select_optimal_llm(self, mock_get_config):
         """Test the convenience function"""
         # Mock config

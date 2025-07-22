@@ -8,8 +8,13 @@ from functools import lru_cache
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
-from langchain_anthropic import ChatAnthropic
 from langchain_core.language_models import BaseChatModel
+
+# Optional import for Anthropic
+try:
+    from langchain_anthropic import ChatAnthropic
+except ImportError:
+    ChatAnthropic = None
 
 from ..config import get_config, LLMProvider
 
@@ -51,6 +56,12 @@ class LLMFactory:
     @staticmethod 
     def create_anthropic(model: str, **kwargs) -> BaseChatModel:
         """Create Anthropic model instance"""
+        if ChatAnthropic is None:
+            raise ImportError(
+                "langchain_anthropic is not installed. "
+                "Install it with: pip install langchain-anthropic"
+            )
+        
         config = get_config()
         
         return ChatAnthropic(

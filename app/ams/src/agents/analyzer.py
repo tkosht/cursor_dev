@@ -77,7 +77,7 @@ class AnalysisAgent:
         analysis_results["metadata"] = {
             "analysis_timestamp": datetime.now().isoformat(),
             "duration_seconds": (datetime.now() - start_time).total_seconds(),
-            "dimensions_analyzed": len(analysis_results) - 1,  # Exclude metadata
+            "dimensions_analyzed": len(analysis_results),  # Count before adding metadata
             "errors": errors,
         }
         

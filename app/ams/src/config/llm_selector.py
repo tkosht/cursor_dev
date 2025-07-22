@@ -183,7 +183,7 @@ class LLMSelector:
         Args:
             available_providers: List of providers with valid API keys
         """
-        self.available_providers = available_providers or list(LLMProvider)
+        self.available_providers = available_providers if available_providers is not None else list(LLMProvider)
         self.model_capabilities = MODEL_CAPABILITIES
     
     def select_model(
