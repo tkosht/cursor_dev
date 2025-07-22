@@ -6,7 +6,6 @@ import logging
 from functools import lru_cache
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.utils.env import get_from_env
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from pydantic import SecretStr
@@ -47,7 +46,7 @@ class LLMFactory:
         api_key = None
         if config.llm.openai_api_key:
             api_key = SecretStr(config.llm.openai_api_key)
-        
+
         return ChatOpenAI(
             model=model,
             api_key=api_key,
