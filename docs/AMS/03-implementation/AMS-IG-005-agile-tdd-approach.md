@@ -115,7 +115,7 @@ class UserConfiguration:
     
     # LLMプロバイダー設定
     llm_provider: str = "gemini"    # "gemini" | "openai" | "anthropic"
-    llm_model: str = "auto"         # "auto" | 具体的なモデル名
+    llm_model: str = "gemini-1.5-flash"  # 具体的なモデル名を明示的に指定（実装時に利用可能なモデルを確認）
     llm_temperature: float = 0.7    # 創造性レベル（0.0-1.0）
     
     # 出力設定

@@ -33,13 +33,13 @@ class TestLLMConfig:
     # 開発・テスト用の設定
     TEST_CONFIGS = {
         "unit_test": {
-            "model": "gemini-pro",  # 軽量モデル
+            "model": "gemini-1.5-flash",  # 実装時に利用可能なモデルを確認
             "max_tokens": 500,      # 最小限のトークン
             "temperature": 0.1,     # 決定的な出力
             "timeout": 10           # タイムアウト短め
         },
         "integration_test": {
-            "model": "gemini-pro",
+            "model": "gemini-1.5-flash",  # 実装時に利用可能なモデルを確認
             "max_tokens": 1000,
             "temperature": 0.3,
             "timeout": 30

@@ -378,7 +378,7 @@ def verify_setup():
     # API接続テスト
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')  # 実装時に利用可能なモデルを確認
         response = model.generate_content("Hello, this is a test")
         print("✅ Gemini API connection successful")
     except Exception as e:
