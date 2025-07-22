@@ -38,7 +38,9 @@ class LLMCapabilities(BaseModel):
     # Performance characteristics
     speed: float = Field(ge=0.0, le=10.0, description="Speed rating 0-10")
     quality: float = Field(ge=0.0, le=10.0, description="Quality rating 0-10")
-    cost_per_1k_tokens: float = Field(ge=0.0, description="Cost per 1000 tokens")
+    cost_per_1k_tokens: float = Field(
+        ge=0.0, description="Cost per 1000 tokens"
+    )
 
     # Technical capabilities
     max_tokens: int = Field(gt=0)
@@ -183,7 +185,9 @@ class LLMSelector:
             available_providers: List of providers with valid API keys
         """
         self.available_providers = (
-            available_providers if available_providers is not None else list(LLMProvider)
+            available_providers
+            if available_providers is not None
+            else list(LLMProvider)
         )
         self.model_capabilities = MODEL_CAPABILITIES
 
@@ -219,22 +223,34 @@ class LLMSelector:
                 continue
 
             # Check required features
-            if "json_mode" in required_features and not capabilities.supports_json_mode:
+            if (
+                "json_mode" in required_features
+                and not capabilities.supports_json_mode
+            ):
                 continue
             if (
                 "function_calling" in required_features
                 and not capabilities.supports_function_calling
             ):
                 continue
-            if "vision" in required_features and not capabilities.supports_vision:
+            if (
+                "vision" in required_features
+                and not capabilities.supports_vision
+            ):
                 continue
 
             # Check cost constraint
-            if max_cost_per_1k and capabilities.cost_per_1k_tokens > max_cost_per_1k:
+            if (
+                max_cost_per_1k
+                and capabilities.cost_per_1k_tokens > max_cost_per_1k
+            ):
                 continue
 
             # Check quality and speed minimums
-            if capabilities.quality < min_quality or capabilities.speed < min_speed:
+            if (
+                capabilities.quality < min_quality
+                or capabilities.speed < min_speed
+            ):
                 continue
 
             # Calculate task suitability score
@@ -252,7 +268,10 @@ class LLMSelector:
         if not candidates:
             # Fallback to default
             logger.warning("No suitable model found, using default")
-            return "gemini-2.5-flash", self.model_capabilities["gemini-2.5-flash"]
+            return (
+                "gemini-2.5-flash",
+                self.model_capabilities["gemini-2.5-flash"],
+            )
 
         # Sort by score and return best
         candidates.sort(key=lambda x: x[2], reverse=True)
@@ -276,7 +295,8 @@ class LLMSelector:
             task_score * 0.4
             + capabilities.quality * 0.3
             + capabilities.speed * 0.2
-            + (10 - capabilities.cost_per_1k_tokens * 1000) * 0.1  # Cost inverse
+            + (10 - capabilities.cost_per_1k_tokens * 1000)
+            * 0.1  # Cost inverse
         )
 
         # Provider preference bonus
@@ -332,7 +352,9 @@ def select_optimal_llm(
         task_type=task_type,
         required_features=required_features,
         max_cost_per_1k=budget_constraint,
-        prefer_provider=LLMProvider(config.llm.provider) if config.llm.provider else None,
+        prefer_provider=(
+            LLMProvider(config.llm.provider) if config.llm.provider else None
+        ),
     )
 
     return capabilities.provider.value, model_name

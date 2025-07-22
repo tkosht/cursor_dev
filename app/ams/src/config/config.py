@@ -23,15 +23,25 @@ class LLMConfig(BaseModel):
     )
 
     # Gemini settings
-    google_api_key: str | None = Field(default=None, description="Google API key")
-    gemini_model: str = Field(default="gemini-2.5-flash", description="Gemini model name")
+    google_api_key: str | None = Field(
+        default=None, description="Google API key"
+    )
+    gemini_model: str = Field(
+        default="gemini-2.5-flash", description="Gemini model name"
+    )
 
     # OpenAI settings
-    openai_api_key: str | None = Field(default=None, description="OpenAI API key")
-    openai_model: str = Field(default="gpt-4o-mini", description="OpenAI model name")
+    openai_api_key: str | None = Field(
+        default=None, description="OpenAI API key"
+    )
+    openai_model: str = Field(
+        default="gpt-4o-mini", description="OpenAI model name"
+    )
 
     # Anthropic settings
-    anthropic_api_key: str | None = Field(default=None, description="Anthropic API key")
+    anthropic_api_key: str | None = Field(
+        default=None, description="Anthropic API key"
+    )
     anthropic_model: str = Field(
         default="claude-3-haiku-20240307", description="Anthropic model name"
     )
@@ -39,7 +49,9 @@ class LLMConfig(BaseModel):
     # Common settings
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(default=4096, gt=0)
-    timeout: int = Field(default=60, gt=0, description="Request timeout in seconds")
+    timeout: int = Field(
+        default=60, gt=0, description="Request timeout in seconds"
+    )
 
     @validator("provider")
     def validate_api_key(cls, v, values):
@@ -93,7 +105,9 @@ class VisualizationConfig(BaseModel):
     max_connections: int = Field(default=100, gt=0)
 
     # Update settings
-    update_interval: float = Field(default=0.5, gt=0.0, description="Update interval in seconds")
+    update_interval: float = Field(
+        default=0.5, gt=0.0, description="Update interval in seconds"
+    )
     use_differential_updates: bool = Field(default=True)
     compress_updates: bool = Field(default=True)
 
@@ -109,7 +123,9 @@ class PerformanceConfig(BaseModel):
 
     parallel_workers: int = Field(default=10, gt=0, le=50)
     enable_caching: bool = Field(default=True)
-    cache_ttl: int = Field(default=3600, gt=0, description="Cache TTL in seconds")
+    cache_ttl: int = Field(
+        default=3600, gt=0, description="Cache TTL in seconds"
+    )
     cache_dir: Path = Field(default=Path(".cache"))
 
     # Profiling
@@ -142,7 +158,9 @@ class AMSConfig(BaseSettings):
     # Sub-configurations
     llm: LLMConfig = Field(default_factory=LLMConfig)
     simulation: SimulationConfig = Field(default_factory=SimulationConfig)
-    visualization: VisualizationConfig = Field(default_factory=VisualizationConfig)
+    visualization: VisualizationConfig = Field(
+        default_factory=VisualizationConfig
+    )
     performance: PerformanceConfig = Field(default_factory=PerformanceConfig)
 
     # Testing
@@ -165,13 +183,17 @@ class AMSConfig(BaseSettings):
             openai_api_key=os.getenv("OPENAI_API_KEY"),
             openai_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
             anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
-            anthropic_model=os.getenv("ANTHROPIC_MODEL", "claude-3-haiku-20240307"),
+            anthropic_model=os.getenv(
+                "ANTHROPIC_MODEL", "claude-3-haiku-20240307"
+            ),
         )
 
         # Load other configs
         sim_config = SimulationConfig(
             max_personas=int(os.getenv("AMS_MAX_PERSONAS", "100")),
-            max_simulation_steps=int(os.getenv("AMS_MAX_SIMULATION_STEPS", "50")),
+            max_simulation_steps=int(
+                os.getenv("AMS_MAX_SIMULATION_STEPS", "50")
+            ),
         )
 
         viz_config = VisualizationConfig(

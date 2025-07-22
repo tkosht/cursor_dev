@@ -1,9 +1,9 @@
 """最もシンプルなLLM呼び出しテスト"""
+
 import asyncio
 import os
 
 from dotenv import load_dotenv
-
 from src.utils.llm_factory import create_llm
 
 # .envファイルを読み込み
@@ -34,11 +34,16 @@ async def test_simple_llm_call():
         print(f"エラータイプ: {type(e)}")
         return False
 
+
 if __name__ == "__main__":
     # 環境変数確認
     print("\n=== 環境変数確認 ===")
-    print(f"GOOGLE_API_KEY: {'設定済み' if os.getenv('GOOGLE_API_KEY') else '未設定'}")
-    print(f"OPENAI_API_KEY: {'設定済み' if os.getenv('OPENAI_API_KEY') else '未設定'}")
+    print(
+        f"GOOGLE_API_KEY: {'設定済み' if os.getenv('GOOGLE_API_KEY') else '未設定'}"
+    )
+    print(
+        f"OPENAI_API_KEY: {'設定済み' if os.getenv('OPENAI_API_KEY') else '未設定'}"
+    )
 
     # 実行
     success = asyncio.run(test_simple_llm_call())

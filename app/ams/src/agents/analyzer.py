@@ -52,7 +52,8 @@ class AnalysisAgent:
 
         # Run all analyses in parallel
         analysis_tasks = [
-            analyzer(article_content) for analyzer in self.analysis_dimensions.values()
+            analyzer(article_content)
+            for analyzer in self.analysis_dimensions.values()
         ]
 
         results = await asyncio.gather(*analysis_tasks, return_exceptions=True)
@@ -61,7 +62,9 @@ class AnalysisAgent:
         analysis_results = {}
         errors = []
 
-        for dimension, result in zip(self.analysis_dimensions.keys(), results, strict=False):
+        for dimension, result in zip(
+            self.analysis_dimensions.keys(), results, strict=False
+        ):
             if isinstance(result, Exception):
                 errors.append({"dimension": dimension, "error": str(result)})
                 logger.error(f"Error in {dimension} analysis: {result}")
@@ -72,7 +75,9 @@ class AnalysisAgent:
         analysis_results["metadata"] = {
             "analysis_timestamp": datetime.now().isoformat(),
             "duration_seconds": (datetime.now() - start_time).total_seconds(),
-            "dimensions_analyzed": len(analysis_results),  # Count before adding metadata
+            "dimensions_analyzed": len(
+                analysis_results
+            ),  # Count before adding metadata
             "errors": errors,
         }
 
@@ -111,9 +116,13 @@ class AnalysisAgent:
             "total_words": len(words),
             "total_lines": len(lines),
             "total_paragraphs": len(paragraphs),
-            "avg_paragraph_length": len(words) / len(paragraphs) if paragraphs else 0,
+            "avg_paragraph_length": (
+                len(words) / len(paragraphs) if paragraphs else 0
+            ),
             "has_sections": any(line.startswith("#") for line in lines),
-            "has_lists": any(line.strip().startswith(("-", "*", "1.")) for line in lines),
+            "has_lists": any(
+                line.strip().startswith(("-", "*", "1.")) for line in lines
+            ),
             "has_code_blocks": "```" in text,
         }
 
@@ -147,7 +156,9 @@ class AnalysisAgent:
             "avg_sentence_length": words / sentences if sentences else 0,
             "complex_word_ratio": complex_words / words if words else 0,
             "estimated_reading_time_minutes": words / 200,  # Assuming 200 wpm
-            "difficulty_level": self._estimate_difficulty(words, sentences, complex_words),
+            "difficulty_level": self._estimate_difficulty(
+                words, sentences, complex_words
+            ),
         }
 
     async def _analyze_keywords(self, text: str) -> dict[str, Any]:
@@ -225,7 +236,9 @@ class AnalysisAgent:
         response = await self.llm.ainvoke(prompt)
         return self._parse_json_response(response.content)
 
-    def _estimate_difficulty(self, words: int, sentences: int, complex_words: int) -> str:
+    def _estimate_difficulty(
+        self, words: int, sentences: int, complex_words: int
+    ) -> str:
         """Estimate reading difficulty level"""
         if sentences == 0:
             return "unknown"

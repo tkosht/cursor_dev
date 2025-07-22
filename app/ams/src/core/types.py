@@ -50,7 +50,9 @@ class PersonaAttributes:
     # Psychographics
     values: list[str] = field(default_factory=list)
     interests: list[str] = field(default_factory=list)
-    personality_traits: dict[PersonalityType, float] = field(default_factory=dict)
+    personality_traits: dict[PersonalityType, float] = field(
+        default_factory=dict
+    )
 
     # Behavioral patterns
     information_seeking_behavior: str = "passive"
@@ -87,7 +89,9 @@ class PersonaAttributes:
             "psychographics": {
                 "values": self.values,
                 "interests": self.interests,
-                "personality_traits": {k.value: v for k, v in self.personality_traits.items()},
+                "personality_traits": {
+                    k.value: v for k, v in self.personality_traits.items()
+                },
             },
             "behavioral": {
                 "information_seeking": self.information_seeking_behavior,
@@ -99,7 +103,9 @@ class PersonaAttributes:
                 "daily_routines": self.daily_routines,
                 "cognitive_biases": self.cognitive_biases,
                 "emotional_triggers": self.emotional_triggers,
-                "preferred_channels": [ch.value for ch in self.preferred_channels],
+                "preferred_channels": [
+                    ch.value for ch in self.preferred_channels
+                ],
             },
             "network": {
                 "connections": self.connections,

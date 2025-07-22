@@ -155,7 +155,9 @@ class OrchestratorAgent:
                     update={
                         "current_phase": "completed",
                         "end_time": datetime.now(),
-                        "messages": [("system", "Review process completed successfully")],
+                        "messages": [
+                            ("system", "Review process completed successfully")
+                        ],
                     },
                 )
 
@@ -163,8 +165,13 @@ class OrchestratorAgent:
                 goto=self._get_node_for_phase(next_phase),
                 update={
                     "current_phase": next_phase,
-                    "phase_status": {**state.get("phase_status", {}), current_phase: "completed"},
-                    "messages": [("system", f"Transitioning to {next_phase} phase")],
+                    "phase_status": {
+                        **state.get("phase_status", {}),
+                        current_phase: "completed",
+                    },
+                    "messages": [
+                        ("system", f"Transitioning to {next_phase} phase")
+                    ],
                 },
             )
 
@@ -245,7 +252,9 @@ class OrchestratorAgent:
         personas = await generator.generate_personas(
             article_content=state["article_content"],
             analysis_results=state["analysis_results"],
-            count=state.get("persona_count", self.config.simulation.population_size),
+            count=state.get(
+                "persona_count", self.config.simulation.population_size
+            ),
         )
 
         return {
@@ -319,7 +328,10 @@ class OrchestratorAgent:
                         "errors": [],  # Clear errors
                         "retry_count": retry_count,
                         "messages": [
-                            ("system", f"Retrying {agent} (attempt {current_retries + 1})")
+                            (
+                                "system",
+                                f"Retrying {agent} (attempt {current_retries + 1})",
+                            )
                         ],
                     },
                 )
@@ -339,7 +351,9 @@ class OrchestratorAgent:
             checkpointer = MemorySaver()
 
         # Add the single persona evaluation node
-        self.workflow.add_node("evaluate_single_persona", self._evaluate_single_persona)
+        self.workflow.add_node(
+            "evaluate_single_persona", self._evaluate_single_persona
+        )
 
         return self.workflow.compile(checkpointer=checkpointer)
 

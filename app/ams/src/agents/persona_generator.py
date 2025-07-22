@@ -28,7 +28,10 @@ class PersonaGenerator:
         self.population_architect = PopulationArchitect()
 
     async def generate_personas(
-        self, article_content: str, analysis_results: dict[str, Any] | None = None, count: int = 50
+        self,
+        article_content: str,
+        analysis_results: dict[str, Any] | None = None,
+        count: int = 50,
     ) -> list[PersonaAttributes]:
         """Generate a list of detailed personas for article evaluation.
 
@@ -67,26 +70,36 @@ class PersonaGenerator:
     async def _analyze_context(self, article_content: str) -> dict[str, Any]:
         """Analyze article context using DeepContextAnalyzer."""
         logger.info("Analyzing article context")
-        return await self.context_analyzer.analyze_article_context(article_content)
+        return await self.context_analyzer.analyze_article_context(
+            article_content
+        )
 
     async def _design_population(
         self, analysis_results: dict[str, Any], target_size: int
     ) -> dict[str, Any]:
         """Design population structure using PopulationArchitect."""
-        logger.info(f"Designing population structure for {target_size} personas")
+        logger.info(
+            f"Designing population structure for {target_size} personas"
+        )
         return await self.population_architect.design_population_hierarchy(
             analysis_results, target_size=target_size
         )
 
     async def _generate_individual_personas(
-        self, analysis_results: dict[str, Any], population_structure: dict[str, Any]
+        self,
+        analysis_results: dict[str, Any],
+        population_structure: dict[str, Any],
     ) -> list[PersonaAttributes]:
         """Generate individual personas from population structure."""
         logger.info("Generating individual personas")
 
         personas = []
-        persona_slots = population_structure.get("hierarchy", {}).get("persona_slots", [])
-        major_segments = population_structure.get("hierarchy", {}).get("major_segments", [])
+        persona_slots = population_structure.get("hierarchy", {}).get(
+            "persona_slots", []
+        )
+        major_segments = population_structure.get("hierarchy", {}).get(
+            "major_segments", []
+        )
 
         # Create segment lookup for easy access
         segment_lookup = {segment["id"]: segment for segment in major_segments}
@@ -96,7 +109,9 @@ class PersonaGenerator:
                 # Get segment information for this persona slot
                 segment_info = segment_lookup.get(slot.get("major_segment"))
                 if not segment_info:
-                    logger.warning(f"No segment info found for slot {slot.get('id')}")
+                    logger.warning(
+                        f"No segment info found for slot {slot.get('id')}"
+                    )
                     continue
 
                 # Generate individual persona
@@ -109,7 +124,9 @@ class PersonaGenerator:
                 personas.append(persona)
 
             except Exception as e:
-                logger.error(f"Error generating persona for slot {slot.get('id')}: {e}")
+                logger.error(
+                    f"Error generating persona for slot {slot.get('id')}: {e}"
+                )
                 continue
 
         return personas
@@ -123,9 +140,15 @@ class PersonaGenerator:
         """Generate a single detailed persona."""
 
         # Extract context information
-        domain = analysis_results.get("core_context", {}).get("domain_analysis", {})
-        stakeholders = analysis_results.get("core_context", {}).get("stakeholder_mapping", {})
-        cultural = analysis_results.get("core_context", {}).get("cultural_dimensions", {})
+        domain = analysis_results.get("core_context", {}).get(
+            "domain_analysis", {}
+        )
+        stakeholders = analysis_results.get("core_context", {}).get(
+            "stakeholder_mapping", {}
+        )
+        cultural = analysis_results.get("core_context", {}).get(
+            "cultural_dimensions", {}
+        )
         hidden = analysis_results.get("hidden_dimensions", {})
 
         persona_prompt = f"""
@@ -177,9 +200,13 @@ class PersonaGenerator:
             persona_data = parse_llm_json_response(response.content)
 
             # Add slot metadata
-            persona_data["id"] = persona_slot.get("id", f"persona_{random.randint(1000, 9999)}")
+            persona_data["id"] = persona_slot.get(
+                "id", f"persona_{random.randint(1000, 9999)}"
+            )
             persona_data["segment_id"] = persona_slot.get("major_segment")
-            persona_data["network_position"] = persona_slot.get("network_position", {})
+            persona_data["network_position"] = persona_slot.get(
+                "network_position", {}
+            )
 
             return persona_data
 
@@ -214,17 +241,24 @@ class PersonaGenerator:
         ]
 
         return {
-            "id": persona_slot.get("id", f"persona_{random.randint(1000, 9999)}"),
+            "id": persona_slot.get(
+                "id", f"persona_{random.randint(1000, 9999)}"
+            ),
             "name": random.choice(names),
             "age": random.randint(25, 65),
             "occupation": f"{segment_info.get('name', 'General')} {random.choice(occupations)}",
             "background": (
                 f"Professional with interest in {segment_info.get('name', 'various topics')}"
             ),
-            "personality_traits": segment_info.get("characteristics", ["analytical", "curious"]),
+            "personality_traits": segment_info.get(
+                "characteristics", ["analytical", "curious"]
+            ),
             "interests": [segment_info.get("name", "general topics")],
             "decision_factors": ["evidence", "relevance", "trustworthiness"],
-            "information_preferences": ["professional networks", "industry publications"],
+            "information_preferences": [
+                "professional networks",
+                "industry publications",
+            ],
             "segment_id": persona_slot.get("major_segment"),
             "network_position": persona_slot.get("network_position", {}),
             "article_relationship": {
@@ -237,13 +271,17 @@ class PersonaGenerator:
             },
         }
 
-    def _convert_to_persona_attributes(self, persona_data: dict[str, Any]) -> PersonaAttributes:
+    def _convert_to_persona_attributes(
+        self, persona_data: dict[str, Any]
+    ) -> PersonaAttributes:
         """Convert persona data to PersonaAttributes object."""
         # Calculate network metrics from article relationship and network position
         sharing_likelihood = persona_data.get("article_relationship", {}).get(
             "sharing_likelihood", 0.5
         )
-        network_centrality = persona_data.get("network_position", {}).get("centrality", 0.5)
+        network_centrality = persona_data.get("network_position", {}).get(
+            "centrality", 0.5
+        )
 
         # Convert personality traits from list to dict with PersonalityType mapping
         personality_traits = {}
@@ -268,7 +306,9 @@ class PersonaGenerator:
             for trait in traits_list:
                 personality_type = trait_mapping.get(trait.lower())
                 if personality_type:
-                    personality_traits[personality_type] = random.uniform(0.6, 0.9)
+                    personality_traits[personality_type] = random.uniform(
+                        0.6, 0.9
+                    )
 
         return PersonaAttributes(
             # Demographics
@@ -280,17 +320,23 @@ class PersonaGenerator:
             values=persona_data.get("decision_factors", []),
             # Behavioral patterns
             content_sharing_likelihood=min(max(sharing_likelihood, 0.0), 1.0),
-            decision_making_style="analytical" if "analytical" in traits_list else "intuitive",
+            decision_making_style=(
+                "analytical" if "analytical" in traits_list else "intuitive"
+            ),
             # Network position
             network_centrality=min(max(network_centrality, 0.0), 1.0),
-            influence_score=min(max((sharing_likelihood + network_centrality) / 2, 0.0), 1.0),
+            influence_score=min(
+                max((sharing_likelihood + network_centrality) / 2, 0.0), 1.0
+            ),
             # Preferences
             preferred_channels=self._map_to_information_channels(
                 persona_data.get("information_preferences", [])
             ),
         )
 
-    def _map_to_information_channels(self, preferences: list[str]) -> list[InformationChannel]:
+    def _map_to_information_channels(
+        self, preferences: list[str]
+    ) -> list[InformationChannel]:
         """Map preference strings to InformationChannel enums."""
         channel_mapping = {
             "social": InformationChannel.SOCIAL_MEDIA,

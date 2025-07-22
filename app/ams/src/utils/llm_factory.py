@@ -115,7 +115,9 @@ class LLMFactory:
 
 
 @lru_cache(maxsize=4)
-def create_llm(provider: str | None = None, model: str | None = None, **kwargs) -> BaseChatModel:
+def create_llm(
+    provider: str | None = None, model: str | None = None, **kwargs
+) -> BaseChatModel:
     """
     Create or get cached LLM instance
 

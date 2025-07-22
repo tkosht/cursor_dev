@@ -1,4 +1,5 @@
 """LLM接続テスト - 実際のAPI呼び出し確認"""
+
 import asyncio
 import os
 import time
@@ -18,7 +19,9 @@ async def test_basic_connection():
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
         print("❌ エラー: GOOGLE_API_KEY が設定されていません")
-        print("対処法: .envファイルに GOOGLE_API_KEY=your-key-here を追加してください")
+        print(
+            "対処法: .envファイルに GOOGLE_API_KEY=your-key-here を追加してください"
+        )
         return False
 
     print(f"✅ API Key 検出: {api_key[:10]}...{api_key[-4:]}")
@@ -27,9 +30,7 @@ async def test_basic_connection():
         # LLM作成
         print("\n📡 LLMインスタンス作成中...")
         llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
-            google_api_key=api_key,
-            temperature=0.7
+            model="gemini-1.5-flash", google_api_key=api_key, temperature=0.7
         )
         print("✅ LLMインスタンス作成完了")
 
@@ -45,17 +46,23 @@ async def test_basic_connection():
         # テスト呼び出し2: 日本語処理
         print("\n🧪 テスト2: 日本語処理")
         start_time = time.time()
-        response = await llm.ainvoke("「こんにちは」を英語に翻訳してください。")
+        response = await llm.ainvoke(
+            "「こんにちは」を英語に翻訳してください。"
+        )
         elapsed = time.time() - start_time
 
         print(f"✅ 応答: {response.content}")
         print(f"⏱️  処理時間: {elapsed:.2f}秒")
 
         # メタデータの確認
-        if hasattr(response, 'response_metadata'):
+        if hasattr(response, "response_metadata"):
             print("\n📊 メタデータ:")
-            print(f"   - モデル: {response.response_metadata.get('model_name', 'N/A')}")
-            print(f"   - トークン使用量: {response.response_metadata.get('token_usage', 'N/A')}")
+            print(
+                f"   - モデル: {response.response_metadata.get('model_name', 'N/A')}"
+            )
+            print(
+                f"   - トークン使用量: {response.response_metadata.get('token_usage', 'N/A')}"
+            )
 
         print("\n✅ すべてのテストが成功しました！")
         return True
@@ -67,14 +74,20 @@ async def test_basic_connection():
 
         # エラー別の対処法
         if "API key not valid" in str(e):
-            print("\n💡 対処法: APIキーが無効です。"
-                  + "Google AI Studioで新しいキーを生成してください。")
+            print(
+                "\n💡 対処法: APIキーが無効です。"
+                + "Google AI Studioで新しいキーを生成してください。"
+            )
         elif "quota" in str(e).lower():
-            print("\n💡 対処法: APIの利用制限に達しました。"
-                  + "しばらく待ってから再試行してください。")
+            print(
+                "\n💡 対処法: APIの利用制限に達しました。"
+                + "しばらく待ってから再試行してください。"
+            )
         else:
-            print("\n💡 対処法: エラーの詳細を確認し、"
-                  + "ネットワーク接続やAPI設定を確認してください。")
+            print(
+                "\n💡 対処法: エラーの詳細を確認し、"
+                + "ネットワーク接続やAPI設定を確認してください。"
+            )
 
         return False
 
@@ -90,9 +103,7 @@ async def test_with_ams_context():
 
     try:
         llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
-            google_api_key=api_key,
-            temperature=0.7
+            model="gemini-1.5-flash", google_api_key=api_key, temperature=0.7
         )
 
         # AMSで使用する典型的なプロンプト
@@ -115,7 +126,9 @@ async def test_with_ams_context():
 
         # コスト推定
         # 概算: 入力100トークン + 出力50トークン
-        estimated_cost = (100 * 0.000000075) + (50 * 0.0000003)  # gemini-1.5-flash pricing
+        estimated_cost = (100 * 0.000000075) + (
+            50 * 0.0000003
+        )  # gemini-1.5-flash pricing
         print(f"💰 推定コスト: ${estimated_cost:.6f}")
 
         return True
@@ -144,6 +157,7 @@ async def main():
 
     print("\n\n❌ テストに失敗しました。エラーを確認してください。")
     return False
+
 
 if __name__ == "__main__":
     success = asyncio.run(main())

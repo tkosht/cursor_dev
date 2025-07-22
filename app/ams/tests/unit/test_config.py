@@ -6,7 +6,6 @@ import os
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from config import (
     AMSConfig,
     LLMConfig,
@@ -38,7 +37,9 @@ class TestLLMConfig:
         """Test config with API key from environment"""
         monkeypatch.setenv("GOOGLE_API_KEY", "test-google-key")
 
-        config = LLMConfig(provider="gemini", google_api_key=os.getenv("GOOGLE_API_KEY"))
+        config = LLMConfig(
+            provider="gemini", google_api_key=os.getenv("GOOGLE_API_KEY")
+        )
 
         assert config.google_api_key == "test-google-key"
 
@@ -172,7 +173,9 @@ class TestLLMSelector:
             output_tokens=500,
         )
 
-        expected_cost = (1500 / 1000) * MODEL_CAPABILITIES["gpt-4o"].cost_per_1k_tokens
+        expected_cost = (1500 / 1000) * MODEL_CAPABILITIES[
+            "gpt-4o"
+        ].cost_per_1k_tokens
         assert cost == pytest.approx(expected_cost)
 
     def test_provider_preference(self):

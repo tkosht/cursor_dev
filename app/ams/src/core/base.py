@@ -49,7 +49,9 @@ class BaseAgent(IAgent):
     """Base implementation of IAgent"""
 
     def __init__(
-        self, agent_id: AgentID | None = None, attributes: PersonaAttributes | None = None
+        self,
+        agent_id: AgentID | None = None,
+        attributes: PersonaAttributes | None = None,
     ):
         self._agent_id = agent_id or str(uuid.uuid4())
         self._attributes = attributes or PersonaAttributes()
@@ -73,7 +75,9 @@ class BaseAgent(IAgent):
         """Must be implemented by subclasses"""
         pass
 
-    async def act(self, action: IAction, environment: IEnvironment) -> ActionResult:
+    async def act(
+        self, action: IAction, environment: IEnvironment
+    ) -> ActionResult:
         """Execute action in environment"""
         result = await environment.apply_action(self._agent_id, action)
         self._action_history.append(result)
@@ -82,7 +86,9 @@ class BaseAgent(IAgent):
     async def update(self, result: ActionResult) -> None:
         """Update internal state based on action result"""
         self._state["last_action_result"] = result
-        logger.debug(f"Agent {self._agent_id} updated with result: {result.success}")
+        logger.debug(
+            f"Agent {self._agent_id} updated with result: {result.success}"
+        )
 
 
 class BaseEnvironment(IEnvironment):
@@ -104,11 +110,15 @@ class BaseEnvironment(IEnvironment):
             "timestep": self._state.timestep,
             "num_agents": len(self._agents),
             "article_metadata": self._state.article_metadata,
-            "my_connections": self._state.agents.get(agent_id, PersonaAttributes()).connections,
+            "my_connections": self._state.agents.get(
+                agent_id, PersonaAttributes()
+            ).connections,
         }
 
     @abstractmethod
-    async def apply_action(self, agent_id: AgentID, action: IAction) -> ActionResult:
+    async def apply_action(
+        self, agent_id: AgentID, action: IAction
+    ) -> ActionResult:
         """Must be implemented by subclasses"""
         pass
 
@@ -141,7 +151,9 @@ class BaseEnvironment(IEnvironment):
 class BasePlugin(IPlugin):
     """Base implementation of IPlugin"""
 
-    def __init__(self, name: str, version: str = "1.0.0", description: str = ""):
+    def __init__(
+        self, name: str, version: str = "1.0.0", description: str = ""
+    ):
         self._name = name
         self._version = version
         self._description = description
@@ -168,15 +180,21 @@ class BasePlugin(IPlugin):
 
     async def on_simulation_start(self, simulation: ISimulation) -> None:
         """Called when simulation starts"""
-        logger.debug(f"Plugin {self._name}: Simulation {simulation.simulation_id} started")
+        logger.debug(
+            f"Plugin {self._name}: Simulation {simulation.simulation_id} started"
+        )
 
-    async def on_timestep(self, simulation: ISimulation, timestep: int) -> None:
+    async def on_timestep(
+        self, simulation: ISimulation, timestep: int
+    ) -> None:
         """Called on each simulation timestep"""
         pass  # Default: do nothing
 
     async def on_simulation_end(self, simulation: ISimulation) -> None:
         """Called when simulation ends"""
-        logger.debug(f"Plugin {self._name}: Simulation {simulation.simulation_id} ended")
+        logger.debug(
+            f"Plugin {self._name}: Simulation {simulation.simulation_id} ended"
+        )
 
     async def cleanup(self) -> None:
         """Cleanup plugin resources"""
@@ -218,7 +236,9 @@ class BaseSimulation(ISimulation):
         logger.info(f"Initializing simulation {self._simulation_id}")
         # Initialize plugins
         for plugin in self._plugins:
-            await plugin.initialize(config.get("plugins", {}).get(plugin.name, {}))
+            await plugin.initialize(
+                config.get("plugins", {}).get(plugin.name, {})
+            )
 
     async def add_plugin(self, plugin: IPlugin) -> None:
         """Add a plugin to the simulation"""
@@ -227,7 +247,9 @@ class BaseSimulation(ISimulation):
 
     async def run(self, max_timesteps: int) -> None:
         """Run the simulation"""
-        logger.info(f"Starting simulation {self._simulation_id} for {max_timesteps} timesteps")
+        logger.info(
+            f"Starting simulation {self._simulation_id} for {max_timesteps} timesteps"
+        )
         self._start_time = datetime.now()
         self._is_running = True
 
@@ -301,7 +323,9 @@ class BaseSimulation(ISimulation):
         return {
             "simulation_id": self._simulation_id,
             "total_timesteps": self._current_timestep,
-            "start_time": self._start_time.isoformat() if self._start_time else None,
+            "start_time": (
+                self._start_time.isoformat() if self._start_time else None
+            ),
             "end_time": self._end_time.isoformat() if self._end_time else None,
             "duration": (
                 (self._end_time - self._start_time).total_seconds()

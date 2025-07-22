@@ -1,11 +1,11 @@
 """小規模統合テスト - 実際のLLM呼び出しで3ペルソナ生成"""
+
 import asyncio
 import json
 import os
 import time
 
 from dotenv import load_dotenv
-
 from src.agents.deep_context_analyzer import DeepContextAnalyzer
 from src.agents.persona_generator import PersonaGenerator
 from src.agents.population_architect import PopulationArchitect
@@ -59,11 +59,13 @@ async def run_small_scale_test():
 
         print(f"✅ 分析完了 ({analysis_time:.2f}秒)")
         print(f"   - 複雑度スコア: {context.get('complexity_score', 0):.2f}")
-        print(f"   - リーチポテンシャル: {context.get('reach_potential', 0):.2f}")
+        print(
+            f"   - リーチポテンシャル: {context.get('reach_potential', 0):.2f}"
+        )
         # 主要ドメインを取得（ネストが深いため分割）
-        core_context = context.get('core_context', {})
-        domain_analysis = core_context.get('domain_analysis', {})
-        primary_domain = domain_analysis.get('primary_domain', 'N/A')
+        core_context = context.get("core_context", {})
+        domain_analysis = core_context.get("domain_analysis", {})
+        primary_domain = domain_analysis.get("primary_domain", "N/A")
         print(f"   - 主要ドメイン: {primary_domain}")
 
         # Phase 2: 人口構造設計
@@ -74,19 +76,22 @@ async def run_small_scale_test():
         architect_start = time.time()
 
         population = await architect.design_population_hierarchy(
-            context,
-            target_size=3
+            context, target_size=3
         )
 
         architect_time = time.time() - architect_start
         api_call_count += 2  # Major segments + sub-segments
 
         print(f"✅ 人口構造設計完了 ({architect_time:.2f}秒)")
-        print(f"   - 主要セグメント数: {len(population['hierarchy']['major_segments'])}")
-        print(f"   - ペルソナスロット数: {len(population['hierarchy']['persona_slots'])}")
+        print(
+            f"   - 主要セグメント数: {len(population['hierarchy']['major_segments'])}"
+        )
+        print(
+            f"   - ペルソナスロット数: {len(population['hierarchy']['persona_slots'])}"
+        )
 
         # 主要セグメント表示
-        for seg in population['hierarchy']['major_segments'][:3]:
+        for seg in population["hierarchy"]["major_segments"][:3]:
             print(f"   - {seg['name']}: {seg['percentage']:.1f}%")
 
         # Phase 3: ペルソナ生成
@@ -97,15 +102,15 @@ async def run_small_scale_test():
         generator_start = time.time()
 
         personas = await generator.generate_personas(
-            article_content=TEST_ARTICLE,
-            analysis_results=context,
-            count=3
+            article_content=TEST_ARTICLE, analysis_results=context, count=3
         )
 
         generator_time = time.time() - generator_start
         api_call_count += len(personas)  # 各ペルソナごとに1回
 
-        print(f"✅ {len(personas)}体のペルソナ生成完了 ({generator_time:.2f}秒)")
+        print(
+            f"✅ {len(personas)}体のペルソナ生成完了 ({generator_time:.2f}秒)"
+        )
 
         # ペルソナ詳細表示
         for i, persona in enumerate(personas, 1):
@@ -114,7 +119,9 @@ async def run_small_scale_test():
             print(f"      - 年齢: {persona.age}")
             print(f"      - 関心事: {', '.join(persona.interests[:3])}")
             print(f"      - 影響力スコア: {persona.influence_score:.2f}")
-            print(f"      - シェア可能性: {persona.content_sharing_likelihood:.2f}")
+            print(
+                f"      - シェア可能性: {persona.content_sharing_likelihood:.2f}"
+            )
 
         # 総括
         total_time = time.time() - start_time
@@ -129,8 +136,12 @@ async def run_small_scale_test():
         # 成功基準チェック
         print("\n🎯 成功基準チェック:")
         print("   ✅ 3ペルソナ生成: 完了")
-        print(f"   {'✅' if total_time < 60 else '❌'} 実行時間 < 60秒: {total_time:.2f}秒")
-        print(f"   {'✅' if api_call_count <= 10 else '⚠️'} API呼び出し ≤ 10回: {api_call_count}回")
+        print(
+            f"   {'✅' if total_time < 60 else '❌'} 実行時間 < 60秒: {total_time:.2f}秒"
+        )
+        print(
+            f"   {'✅' if api_call_count <= 10 else '⚠️'} API呼び出し ≤ 10回: {api_call_count}回"
+        )
 
         # 結果をファイルに保存
         result_data = {
@@ -139,13 +150,15 @@ async def run_small_scale_test():
             "api_calls": api_call_count,
             "estimated_cost": api_call_count * 0.000022,
             "personas_generated": len(personas),
-            "success": total_time < 60 and len(personas) == 3
+            "success": total_time < 60 and len(personas) == 3,
         }
 
         with open("test_results/small_integration_result.json", "w") as f:
             json.dump(result_data, f, indent=2)
 
-        print("\n📄 結果を test_results/small_integration_result.json に保存しました")
+        print(
+            "\n📄 結果を test_results/small_integration_result.json に保存しました"
+        )
 
         return True
 
@@ -155,9 +168,11 @@ async def run_small_scale_test():
         print(f"   詳細: {e}")
 
         import traceback
+
         traceback.print_exc()
 
         return False
+
 
 if __name__ == "__main__":
     # 結果保存用ディレクトリ作成

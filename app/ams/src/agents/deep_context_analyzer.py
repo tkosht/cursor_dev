@@ -36,13 +36,17 @@ class DeepContextAnalyzer:
             core_context = await self._analyze_core_dimensions(article)
 
             # Discover hidden dimensions
-            hidden_dimensions = await self._discover_hidden_dimensions(article, core_context)
+            hidden_dimensions = await self._discover_hidden_dimensions(
+                article, core_context
+            )
 
             return {
                 "core_context": core_context,
                 "hidden_dimensions": hidden_dimensions,
                 "complexity_score": self._calculate_complexity(core_context),
-                "reach_potential": self._estimate_reach_potential(core_context),
+                "reach_potential": self._estimate_reach_potential(
+                    core_context
+                ),
             }
 
         except Exception:
@@ -164,7 +168,9 @@ class DeepContextAnalyzer:
 
         return round(score, 2)
 
-    def _estimate_reach_potential(self, context_analysis: dict[str, Any]) -> float:
+    def _estimate_reach_potential(
+        self, context_analysis: dict[str, Any]
+    ) -> float:
         """Estimate article reach potential (0-1).
 
         Args:
@@ -184,7 +190,9 @@ class DeepContextAnalyzer:
 
         # Emotional impact component (0-0.3)
         emotional = context_analysis.get("emotional_landscape", {})
-        controversy = 1.0 if emotional.get("controversy_potential") == "high" else 0.5
+        controversy = (
+            1.0 if emotional.get("controversy_potential") == "high" else 0.5
+        )
         inspiration = len(emotional.get("inspirational_elements", [])) / 3
         emotional_score = (controversy + min(inspiration, 1.0)) / 2
         score += emotional_score * 0.3

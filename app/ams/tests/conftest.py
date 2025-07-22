@@ -43,8 +43,12 @@ def mock_config(monkeypatch):
 def mock_llm():
     """Mock LLM for testing"""
     mock = MagicMock()
-    mock.ainvoke = MagicMock(return_value=MagicMock(content='{"result": "test"}'))
-    mock.invoke = MagicMock(return_value=MagicMock(content='{"result": "test"}'))
+    mock.ainvoke = MagicMock(
+        return_value=MagicMock(content='{"result": "test"}')
+    )
+    mock.invoke = MagicMock(
+        return_value=MagicMock(content='{"result": "test"}')
+    )
     return mock
 
 
@@ -91,7 +95,11 @@ def sample_article():
 @pytest.fixture
 def sample_persona_attributes():
     """Sample persona attributes for testing"""
-    from core.types import InformationChannel, PersonaAttributes, PersonalityType
+    from core.types import (
+        InformationChannel,
+        PersonaAttributes,
+        PersonalityType,
+    )
 
     return PersonaAttributes(
         age=35,
@@ -105,7 +113,10 @@ def sample_persona_attributes():
             PersonalityType.CONSCIENTIOUSNESS: 0.7,
         },
         information_seeking_behavior="active",
-        preferred_channels=[InformationChannel.TECH_BLOGS, InformationChannel.SOCIAL_MEDIA],
+        preferred_channels=[
+            InformationChannel.TECH_BLOGS,
+            InformationChannel.SOCIAL_MEDIA,
+        ],
     )
 
 

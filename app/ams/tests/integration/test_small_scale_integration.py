@@ -11,7 +11,6 @@ import time
 
 import pytest
 from dotenv import load_dotenv
-
 from src.agents.deep_context_analyzer import DeepContextAnalyzer
 from src.agents.persona_generator import PersonaGenerator
 from src.agents.population_architect import PopulationArchitect
@@ -21,7 +20,9 @@ from src.core.types import PersonaAttributes
 load_dotenv()
 
 # Configure logging to see what's happening
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -87,8 +88,12 @@ class TestSmallScaleIntegration:
             api_calls["architect"] = 2  # Major segments + sub-segments
 
             logger.info("Population design complete.")
-            logger.info(f"Major segments: {len(population['hierarchy']['major_segments'])}")
-            logger.info(f"Persona slots: {len(population['hierarchy']['persona_slots'])}")
+            logger.info(
+                f"Major segments: {len(population['hierarchy']['major_segments'])}"
+            )
+            logger.info(
+                f"Persona slots: {len(population['hierarchy']['persona_slots'])}"
+            )
             logger.info(f"API calls so far: {sum(api_calls.values())}")
 
             # Verify population structure
@@ -102,7 +107,9 @@ class TestSmallScaleIntegration:
             generator = PersonaGenerator()
 
             personas = await generator.generate_personas(
-                article_content=short_article, analysis_results=context, count=3  # Only 3 personas
+                article_content=short_article,
+                analysis_results=context,
+                count=3,  # Only 3 personas
             )
             api_calls["generator"] = 3  # One per persona
 
@@ -113,7 +120,9 @@ class TestSmallScaleIntegration:
             assert len(personas) >= 3
             for i, persona in enumerate(personas):
                 assert isinstance(persona, PersonaAttributes)
-                logger.info(f"Persona {i+1}: {persona.occupation}, Age: {persona.age}")
+                logger.info(
+                    f"Persona {i+1}: {persona.occupation}, Age: {persona.age}"
+                )
                 logger.info(f"  Interests: {persona.interests[:2]}")
                 logger.info(f"  Influence: {persona.influence_score:.2f}")
 
@@ -125,10 +134,14 @@ class TestSmallScaleIntegration:
             logger.info(f"Total API calls: {total_api_calls}")
             logger.info(f"Breakdown: {api_calls}")
             logger.info(f"Execution time: {elapsed_time:.2f} seconds")
-            logger.info(f"Estimated cost: ~${total_api_calls * 0.002:.4f} (assuming ~$0.002/call)")
+            logger.info(
+                f"Estimated cost: ~${total_api_calls * 0.002:.4f} (assuming ~$0.002/call)"
+            )
 
             # Basic assertions
-            assert total_api_calls <= 10, "Too many API calls for small scale test"
+            assert (
+                total_api_calls <= 10
+            ), "Too many API calls for small scale test"
             assert elapsed_time < 60, "Test took too long"
 
         except Exception as e:
@@ -146,7 +159,9 @@ class TestSmallScaleIntegration:
         context = await analyzer.analyze_article_context(short_article)
 
         architect = PopulationArchitect()
-        population = await architect.design_population_hierarchy(context, target_size=3)
+        population = await architect.design_population_hierarchy(
+            context, target_size=3
+        )
 
         # Verify data compatibility
         assert isinstance(context, dict)
@@ -180,7 +195,9 @@ class TestSmallScaleIntegration:
 
         # Test population design with bad context
         architect = PopulationArchitect()
-        population = await architect.design_population_hierarchy({}, target_size=3)
+        population = await architect.design_population_hierarchy(
+            {}, target_size=3
+        )
 
         # Should return valid structure
         assert isinstance(population, dict)

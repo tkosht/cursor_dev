@@ -4,7 +4,6 @@ import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from src.agents.population_architect import PopulationArchitect
 
 
@@ -24,7 +23,10 @@ class TestPopulationArchitect:
                 "stakeholder_mapping": {
                     "beneficiaries": ["patients", "healthcare providers"],
                     "opponents": ["privacy advocates"],
-                    "likely_sharers": ["tech enthusiasts", "medical professionals"],
+                    "likely_sharers": [
+                        "tech enthusiasts",
+                        "medical professionals",
+                    ],
                 },
             },
             "hidden_dimensions": {
@@ -41,7 +43,9 @@ class TestPopulationArchitect:
         return PopulationArchitect()
 
     @pytest.mark.asyncio
-    async def test_design_population_hierarchy_structure(self, architect, sample_context):
+    async def test_design_population_hierarchy_structure(
+        self, architect, sample_context
+    ):
         """Test that design_population_hierarchy returns proper structure."""
         # Mock major segments response
         mock_segments = [
@@ -75,19 +79,34 @@ class TestPopulationArchitect:
             with patch.object(architect, "_design_sub_segments") as mock_sub:
                 mock_sub.return_value = {"subcategories": ["junior", "senior"]}
 
-                with patch.object(architect, "_design_micro_clusters") as mock_micro:
-                    mock_micro.return_value = {"clusters": ["innovators", "pragmatists"]}
+                with patch.object(
+                    architect, "_design_micro_clusters"
+                ) as mock_micro:
+                    mock_micro.return_value = {
+                        "clusters": ["innovators", "pragmatists"]
+                    }
 
-                    with patch.object(architect, "_allocate_persona_slots") as mock_slots:
-                        mock_slots.return_value = [{"slot": i} for i in range(50)]
+                    with patch.object(
+                        architect, "_allocate_persona_slots"
+                    ) as mock_slots:
+                        mock_slots.return_value = [
+                            {"slot": i} for i in range(50)
+                        ]
 
-                        with patch.object(architect, "_design_network_topology") as mock_network:
-                            mock_network.return_value = {"type": "small-world", "density": 0.3}
+                        with patch.object(
+                            architect, "_design_network_topology"
+                        ) as mock_network:
+                            mock_network.return_value = {
+                                "type": "small-world",
+                                "density": 0.3,
+                            }
 
                             with patch.object(
                                 architect, "_design_influence_patterns"
                             ) as mock_influence:
-                                mock_influence.return_value = {"influencers": ["tech_leaders"]}
+                                mock_influence.return_value = {
+                                    "influencers": ["tech_leaders"]
+                                }
 
                                 result = await architect.design_population_hierarchy(
                                     sample_context, target_size=50
@@ -174,7 +193,9 @@ class TestPopulationArchitect:
             mock_llm.ainvoke = AsyncMock()
             mock_llm.ainvoke.return_value.content = json.dumps(mock_response)
 
-            sub_segments = await architect._design_sub_segments(major_segment, sample_context)
+            sub_segments = await architect._design_sub_segments(
+                major_segment, sample_context
+            )
 
             assert len(sub_segments) == 2
             assert sub_segments[0]["id"] == "young_doctors"
@@ -214,14 +235,19 @@ class TestPopulationArchitect:
         assert len(slots) == 100
 
         # Check distribution roughly matches percentages
-        early_adopter_count = sum(1 for s in slots if s["major_segment"] == "early_adopters")
+        early_adopter_count = sum(
+            1 for s in slots if s["major_segment"] == "early_adopters"
+        )
         assert 15 <= early_adopter_count <= 25  # Allow some variance
 
     @pytest.mark.asyncio
     async def test_design_network_topology(self, architect):
         """Test network topology design."""
         persona_slots = [
-            {"id": f"persona_{i}", "major_segment": "early_adopters" if i < 20 else "mainstream"}
+            {
+                "id": f"persona_{i}",
+                "major_segment": "early_adopters" if i < 20 else "mainstream",
+            }
             for i in range(50)
         ]
 
@@ -234,7 +260,12 @@ class TestPopulationArchitect:
 
         # Check reasonable values
         assert 0 < topology["density"] < 1
-        assert topology["network_type"] in ["small-world", "scale-free", "random", "hierarchical"]
+        assert topology["network_type"] in [
+            "small-world",
+            "scale-free",
+            "random",
+            "hierarchical",
+        ]
 
     @pytest.mark.asyncio
     async def test_design_influence_patterns(self, architect):
@@ -244,7 +275,11 @@ class TestPopulationArchitect:
                 "id": f"persona_{i}",
                 "major_segment": "early_adopters" if i < 10 else "mainstream",
                 "sub_segment": "tech_leaders" if i < 5 else "followers",
-                "micro_cluster": "influencers" if i < 3 else "connectors" if i < 6 else "followers",
+                "micro_cluster": (
+                    "influencers"
+                    if i < 3
+                    else "connectors" if i < 6 else "followers"
+                ),
             }
             for i in range(30)
         ]
@@ -282,7 +317,9 @@ class TestPopulationArchitect:
             mock_llm.ainvoke.side_effect = Exception("LLM API Error")
 
             # Should handle error gracefully
-            result = await architect.design_population_hierarchy(sample_context)
+            result = await architect.design_population_hierarchy(
+                sample_context
+            )
 
             # Should return valid structure even on error
             assert "hierarchy" in result

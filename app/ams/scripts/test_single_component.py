@@ -1,4 +1,5 @@
 """単一コンポーネントテスト - 実際のLLM呼び出し確認"""
+
 import asyncio
 import os
 import sys
@@ -45,8 +46,8 @@ async def test_analyzer_only():
         print(f"リーチポテンシャル: {context.get('reach_potential', 0):.2f}")
 
         # コンテキストの一部を表示
-        if 'core_context' in context:
-            domain = context['core_context'].get('domain_analysis', {})
+        if "core_context" in context:
+            domain = context["core_context"].get("domain_analysis", {})
             print("\nドメイン分析:")
             print(f"  主要ドメイン: {domain.get('primary_domain', 'N/A')}")
 
@@ -57,8 +58,10 @@ async def test_analyzer_only():
     except Exception as e:
         print(f"\n❌ エラー: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 if __name__ == "__main__":
     success = asyncio.run(test_analyzer_only())

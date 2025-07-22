@@ -6,10 +6,20 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
-from core.base import BaseAction, BaseAgent, BaseEnvironment, BasePlugin, BaseSimulation
+from core.base import (
+    BaseAction,
+    BaseAgent,
+    BaseEnvironment,
+    BasePlugin,
+    BaseSimulation,
+)
 from core.interfaces import IAction, IAgent, IEnvironment, IPlugin, ISimulation
-from core.types import ActionResult, AgentID, PersonaAttributes, SimulationState
+from core.types import (
+    ActionResult,
+    AgentID,
+    PersonaAttributes,
+    SimulationState,
+)
 
 
 # テスト用の具体的な実装クラス
@@ -25,7 +35,9 @@ class ConcreteTestAgent(BaseAgent):
 class ConcreteTestEnvironment(BaseEnvironment):
     """テスト用の環境実装"""
 
-    async def apply_action(self, agent_id: AgentID, action: IAction) -> ActionResult:
+    async def apply_action(
+        self, agent_id: AgentID, action: IAction
+    ) -> ActionResult:
         """テスト用のアクション適用"""
         # 最小限の実装：常に成功を返す
         return ActionResult(
@@ -77,7 +89,9 @@ class TestBaseAgent:
 
     def test_agent_with_custom_attributes(self):
         """Test agent with custom attributes"""
-        attrs = PersonaAttributes(age=30, occupation="Engineer", values=["innovation", "quality"])
+        attrs = PersonaAttributes(
+            age=30, occupation="Engineer", values=["innovation", "quality"]
+        )
         agent = ConcreteTestAgent(agent_id="test-123", attributes=attrs)
 
         assert agent.agent_id == "test-123"
@@ -89,7 +103,9 @@ class TestBaseAgent:
         """Test agent perception"""
         agent = ConcreteTestAgent()
         mock_env = MagicMock(spec=IEnvironment)
-        mock_env.get_observable_state = AsyncMock(return_value={"test": "data"})
+        mock_env.get_observable_state = AsyncMock(
+            return_value={"test": "data"}
+        )
 
         perception = await agent.perceive(mock_env)
 
@@ -128,7 +144,9 @@ class TestBaseAgent:
         await agent.update(result)
 
         assert agent._state["last_action_result"] == result
-        assert len(agent._action_history) == 0  # Not added in update, only in act
+        assert (
+            len(agent._action_history) == 0
+        )  # Not added in update, only in act
 
 
 class TestBaseEnvironment:
@@ -194,7 +212,9 @@ class TestBasePlugin:
 
     def test_plugin_creation(self):
         """Test creating a basic plugin"""
-        plugin = BasePlugin(name="TestPlugin", version="1.0.0", description="A test plugin")
+        plugin = BasePlugin(
+            name="TestPlugin", version="1.0.0", description="A test plugin"
+        )
 
         assert plugin.name == "TestPlugin"
         assert plugin.version == "1.0.0"
@@ -262,7 +282,9 @@ class TestBaseSimulation:
         agent = MagicMock(spec=IAgent)
         agent.perceive = AsyncMock(return_value={"test": "perception"})
         agent.decide = AsyncMock(return_value=BaseAction("test", {}))
-        agent.act = AsyncMock(return_value=ActionResult(True, "test", "agent-1"))
+        agent.act = AsyncMock(
+            return_value=ActionResult(True, "test", "agent-1")
+        )
         agent.update = AsyncMock()
 
         env.add_agent(agent)
