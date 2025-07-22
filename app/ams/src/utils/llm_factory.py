@@ -6,8 +6,10 @@ import logging
 from functools import lru_cache
 
 from langchain_core.language_models import BaseChatModel
+from langchain_core.utils.env import get_from_env
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
+from pydantic import SecretStr
 
 # Optional import for Anthropic
 try:
@@ -42,11 +44,14 @@ class LLMFactory:
         """Create OpenAI model instance"""
         config = get_config()
 
+        api_key = None
+        if config.llm.openai_api_key:
+            api_key = SecretStr(config.llm.openai_api_key)
+        
         return ChatOpenAI(
             model=model,
-            api_key=config.llm.openai_api_key,
+            api_key=api_key,
             temperature=kwargs.get("temperature", config.llm.temperature),
-            max_tokens=kwargs.get("max_tokens", config.llm.max_tokens),
             timeout=kwargs.get("timeout", config.llm.timeout),
             max_retries=kwargs.get("max_retries", 2),
         )

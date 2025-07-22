@@ -59,8 +59,8 @@ class AnalysisAgent:
         results = await asyncio.gather(*analysis_tasks, return_exceptions=True)
 
         # Combine results
-        analysis_results = {}
-        errors = []
+        analysis_results: dict[str, Any] = {}
+        errors: list[dict[str, str]] = []
 
         for dimension, result in zip(
             self.analysis_dimensions.keys(), results, strict=False

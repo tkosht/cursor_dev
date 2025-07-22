@@ -227,7 +227,7 @@ class PopulationArchitect:
         target_size: int,
     ) -> list[dict[str, Any]]:
         """Allocate individual persona slots across the hierarchy."""
-        persona_slots = []
+        persona_slots: list[dict[str, Any]] = []
 
         # Calculate slots per major segment
         for major_seg in major_segments:

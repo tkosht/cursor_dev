@@ -5,7 +5,7 @@ Configuration management for AMS
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field, validator
@@ -177,7 +177,10 @@ class AMSConfig(BaseSettings):
         """Create config from environment variables"""
         # Load LLM config from env
         llm_config = LLMConfig(
-            provider=os.getenv("LLM_PROVIDER", "gemini"),
+            provider=cast(
+                Literal["gemini", "openai", "anthropic"],
+                os.getenv("LLM_PROVIDER", "gemini"),
+            ),
             google_api_key=os.getenv("GOOGLE_API_KEY"),
             gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
             openai_api_key=os.getenv("OPENAI_API_KEY"),
