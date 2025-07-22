@@ -2,14 +2,15 @@
 Pytest configuration for AMS tests
 """
 
-import pytest
-import os
-from pathlib import Path
-from unittest.mock import MagicMock
 import asyncio
 
 # Add src to path
 import sys
+from pathlib import Path
+from unittest.mock import MagicMock
+
+import pytest
+
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
@@ -31,9 +32,10 @@ def mock_config(monkeypatch):
     monkeypatch.setenv("TEST_MODE", "true")
     monkeypatch.setenv("AMS_MAX_PERSONAS", "10")
     monkeypatch.setenv("AMS_LOG_LEVEL", "DEBUG")
-    
+
     # Import after env vars are set
     from config import get_config
+
     return get_config()
 
 
@@ -51,36 +53,36 @@ def sample_article():
     """Sample article for testing"""
     return """
     # Introduction to Large Language Models
-    
+
     Large Language Models (LLMs) have revolutionized natural language processing
     and artificial intelligence. These models, trained on vast amounts of text data,
     can understand and generate human-like text with remarkable accuracy.
-    
+
     ## Key Capabilities
-    
+
     - Text generation and completion
     - Language translation
     - Question answering
     - Code generation
     - Summarization
-    
+
     ## Applications
-    
+
     LLMs are being used across various industries:
-    
+
     1. **Healthcare**: Medical documentation and research
     2. **Education**: Personalized tutoring and content creation
     3. **Business**: Customer service and content marketing
     4. **Technology**: Code assistance and debugging
-    
+
     ## Future Directions
-    
+
     The future of LLMs looks promising with ongoing research in:
     - Multimodal capabilities
     - Improved efficiency
     - Better reasoning abilities
     - Enhanced safety and alignment
-    
+
     As these models continue to evolve, we can expect even more
     innovative applications and improvements in human-AI interaction.
     """
@@ -89,8 +91,8 @@ def sample_article():
 @pytest.fixture
 def sample_persona_attributes():
     """Sample persona attributes for testing"""
-    from core.types import PersonaAttributes, PersonalityType, InformationChannel
-    
+    from core.types import InformationChannel, PersonaAttributes, PersonalityType
+
     return PersonaAttributes(
         age=35,
         occupation="Software Engineer",
