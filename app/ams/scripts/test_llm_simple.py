@@ -9,6 +9,7 @@ from src.utils.llm_factory import create_llm
 # .envファイルを読み込み
 load_dotenv()
 
+
 async def test_simple_llm_call():
     """シンプルなLLM呼び出しテスト"""
     print("=== シンプルなLLM呼び出しテスト ===")

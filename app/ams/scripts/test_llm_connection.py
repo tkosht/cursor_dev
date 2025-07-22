@@ -9,6 +9,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 # .envファイルを読み込み
 load_dotenv()
 
+
 async def test_basic_connection():
     """基本的な接続テスト"""
     print("=== 基本的なLLM接続テスト ===")
@@ -66,16 +67,17 @@ async def test_basic_connection():
 
         # エラー別の対処法
         if "API key not valid" in str(e):
-            print("\n💡 対処法: APIキーが無効です。" +
-                  "Google AI Studioで新しいキーを生成してください。")
+            print("\n💡 対処法: APIキーが無効です。"
+                  + "Google AI Studioで新しいキーを生成してください。")
         elif "quota" in str(e).lower():
-            print("\n💡 対処法: APIの利用制限に達しました。" +
-                  "しばらく待ってから再試行してください。")
+            print("\n💡 対処法: APIの利用制限に達しました。"
+                  + "しばらく待ってから再試行してください。")
         else:
-            print("\n💡 対処法: エラーの詳細を確認し、" +
-                  "ネットワーク接続やAPI設定を確認してください。")
+            print("\n💡 対処法: エラーの詳細を確認し、"
+                  + "ネットワーク接続やAPI設定を確認してください。")
 
         return False
+
 
 async def test_with_ams_context():
     """AMSコンテキストでのテスト"""
@@ -121,6 +123,7 @@ async def test_with_ams_context():
     except Exception as e:
         print(f"❌ エラー: {e}")
         return False
+
 
 async def main():
     """メイン実行関数"""

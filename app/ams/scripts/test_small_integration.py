@@ -29,6 +29,7 @@ TEST_ARTICLE = """
 ポジティブなフィードバックを多数いただいています。
 """
 
+
 async def run_small_scale_test():
     """小規模統合テスト実行"""
     print("🚀 AMS小規模統合テスト開始（3ペルソナ、実API呼び出し）")

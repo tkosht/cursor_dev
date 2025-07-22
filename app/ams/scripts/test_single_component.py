@@ -6,9 +6,10 @@ import time
 
 from dotenv import load_dotenv
 
+# パスを追加してからインポート
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.agents.deep_context_analyzer import DeepContextAnalyzer
+from src.agents.deep_context_analyzer import DeepContextAnalyzer  # noqa: E402
 
 # 環境変数読み込み
 load_dotenv()
@@ -18,6 +19,7 @@ TEST_ARTICLE = """
 AIアシスタントが業務効率を向上させます。
 自然な会話で操作でき、24時間利用可能です。
 """
+
 
 async def test_analyzer_only():
     """DeepContextAnalyzerのみをテスト"""
