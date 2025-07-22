@@ -45,7 +45,7 @@ class UserConfiguration:
     # === LLM設定（明示的な指定のみ）===
     llm_provider: str = "gemini"    # "gemini" | "openai" | "anthropic"
     llm_model: str                  # 明示的なモデル名の指定が必須
-    # 例: "gemini-1.5-flash", "gemini-1.5-pro" など
+    # 例: "gemini-2.5-flash", "gemini-2.5-pro" など
     # ※実装時に最新の利用可能モデルを確認すること
     
     llm_temperature: float = 0.7    # 創造性レベル（0.0-1.0）
@@ -60,7 +60,7 @@ class UserConfiguration:
 config = UserConfiguration(
     article="評価対象の記事...",
     llm_provider="gemini",
-    llm_model="gemini-1.5-flash",  # 実装時に正確な名前を確認
+    llm_model="gemini-2.5-flash",  # デフォルトモデル
     population_size=30,
     simulation_steps=10
 )
@@ -175,11 +175,11 @@ class SimplifiedConfig:
     """簡素化された設定"""
     
     # ユーザーが明示的に選択
-    llm_model: str  # "gemini-1.5-flash" or "gemini-1.5-pro" など
+    llm_model: str  # "gemini-2.5-flash" or "gemini-2.5-pro" など
     
     # コスト vs 品質のトレードオフを明示
-    # - 低コスト版: gemini-1.5-flash（仮）
-    # - 高品質版: gemini-1.5-pro（仮）
+    # - 低コスト版: gemini-2.5-flash（デフォルト）
+    # - 高品質版: gemini-2.5-pro（高精度・高額）
     # ※実際のモデル名は実装時に確認
 ```
 

@@ -63,7 +63,7 @@ simulation:
 # === LLM設定 ===
 llm:
   provider: "gemini"        # gemini/openai/anthropic
-  model: "gemini-1.5-flash" # 具体的なモデル名を明示的に指定（実装時に利用可能なモデルを確認）
+  model: "gemini-2.5-flash" # デフォルトモデル
   temperature: 0.7          # 0.0-1.0（創造性レベル）
   max_tokens_per_call: 1000
   

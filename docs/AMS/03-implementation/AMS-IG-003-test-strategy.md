@@ -33,19 +33,19 @@ class TestLLMConfig:
     # 開発・テスト用の設定
     TEST_CONFIGS = {
         "unit_test": {
-            "model": "gemini-1.5-flash",  # 実装時に利用可能なモデルを確認
+            "model": "gemini-2.5-flash",  # デフォルトモデル
             "max_tokens": 500,      # 最小限のトークン
             "temperature": 0.1,     # 決定的な出力
             "timeout": 10           # タイムアウト短め
         },
         "integration_test": {
-            "model": "gemini-1.5-flash",  # 実装時に利用可能なモデルを確認
+            "model": "gemini-2.5-flash",  # デフォルトモデル
             "max_tokens": 1000,
             "temperature": 0.3,
             "timeout": 30
         },
         "e2e_test": {
-            "model": "gemini-2.5-flash",  # 本番同等
+            "model": "gemini-2.5-flash",  # デフォルトモデル
             "max_tokens": 2000,
             "temperature": 0.7,
             "timeout": 60
