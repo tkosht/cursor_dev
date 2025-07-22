@@ -131,7 +131,7 @@ async def run_small_scale_test():
         print(f"   - 総実行時間: {total_time:.2f}秒")
         print(f"   - API呼び出し回数: {api_call_count}回")
         print(f"   - 推定コスト: ${api_call_count * 0.000022:.6f}")
-        print(f"   - 1ペルソナあたり時間: {total_time/3:.2f}秒")
+        print(f"   - 1ペルソナあたり時間: {total_time / 3:.2f}秒")
 
         # 成功基準チェック
         print("\n🎯 成功基準チェック:")

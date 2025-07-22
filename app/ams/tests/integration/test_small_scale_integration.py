@@ -121,7 +121,7 @@ class TestSmallScaleIntegration:
             for i, persona in enumerate(personas):
                 assert isinstance(persona, PersonaAttributes)
                 logger.info(
-                    f"Persona {i+1}: {persona.occupation}, Age: {persona.age}"
+                    f"Persona {i + 1}: {persona.occupation}, Age: {persona.age}"
                 )
                 logger.info(f"  Interests: {persona.interests[:2]}")
                 logger.info(f"  Influence: {persona.influence_score:.2f}")
