@@ -118,7 +118,11 @@ pytest --cov=src --cov-report=html
 
 # Run specific test markers
 pytest -m "unit"  # Unit tests only
-pytest -m "llm"   # Tests requiring LLM API
+pytest -m "integration"  # Integration tests (requires valid API key)
+
+# Run specific test modules
+pytest tests/integration/test_llm_connection.py -v
+pytest tests/unit/test_llm_transparency.py -v
 ```
 
 ### Development Workflow

@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Article Market Simulator - Dynamic multi-agent evaluation system"
 authors = [{name = "AMS Team", email = "ams@example.com"}]
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 keywords = ["multi-agent", "simulation", "article-evaluation", "langgraph"]
 
 dependencies = [

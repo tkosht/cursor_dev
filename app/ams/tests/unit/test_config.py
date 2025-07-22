@@ -43,8 +43,11 @@ class TestLLMConfig:
 
         assert config.google_api_key == "test-google-key"
 
-    def test_invalid_provider_without_key(self):
+    def test_invalid_provider_without_key(self, monkeypatch):
         """Test invalid provider without API key"""
+        # 環境変数をクリア
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        
         with pytest.raises(ValueError, match="API key required"):
             LLMConfig(provider="openai", openai_api_key=None)
 
