@@ -216,6 +216,33 @@ CHECKLIST_STORAGE="checklists/[task_type]_checklist.md"
 NO_CHECKLIST_NO_PROCEED="Complex tasks require checklist first"
 ```
 
+### ⓬ TASK DESIGN FRAMEWORK (タスク設計フレームワーク)
+```bash
+# 🎯 SYSTEMATIC TASK DESIGN FOR OPTIMAL LLM EXECUTION
+TASK_DESIGN_PROTOCOL=(
+    "SELF_ANALYSIS: Consider context size constraints and thinking limits"
+    "TASK_DEFINITION: Define specific task with clear deliverables"
+    "HOLISTIC_ANALYSIS: Analyze final goal, components, and dependencies"
+    "HIERARCHICAL_DECOMPOSITION: Break down into manageable subtasks"
+    "DENSITY_ADJUSTMENT: Ensure single, concrete actions per subtask"
+    "EXECUTION_PLANNING: Define order and deliverables for each step"
+)
+
+# Task Design Process
+TASK_DESIGN_STEPS=(
+    "1. SELF-ANALYSIS: Acknowledge [context_size] limitations"
+    "2. TASK DEFINITION: Insert specific task requirements"
+    "3. HOLISTIC ANALYSIS: Map goal → components → dependencies"
+    "4. HIERARCHICAL DECOMPOSITION: Create tree structure within limits"
+    "5. DENSITY ADJUSTMENT: Review and split as needed"
+    "6. EXECUTION PLAN: Order tasks with clear outputs"
+)
+
+# ENFORCEMENT
+NO_DESIGN_NO_EXECUTION="Complex tasks require design framework first"
+DESIGN_VIOLATION="Unstructured execution leads to incomplete results"
+```
+
 ## 🚀 Quick Start Implementation
 
 ```bash
