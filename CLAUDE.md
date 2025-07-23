@@ -40,8 +40,8 @@ function display_mandatory_rules_checklist() {
     echo "□ 5️⃣ KNOWLEDGE ACCESS: Proper knowledge loading"
     echo "□ 6️⃣ AI-OPTIMIZED FORMAT: Structured knowledge recording"
     echo "□ 7️⃣ CHECKLIST-DRIVEN: CDTE framework applied when applicable"
-    echo "□ 8️⃣ TASK COMPLETION: Integrity verification completed"
-    echo "□ 9️⃣ QUALITY GATES: All quality checks passed"
+    echo "□ 8️⃣ NO MOCKS: Real API calls only - NO mocking in tests"
+    echo "□ 9️⃣ WEB RESEARCH: Unknown items researched via WebSearch"
     echo "□ 🔟 FACT-BASED: No speculation, verified facts only"
     echo ""
     echo "📚 MANDATORY REFERENCES:"
@@ -132,6 +132,88 @@ AI_KNOWLEDGE_FORMAT=(
     "LINKED: Explicit cross-references to related knowledge"
     "ACTIONABLE: Include executable examples/commands"
 )
+```
+
+### 8️⃣ MOCK USAGE ABSOLUTE BAN (モック使用絶対禁止)
+```bash
+# 🚫 MOCK TESTING IS STRICTLY FORBIDDEN
+MOCK_BAN_ABSOLUTE=(
+    "NO_MOCKS: NEVER use mock/patch for integration/E2E tests"
+    "REAL_ONLY: ALWAYS use actual LLM API calls for verification"
+    "COST_AWARE: Use small-scale tests (3-5 calls) but REAL calls"
+    "VIOLATION: Using mocks = Immediate task failure + penalty"
+)
+
+# Detection patterns that trigger immediate failure
+MOCK_FORBIDDEN_PATTERNS=("@patch" "Mock(" "mock." "patch." "MagicMock" "AsyncMock")
+
+# ENFORCEMENT
+MOCK_DETECTION_ACTION="Stop immediately and rewrite with real API calls"
+MOCK_VIOLATION_PENALTY="Task marked as FAILED - User trust breach"
+```
+
+### 9️⃣ WEB RESEARCH MANDATORY (不明時Web調査必須)
+```bash
+# 🔍 WHEN UNCERTAIN, RESEARCH IS MANDATORY
+WEB_RESEARCH_PROTOCOL=(
+    "UNKNOWN: Don't know how to implement? → WebSearch REQUIRED"
+    "VERIFY: Unsure about best practices? → WebSearch FIRST"
+    "UPDATE: Technology changed? → WebSearch for latest info"
+    "NO_GUESS: NEVER guess or assume - ALWAYS verify"
+)
+
+# Research triggers
+RESEARCH_TRIGGERS=(
+    "Implementation method unknown"
+    "API usage uncertain"
+    "Best practices unclear"
+    "Error resolution needed"
+    "Technology updates required"
+)
+
+# ENFORCEMENT
+NO_RESEARCH_NO_PROCEED="Cannot proceed without proper research"
+GUESSING_BAN="Guessing without research = Task failure"
+```
+
+### 🔟 KNOWLEDGE RECORDING MANDATORY (ナレッジ記録必須)
+```bash
+# 📝 ALL RESEARCH MUST BE RECORDED AS KNOWLEDGE
+KNOWLEDGE_RECORDING_PROTOCOL=(
+    "RESEARCH: Every WebSearch result → Record in memory-bank/"
+    "METHODS: Implementation methods → Document in knowledge base"
+    "SOLUTIONS: Problem solutions → Create reusable knowledge"
+    "PATTERNS: Discovered patterns → Add to best practices"
+)
+
+# Recording format
+KNOWLEDGE_RECORD_FORMAT=(
+    "LOCATION: memory-bank/[category]/[topic]_[date].md"
+    "STRUCTURE: Problem → Research → Solution → Verification"
+    "TAGS: Include searchable keywords"
+    "EXAMPLES: Always include working code examples"
+)
+
+# ENFORCEMENT
+NO_RECORD_NO_COMPLETE="Task incomplete without knowledge recording"
+KNOWLEDGE_LOSS_PENALTY="Failing to record = Repeat same mistakes"
+```
+
+### ⓫ CHECKLIST-DRIVEN EXECUTION (チェックリスト駆動実行)
+```bash
+# ✅ ALWAYS USE CHECKLISTS FOR COMPLEX TASKS
+CHECKLIST_MANDATORY=(
+    "COMPLEX: Multi-step tasks → Create checklist FIRST"
+    "TRACK: Mark progress in real-time"
+    "VERIFY: Check completion before proceeding"
+    "RECORD: Save successful checklists as templates"
+)
+
+# Checklist location
+CHECKLIST_STORAGE="checklists/[task_type]_checklist.md"
+
+# ENFORCEMENT
+NO_CHECKLIST_NO_PROCEED="Complex tasks require checklist first"
 ```
 
 ## 🚀 Quick Start Implementation
