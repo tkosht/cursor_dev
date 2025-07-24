@@ -32,13 +32,21 @@ class DeepContextAnalyzer:
                 - reach_potential: Estimated reach potential (0-1)
         """
         try:
-            # Perform multi-dimensional analysis
-            core_context = await self._analyze_core_dimensions(article)
-
-            # Discover hidden dimensions
-            hidden_dimensions = await self._discover_hidden_dimensions(
-                article, core_context
-            )
+            # Use lightweight mode for short articles (500 chars or less)
+            is_lightweight = len(article) <= 500
+            
+            if is_lightweight:
+                # Perform lightweight analysis for short articles
+                core_context = await self._analyze_core_dimensions_lightweight(article)
+                # Skip hidden dimensions for lightweight mode
+                hidden_dimensions = {}
+            else:
+                # Perform multi-dimensional analysis
+                core_context = await self._analyze_core_dimensions(article)
+                # Discover hidden dimensions
+                hidden_dimensions = await self._discover_hidden_dimensions(
+                    article, core_context
+                )
 
             return {
                 "core_context": core_context,
@@ -58,44 +66,57 @@ class DeepContextAnalyzer:
                 "reach_potential": 0.5,
             }
 
+    async def _analyze_core_dimensions_lightweight(self, article: str) -> dict[str, Any]:
+        """Perform lightweight analysis for short articles."""
+        analysis_prompt = f"""
+        Quick analysis of this short article:
+
+        1. DOMAIN: Primary topic and complexity (1-10)
+        2. STAKEHOLDERS: Key beneficiaries and sharers (2-3 each)
+        3. EMOTIONAL: Main emotional tone and controversy level
+        4. TEMPORAL: Time sensitivity (high/medium/low)
+
+        Article: {article}
+
+        Return as JSON with keys: domain_analysis, stakeholder_mapping,
+        emotional_landscape, temporal_aspects
+        """
+
+        response = await self.llm.ainvoke(analysis_prompt)
+        result = self._parse_analysis_response(response)
+        
+        # Ensure consistent structure with full analysis
+        return {
+            "domain_analysis": result.get("domain_analysis", {
+                "primary_domain": "general",
+                "technical_complexity": 5
+            }),
+            "cultural_dimensions": {},  # Empty for lightweight
+            "temporal_aspects": result.get("temporal_aspects", {
+                "time_sensitivity": "medium"
+            }),
+            "emotional_landscape": result.get("emotional_landscape", {
+                "controversy_potential": "low"
+            }),
+            "stakeholder_mapping": result.get("stakeholder_mapping", {
+                "beneficiaries": [],
+                "likely_sharers": []
+            })
+        }
+
     async def _analyze_core_dimensions(self, article: str) -> dict[str, Any]:
         """Analyze core contextual dimensions of the article."""
         analysis_prompt = f"""
-        Analyze this article across multiple dimensions:
+        Analyze this article concisely:
 
-        1. DOMAIN ANALYSIS:
-           - Primary domain and sub-domains
-           - Technical complexity level (1-10)
-           - Required background knowledge
-           - Industry/sector relevance
+        1. DOMAIN: Primary domain, complexity (1-10), required knowledge
+        2. CULTURAL: Geographic relevance, sensitivities
+        3. TEMPORAL: Time sensitivity, trend alignment
+        4. EMOTIONAL: Controversy potential, inspirational elements
+        5. STAKEHOLDERS: beneficiaries, opponents, need_to_know, likely_sharers (3-4 each)
 
-        2. CULTURAL DIMENSIONS:
-           - Geographic relevance
-           - Cultural sensitivities
-           - Language nuances
-           - Social context
+        Article: {article[:1500]}...
 
-        3. TEMPORAL ASPECTS:
-           - Time sensitivity
-           - Trend alignment
-           - Historical context
-           - Future implications
-
-        4. EMOTIONAL LANDSCAPE:
-           - Emotional triggers
-           - Controversy potential
-           - Inspirational elements
-           - Fear/anxiety factors
-
-        5. STAKEHOLDER MAPPING:
-           - Who benefits from this information (beneficiaries)
-           - Who might oppose it (opponents)
-           - Who needs to know about it (need_to_know)
-           - Who would share it (likely_sharers)
-
-        Article: {article[:2000]}...
-
-        Provide structured analysis with specific examples.
         Return as JSON with keys: domain_analysis, cultural_dimensions,
         temporal_aspects, emotional_landscape, stakeholder_mapping
         """
@@ -108,22 +129,16 @@ class DeepContextAnalyzer:
     ) -> dict[str, Any]:
         """Use LLM to discover non-obvious contextual dimensions."""
         discovery_prompt = f"""
-        Given this article and initial analysis:
-        {json.dumps(initial_analysis, indent=2)}
+        Based on analysis: {json.dumps(initial_analysis, ensure_ascii=False)[:500]}...
 
-        Identify UNEXPECTED or HIDDEN dimensions that might affect readership:
+        Identify 3-4 HIDDEN dimensions affecting readership:
+        - Second-order effects
+        - Cross-domain implications
+        - Subculture relevance
+        - Contrarian viewpoints
 
-        1. Second-order effects (who is indirectly affected?)
-        2. Cross-domain implications (unexpected fields this impacts)
-        3. Generational perspectives (how different age groups interpret this)
-        4. Subculture relevance (niche communities that care deeply)
-        5. Contrarian viewpoints (who would read this critically?)
-        6. Emotional projections (what personal experiences this triggers)
-
-        Be creative and think beyond obvious connections.
         Return as JSON with keys: second_order_effects, cross_domain_implications,
-        generational_perspectives, subculture_relevance, contrarian_viewpoints,
-        emotional_projections
+        subculture_relevance, contrarian_viewpoints
         """
 
         response = await self.llm.ainvoke(discovery_prompt)

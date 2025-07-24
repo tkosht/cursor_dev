@@ -395,7 +395,7 @@ class TestPersonaGenerator:
 
     @pytest.mark.asyncio
     async def test_error_handling(
-        self, generator, sample_article, sample_analysis_results
+        self, generator, sample_article
     ):
         """Test error handling in persona generation."""
         with patch.object(generator, "_analyze_context") as mock_context:
@@ -404,7 +404,7 @@ class TestPersonaGenerator:
             # Should handle error gracefully and return empty list
             result = await generator.generate_personas(
                 article_content=sample_article,
-                analysis_results=sample_analysis_results,
+                analysis_results=None,  # Set to None to ensure _analyze_context is called
                 count=5,
             )
 

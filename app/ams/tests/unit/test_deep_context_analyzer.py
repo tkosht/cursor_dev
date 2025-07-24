@@ -292,3 +292,41 @@ class TestDeepContextAnalyzer:
             assert (
                 result["complexity_score"] == 0.5
             )  # Default medium complexity
+
+    @pytest.mark.asyncio
+    async def test_lightweight_mode_for_short_articles(self, analyzer):
+        """Test that lightweight mode is used for short articles."""
+        short_article = "AI transforms healthcare with early disease detection."  # < 500 chars
+
+        mock_response = {
+            "domain_analysis": {
+                "primary_domain": "healthcare",
+                "technical_complexity": 5,
+            },
+            "stakeholder_mapping": {
+                "beneficiaries": ["patients"],
+                "likely_sharers": ["tech community"],
+            },
+            "emotional_landscape": {
+                "controversy_potential": "low",
+            },
+            "temporal_aspects": {
+                "time_sensitivity": "medium",
+            },
+        }
+
+        with patch.object(analyzer, "llm") as mock_llm:
+            mock_llm.ainvoke = AsyncMock()
+            mock_llm.ainvoke.return_value.content = json.dumps(mock_response)
+
+            result = await analyzer.analyze_article_context(short_article)
+
+            # Should only call LLM once for lightweight mode
+            assert mock_llm.ainvoke.call_count == 1
+
+            # Hidden dimensions should be empty
+            assert result["hidden_dimensions"] == {}
+
+            # Core context should have basic structure
+            assert "domain_analysis" in result["core_context"]
+            assert "stakeholder_mapping" in result["core_context"]
