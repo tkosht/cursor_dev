@@ -29,6 +29,15 @@ async def test_basic_llm_connection():
     response = await llm.ainvoke("1+1は何ですか？短く答えてください。")
     elapsed = time.time() - start_time
     
+    # 実際のLLMレスポンスをログ出力
+    print(f"\n=== LLM Response Debug ===")
+    print(f"Response type: {type(response)}")
+    print(f"Response content: '{response.content}'")
+    print(f"Content length: {len(response.content)} characters")
+    print(f"Elapsed time: {elapsed:.3f} seconds")
+    print(f"LLM provider: {config.llm.provider}")
+    print("========================\n")
+    
     # 検証
     assert response is not None
     assert response.content is not None
@@ -38,10 +47,27 @@ async def test_basic_llm_connection():
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-@pytest.mark.xfail(
-    condition=not os.getenv("PYTEST_INDIVIDUAL_RUN"),
-    reason="Known issue with event loop in batch execution - see docs/event_loop_issue_workaround.md"
-)
+async def test_llm_natural_language_response():
+    """実際のLLM応答の自然さを確認"""
+    llm = create_llm()
+    
+    # より複雑な質問
+    response = await llm.ainvoke("なぜ空は青いのですか？簡潔に説明してください。")
+    
+    print(f"\n=== Natural Language Response ===")
+    print(f"Question: なぜ空は青いのですか？")
+    print(f"Response: {response.content}")
+    print(f"Response length: {len(response.content)} characters")
+    print("================================\n")
+    
+    # 検証：自然言語の応答であることを確認
+    assert response is not None
+    assert len(response.content) > 10  # 単純な数値回答ではない
+    assert any(word in response.content.lower() for word in ["光", "散乱", "波長", "light", "scatter", "wavelength"])
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
 async def test_llm_with_japanese():
     """日本語処理のテスト"""
     from src.utils.async_llm_manager import create_async_llm_manager
@@ -95,10 +121,6 @@ async def test_llm_configuration():
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-@pytest.mark.xfail(
-    condition=not os.getenv("PYTEST_INDIVIDUAL_RUN"),
-    reason="Known issue with event loop in batch execution - see docs/event_loop_issue_workaround.md"
-)
 async def test_multiple_llm_calls():
     """複数回の呼び出しテスト"""
     from src.utils.async_llm_manager import create_async_llm_manager

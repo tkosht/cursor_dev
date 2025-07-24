@@ -3,6 +3,7 @@ Pytest configuration for AMS tests
 """
 
 import asyncio
+import gc
 
 # Add src to path
 import sys
@@ -15,12 +16,47 @@ src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def event_loop():
-    """Create an instance of the default event loop for the test session."""
+    """Create an instance of the default event loop for each test function.
+    
+    This implementation handles the event loop closure issue that occurs when
+    running async tests in batch mode. Changed to function scope to ensure
+    clean state between tests, especially for gRPC connections.
+    """
+    # Create a new event loop for each test
     loop = asyncio.get_event_loop_policy().new_event_loop()
+    
+    # Set the event loop for the current policy
+    asyncio.set_event_loop(loop)
+    
     yield loop
-    loop.close()
+    
+    # Cleanup after test
+    try:
+        # Cancel all pending tasks
+        pending = asyncio.all_tasks(loop)
+        for task in pending:
+            if not task.done():
+                task.cancel()
+        
+        # Wait for all tasks to be cancelled
+        if pending:
+            loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+        
+        # Force garbage collection to clean up gRPC resources
+        gc.collect()
+        
+        # Small delay to ensure gRPC cleanup
+        loop.run_until_complete(asyncio.sleep(0.1))
+        
+    finally:
+        # Close the loop
+        loop.close()
+        # Set event loop to None to ensure fresh start
+        asyncio.set_event_loop(None)
+        # Force garbage collection again after loop closure
+        gc.collect()
 
 
 @pytest.fixture

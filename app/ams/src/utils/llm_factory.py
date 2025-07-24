@@ -118,7 +118,6 @@ class LLMFactory:
         return provider_map[provider](model, **kwargs)
 
 
-@lru_cache(maxsize=4)
 def create_llm(
     provider: str | None = None, model: str | None = None, **kwargs
 ) -> BaseChatModel:
@@ -127,8 +126,25 @@ def create_llm(
 
     This is a convenience function that caches LLM instances
     to avoid recreating them repeatedly.
+    
+    Note: Caching is disabled by default due to gRPC connection issues
+    in test environments. Set use_cache=True to enable caching.
     """
-    # Convert kwargs to hashable format for caching
-    (provider, model, tuple(sorted(kwargs.items())))
+    use_cache = kwargs.pop("use_cache", False)
+    
+    if use_cache:
+        # Use a cached version if caching is enabled
+        return _create_llm_cached(provider, model, **kwargs)
+    else:
+        # Create a new instance without caching
+        return LLMFactory.create(provider, model, **kwargs)
 
+
+@lru_cache(maxsize=4)
+def _create_llm_cached(
+    provider: str | None = None, model: str | None = None, **kwargs
+) -> BaseChatModel:
+    """Internal cached version of create_llm"""
+    # Convert kwargs to hashable format for caching
+    cache_key = (provider, model, tuple(sorted(kwargs.items())))
     return LLMFactory.create(provider, model, **kwargs)
