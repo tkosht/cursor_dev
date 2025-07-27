@@ -235,6 +235,8 @@ class TestDeepContextAnalyzer:
         mock_hidden_response = {
             "second_order_effects": ["Insurance disruption"],
             "cross_domain_implications": ["Legal ramifications"],
+            "subculture_relevance": ["Niche community interest"],
+            "contrarian_viewpoints": ["Alternative perspective"]
         }
 
         with patch.object(analyzer, "llm") as mock_llm:

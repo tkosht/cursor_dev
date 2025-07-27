@@ -176,12 +176,25 @@ class AMSConfig(BaseSettings):
     def from_env(cls) -> "AMSConfig":
         """Create config from environment variables"""
         # Load LLM config from env
+        # Auto-detect provider based on available API keys
+        provider = os.getenv("LLM_PROVIDER")
+        if not provider:
+            # Auto-detect based on available API keys
+            if os.getenv("OPENAI_API_KEY"):
+                provider = "openai"
+            elif os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"):
+                provider = "gemini"
+            elif os.getenv("ANTHROPIC_API_KEY"):
+                provider = "anthropic"
+            else:
+                provider = "gemini"  # Default, will fail validation if no key
+                
         llm_config = LLMConfig(
             provider=cast(
                 Literal["gemini", "openai", "anthropic"],
-                os.getenv("LLM_PROVIDER", "gemini"),
+                provider,
             ),
-            google_api_key=os.getenv("GOOGLE_API_KEY"),
+            google_api_key=os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"),
             gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
             openai_api_key=os.getenv("OPENAI_API_KEY"),
             openai_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),

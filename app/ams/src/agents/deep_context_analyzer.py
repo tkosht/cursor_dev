@@ -14,9 +14,14 @@ from src.utils.llm_factory import create_llm
 class DeepContextAnalyzer:
     """Extract multi-dimensional context from articles for persona generation."""
 
-    def __init__(self):
-        """Initialize the DeepContextAnalyzer."""
+    def __init__(self, force_lightweight: bool = False):
+        """Initialize the DeepContextAnalyzer.
+        
+        Args:
+            force_lightweight: If True, always use lightweight analysis mode
+        """
         self.llm = create_llm()
+        self.force_lightweight = force_lightweight
 
     async def analyze_article_context(self, article: str) -> dict[str, Any]:
         """Extract deep contextual information from article.
@@ -32,19 +37,19 @@ class DeepContextAnalyzer:
                 - reach_potential: Estimated reach potential (0-1)
         """
         try:
-            # Use lightweight mode for short articles (500 chars or less)
-            is_lightweight = len(article) <= 500
+            # Use lightweight mode for short articles or when forced
+            is_lightweight = self.force_lightweight or len(article) <= 500
             
             if is_lightweight:
-                # Perform lightweight analysis for short articles
+                # Perform lightweight analysis
                 core_context = await self._analyze_core_dimensions_lightweight(article)
                 # Skip hidden dimensions for lightweight mode
                 hidden_dimensions = {}
             else:
                 # Perform multi-dimensional analysis
                 core_context = await self._analyze_core_dimensions(article)
-                # Discover hidden dimensions
-                hidden_dimensions = await self._discover_hidden_dimensions(
+                # Discover hidden dimensions with optimized prompt
+                hidden_dimensions = await self._discover_hidden_dimensions_optimized(
                     article, core_context
                 )
 
@@ -68,18 +73,15 @@ class DeepContextAnalyzer:
 
     async def _analyze_core_dimensions_lightweight(self, article: str) -> dict[str, Any]:
         """Perform lightweight analysis for short articles."""
+        # Very concise prompt
         analysis_prompt = f"""
-        Quick analysis of this short article:
-
-        1. DOMAIN: Primary topic and complexity (1-10)
-        2. STAKEHOLDERS: Key beneficiaries and sharers (2-3 each)
-        3. EMOTIONAL: Main emotional tone and controversy level
-        4. TEMPORAL: Time sensitivity (high/medium/low)
-
-        Article: {article}
-
-        Return as JSON with keys: domain_analysis, stakeholder_mapping,
-        emotional_landscape, temporal_aspects
+        Analyze: {article[:300]}...
+        
+        Return JSON:
+        - domain_analysis: primary_domain (string), technical_complexity (1-10)
+        - stakeholder_mapping: beneficiaries (list), likely_sharers (list)
+        - emotional_landscape: controversy_potential (low/medium/high)
+        - temporal_aspects: time_sensitivity (low/medium/high)
         """
 
         response = await self.llm.ainvoke(analysis_prompt)
@@ -128,21 +130,66 @@ class DeepContextAnalyzer:
         self, article: str, initial_analysis: dict[str, Any]
     ) -> dict[str, Any]:
         """Use LLM to discover non-obvious contextual dimensions."""
+        # Extract key insights from initial analysis to reduce prompt size
+        summary = self._summarize_initial_analysis(initial_analysis)
+        
         discovery_prompt = f"""
-        Based on analysis: {json.dumps(initial_analysis, ensure_ascii=False)[:500]}...
-
-        Identify 3-4 HIDDEN dimensions affecting readership:
-        - Second-order effects
-        - Cross-domain implications
-        - Subculture relevance
-        - Contrarian viewpoints
-
-        Return as JSON with keys: second_order_effects, cross_domain_implications,
-        subculture_relevance, contrarian_viewpoints
+        Article: {article[:300]}...
+        
+        Key insights:
+        - Domain: {summary.get('domain', 'Unknown')}
+        - Complexity: {summary.get('complexity', 5)}/10
+        - Key stakeholders: {', '.join(summary.get('stakeholders', [])[:3])}
+        
+        Identify 3 UNEXPECTED dimensions:
+        1. Second-order effects (indirect impacts)
+        2. Cross-domain implications
+        3. Contrarian viewpoints
+        
+        Return concise JSON with these keys only.
         """
 
         response = await self.llm.ainvoke(discovery_prompt)
         return self._parse_analysis_response(response)
+    
+    def _summarize_initial_analysis(self, analysis: dict[str, Any]) -> dict[str, Any]:
+        """Extract key information from initial analysis to reduce prompt size."""
+        return {
+            "domain": analysis.get("domain_analysis", {}).get("primary_domain", "Unknown"),
+            "complexity": analysis.get("domain_analysis", {}).get("technical_complexity", 5),
+            "stakeholders": [
+                s for s in analysis.get("stakeholder_mapping", {}).get("beneficiaries", [])
+            ],
+            "controversy": analysis.get("emotional_landscape", {}).get("controversy_potential", "medium"),
+            "time_sensitivity": analysis.get("temporal_aspects", {}).get("time_sensitivity", "medium")
+        }
+    
+    async def _discover_hidden_dimensions_optimized(
+        self, article: str, initial_analysis: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Optimized version with minimal prompt."""
+        # Use only essential information
+        domain = initial_analysis.get("domain_analysis", {}).get("primary_domain", "Unknown")
+        
+        minimal_prompt = f"""
+        Article domain: {domain}
+        Find 2 unexpected impacts:
+        1. Side effects?
+        2. Who else affected?
+        
+        Brief JSON response.
+        """
+        
+        response = await self.llm.ainvoke(minimal_prompt)
+        result = self._parse_analysis_response(response)
+        
+        # Provide structure with defaults
+        return {
+            "second_order_effects": result.get("second_order_effects", ["Indirect market impact"]),
+            "cross_domain_implications": result.get("cross_domain_implications", ["Adjacent industry effects"]),
+            "subculture_relevance": result.get("subculture_relevance", ["Niche community interest"]),
+            "contrarian_viewpoints": result.get("contrarian_viewpoints", ["Alternative perspective"])
+        }
 
     def _calculate_complexity(self, context_analysis: dict[str, Any]) -> float:
         """Calculate article complexity score (0-1).

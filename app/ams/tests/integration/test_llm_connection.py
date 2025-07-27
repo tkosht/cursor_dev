@@ -68,23 +68,15 @@ async def test_llm_natural_language_response():
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_llm_with_japanese():
+async def test_llm_with_japanese(llm_manager):
     """日本語処理のテスト"""
-    from src.utils.async_llm_manager import create_async_llm_manager
+    response = await llm_manager.ainvoke("「こんにちは」を英語に翻訳してください。")
     
-    llm = create_llm()
-    manager = create_async_llm_manager(llm)
-    
-    try:
-        response = await manager.ainvoke("「こんにちは」を英語に翻訳してください。")
-        
-        # 基本的な検証
-        assert response is not None
-        assert response.content is not None
-        # "Hello" または "Hi" が含まれることを期待
-        assert any(word in response.content.lower() for word in ["hello", "hi"])
-    finally:
-        await manager.cleanup()
+    # 基本的な検証
+    assert response is not None
+    assert response.content is not None
+    # "Hello" または "Hi" が含まれることを期待
+    assert any(word in response.content.lower() for word in ["hello", "hi"])
 
 
 @pytest.mark.integration
@@ -121,26 +113,18 @@ async def test_llm_configuration():
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_multiple_llm_calls():
+async def test_multiple_llm_calls(llm_manager):
     """複数回の呼び出しテスト"""
-    from src.utils.async_llm_manager import create_async_llm_manager
-    
-    llm = create_llm()
-    manager = create_async_llm_manager(llm)
-    
-    try:
-        prompts = [
-            "1 + 1 = ?",
-            "2 + 2 = ?",
-            "3 + 3 = ?",
-        ]
+    prompts = [
+        "1 + 1 = ?",
+        "2 + 2 = ?",
+        "3 + 3 = ?",
+    ]
 
-        # 並列実行
-        tasks = [manager.ainvoke(prompt) for prompt in prompts]
-        responses = await asyncio.gather(*tasks)
-        
-        # すべての呼び出しが成功
-        assert len(responses) == 3
-        assert all(r.content for r in responses)
-    finally:
-        await manager.cleanup()
+    # 並列実行
+    tasks = [llm_manager.ainvoke(prompt) for prompt in prompts]
+    responses = await asyncio.gather(*tasks)
+    
+    # すべての呼び出しが成功
+    assert len(responses) == 3
+    assert all(r.content for r in responses)
