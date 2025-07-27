@@ -3,6 +3,7 @@
 import asyncio
 import gc
 import warnings
+import os
 
 import pytest
 
@@ -10,7 +11,10 @@ import pytest
 @pytest.fixture(scope="function")
 def event_loop():
     """Create a new event loop for each test function."""
-    # 既存のループがあれば閉じる
+    # Set environment variable to allow tests to know they're in batch mode
+    os.environ['PYTEST_BATCH_RUN'] = '1'
+    
+    # Close any existing loop
     try:
         loop = asyncio.get_running_loop()
         if not loop.is_closed():
@@ -18,52 +22,82 @@ def event_loop():
     except RuntimeError:
         pass
     
-    # 新しいループを作成
+    # Create new loop with custom exception handler
     loop = asyncio.new_event_loop()
+    
+    # Suppress gRPC warnings
+    def exception_handler(loop, context):
+        exception = context.get('exception')
+        if exception and 'grpc' in str(exception):
+            return  # Ignore gRPC exceptions during cleanup
+        # Log other exceptions
+        loop.default_exception_handler(context)
+    
+    loop.set_exception_handler(exception_handler)
     asyncio.set_event_loop(loop)
+    
     yield loop
     
-    # テスト後のクリーンアップ
-    # 残っているタスクを収集
+    # Cleanup after test
     try:
+        # Get all tasks
         pending = asyncio.all_tasks(loop)
     except AttributeError:
         # Python 3.9+
         pending = asyncio.tasks.all_tasks(loop)
     
-    # 現在のタスクを除外
-    if pending:
-        current = asyncio.current_task(loop)
-        if current:
-            pending.discard(current)
-    
-    # タスクをキャンセル
+    # Cancel all pending tasks
     for task in pending:
-        task.cancel()
+        if not task.done():
+            task.cancel()
     
-    # キャンセルしたタスクの完了を待つ
+    # Wait for task cancellation
     if pending:
         loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
     
-    # gRPCのクリーンアップのために待機
+    # Additional cleanup wait
     loop.run_until_complete(asyncio.sleep(0.5))
     
-    # ループを閉じる
+    # Close the loop
     loop.close()
     asyncio.set_event_loop(None)
     
-    # ガベージコレクションを強制
+    # Force garbage collection
     gc.collect()
 
 
 @pytest.fixture(autouse=True)
 async def cleanup_after_test():
-    """各テスト後のクリーンアップ"""
-    # テスト実行
+    """Clean up after each test"""
+    # Run the test
     yield
     
-    # 非同期処理の完了を待つ
-    await asyncio.sleep(0.2)
+    # Import here to avoid circular imports
+    from src.utils.async_llm_manager import cleanup_all_managers
     
-    # 警告を無視（gRPC関連の警告を抑制）
+    # Clean up all LLM managers
+    await cleanup_all_managers()
+    
+    # Wait for async operations to complete
+    await asyncio.sleep(0.3)
+    
+    # Force garbage collection
+    gc.collect()
+    
+    # Suppress warnings
     warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*coroutine.*was never awaited")
+
+
+@pytest.fixture
+async def llm_manager():
+    """Fixture to provide AsyncLLMManager with automatic cleanup"""
+    from src.utils.llm_factory import create_llm
+    from src.utils.async_llm_manager import AsyncLLMManager
+    
+    llm = create_llm()
+    manager = AsyncLLMManager(llm)
+    
+    try:
+        yield manager
+    finally:
+        await manager.cleanup()

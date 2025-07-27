@@ -1,0 +1,50 @@
+--- a/src/agents/deep_context_analyzer.py
++++ b/src/agents/deep_context_analyzer.py
+@@ -109,18 +109,39 @@ class DeepContextAnalyzer:
+     async def _discover_hidden_dimensions(
+         self, article: str, initial_analysis: dict[str, Any]
+     ) -> dict[str, Any]:
+         """Use LLM to discover non-obvious contextual dimensions."""
++        # Extract key insights from initial analysis to reduce prompt size
++        summary = self._summarize_initial_analysis(initial_analysis)
++        
+         discovery_prompt = f"""
+-        Based on analysis: {json.dumps(initial_analysis, ensure_ascii=False)[:500]}...
+-        Identify 3-4 HIDDEN dimensions affecting readership:
+-        - Second-order effects
+-        - Cross-domain implications
+-        - Subculture relevance
+-        - Contrarian viewpoints
+-        Return as JSON with keys: second_order_effects, cross_domain_implications,
+-        subculture_relevance, contrarian_viewpoints
++        Article: {article[:300]}...
++        
++        Key insights:
++        - Domain: {summary.get('domain', 'Unknown')}
++        - Complexity: {summary.get('complexity', 5)}/10
++        - Key stakeholders: {', '.join(summary.get('stakeholders', [])[:3])}
++        
++        Identify 3 UNEXPECTED dimensions:
++        1. Second-order effects (indirect impacts)
++        2. Cross-domain implications
++        3. Contrarian viewpoints
++        
++        Return concise JSON with these keys only.
+         """
+         response = await self.llm.ainvoke(discovery_prompt)
+         return self._parse_analysis_response(response)
++    
++    def _summarize_initial_analysis(self, analysis: dict[str, Any]) -> dict[str, Any]:
++        """Extract key information from initial analysis to reduce prompt size."""
++        return {
++            "domain": analysis.get("domain_analysis", {}).get("primary_domain", "Unknown"),
++            "complexity": analysis.get("domain_analysis", {}).get("technical_complexity", 5),
++            "stakeholders": [
++                s for s in analysis.get("stakeholder_mapping", {}).get("beneficiaries", [])
++            ],
++            "controversy": analysis.get("emotional_landscape", {}).get("controversy_potential", "medium"),
++            "time_sensitivity": analysis.get("temporal_aspects", {}).get("time_sensitivity", "medium")
++        }
+ 
+     def _calculate_complexity(self, context_analysis: dict[str, Any]) -> float:
+         """Calculate article complexity score (0-1).

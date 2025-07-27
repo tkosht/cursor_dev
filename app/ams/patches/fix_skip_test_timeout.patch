@@ -1,0 +1,22 @@
+--- a/tests/integration/test_small_scale_integration.py
++++ b/tests/integration/test_small_scale_integration.py
+@@ -50,9 +50,8 @@ class TestSmallScaleIntegration:
+         今後も継続的な改善を行い、より良いサービスを提供していきます。
+         """
+ 
+     @pytest.mark.integration
+     @pytest.mark.asyncio
+-    @pytest.mark.skip(reason="Investigating timeout issue with large prompts - see docs/test_failure_final_diagnosis.md")
+     async def test_minimal_pipeline(self, short_article):
+         """Test the minimal pipeline with 3 personas."""
+         logger.info("=== Starting Small Scale Integration Test ===")
+@@ -67,9 +66,9 @@ class TestSmallScaleIntegration:
+             analyzer = DeepContextAnalyzer()
+ 
+             # タイムアウトを設定して実行
+             context = await asyncio.wait_for(
+                 analyzer.analyze_article_context(short_article),
+-                timeout=60.0  # 60秒のタイムアウト（大きなプロンプトに対応）
++                timeout=90.0  # 90秒のタイムアウト（プロンプト最適化後でも余裕を持たせる）
+             )
+             api_calls["analyzer"] = 2  # Core + hidden dimensions
