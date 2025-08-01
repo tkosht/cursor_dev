@@ -159,8 +159,7 @@ class PersonaGenerator:
             "age": random.randint(25, 65),
             "occupation": "Professional",
             "background": (
-                f"Professional with interest in "
-                f"{segment_info.get('name', 'various topics')}"
+                f"Professional with interest in " f"{segment_info.get('name', 'various topics')}"
             ),
             "personality_traits": segment_info.get("characteristics", ["analytical", "curious"])[
                 :4

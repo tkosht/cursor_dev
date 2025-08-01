@@ -150,9 +150,7 @@ class DeepContextAnalyzer:
         return {
             "domain": analysis.get("domain_analysis", {}).get("primary_domain", "Unknown"),
             "complexity": analysis.get("domain_analysis", {}).get("technical_complexity", 5),
-            "stakeholders": list(
-                analysis.get("stakeholder_mapping", {}).get("beneficiaries", [])
-            ),
+            "stakeholders": list(analysis.get("stakeholder_mapping", {}).get("beneficiaries", [])),
             "controversy": analysis.get("emotional_landscape", {}).get(
                 "controversy_potential", "medium"
             ),
