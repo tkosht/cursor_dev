@@ -7,7 +7,7 @@ Optimized version reduces prompt size and improves performance.
 import random
 from typing import Any
 
-from src.core.types import PersonaAttributes, PersonalityType
+from src.core.types import PersonaAttributes
 from src.utils.json_parser import parse_llm_json_response
 from src.utils.llm_factory import create_llm
 
@@ -185,55 +185,58 @@ class PersonaGenerator:
         )
         influence = persona_data.get("network_position", {}).get("influence", 0.5)
 
-        # Map to PersonaAttributes fields
-        personality_traits_dict = {
-            PersonalityType.OPENNESS: 0.5,
-            PersonalityType.CONSCIENTIOUSNESS: 0.5,
-            PersonalityType.EXTRAVERSION: 0.5,
-            PersonalityType.AGREEABLENESS: 0.5,
-            PersonalityType.NEUROTICISM: 0.5,
-        }
-        
         return PersonaAttributes(
-            # Demographics
+            id=persona_data["id"],
+            name=persona_data.get("name", "Unknown User"),
             age=persona_data.get("age", 35),
             occupation=persona_data.get("occupation", "Professional"),
-            # Psychographics
+            background=persona_data.get("background", ""),
+            personality_traits=persona_data.get("personality_traits", []),
             interests=persona_data.get("interests", []),
-            personality_traits=personality_traits_dict,
-            # Behavioral
-            content_sharing_likelihood=sharing_likelihood,
-            influence_susceptibility=0.5,
-            # Network position
-            influence_score=influence,
-            network_centrality=0.5,
-            # Dynamic attributes
-            trust_level={"article_source": 0.7}
+            decision_factors=persona_data.get("decision_factors", []),
+            information_preferences=persona_data.get("information_preferences", []),
+            network_metrics={
+                "influence_score": influence,
+                "connectivity": 0.5,
+                "propagation_likelihood": sharing_likelihood * influence,
+                "centrality": 0.5,
+            },
+            content_affinity={
+                "relevance_score": persona_data.get("article_relationship", {}).get(
+                    "relevance_score", 0.5
+                ),
+                "interest_level": persona_data.get("article_relationship", {}).get(
+                    "interest_level", "medium"
+                ),
+                "sharing_likelihood": sharing_likelihood,
+                "discussion_points": persona_data.get("article_relationship", {}).get(
+                    "discussion_points", []
+                ),
+            },
         )
 
     def _create_default_persona(self, persona_id: str) -> PersonaAttributes:
         """Create a default persona."""
-        personality_traits_dict = {
-            PersonalityType.OPENNESS: 0.7,
-            PersonalityType.CONSCIENTIOUSNESS: 0.6,
-            PersonalityType.EXTRAVERSION: 0.5,
-            PersonalityType.AGREEABLENESS: 0.6,
-            PersonalityType.NEUROTICISM: 0.3,
-        }
-        
         return PersonaAttributes(
-            # Demographics
+            id=persona_id,
+            name=f"User {random.randint(100, 999)}",
             age=random.randint(25, 65),
             occupation="Professional",
-            # Psychographics
+            background="General professional with diverse interests",
+            personality_traits=["analytical", "curious", "open-minded", "pragmatic"],
             interests=["technology", "business", "current events"],
-            personality_traits=personality_traits_dict,
-            # Behavioral
-            content_sharing_likelihood=0.5,
-            influence_susceptibility=0.5,
-            # Network position
-            influence_score=0.5,
-            network_centrality=0.5,
-            # Dynamic attributes
-            trust_level={"article_source": 0.5}
+            decision_factors=["evidence", "practicality", "innovation"],
+            information_preferences=["online news", "professional networks"],
+            network_metrics={
+                "influence_score": 0.5,
+                "connectivity": 0.5,
+                "propagation_likelihood": 0.25,
+                "centrality": 0.5,
+            },
+            content_affinity={
+                "relevance_score": 0.5,
+                "interest_level": "medium",
+                "sharing_likelihood": 0.5,
+                "discussion_points": ["General insights", "Practical applications"],
+            },
         )

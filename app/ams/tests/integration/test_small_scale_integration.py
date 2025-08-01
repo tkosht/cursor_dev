@@ -227,7 +227,6 @@ class TestSmallScaleIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Performance baseline test times out with real LLM calls - needs optimization")
     async def test_performance_baseline(self, short_article):
         """Establish performance baseline for small scale."""
         logger.info("\n=== Performance Baseline Test ===")
