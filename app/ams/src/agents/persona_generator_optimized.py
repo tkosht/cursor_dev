@@ -216,7 +216,9 @@ class PersonaGenerator:
             values=persona_data.get("values", []),
             interests=persona_data.get("interests", []),
             personality_traits=personality_traits_dict,
-            information_seeking_behavior=persona_data.get("information_seeking_behavior", "passive"),
+            information_seeking_behavior=persona_data.get(
+                "information_seeking_behavior", "passive"
+            ),
             decision_making_style=persona_data.get("decision_making_style", "analytical"),
             content_sharing_likelihood=sharing_likelihood,
             influence_susceptibility=0.5,
