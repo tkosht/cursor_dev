@@ -4,6 +4,7 @@ import json
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+
 from src.agents.deep_context_analyzer import DeepContextAnalyzer
 
 
@@ -35,9 +36,7 @@ class TestDeepContextAnalyzer:
         return DeepContextAnalyzer()
 
     @pytest.mark.asyncio
-    async def test_analyze_article_context_structure(
-        self, analyzer, sample_article
-    ):
+    async def test_analyze_article_context_structure(self, analyzer, sample_article):
         """Test that analyze_article_context returns proper structure."""
         # Mock LLM response
         mock_response = {
@@ -111,9 +110,7 @@ class TestDeepContextAnalyzer:
     @pytest.mark.asyncio
     async def test_discover_hidden_dimensions(self, analyzer, sample_article):
         """Test discovery of non-obvious contextual dimensions."""
-        initial_analysis = {
-            "domain_analysis": {"primary_domain": "healthcare"}
-        }
+        initial_analysis = {"domain_analysis": {"primary_domain": "healthcare"}}
 
         mock_hidden_dimensions = {
             "second_order_effects": [
@@ -144,13 +141,9 @@ class TestDeepContextAnalyzer:
 
         with patch.object(analyzer, "llm") as mock_llm:
             mock_llm.ainvoke = AsyncMock()
-            mock_llm.ainvoke.return_value.content = json.dumps(
-                mock_hidden_dimensions
-            )
+            mock_llm.ainvoke.return_value.content = json.dumps(mock_hidden_dimensions)
 
-            result = await analyzer._discover_hidden_dimensions(
-                sample_article, initial_analysis
-            )
+            result = await analyzer._discover_hidden_dimensions(sample_article, initial_analysis)
 
             assert "second_order_effects" in result
             assert "cross_domain_implications" in result
@@ -172,9 +165,7 @@ class TestDeepContextAnalyzer:
                     "ethics",
                 ],
             },
-            "cultural_dimensions": {
-                "cultural_sensitivities": ["privacy", "ethics", "equity"]
-            },
+            "cultural_dimensions": {"cultural_sensitivities": ["privacy", "ethics", "equity"]},
             "stakeholder_mapping": {
                 "beneficiaries": ["patients", "doctors"],
                 "opponents": ["privacy advocates"],
@@ -207,9 +198,7 @@ class TestDeepContextAnalyzer:
                 "controversy_potential": "high",
                 "inspirational_elements": ["life-saving potential"],
             },
-            "temporal_aspects": {
-                "trend_alignment": ["AI boom", "healthcare innovation"]
-            },
+            "temporal_aspects": {"trend_alignment": ["AI boom", "healthcare innovation"]},
         }
 
         potential = analyzer._estimate_reach_potential(context_analysis)
@@ -220,9 +209,7 @@ class TestDeepContextAnalyzer:
         assert potential > 0.6
 
     @pytest.mark.asyncio
-    async def test_analyze_article_context_integration(
-        self, analyzer, sample_article
-    ):
+    async def test_analyze_article_context_integration(self, analyzer, sample_article):
         """Test full integration of analyze_article_context."""
         # Mock comprehensive responses
         mock_core_response = {
@@ -236,7 +223,7 @@ class TestDeepContextAnalyzer:
             "second_order_effects": ["Insurance disruption"],
             "cross_domain_implications": ["Legal ramifications"],
             "subculture_relevance": ["Niche community interest"],
-            "contrarian_viewpoints": ["Alternative perspective"]
+            "contrarian_viewpoints": ["Alternative perspective"],
         }
 
         with patch.object(analyzer, "llm") as mock_llm:
@@ -262,9 +249,7 @@ class TestDeepContextAnalyzer:
     async def test_parse_analysis_response(self, analyzer):
         """Test parsing of LLM responses."""
         # Test valid JSON response
-        valid_response = Mock(
-            content='{"key": "value", "nested": {"item": 1}}'
-        )
+        valid_response = Mock(content='{"key": "value", "nested": {"item": 1}}')
         parsed = analyzer._parse_analysis_response(valid_response)
         assert parsed == {"key": "value", "nested": {"item": 1}}
 
@@ -291,9 +276,7 @@ class TestDeepContextAnalyzer:
 
             # Values should be defaults
             assert result["core_context"] == {}
-            assert (
-                result["complexity_score"] == 0.5
-            )  # Default medium complexity
+            assert result["complexity_score"] == 0.5  # Default medium complexity
 
     @pytest.mark.asyncio
     async def test_lightweight_mode_for_short_articles(self, analyzer):

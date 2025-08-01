@@ -4,7 +4,6 @@ This module analyzes articles across multiple dimensions to extract
 contextual information for persona generation.
 """
 
-import json
 from typing import Any
 
 from src.utils.json_parser import parse_llm_json_response
@@ -16,7 +15,7 @@ class DeepContextAnalyzer:
 
     def __init__(self, force_lightweight: bool = False):
         """Initialize the DeepContextAnalyzer.
-        
+
         Args:
             force_lightweight: If True, always use lightweight analysis mode
         """
@@ -39,7 +38,7 @@ class DeepContextAnalyzer:
         try:
             # Use lightweight mode for short articles or when forced
             is_lightweight = self.force_lightweight or len(article) <= 500
-            
+
             if is_lightweight:
                 # Perform lightweight analysis
                 core_context = await self._analyze_core_dimensions_lightweight(article)
@@ -57,9 +56,7 @@ class DeepContextAnalyzer:
                 "core_context": core_context,
                 "hidden_dimensions": hidden_dimensions,
                 "complexity_score": self._calculate_complexity(core_context),
-                "reach_potential": self._estimate_reach_potential(
-                    core_context
-                ),
+                "reach_potential": self._estimate_reach_potential(core_context),
             }
 
         except Exception:
@@ -76,7 +73,7 @@ class DeepContextAnalyzer:
         # Very concise prompt
         analysis_prompt = f"""
         Analyze: {article[:300]}...
-        
+
         Return JSON:
         - domain_analysis: primary_domain (string), technical_complexity (1-10)
         - stakeholder_mapping: beneficiaries (list), likely_sharers (list)
@@ -86,24 +83,20 @@ class DeepContextAnalyzer:
 
         response = await self.llm.ainvoke(analysis_prompt)
         result = self._parse_analysis_response(response)
-        
+
         # Ensure consistent structure with full analysis
         return {
-            "domain_analysis": result.get("domain_analysis", {
-                "primary_domain": "general",
-                "technical_complexity": 5
-            }),
+            "domain_analysis": result.get(
+                "domain_analysis", {"primary_domain": "general", "technical_complexity": 5}
+            ),
             "cultural_dimensions": {},  # Empty for lightweight
-            "temporal_aspects": result.get("temporal_aspects", {
-                "time_sensitivity": "medium"
-            }),
-            "emotional_landscape": result.get("emotional_landscape", {
-                "controversy_potential": "low"
-            }),
-            "stakeholder_mapping": result.get("stakeholder_mapping", {
-                "beneficiaries": [],
-                "likely_sharers": []
-            })
+            "temporal_aspects": result.get("temporal_aspects", {"time_sensitivity": "medium"}),
+            "emotional_landscape": result.get(
+                "emotional_landscape", {"controversy_potential": "low"}
+            ),
+            "stakeholder_mapping": result.get(
+                "stakeholder_mapping", {"beneficiaries": [], "likely_sharers": []}
+            ),
         }
 
     async def _analyze_core_dimensions(self, article: str) -> dict[str, Any]:
@@ -132,63 +125,73 @@ class DeepContextAnalyzer:
         """Use LLM to discover non-obvious contextual dimensions."""
         # Extract key insights from initial analysis to reduce prompt size
         summary = self._summarize_initial_analysis(initial_analysis)
-        
+
         discovery_prompt = f"""
         Article: {article[:300]}...
-        
+
         Key insights:
         - Domain: {summary.get('domain', 'Unknown')}
         - Complexity: {summary.get('complexity', 5)}/10
         - Key stakeholders: {', '.join(summary.get('stakeholders', [])[:3])}
-        
+
         Identify 3 UNEXPECTED dimensions:
         1. Second-order effects (indirect impacts)
         2. Cross-domain implications
         3. Contrarian viewpoints
-        
+
         Return concise JSON with these keys only.
         """
 
         response = await self.llm.ainvoke(discovery_prompt)
         return self._parse_analysis_response(response)
-    
+
     def _summarize_initial_analysis(self, analysis: dict[str, Any]) -> dict[str, Any]:
         """Extract key information from initial analysis to reduce prompt size."""
         return {
             "domain": analysis.get("domain_analysis", {}).get("primary_domain", "Unknown"),
             "complexity": analysis.get("domain_analysis", {}).get("technical_complexity", 5),
-            "stakeholders": [
-                s for s in analysis.get("stakeholder_mapping", {}).get("beneficiaries", [])
-            ],
-            "controversy": analysis.get("emotional_landscape", {}).get("controversy_potential", "medium"),
-            "time_sensitivity": analysis.get("temporal_aspects", {}).get("time_sensitivity", "medium")
+            "stakeholders": list(
+                analysis.get("stakeholder_mapping", {}).get("beneficiaries", [])
+            ),
+            "controversy": analysis.get("emotional_landscape", {}).get(
+                "controversy_potential", "medium"
+            ),
+            "time_sensitivity": analysis.get("temporal_aspects", {}).get(
+                "time_sensitivity", "medium"
+            ),
         }
-    
+
     async def _discover_hidden_dimensions_optimized(
         self, article: str, initial_analysis: dict[str, Any]
     ) -> dict[str, Any]:
         """Optimized version with minimal prompt."""
         # Use only essential information
         domain = initial_analysis.get("domain_analysis", {}).get("primary_domain", "Unknown")
-        
+
         minimal_prompt = f"""
         Article domain: {domain}
         Find 2 unexpected impacts:
         1. Side effects?
         2. Who else affected?
-        
+
         Brief JSON response.
         """
-        
+
         response = await self.llm.ainvoke(minimal_prompt)
         result = self._parse_analysis_response(response)
-        
+
         # Provide structure with defaults
         return {
             "second_order_effects": result.get("second_order_effects", ["Indirect market impact"]),
-            "cross_domain_implications": result.get("cross_domain_implications", ["Adjacent industry effects"]),
-            "subculture_relevance": result.get("subculture_relevance", ["Niche community interest"]),
-            "contrarian_viewpoints": result.get("contrarian_viewpoints", ["Alternative perspective"])
+            "cross_domain_implications": result.get(
+                "cross_domain_implications", ["Adjacent industry effects"]
+            ),
+            "subculture_relevance": result.get(
+                "subculture_relevance", ["Niche community interest"]
+            ),
+            "contrarian_viewpoints": result.get(
+                "contrarian_viewpoints", ["Alternative perspective"]
+            ),
         }
 
     def _calculate_complexity(self, context_analysis: dict[str, Any]) -> float:
@@ -230,9 +233,7 @@ class DeepContextAnalyzer:
 
         return round(score, 2)
 
-    def _estimate_reach_potential(
-        self, context_analysis: dict[str, Any]
-    ) -> float:
+    def _estimate_reach_potential(self, context_analysis: dict[str, Any]) -> float:
         """Estimate article reach potential (0-1).
 
         Args:
@@ -252,9 +253,7 @@ class DeepContextAnalyzer:
 
         # Emotional impact component (0-0.3)
         emotional = context_analysis.get("emotional_landscape", {})
-        controversy = (
-            1.0 if emotional.get("controversy_potential") == "high" else 0.5
-        )
+        controversy = 1.0 if emotional.get("controversy_potential") == "high" else 0.5
         inspiration = len(emotional.get("inspirational_elements", [])) / 3
         emotional_score = (controversy + min(inspiration, 1.0)) / 2
         score += emotional_score * 0.3

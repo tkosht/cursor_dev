@@ -6,12 +6,11 @@ providing scores, qualitative feedback, and predicted behaviors.
 """
 
 import asyncio
-import json
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from ..config import get_config
-from ..core.base import BaseAgent, BaseAction
+from ..core.base import BaseAction, BaseAgent
 from ..core.interfaces import IAction
 from ..core.types import EvaluationMetric, EvaluationResult, PersonaAttributes
 from ..utils.json_parser import parse_llm_json_response
@@ -37,7 +36,7 @@ class EvaluationAgent(BaseAgent):
         self,
         persona: PersonaAttributes,
         article_content: str,
-        analysis_results: Dict[str, Any],
+        analysis_results: dict[str, Any],
     ) -> EvaluationResult:
         """
         Evaluate an article from a specific persona's perspective
@@ -51,9 +50,7 @@ class EvaluationAgent(BaseAgent):
             EvaluationResult with scores, feedback, and predictions
         """
         # Generate evaluation prompt
-        prompt = self._generate_evaluation_prompt(
-            persona, article_content, analysis_results
-        )
+        prompt = self._generate_evaluation_prompt(persona, article_content, analysis_results)
 
         # Try to get evaluation with retries
         response_content = None
@@ -61,16 +58,13 @@ class EvaluationAgent(BaseAgent):
             try:
                 # Set timeout from config
                 timeout = self.config.llm.timeout
-                
+
                 # Call LLM with timeout
-                response = await asyncio.wait_for(
-                    self.llm.ainvoke(prompt),
-                    timeout=timeout
-                )
+                response = await asyncio.wait_for(self.llm.ainvoke(prompt), timeout=timeout)
                 response_content = response.content
                 break
-                
-            except asyncio.TimeoutError:
+
+            except TimeoutError:
                 logger.warning(
                     f"Timeout on attempt {attempt + 1}/{self.max_retries} "
                     f"for persona evaluation"
@@ -78,21 +72,19 @@ class EvaluationAgent(BaseAgent):
                 if attempt < self.max_retries - 1:
                     await asyncio.sleep(self.retry_delay)
                 else:
-                    logger.error(f"All attempts timed out for persona evaluation")
-                    
+                    logger.error("All attempts timed out for persona evaluation")
+
             except Exception as e:
-                logger.error(
-                    f"Error on attempt {attempt + 1}/{self.max_retries}: {str(e)}"
-                )
+                logger.error(f"Error on attempt {attempt + 1}/{self.max_retries}: {str(e)}")
                 if attempt < self.max_retries - 1:
                     await asyncio.sleep(self.retry_delay)
                 else:
-                    logger.error(f"All attempts failed for persona evaluation")
+                    logger.error("All attempts failed for persona evaluation")
 
         # Parse response or use default
         # Generate persona ID from attributes
         persona_id = self._generate_persona_id(persona)
-        
+
         if response_content:
             return self._parse_evaluation_response(
                 response_content,
@@ -101,16 +93,13 @@ class EvaluationAgent(BaseAgent):
             )
         else:
             # Return default evaluation if all attempts failed
-            return self._create_default_evaluation(
-                persona_id=persona_id,
-                article_id="default"
-            )
+            return self._create_default_evaluation(persona_id=persona_id, article_id="default")
 
     def _generate_evaluation_prompt(
         self,
         persona: PersonaAttributes,
         article_content: str,
-        analysis_results: Dict[str, Any],
+        analysis_results: dict[str, Any],
     ) -> str:
         """Generate the evaluation prompt for LLM"""
         # Format persona attributes
@@ -130,8 +119,12 @@ class EvaluationAgent(BaseAgent):
         - Personality Traits: {self._format_personality_traits(persona.personality_traits)}
         - Information Seeking: {persona.information_seeking_behavior}
         - Preferred Channels: {', '.join([ch.value for ch in persona.preferred_channels])}
-        - Cognitive Biases: {', '.join(persona.cognitive_biases) if persona.cognitive_biases else 'None specified'}
-        - Emotional Triggers: {', '.join(persona.emotional_triggers) if persona.emotional_triggers else 'None specified'}
+        - Cognitive Biases: {(
+            ', '.join(persona.cognitive_biases) if persona.cognitive_biases else 'None specified'
+        )}
+        - Emotional Triggers: {(
+            ', '.join(persona.emotional_triggers) if persona.emotional_triggers else 'None specified'
+        )}
         - Decision Making Style: {persona.decision_making_style}
         - Content Sharing Likelihood: {persona.content_sharing_likelihood}
         - Influence Susceptibility: {persona.influence_susceptibility}
@@ -140,9 +133,15 @@ class EvaluationAgent(BaseAgent):
         # Format analysis results
         analysis_summary = f"""
         Article Analysis:
-        - Readability: Flesch Reading Ease {analysis_results.get('readability', {}).get('flesch_reading_ease', 'N/A')}
-        - Sentiment: {analysis_results.get('sentiment', {}).get('overall', 'N/A')} (confidence: {analysis_results.get('sentiment', {}).get('confidence', 'N/A')})
-        - Structure: {analysis_results.get('structure', {}).get('sections', 'N/A')} sections, {analysis_results.get('structure', {}).get('paragraphs', 'N/A')} paragraphs
+        - Readability: Flesch Reading Ease {
+            analysis_results.get('readability', {}).get('flesch_reading_ease', 'N/A')
+        }
+        - Sentiment: {analysis_results.get('sentiment', {}).get('overall', 'N/A')} (
+            confidence: {analysis_results.get('sentiment', {}).get('confidence', 'N/A')}
+        )
+        - Structure: {analysis_results.get('structure', {}).get('sections', 'N/A')} sections, {
+            analysis_results.get('structure', {}).get('paragraphs', 'N/A')
+        } paragraphs
         - Keywords: {', '.join(analysis_results.get('keywords', {}).get('main_topics', []))}
         - Technical Depth: {analysis_results.get('technical_depth', {}).get('level', 'N/A')}
         """
@@ -216,21 +215,21 @@ class EvaluationAgent(BaseAgent):
             "key_insights": [<list of 2-3 key insights about how this persona perceives the article>]
         }}
         """
-        
+
         return prompt
 
     def _generate_persona_id(self, persona: PersonaAttributes) -> str:
         """Generate ID for persona based on attributes"""
         import hashlib
-        
+
         # Create a stable ID based on persona attributes
         key_attrs = f"{persona.age}_{persona.occupation}_{persona.location}"
         return hashlib.md5(key_attrs.encode()).hexdigest()[:12]
 
-    async def decide(self, perception: Dict[str, Any]) -> IAction:
+    async def decide(self, perception: dict[str, Any]) -> IAction:
         """
         Decide action based on perception (required by BaseAgent)
-        
+
         For evaluation agent, this creates an evaluation action
         """
         # EvaluationAgent doesn't make traditional decisions
@@ -240,19 +239,19 @@ class EvaluationAgent(BaseAgent):
             parameters={
                 "persona_id": perception.get("persona_id"),
                 "article_id": perception.get("article_id"),
-            }
+            },
         )
 
-    def _format_personality_traits(self, traits: Dict[str, float]) -> str:
+    def _format_personality_traits(self, traits: dict[str, float]) -> str:
         """Format personality traits for prompt"""
         if not traits:
             return "Not specified"
-        
+
         formatted = []
         for trait, value in traits.items():
-            trait_name = trait.value if hasattr(trait, 'value') else str(trait)
+            trait_name = trait.value if hasattr(trait, "value") else str(trait)
             formatted.append(f"{trait_name}: {value:.2f}")
-        
+
         return ", ".join(formatted)
 
     def _parse_evaluation_response(
@@ -265,26 +264,46 @@ class EvaluationAgent(BaseAgent):
         try:
             # Use the json parser utility
             parsed = parse_llm_json_response(response)
-            
+
             # Create EvaluationResult with parsed data
             # Convert individual scores to metrics
             metrics = [
-                EvaluationMetric(name="relevance", score=parsed.get("relevance_score", 50), weight=0.3),
+                EvaluationMetric(
+                    name="relevance", score=parsed.get("relevance_score", 50), weight=0.3
+                ),
                 EvaluationMetric(name="clarity", score=parsed.get("clarity_score", 50), weight=0.2),
-                EvaluationMetric(name="credibility", score=parsed.get("credibility_score", 50), weight=0.2),
-                EvaluationMetric(name="emotional_impact", score=parsed.get("emotional_impact_score", 50), weight=0.15),
-                EvaluationMetric(name="action_potential", score=parsed.get("action_potential_score", 50), weight=0.15),
+                EvaluationMetric(
+                    name="credibility", score=parsed.get("credibility_score", 50), weight=0.2
+                ),
+                EvaluationMetric(
+                    name="emotional_impact",
+                    score=parsed.get("emotional_impact_score", 50),
+                    weight=0.15,
+                ),
+                EvaluationMetric(
+                    name="action_potential",
+                    score=parsed.get("action_potential_score", 50),
+                    weight=0.15,
+                ),
             ]
-            
+
             # Determine engagement level from scores
             overall = self._calculate_overall_score(parsed)
             engagement_level = "high" if overall >= 70 else "medium" if overall >= 40 else "low"
-            
+
             # Determine sentiment
             emotional_response = parsed.get("emotional_response", {})
             primary_emotion = emotional_response.get("primary_emotion", "neutral")
-            sentiment = "positive" if primary_emotion in ["excitement", "joy", "satisfaction"] else "negative" if primary_emotion in ["anger", "frustration", "disappointment"] else "neutral"
-            
+            sentiment = (
+                "positive"
+                if primary_emotion in ["excitement", "joy", "satisfaction"]
+                else (
+                    "negative"
+                    if primary_emotion in ["anger", "frustration", "disappointment"]
+                    else "neutral"
+                )
+            )
+
             return EvaluationResult(
                 persona_id=persona_id,
                 persona_type="dynamic",  # Will be set by orchestrator
@@ -293,31 +312,30 @@ class EvaluationAgent(BaseAgent):
                 overall_score=overall,
                 strengths=parsed.get("strengths", ["Unable to parse strengths"]),
                 weaknesses=parsed.get("weaknesses", ["Unable to parse weaknesses"]),
-                suggestions=parsed.get(
-                    "improvement_suggestions",
-                    ["Unable to parse suggestions"]
+                suggestions=parsed.get("improvement_suggestions", ["Unable to parse suggestions"]),
+                sharing_probability=parsed.get("predicted_engagement", {}).get(
+                    "share_probability", 0.3
                 ),
-                sharing_probability=parsed.get(
-                    "predicted_engagement", {}
-                ).get("share_probability", 0.3),
                 engagement_level=engagement_level,
                 sentiment=sentiment,
-                reasoning="\n".join(parsed.get(
-                    "key_insights",
-                    ["Evaluation completed with partial data"]
-                )),
-                confidence=0.8 if all(
-                    key in parsed for key in [
-                        "relevance_score", "clarity_score", "credibility_score"
-                    ]
-                ) else 0.5,
+                reasoning="\n".join(
+                    parsed.get("key_insights", ["Evaluation completed with partial data"])
+                ),
+                confidence=(
+                    0.8
+                    if all(
+                        key in parsed
+                        for key in ["relevance_score", "clarity_score", "credibility_score"]
+                    )
+                    else 0.5
+                ),
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to parse evaluation response: {str(e)}")
             return self._create_default_evaluation(persona_id, article_id)
 
-    def _calculate_overall_score(self, parsed_data: Dict[str, Any]) -> float:
+    def _calculate_overall_score(self, parsed_data: dict[str, Any]) -> float:
         """Calculate weighted overall score"""
         scores = [
             parsed_data.get("relevance_score", 50) * 0.3,
@@ -342,7 +360,7 @@ class EvaluationAgent(BaseAgent):
             EvaluationMetric(name="emotional_impact", score=50, weight=0.15),
             EvaluationMetric(name="action_potential", score=50, weight=0.15),
         ]
-        
+
         return EvaluationResult(
             persona_id=persona_id,
             persona_type="dynamic",

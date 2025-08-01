@@ -19,19 +19,19 @@ sys.path.insert(0, str(src_path))
 @pytest.fixture(scope="function")
 def event_loop():
     """Create an instance of the default event loop for each test function.
-    
+
     This implementation handles the event loop closure issue that occurs when
     running async tests in batch mode. Changed to function scope to ensure
     clean state between tests, especially for gRPC connections.
     """
     # Create a new event loop for each test
     loop = asyncio.get_event_loop_policy().new_event_loop()
-    
+
     # Set the event loop for the current policy
     asyncio.set_event_loop(loop)
-    
+
     yield loop
-    
+
     # Cleanup after test
     try:
         # Cancel all pending tasks
@@ -39,17 +39,17 @@ def event_loop():
         for task in pending:
             if not task.done():
                 task.cancel()
-        
+
         # Wait for all tasks to be cancelled
         if pending:
             loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
-        
+
         # Force garbage collection to clean up gRPC resources
         gc.collect()
-        
+
         # Small delay to ensure gRPC cleanup
         loop.run_until_complete(asyncio.sleep(0.1))
-        
+
     finally:
         # Close the loop
         loop.close()
@@ -79,12 +79,8 @@ def mock_config(monkeypatch):
 def mock_llm():
     """Mock LLM for testing"""
     mock = MagicMock()
-    mock.ainvoke = MagicMock(
-        return_value=MagicMock(content='{"result": "test"}')
-    )
-    mock.invoke = MagicMock(
-        return_value=MagicMock(content='{"result": "test"}')
-    )
+    mock.ainvoke = MagicMock(return_value=MagicMock(content='{"result": "test"}'))
+    mock.invoke = MagicMock(return_value=MagicMock(content='{"result": "test"}'))
     return mock
 
 

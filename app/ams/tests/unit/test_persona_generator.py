@@ -4,6 +4,7 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from src.agents.persona_generator import PersonaGenerator
 from src.core.types import PersonaAttributes, PersonalityType
 
@@ -85,9 +86,7 @@ class TestPersonaGenerator:
                         }
                     ]
                 },
-                "micro_clusters": {
-                    "tech_leaders": ["innovators", "influencers"]
-                },
+                "micro_clusters": {"tech_leaders": ["innovators", "influencers"]},
                 "persona_slots": [
                     {
                         "id": "persona_0",
@@ -116,9 +115,7 @@ class TestPersonaGenerator:
                 "density": 0.3,
             },
             "influence_map": {
-                "influencer_nodes": [
-                    {"id": "persona_0", "influence_score": 0.8}
-                ],
+                "influencer_nodes": [{"id": "persona_0", "influence_score": 0.8}],
                 "influence_paths": [],
             },
         }
@@ -138,7 +135,7 @@ class TestPersonaGenerator:
         """Test that generate_personas returns proper structure."""
         # Add hierarchy to analysis results for new implementation
         sample_analysis_results["hierarchy"] = sample_population_structure["hierarchy"]
-        
+
         # Mock LLM response
         mock_llm_response = {
             "name": "Dr. Sarah Chen",
@@ -153,26 +150,26 @@ class TestPersonaGenerator:
                 "interest_level": "high",
                 "sharing_likelihood": 0.8,
                 "discussion_points": ["AI implementation", "Patient safety"],
-                "action_likelihood": 0.7
+                "action_likelihood": 0.7,
             },
-            "information_preferences": ["tech blogs", "medical journals"]
+            "information_preferences": ["tech blogs", "medical journals"],
         }
-        
+
         mock_llm = MagicMock()
         mock_llm.ainvoke = AsyncMock()
         mock_response = MagicMock()
         mock_response.content = json.dumps(mock_llm_response)
         mock_llm.ainvoke.return_value = mock_response
-        
-        with patch('src.agents.persona_generator.create_llm', return_value=mock_llm):
+
+        with patch("src.agents.persona_generator.create_llm", return_value=mock_llm):
             generator = PersonaGenerator()
-            
+
             result = await generator.generate_personas(
                 article_content=sample_article,
                 analysis_results=sample_analysis_results,
                 count=1,
             )
-            
+
             # Verify result is list of PersonaAttributes
             assert isinstance(result, list)
             assert len(result) == 1
@@ -187,7 +184,7 @@ class TestPersonaGenerator:
         """Test persona generation with multiple slots."""
         # Add hierarchy to analysis results
         sample_analysis_results["hierarchy"] = sample_population_structure["hierarchy"]
-        
+
         # Mock different LLM responses for each persona
         mock_llm_responses = [
             {
@@ -203,12 +200,12 @@ class TestPersonaGenerator:
                     "interest_level": "high",
                     "sharing_likelihood": 0.8,
                     "discussion_points": ["Clinical applications", "Safety protocols"],
-                    "action_likelihood": 0.85
+                    "action_likelihood": 0.85,
                 },
-                "information_preferences": ["medical journals", "peer networks"]
+                "information_preferences": ["medical journals", "peer networks"],
             },
             {
-                "name": "Dr. Alex Rodriguez", 
+                "name": "Dr. Alex Rodriguez",
                 "age": 38,
                 "occupation": "Chief Medical Information Officer",
                 "background": "Physician turned healthcare technology executive",
@@ -220,30 +217,32 @@ class TestPersonaGenerator:
                     "interest_level": "very high",
                     "sharing_likelihood": 0.9,
                     "discussion_points": ["Implementation challenges", "ROI metrics"],
-                    "action_likelihood": 0.9
+                    "action_likelihood": 0.9,
                 },
-                "information_preferences": ["tech publications", "industry reports"]
-            }
+                "information_preferences": ["tech publications", "industry reports"],
+            },
         ]
-        
+
         response_iter = iter(mock_llm_responses)
-        
+
         mock_llm = MagicMock()
+
         def mock_ainvoke(prompt):
             mock_response = MagicMock()
             mock_response.content = json.dumps(next(response_iter))
             return mock_response
+
         mock_llm.ainvoke = AsyncMock(side_effect=mock_ainvoke)
-            
-        with patch('src.agents.persona_generator.create_llm', return_value=mock_llm):
+
+        with patch("src.agents.persona_generator.create_llm", return_value=mock_llm):
             generator = PersonaGenerator()
-            
+
             result = await generator.generate_personas(
                 article_content=sample_article,
                 analysis_results=sample_analysis_results,
                 count=2,
             )
-            
+
             # Should generate 2 personas
             assert len(result) == 2
             assert all(isinstance(p, PersonaAttributes) for p in result)
@@ -251,24 +250,22 @@ class TestPersonaGenerator:
             assert result[1].occupation == "Chief Medical Information Officer"
 
     @pytest.mark.asyncio
-    async def test_generate_single_persona_optimized(
-        self
-    ):
+    async def test_generate_single_persona_optimized(self):
         """Test single persona generation with optimized method."""
         article_summary = "AI transforms healthcare..."
         essential_context = {
             "domain": "healthcare",
             "complexity": 7,
-            "stakeholders": ["doctors", "patients", "tech companies"]
+            "stakeholders": ["doctors", "patients", "tech companies"],
         }
         persona_slot = {
             "id": "persona_0",
             "major_segment": "early_adopters",
-            "network_position": {"type": "influencer", "centrality": 0.8}
+            "network_position": {"type": "influencer", "centrality": 0.8},
         }
         segment_info = {
             "name": "Healthcare Tech Early Adopters",
-            "characteristics": ["tech-savvy", "innovation-seeking", "forward-thinking"]
+            "characteristics": ["tech-savvy", "innovation-seeking", "forward-thinking"],
         }
 
         mock_response = {
@@ -285,8 +282,8 @@ class TestPersonaGenerator:
                 "interest_level": "very high",
                 "sharing_likelihood": 0.9,
                 "discussion_points": ["Implementation challenges", "ROI metrics"],
-                "action_likelihood": 0.9
-            }
+                "action_likelihood": 0.9,
+            },
         }
 
         mock_llm = MagicMock()
@@ -295,9 +292,9 @@ class TestPersonaGenerator:
         mock_response_obj.content = json.dumps(mock_response)
         mock_llm.ainvoke.return_value = mock_response_obj
 
-        with patch('src.agents.persona_generator.create_llm', return_value=mock_llm):
+        with patch("src.agents.persona_generator.create_llm", return_value=mock_llm):
             generator = PersonaGenerator()
-            
+
             result = await generator._generate_single_persona_optimized(
                 article_summary, essential_context, persona_slot, segment_info
             )
@@ -358,15 +355,13 @@ class TestPersonaGenerator:
         assert result.preferred_channels == []
 
     @pytest.mark.asyncio
-    async def test_error_handling(
-        self, sample_article, sample_analysis_results
-    ):
+    async def test_error_handling(self, sample_article, sample_analysis_results):
         """Test error handling in persona generation."""
         # Mock LLM to raise an exception
         mock_llm = MagicMock()
         mock_llm.ainvoke = AsyncMock(side_effect=Exception("LLM API error"))
-        
-        with patch('src.agents.persona_generator.create_llm', return_value=mock_llm):
+
+        with patch("src.agents.persona_generator.create_llm", return_value=mock_llm):
             generator = PersonaGenerator()
 
             # Should handle error gracefully and return default personas
@@ -385,9 +380,7 @@ class TestPersonaGenerator:
                 assert persona.occupation is not None
 
     @pytest.mark.asyncio
-    async def test_persona_count_compliance(
-        self, sample_article, sample_analysis_results
-    ):
+    async def test_persona_count_compliance(self, sample_article, sample_analysis_results):
         """Test that correct number of personas are generated."""
         # Mock population with fewer slots than requested
         sample_analysis_results["hierarchy"] = {
@@ -395,11 +388,19 @@ class TestPersonaGenerator:
                 {"id": "test", "name": "Test Segment", "characteristics": ["curious"]}
             ],
             "persona_slots": [
-                {"id": "persona_0", "major_segment": "test", "network_position": {"type": "central"}},
-                {"id": "persona_1", "major_segment": "test", "network_position": {"type": "peripheral"}},
-            ]
+                {
+                    "id": "persona_0",
+                    "major_segment": "test",
+                    "network_position": {"type": "central"},
+                },
+                {
+                    "id": "persona_1",
+                    "major_segment": "test",
+                    "network_position": {"type": "peripheral"},
+                },
+            ],
         }
-        
+
         # Mock LLM responses for the two available slots
         mock_response = {
             "name": "Test Person",
@@ -414,26 +415,26 @@ class TestPersonaGenerator:
                 "interest_level": "medium",
                 "sharing_likelihood": 0.5,
                 "discussion_points": ["Point 1", "Point 2"],
-                "action_likelihood": 0.5
+                "action_likelihood": 0.5,
             },
-            "information_preferences": ["online", "social media"]
+            "information_preferences": ["online", "social media"],
         }
-        
+
         mock_llm = MagicMock()
         mock_llm.ainvoke = AsyncMock()
         mock_response_obj = MagicMock()
         mock_response_obj.content = json.dumps(mock_response)
         mock_llm.ainvoke.return_value = mock_response_obj
-        
-        with patch('src.agents.persona_generator.create_llm', return_value=mock_llm):
+
+        with patch("src.agents.persona_generator.create_llm", return_value=mock_llm):
             generator = PersonaGenerator()
-            
+
             result = await generator.generate_personas(
                 article_content=sample_article,
                 analysis_results=sample_analysis_results,
                 count=5,  # Request 5 but only 2 slots available
             )
-            
+
             # Should generate 5 personas (2 from slots + 3 defaults)
             assert len(result) == 5
             assert all(isinstance(p, PersonaAttributes) for p in result)

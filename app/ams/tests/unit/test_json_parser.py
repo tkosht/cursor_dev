@@ -5,6 +5,7 @@ Unit tests for JSON parsing utilities
 from unittest.mock import patch
 
 import pytest
+
 from src.utils.json_parser import (
     _clean_response,
     _extract_code_block,
@@ -204,10 +205,7 @@ class TestHelperFunctions:
         assert _fix_common_json_issues('{key: "value"}') == '{"key": "value"}'
 
         # Python booleans
-        assert (
-            _fix_common_json_issues('{"t": True, "f": False}')
-            == '{"t": true, "f": false}'
-        )
+        assert _fix_common_json_issues('{"t": True, "f": False}') == '{"t": true, "f": false}'
 
         # Python None
         assert _fix_common_json_issues('{"val": None}') == '{"val": null}'

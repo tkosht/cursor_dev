@@ -8,6 +8,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from src.agents.analyzer import AnalysisAgent
 
 
@@ -58,9 +59,7 @@ Contact us at ai-ethics@example.com for more information.
     @patch("src.agents.analyzer.get_config")
     @patch("src.agents.analyzer.select_optimal_llm")
     @patch("src.agents.analyzer.create_llm")
-    def test_initialization(
-        self, mock_create_llm, mock_select_llm, mock_get_config
-    ):
+    def test_initialization(self, mock_create_llm, mock_select_llm, mock_get_config):
         """Test agent initialization"""
         # Setup mocks
         mock_get_config.return_value = MagicMock()
@@ -73,9 +72,7 @@ Contact us at ai-ethics@example.com for more information.
         # Verify initialization
         assert agent.config is not None
         mock_select_llm.assert_called_once()
-        mock_create_llm.assert_called_once_with(
-            provider="gemini", model="gemini-2.5-flash"
-        )
+        mock_create_llm.assert_called_once_with(provider="gemini", model="gemini-2.5-flash")
         assert len(agent.analysis_dimensions) == 8
 
     @pytest.mark.asyncio
@@ -165,9 +162,7 @@ Contact us at ai-ethics@example.com for more information.
 
         # Verify results structure
         assert "metadata" in results
-        assert (
-            results["metadata"]["dimensions_analyzed"] == 8
-        )  # All 8 dimensions
+        assert results["metadata"]["dimensions_analyzed"] == 8  # All 8 dimensions
         assert results["metadata"]["errors"] == []
         assert "content" in results
         assert "structure" in results
@@ -199,19 +194,11 @@ Contact us at ai-ethics@example.com for more information.
         # Setup LLM to fail for some calls
         mock_llm.ainvoke.side_effect = [
             Exception("LLM API Error"),  # content fails
-            MagicMock(
-                content='{"overall_sentiment": "neutral"}'
-            ),  # sentiment succeeds
+            MagicMock(content='{"overall_sentiment": "neutral"}'),  # sentiment succeeds
             Exception("Rate limit exceeded"),  # keywords fails
-            MagicMock(
-                content='{"primary_audience": "General"}'
-            ),  # target_audience succeeds
-            MagicMock(
-                content='{"technical_level": 5}'
-            ),  # technical_depth succeeds
-            MagicMock(
-                content='{"primary_emotion": "neutral"}'
-            ),  # emotional_impact succeeds
+            MagicMock(content='{"primary_audience": "General"}'),  # target_audience succeeds
+            MagicMock(content='{"technical_level": 5}'),  # technical_depth succeeds
+            MagicMock(content='{"primary_emotion": "neutral"}'),  # emotional_impact succeeds
         ]
 
         # Create agent and analyze
@@ -273,9 +260,7 @@ code_block()
 
         assert result["sentence_count"] == 3
         assert result["avg_sentence_length"] == pytest.approx(4.33, 0.1)
-        assert result["complex_word_ratio"] == pytest.approx(
-            0.46, 0.1
-        )  # 6/13 words
+        assert result["complex_word_ratio"] == pytest.approx(0.46, 0.1)  # 6/13 words
         assert result["difficulty_level"] == "very_difficult"
 
     def test_estimate_difficulty(self):

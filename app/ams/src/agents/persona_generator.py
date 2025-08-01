@@ -14,7 +14,7 @@ from src.utils.llm_factory import create_llm
 
 class PersonaGenerator:
     """Generate diverse personas for article evaluation.
-    
+
     Optimized to reduce prompt sizes and improve performance.
     """
 
@@ -41,7 +41,7 @@ class PersonaGenerator:
             # Extract essential information once
             article_summary = self._extract_article_summary(article_content)
             essential_context = self._extract_essential_context(analysis_results)
-            
+
             # Get hierarchy or use default
             hierarchy = analysis_results.get("hierarchy", {})
             persona_slots = hierarchy.get("persona_slots", [])
@@ -50,12 +50,12 @@ class PersonaGenerator:
             personas = []
             for i in range(min(count, len(persona_slots))):
                 persona_slot = persona_slots[i]
-                
+
                 # Get segment info
                 major_segments = hierarchy.get("major_segments", [])
                 segment_info = next(
                     (s for s in major_segments if s["id"] == persona_slot.get("major_segment")),
-                    {"name": "General", "characteristics": ["curious", "open-minded"]}
+                    {"name": "General", "characteristics": ["curious", "open-minded"]},
                 )
 
                 # Generate persona with minimal context
@@ -65,7 +65,7 @@ class PersonaGenerator:
                     persona_slot,
                     segment_info,
                 )
-                
+
                 # Convert to PersonaAttributes
                 persona = self._convert_to_persona_attributes(persona_data)
                 personas.append(persona)
@@ -79,10 +79,7 @@ class PersonaGenerator:
 
         except Exception:
             # Return default personas on error
-            return [
-                self._create_default_persona(f"persona_{i}")
-                for i in range(count)
-            ]
+            return [self._create_default_persona(f"persona_{i}") for i in range(count)]
 
     def _extract_article_summary(self, article_content: str) -> str:
         """Extract key points from article for prompt."""
@@ -94,13 +91,15 @@ class PersonaGenerator:
     def _extract_essential_context(self, analysis_results: dict[str, Any]) -> dict[str, Any]:
         """Extract only essential context information."""
         core = analysis_results.get("core_context", {})
-        
+
         return {
             "domain": core.get("domain_analysis", {}).get("primary_domain", "general"),
             "complexity": core.get("domain_analysis", {}).get("technical_complexity", 5),
-            "emotional_tone": core.get("emotional_landscape", {}).get("controversy_potential", "medium"),
+            "emotional_tone": core.get("emotional_landscape", {}).get(
+                "controversy_potential", "medium"
+            ),
             "key_stakeholders": core.get("stakeholder_mapping", {}).get("beneficiaries", [])[:2],
-            "reach_potential": analysis_results.get("reach_potential", 0.5)
+            "reach_potential": analysis_results.get("reach_potential", 0.5),
         }
 
     async def _generate_single_persona_optimized(
@@ -139,7 +138,7 @@ class PersonaGenerator:
             persona_data["id"] = persona_slot.get("id", f"persona_{random.randint(1000, 9999)}")
             persona_data["segment_id"] = persona_slot.get("major_segment")
             persona_data["network_position"] = persona_slot.get("network_position", {})
-            
+
             # Ensure information_preferences exists
             if "information_preferences" not in persona_data:
                 persona_data["information_preferences"] = ["online news", "social media"]
@@ -159,7 +158,9 @@ class PersonaGenerator:
             "age": random.randint(25, 65),
             "occupation": "Professional",
             "background": f"Professional with interest in {segment_info.get('name', 'various topics')}",
-            "personality_traits": segment_info.get("characteristics", ["analytical", "curious"])[:4],
+            "personality_traits": segment_info.get("characteristics", ["analytical", "curious"])[
+                :4
+            ],
             "interests": [segment_info.get("name", "general topics")],
             "decision_factors": ["evidence", "relevance"],
             "information_preferences": ["professional networks", "industry publications"],
@@ -175,9 +176,7 @@ class PersonaGenerator:
             },
         }
 
-    def _convert_to_persona_attributes(
-        self, persona_data: dict[str, Any]
-    ) -> PersonaAttributes:
+    def _convert_to_persona_attributes(self, persona_data: dict[str, Any]) -> PersonaAttributes:
         """Convert persona data to PersonaAttributes object."""
         # Calculate network metrics
         sharing_likelihood = persona_data.get("article_relationship", {}).get(
@@ -193,7 +192,7 @@ class PersonaGenerator:
             PersonalityType.AGREEABLENESS: 0.5,
             PersonalityType.NEUROTICISM: 0.5,
         }
-        
+
         return PersonaAttributes(
             # Demographics
             age=persona_data.get("age", 35),
@@ -208,7 +207,7 @@ class PersonaGenerator:
             influence_score=influence,
             network_centrality=0.5,
             # Dynamic attributes
-            trust_level={"article_source": 0.7}
+            trust_level={"article_source": 0.7},
         )
 
     def _create_default_persona(self, persona_id: str) -> PersonaAttributes:
@@ -220,7 +219,7 @@ class PersonaGenerator:
             PersonalityType.AGREEABLENESS: 0.6,
             PersonalityType.NEUROTICISM: 0.3,
         }
-        
+
         return PersonaAttributes(
             # Demographics
             age=random.randint(25, 65),
@@ -235,5 +234,5 @@ class PersonaGenerator:
             influence_score=0.5,
             network_centrality=0.5,
             # Dynamic attributes
-            trust_level={"article_source": 0.5}
+            trust_level={"article_source": 0.5},
         )

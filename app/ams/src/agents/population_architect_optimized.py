@@ -5,7 +5,6 @@ Optimized version reduces prompt size and improves performance.
 """
 
 import asyncio
-import json
 from typing import Any
 
 from src.utils.json_parser import parse_llm_json_response
@@ -14,7 +13,7 @@ from src.utils.llm_factory import create_llm
 
 class PopulationArchitect:
     """Design population hierarchies and network structures.
-    
+
     Optimized to reduce prompt sizes and improve performance.
     """
 
@@ -39,7 +38,7 @@ class PopulationArchitect:
         try:
             # Extract only essential context info
             essential_context = self._extract_essential_context(context)
-            
+
             # Design major segments (3-5)
             major_segments = await self._design_major_segments(essential_context)
 
@@ -49,9 +48,7 @@ class PopulationArchitect:
             )
 
             # Design micro-clusters based on segments
-            micro_clusters = self._design_micro_clusters(
-                major_segments, sub_segments, target_size
-            )
+            micro_clusters = self._design_micro_clusters(major_segments, sub_segments, target_size)
 
             # Allocate personas to slots
             persona_slots = self._allocate_persona_slots(
@@ -65,12 +62,8 @@ class PopulationArchitect:
                     "micro_clusters": micro_clusters,
                     "persona_slots": persona_slots,
                 },
-                "network_topology": self._design_network_topology(
-                    persona_slots
-                ),
-                "influence_map": self._design_influence_patterns(
-                    persona_slots
-                ),
+                "network_topology": self._design_network_topology(persona_slots),
+                "influence_map": self._design_influence_patterns(persona_slots),
             }
 
         except Exception:
@@ -92,15 +85,21 @@ class PopulationArchitect:
     def _extract_essential_context(self, context: dict[str, Any]) -> dict[str, Any]:
         """Extract only essential information from context to reduce prompt size."""
         core_context = context.get("core_context", {})
-        
+
         return {
             "domain": core_context.get("domain_analysis", {}).get("primary_domain", "general"),
             "complexity": core_context.get("domain_analysis", {}).get("technical_complexity", 5),
-            "stakeholders": core_context.get("stakeholder_mapping", {}).get("beneficiaries", [])[:3],
-            "emotional_tone": core_context.get("emotional_landscape", {}).get("controversy_potential", "medium"),
-            "time_sensitivity": core_context.get("temporal_aspects", {}).get("time_sensitivity", "medium"),
+            "stakeholders": core_context.get("stakeholder_mapping", {}).get("beneficiaries", [])[
+                :3
+            ],
+            "emotional_tone": core_context.get("emotional_landscape", {}).get(
+                "controversy_potential", "medium"
+            ),
+            "time_sensitivity": core_context.get("temporal_aspects", {}).get(
+                "time_sensitivity", "medium"
+            ),
             "complexity_score": context.get("complexity_score", 0.5),
-            "reach_potential": context.get("reach_potential", 0.5)
+            "reach_potential": context.get("reach_potential", 0.5),
         }
 
     async def _design_major_segments(
@@ -138,9 +137,7 @@ class PopulationArchitect:
             total_percentage = sum(s.get("percentage", 0) for s in segments)
             if total_percentage > 0:
                 for segment in segments:
-                    segment["percentage"] = (
-                        segment.get("percentage", 0) / total_percentage
-                    ) * 100
+                    segment["percentage"] = (segment.get("percentage", 0) / total_percentage) * 100
 
             return segments
 
@@ -155,17 +152,17 @@ class PopulationArchitect:
         for segment in major_segments:
             task = self._design_sub_segments_for_one(segment, essential_context)
             tasks.append(task)
-        
+
         # Execute all sub-segment designs in parallel
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         sub_segments = {}
         for i, segment in enumerate(major_segments):
             if isinstance(results[i], list):
                 sub_segments[segment["id"]] = results[i]
             else:
                 sub_segments[segment["id"]] = []
-        
+
         return sub_segments
 
     async def _design_sub_segments_for_one(
@@ -217,13 +214,15 @@ class PopulationArchitect:
                 # Create 1-2 micro clusters per sub-segment
                 cluster_count = min(2, max(1, target_size // 10))
                 for i in range(cluster_count):
-                    clusters.append({
-                        "id": f"{sub_seg['id']}_cluster_{i}",
-                        "name": f"{sub_seg['name']} Group {i+1}",
-                        "size": 1 + (i % 2),  # Alternate between 1-2 people
-                        "sub_segment_id": sub_seg["id"],
-                        "characteristics": sub_seg.get("characteristics", []),
-                    })
+                    clusters.append(
+                        {
+                            "id": f"{sub_seg['id']}_cluster_{i}",
+                            "name": f"{sub_seg['name']} Group {i+1}",
+                            "size": 1 + (i % 2),  # Alternate between 1-2 people
+                            "sub_segment_id": sub_seg["id"],
+                            "characteristics": sub_seg.get("characteristics", []),
+                        }
+                    )
 
             micro_clusters[segment_id] = clusters
 
@@ -252,38 +251,34 @@ class PopulationArchitect:
             for i in range(segment_personas):
                 if sub_segs:
                     sub_seg = sub_segs[i % len(sub_segs)]
-                    cluster = (
-                        clusters[i % len(clusters)] if clusters else None
-                    )
+                    cluster = clusters[i % len(clusters)] if clusters else None
 
-                    slots.append({
-                        "id": f"persona_{persona_id}",
-                        "major_segment": segment_id,
-                        "sub_segment": sub_seg["id"],
-                        "micro_cluster": (
-                            cluster["id"] if cluster else None
-                        ),
-                        "network_position": self._assign_network_position(
-                            i, segment_personas
-                        ),
-                    })
+                    slots.append(
+                        {
+                            "id": f"persona_{persona_id}",
+                            "major_segment": segment_id,
+                            "sub_segment": sub_seg["id"],
+                            "micro_cluster": (cluster["id"] if cluster else None),
+                            "network_position": self._assign_network_position(i, segment_personas),
+                        }
+                    )
                     persona_id += 1
 
         # Ensure we have exactly target_size personas
         while len(slots) < target_size:
-            slots.append({
-                "id": f"persona_{len(slots)}",
-                "major_segment": major_segments[0]["id"],
-                "sub_segment": None,
-                "micro_cluster": None,
-                "network_position": {"type": "peripheral"},
-            })
+            slots.append(
+                {
+                    "id": f"persona_{len(slots)}",
+                    "major_segment": major_segments[0]["id"],
+                    "sub_segment": None,
+                    "micro_cluster": None,
+                    "network_position": {"type": "peripheral"},
+                }
+            )
 
         return slots[:target_size]
 
-    def _assign_network_position(
-        self, index: int, total_in_segment: int
-    ) -> dict[str, Any]:
+    def _assign_network_position(self, index: int, total_in_segment: int) -> dict[str, Any]:
         """Assign network position based on index."""
         if index == 0:
             return {"type": "hub", "influence": 0.9}
@@ -294,14 +289,10 @@ class PopulationArchitect:
         else:
             return {"type": "peripheral", "influence": 0.3}
 
-    def _design_network_topology(
-        self, persona_slots: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    def _design_network_topology(self, persona_slots: list[dict[str, Any]]) -> dict[str, Any]:
         """Design the network topology."""
         hub_count = sum(
-            1
-            for p in persona_slots
-            if p.get("network_position", {}).get("type") == "hub"
+            1 for p in persona_slots if p.get("network_position", {}).get("type") == "hub"
         )
 
         return {
@@ -312,9 +303,7 @@ class PopulationArchitect:
             "average_path_length": 3.5,
         }
 
-    def _design_influence_patterns(
-        self, persona_slots: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    def _design_influence_patterns(self, persona_slots: list[dict[str, Any]]) -> dict[str, Any]:
         """Design influence patterns."""
         influencers = [
             p["id"]

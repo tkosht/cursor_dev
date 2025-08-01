@@ -41,14 +41,10 @@ class PopulationArchitect:
             # Level 2: Sub-segments within each major segment
             sub_segments = {}
             for segment in major_segments:
-                sub_segments[segment["id"]] = await self._design_sub_segments(
-                    segment, context
-                )
+                sub_segments[segment["id"]] = await self._design_sub_segments(segment, context)
 
             # Level 3: Micro-clusters for nuanced behaviors
-            micro_clusters = await self._design_micro_clusters(
-                sub_segments, context
-            )
+            micro_clusters = await self._design_micro_clusters(sub_segments, context)
 
             # Level 4: Individual persona slots with relationships
             persona_slots = await self._allocate_persona_slots(
@@ -62,12 +58,8 @@ class PopulationArchitect:
                     "micro_clusters": micro_clusters,
                     "persona_slots": persona_slots,
                 },
-                "network_topology": self._design_network_topology(
-                    persona_slots
-                ),
-                "influence_map": self._design_influence_patterns(
-                    persona_slots
-                ),
+                "network_topology": self._design_network_topology(persona_slots),
+                "influence_map": self._design_influence_patterns(persona_slots),
             }
 
         except Exception:
@@ -86,9 +78,7 @@ class PopulationArchitect:
                 },
             }
 
-    async def _design_major_segments(
-        self, context: dict[str, Any]
-    ) -> list[dict[str, Any]]:
+    async def _design_major_segments(self, context: dict[str, Any]) -> list[dict[str, Any]]:
         """Design major population segments based on context."""
         segment_prompt = f"""
         Context: {json.dumps(context, indent=2)}
@@ -137,9 +127,7 @@ class PopulationArchitect:
             total_percentage = sum(s.get("percentage", 0) for s in segments)
             if total_percentage > 0:
                 for segment in segments:
-                    segment["percentage"] = (
-                        segment.get("percentage", 0) / total_percentage
-                    ) * 100
+                    segment["percentage"] = (segment.get("percentage", 0) / total_percentage) * 100
 
             return segments
 
@@ -179,9 +167,7 @@ class PopulationArchitect:
             total = sum(s.get("percentage_of_parent", 0) for s in sub_segments)
             if total > 0:
                 for sub in sub_segments:
-                    sub["percentage_of_parent"] = (
-                        sub.get("percentage_of_parent", 0) / total
-                    ) * 100
+                    sub["percentage_of_parent"] = (sub.get("percentage_of_parent", 0) / total) * 100
 
             return sub_segments
 
@@ -245,24 +231,18 @@ class PopulationArchitect:
                             "major_segment": major_seg["id"],
                             "sub_segment": None,
                             "micro_cluster": None,
-                            "network_position": self._calculate_network_position(
-                                i, major_seg
-                            ),
+                            "network_position": self._calculate_network_position(i, major_seg),
                         }
                     )
             else:
                 # Distribute across sub-segments
                 for sub_seg in sub_segs:
-                    sub_size = int(
-                        segment_size * sub_seg["percentage_of_parent"] / 100
-                    )
+                    sub_size = int(segment_size * sub_seg["percentage_of_parent"] / 100)
                     clusters = micro_clusters.get(sub_seg["id"], [])
 
                     for i in range(sub_size):
                         # Assign to a micro-cluster
-                        cluster = (
-                            clusters[i % len(clusters)] if clusters else None
-                        )
+                        cluster = clusters[i % len(clusters)] if clusters else None
 
                         persona_slots.append(
                             {
@@ -270,9 +250,7 @@ class PopulationArchitect:
                                 "major_segment": major_seg["id"],
                                 "sub_segment": sub_seg["id"],
                                 "micro_cluster": cluster,
-                                "network_position": self._calculate_network_position(
-                                    i, sub_seg
-                                ),
+                                "network_position": self._calculate_network_position(i, sub_seg),
                             }
                         )
 
@@ -285,18 +263,14 @@ class PopulationArchitect:
                     "major_segment": major_segments[0]["id"],
                     "sub_segment": None,
                     "micro_cluster": None,
-                    "network_position": self._calculate_network_position(
-                        len(persona_slots), {}
-                    ),
+                    "network_position": self._calculate_network_position(len(persona_slots), {}),
                 }
             )
 
         # Trim if over
         return persona_slots[:target_size]
 
-    def _design_network_topology(
-        self, persona_slots: list[dict]
-    ) -> dict[str, Any]:
+    def _design_network_topology(self, persona_slots: list[dict]) -> dict[str, Any]:
         """Design the network topology for persona connections."""
         num_personas = len(persona_slots)
 
@@ -326,32 +300,22 @@ class PopulationArchitect:
             ]
 
             # Connect to some random others
-            others = [
-                j
-                for j in range(num_personas)
-                if j != i and j not in same_segment
-            ]
+            others = [j for j in range(num_personas) if j != i and j not in same_segment]
 
             # Make connections
-            num_connections = min(
-                avg_connections, len(same_segment) + len(others)
-            )
-            segment_connections = min(
-                int(num_connections * 0.7), len(same_segment)
-            )
+            num_connections = min(avg_connections, len(same_segment) + len(others))
+            segment_connections = min(int(num_connections * 0.7), len(same_segment))
             other_connections = num_connections - segment_connections
 
-            connected_to = random.sample(
-                same_segment, segment_connections
-            ) + random.sample(others, min(other_connections, len(others)))
+            connected_to = random.sample(same_segment, segment_connections) + random.sample(
+                others, min(other_connections, len(others))
+            )
 
             connections.append(
                 {
                     "node": i,
                     "connected_to": connected_to,
-                    "strength": [
-                        0.5 + 0.5 * random.random() for _ in connected_to
-                    ],
+                    "strength": [0.5 + 0.5 * random.random() for _ in connected_to],
                 }
             )
 
@@ -363,9 +327,7 @@ class PopulationArchitect:
             "connections": connections,
         }
 
-    def _design_influence_patterns(
-        self, persona_slots: list[dict]
-    ) -> dict[str, Any]:
+    def _design_influence_patterns(self, persona_slots: list[dict]) -> dict[str, Any]:
         """Design influence patterns between personas."""
         # Identify potential influencers
         influencer_nodes = []
@@ -416,23 +378,17 @@ class PopulationArchitect:
             "influencer_nodes": influencer_nodes,
             "influence_paths": influence_paths,
             "influence_strength": {
-                node["index"]: node["influence_score"]
-                for node in influencer_nodes
+                node["index"]: node["influence_score"] for node in influencer_nodes
             },
         }
 
-    def _calculate_network_position(
-        self, index: int, segment_info: dict
-    ) -> dict[str, float]:
+    def _calculate_network_position(self, index: int, segment_info: dict) -> dict[str, float]:
         """Calculate network position metrics for a persona."""
         # Simple calculation based on index and segment
         base_centrality = 0.3 + 0.4 * random.random()
 
         # Adjust based on segment characteristics
-        if (
-            "leader" in str(segment_info).lower()
-            or "influencer" in str(segment_info).lower()
-        ):
+        if "leader" in str(segment_info).lower() or "influencer" in str(segment_info).lower():
             base_centrality += 0.2
 
         return {
