@@ -24,6 +24,9 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12']
+    defaults:
+      run:
+        working-directory: app/ams
     
     steps:
       - name: Checkout code
@@ -40,7 +43,7 @@ jobs:
           path: |
             ~/.cache/pypoetry
             ~/.cache/pip
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-poetry-${{ hashFiles('app/ams/poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-poetry-
       
@@ -55,17 +58,17 @@ jobs:
       
       - name: Run linters
         run: |
-          poetry run ruff check app/ tests/
-          poetry run black --check app/ tests/
+          poetry run ruff check src/ tests/
+          poetry run black --check src/ tests/
       
       - name: Type checking
         run: |
-          poetry run mypy app/ --ignore-missing-imports --explicit-package-bases
+          poetry run mypy src/ --ignore-missing-imports --explicit-package-bases
       
       - name: Run tests with coverage
         run: |
           poetry run pytest tests/ \
-            --cov=app \
+            --cov=src \
             --cov-report=xml \
             --cov-report=term-missing \
             --cov-fail-under=85 \
