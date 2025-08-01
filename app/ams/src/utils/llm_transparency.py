@@ -23,7 +23,7 @@ class TransparentLLM:
         self.call_history: list[dict[str, Any]] = []
         self._call_count = 0
 
-    async def ainvoke(self, prompt: str, **kwargs) -> BaseMessage:
+    async def ainvoke(self, prompt: str, **kwargs: Any) -> BaseMessage:
         """透明性を確保したLLM呼び出し"""
         call_id = f"call_{self._call_count:04d}"
         self._call_count += 1
@@ -49,10 +49,14 @@ class TransparentLLM:
             latency_ms = int((time.time() - start_time) * 1000)
 
             # レスポンス記録
+            # Handle Union type for response.content (str or list)
+            content_str = (
+                response.content if isinstance(response.content, str) else str(response.content)
+            )
             call_record.update(
                 {
                     "response": response.content,
-                    "response_hash": hashlib.sha256(response.content.encode()).hexdigest()[:16],
+                    "response_hash": hashlib.sha256(content_str.encode()).hexdigest()[:16],
                     "latency_ms": latency_ms,
                     "success": True,
                 }
@@ -61,7 +65,7 @@ class TransparentLLM:
             if self.enable_verification:
                 print(f"   Response hash: {call_record['response_hash']}")
                 print(f"   Latency: {latency_ms}ms")
-                print(f"   Response length: {len(response.content)} chars")
+                print(f"   Response length: {len(content_str)} chars")
 
         except Exception as e:
             call_record.update(
@@ -114,7 +118,7 @@ def verify_llm_call(func: Callable) -> Callable:
     """LLM呼び出しを検証するデコレータ"""
 
     @functools.wraps(func)
-    async def wrapper(*args, **kwargs):
+    async def wrapper(*args: Any, **kwargs: Any) -> Any:
         print(f"\n🔍 Verifying LLM call in {func.__name__}")
         start_time = time.time()
 
@@ -156,10 +160,10 @@ def verify_llm_call(func: Callable) -> Callable:
 class LLMCallTracker:
     """テスト用のLLM呼び出しトラッカー"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         """トラッキング情報をリセット"""
         self.calls: list[dict[str, Any]] = []
         self.total_tokens = 0
@@ -172,7 +176,7 @@ class LLMCallTracker:
         model: str,
         latency_ms: int,
         tokens: dict[str, int] | None = None,
-    ):
+    ) -> None:
         """LLM呼び出しを記録"""
         call_data = {
             "timestamp": time.time(),
@@ -189,8 +193,9 @@ class LLMCallTracker:
         if tokens:
             input_cost = (tokens.get("prompt_tokens", 0) / 1_000_000) * 0.075
             output_cost = (tokens.get("completion_tokens", 0) / 1_000_000) * 0.30
-            call_data["estimated_cost"] = input_cost + output_cost
-            self.total_cost += call_data["estimated_cost"]
+            estimated_cost = input_cost + output_cost
+            call_data["estimated_cost"] = estimated_cost
+            self.total_cost += estimated_cost
             self.total_tokens += tokens.get("total_tokens", 0)
 
         self.calls.append(call_data)
@@ -212,7 +217,7 @@ class LLMCallTracker:
             "models_used": list({c["model"] for c in self.calls}),
         }
 
-    def print_detailed_report(self):
+    def print_detailed_report(self) -> None:
         """詳細レポートを出力"""
         print("\n" + "=" * 60)
         print("LLM Call Tracking Report")

@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
       "Bash(ls:*)",
@@ -11,7 +12,15 @@
       "Bash(gh pr create:*)",
       "Bash(gh pr:*)",
       "Bash(git pull:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "mcp__serena__onboarding",
+      "mcp__serena__list_dir",
+      "mcp__serena__read_file",
+      "mcp__serena__find_file",
+      "mcp__serena__write_memory",
+      "mcp__serena__list_memories",
+      "mcp__serena__activate_project",
+      "mcp__serena__execute_shell_command"
     ],
     "deny": []
   }

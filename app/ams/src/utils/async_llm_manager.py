@@ -101,16 +101,16 @@ class AsyncLLMManager:
         # Force garbage collection
         gc.collect()
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "AsyncLLMManager":
         """Context manager entry"""
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Context manager exit with cleanup"""
         await self.cleanup()
 
 
-async def cleanup_all_managers():
+async def cleanup_all_managers() -> None:
     """Clean up all active managers globally"""
     # Create a list to avoid modification during iteration
     managers = []

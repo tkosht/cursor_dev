@@ -4,6 +4,7 @@ LLM factory for creating language models
 
 import logging
 from functools import lru_cache
+from typing import Any, cast
 
 from langchain_core.language_models import BaseChatModel
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -25,7 +26,7 @@ class LLMFactory:
     """Factory for creating LLM instances"""
 
     @staticmethod
-    def create_gemini(model: str, **kwargs) -> BaseChatModel:
+    def create_gemini(model: str, **kwargs: Any) -> BaseChatModel:
         """Create Gemini model instance"""
         config = get_config()
 
@@ -39,7 +40,7 @@ class LLMFactory:
         )
 
     @staticmethod
-    def create_openai(model: str, **kwargs) -> BaseChatModel:
+    def create_openai(model: str, **kwargs: Any) -> BaseChatModel:
         """Create OpenAI model instance"""
         config = get_config()
 
@@ -56,7 +57,7 @@ class LLMFactory:
         )
 
     @staticmethod
-    def create_anthropic(model: str, **kwargs) -> BaseChatModel:
+    def create_anthropic(model: str, **kwargs: Any) -> BaseChatModel:
         """Create Anthropic model instance"""
         if ChatAnthropic is None:
             raise ImportError(
@@ -66,18 +67,21 @@ class LLMFactory:
 
         config = get_config()
 
-        return ChatAnthropic(
-            model=model,
-            api_key=config.llm.anthropic_api_key,
-            temperature=kwargs.get("temperature", config.llm.temperature),
-            max_tokens=kwargs.get("max_tokens", config.llm.max_tokens),
-            timeout=kwargs.get("timeout", config.llm.timeout),
-            max_retries=kwargs.get("max_retries", 2),
+        return cast(
+            BaseChatModel,
+            ChatAnthropic(
+                model=model,
+                api_key=config.llm.anthropic_api_key,
+                temperature=kwargs.get("temperature", config.llm.temperature),
+                max_tokens=kwargs.get("max_tokens", config.llm.max_tokens),
+                timeout=kwargs.get("timeout", config.llm.timeout),
+                max_retries=kwargs.get("max_retries", 2),
+            ),
         )
 
     @classmethod
     def create(
-        cls, provider: str | None = None, model: str | None = None, **kwargs
+        cls, provider: str | None = None, model: str | None = None, **kwargs: Any
     ) -> BaseChatModel:
         """
         Create LLM instance
@@ -118,7 +122,9 @@ class LLMFactory:
         return provider_map[provider](model, **kwargs)
 
 
-def create_llm(provider: str | None = None, model: str | None = None, **kwargs) -> BaseChatModel:
+def create_llm(
+    provider: str | None = None, model: str | None = None, **kwargs: Any
+) -> BaseChatModel:
     """
     Create or get cached LLM instance
 
@@ -140,7 +146,7 @@ def create_llm(provider: str | None = None, model: str | None = None, **kwargs) 
 
 @lru_cache(maxsize=4)
 def _create_llm_cached(
-    provider: str | None = None, model: str | None = None, **kwargs
+    provider: str | None = None, model: str | None = None, **kwargs: Any
 ) -> BaseChatModel:
     """Internal cached version of create_llm"""
     return LLMFactory.create(provider, model, **kwargs)

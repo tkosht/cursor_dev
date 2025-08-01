@@ -42,7 +42,7 @@ class LLMConfig(BaseModel):
     timeout: int = Field(default=60, gt=0, description="Request timeout in seconds")
 
     @validator("provider")
-    def validate_api_key(cls, v, values):
+    def validate_api_key(cls, v: str, values: dict[str, Any]) -> str:
         """Ensure API key exists for selected provider"""
         key_map = {
             "gemini": "google_api_key",
@@ -125,7 +125,7 @@ class PerformanceConfig(BaseModel):
     adaptive_sampling: bool = Field(default=True)
 
     @validator("cache_dir", "profile_output_dir")
-    def create_directories(cls, v):
+    def create_directories(cls, v: Path) -> Path:
         """Ensure directories exist"""
         v.mkdir(parents=True, exist_ok=True)
         return v

@@ -6,6 +6,8 @@ contextual information for persona generation.
 
 from typing import Any
 
+from langchain_core.messages import BaseMessage
+
 from src.utils.json_parser import parse_llm_json_response
 from src.utils.llm_factory import create_llm
 
@@ -229,7 +231,7 @@ class DeepContextAnalyzer:
         stakeholder_score = min(total_stakeholders / 8, 1.0)
         score += stakeholder_score * 0.2
 
-        return round(score, 2)
+        return float(round(score, 2))
 
     def _estimate_reach_potential(self, context_analysis: dict[str, Any]) -> float:
         """Estimate article reach potential (0-1).
@@ -268,7 +270,7 @@ class DeepContextAnalyzer:
 
         return round(score, 2)
 
-    def _parse_analysis_response(self, response) -> dict[str, Any]:
+    def _parse_analysis_response(self, response: BaseMessage) -> dict[str, Any]:
         """Parse LLM response into structured data.
 
         Args:

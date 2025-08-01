@@ -90,7 +90,7 @@ class BaseAgent(IAgent):
 class BaseEnvironment(IEnvironment):
     """Base implementation of IEnvironment"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._state = SimulationState()
         self._agents: dict[AgentID, IAgent] = {}
         self._action_queue: list[tuple[AgentID, IAction]] = []

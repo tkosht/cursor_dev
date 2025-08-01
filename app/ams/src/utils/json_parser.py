@@ -94,7 +94,7 @@ def _extract_code_block(response: str) -> str | None:
     for match in matches:
         # Check if it looks like JSON
         if match.strip().startswith("{") or match.strip().startswith("["):
-            return match
+            return str(match)
 
     return None
 

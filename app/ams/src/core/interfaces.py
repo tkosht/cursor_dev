@@ -5,6 +5,8 @@ Core interfaces for the Article Market Simulator
 from abc import abstractmethod
 from typing import Any, Protocol, runtime_checkable
 
+from websockets.server import ServerProtocol
+
 from .types import (
     ActionResult,
     AgentID,
@@ -240,12 +242,12 @@ class IVisualization(Protocol):
     """Interface for visualization components"""
 
     @abstractmethod
-    async def connect(self, websocket) -> None:
+    async def connect(self, websocket: ServerProtocol) -> None:
         """Connect a websocket client"""
         ...
 
     @abstractmethod
-    async def disconnect(self, websocket) -> None:
+    async def disconnect(self, websocket: ServerProtocol) -> None:
         """Disconnect a websocket client"""
         ...
 

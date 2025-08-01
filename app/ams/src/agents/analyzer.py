@@ -255,7 +255,7 @@ class AnalysisAgent:
             else:
                 json_str = response.strip()
 
-            return json.loads(json_str)
+            return json.loads(json_str)  # type: ignore[no-any-return]
         except Exception as e:
             logger.error(f"Failed to parse JSON response: {e}")
             return {"error": "Failed to parse response", "raw": response}

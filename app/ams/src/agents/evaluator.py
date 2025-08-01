@@ -7,12 +7,12 @@ providing scores, qualitative feedback, and predicted behaviors.
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, Literal
 
 from ..config import get_config
 from ..core.base import BaseAction, BaseAgent
 from ..core.interfaces import IAction
-from ..core.types import EvaluationMetric, EvaluationResult, PersonaAttributes
+from ..core.types import EvaluationMetric, EvaluationResult, PersonaAttributes, PersonalityType
 from ..utils.json_parser import parse_llm_json_response
 from ..utils.llm_factory import create_llm
 from ..utils.llm_transparency import LLMCallTracker
@@ -253,7 +253,7 @@ class EvaluationAgent(BaseAgent):
             },
         )
 
-    def _format_personality_traits(self, traits: dict[str, float]) -> str:
+    def _format_personality_traits(self, traits: dict[PersonalityType, float]) -> str:
         """Format personality traits for prompt"""
         if not traits:
             return "Not specified"
@@ -300,12 +300,14 @@ class EvaluationAgent(BaseAgent):
 
             # Determine engagement level from scores
             overall = self._calculate_overall_score(parsed)
-            engagement_level = "high" if overall >= 70 else "medium" if overall >= 40 else "low"
+            engagement_level: Literal["low", "medium", "high"] = (
+                "high" if overall >= 70 else "medium" if overall >= 40 else "low"
+            )
 
             # Determine sentiment
             emotional_response = parsed.get("emotional_response", {})
             primary_emotion = emotional_response.get("primary_emotion", "neutral")
-            sentiment = (
+            sentiment: Literal["negative", "neutral", "positive"] = (
                 "positive"
                 if primary_emotion in ["excitement", "joy", "satisfaction"]
                 else (
@@ -355,7 +357,7 @@ class EvaluationAgent(BaseAgent):
             parsed_data.get("emotional_impact_score", 50) * 0.15,
             parsed_data.get("action_potential_score", 50) * 0.15,
         ]
-        return sum(scores)
+        return float(sum(scores))
 
     def _create_default_evaluation(
         self,

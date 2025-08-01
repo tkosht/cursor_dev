@@ -156,10 +156,10 @@ class PopulationArchitect:
         # Execute all sub-segment designs in parallel
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        sub_segments = {}
+        sub_segments: dict[str, list[dict[str, Any]]] = {}
         for i, segment in enumerate(major_segments):
             if isinstance(results[i], list):
-                sub_segments[segment["id"]] = results[i]
+                sub_segments[segment["id"]] = cast(list[dict[str, Any]], results[i])
             else:
                 sub_segments[segment["id"]] = []
 
