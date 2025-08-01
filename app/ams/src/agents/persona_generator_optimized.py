@@ -114,7 +114,7 @@ class PersonaGenerator:
         persona_prompt = f"""
         Article: {article_summary}
         Domain: {essential_context['domain']} (complexity: {essential_context['complexity']}/10)
-        
+
         Generate persona for segment: {segment_info['name']}
         Traits: {', '.join(segment_info.get('characteristics', [])[:3])}
         Position: {persona_slot.get('network_position', {}).get('type', 'active')}
@@ -125,7 +125,8 @@ class PersonaGenerator:
         - personality_traits (4 traits)
         - interests (3 items)
         - decision_factors (2-3 factors)
-        - article_relationship: relevance_score, interest_level, sharing_likelihood, discussion_points (2), action_likelihood
+        - article_relationship: relevance_score, interest_level, sharing_likelihood,
+          discussion_points (2), action_likelihood
 
         Make it specific and realistic for this segment.
         """
@@ -157,7 +158,10 @@ class PersonaGenerator:
             "name": f"User {random.randint(100, 999)}",
             "age": random.randint(25, 65),
             "occupation": "Professional",
-            "background": f"Professional with interest in {segment_info.get('name', 'various topics')}",
+            "background": (
+                f"Professional with interest in "
+                f"{segment_info.get('name', 'various topics')}"
+            ),
             "personality_traits": segment_info.get("characteristics", ["analytical", "curious"])[
                 :4
             ],

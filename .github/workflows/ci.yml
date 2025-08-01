@@ -51,17 +51,16 @@ jobs:
       
       - name: Install dependencies
         run: |
-          poetry install --no-interaction --no-ansi
+          poetry install --no-interaction --no-ansi --extras "dev test"
       
       - name: Run linters
         run: |
-          poetry run flake8 app/ tests/ --exclude=backup/,docs/,memory-bank/,templates/
+          poetry run ruff check app/ tests/
           poetry run black --check app/ tests/
-          poetry run isort --check app/ tests/
       
       - name: Type checking
         run: |
-          poetry run mypy app/ --ignore-missing-imports
+          poetry run mypy app/ --ignore-missing-imports --explicit-package-bases
       
       - name: Run tests with coverage
         run: |

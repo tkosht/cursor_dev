@@ -123,7 +123,8 @@ class EvaluationAgent(BaseAgent):
             ', '.join(persona.cognitive_biases) if persona.cognitive_biases else 'None specified'
         )}
         - Emotional Triggers: {(
-            ', '.join(persona.emotional_triggers) if persona.emotional_triggers else 'None specified'
+            ', '.join(persona.emotional_triggers)
+            if persona.emotional_triggers else 'None specified'
         )}
         - Decision Making Style: {persona.decision_making_style}
         - Content Sharing Likelihood: {persona.content_sharing_likelihood}
@@ -148,46 +149,54 @@ class EvaluationAgent(BaseAgent):
 
         prompt = f"""
         You are evaluating the following article from the perspective of a specific persona.
-        
+
         PERSONA PROFILE:
         {demographics}
         {psychographics}
-        
+
         ARTICLE TO EVALUATE:
         {article_content[:3000]}...  # Truncate for token limits
-        
+
         {analysis_summary}
-        
+
         EVALUATION CRITERIA:
-        Based on this persona's unique characteristics, evaluate the article on the following dimensions:
-        
-        1. Relevance Score (0-100): How relevant is this article to the persona's interests and needs?
-        2. Clarity Score (0-100): How clear and understandable is the article for this persona?
-        3. Credibility Score (0-100): How credible does this persona find the article?
-        4. Emotional Impact Score (0-100): How emotionally engaging is the article for this persona?
-        5. Action Potential Score (0-100): How likely is this persona to take action based on the article?
-        
+        Based on this persona's unique characteristics, evaluate the article on the
+        following dimensions:
+
+        1. Relevance Score (0-100): How relevant is this article to the persona's
+           interests and needs?
+        2. Clarity Score (0-100): How clear and understandable is the article for
+           this persona?
+        3. Credibility Score (0-100): How credible does this persona find the
+           article?
+        4. Emotional Impact Score (0-100): How emotionally engaging is the article
+           for this persona?
+        5. Action Potential Score (0-100): How likely is this persona to take action
+           based on the article?
+
         Additional metrics:
         - Interest Alignment (0.0-1.0): How well does the article align with persona's interests?
         - Value Alignment (0.0-1.0): How well does the article align with persona's values?
-        - Bias Resonance (0.0-1.0): How much does the article resonate with persona's cognitive biases?
-        
+        - Bias Resonance (0.0-1.0): How much does the article resonate with
+          persona's cognitive biases?
+
         Provide qualitative feedback:
         - Strengths: 3-5 specific strengths from this persona's perspective
         - Weaknesses: 2-4 specific weaknesses from this persona's perspective
-        - Improvement Suggestions: 2-4 concrete suggestions that would make the article more appealing to this persona
-        
+        - Improvement Suggestions: 2-4 concrete suggestions that would make the
+          article more appealing to this persona
+
         Predict engagement behavior:
         - Read Completion Probability (0.0-1.0)
         - Share Probability (0.0-1.0)
         - Bookmark Probability (0.0-1.0)
         - Discussion Probability (0.0-1.0)
-        
+
         Emotional Response:
         - Primary Emotion (e.g., excitement, curiosity, skepticism, etc.)
         - Intensity (0.0-1.0)
         - Triggers (list of specific elements that triggered the emotion)
-        
+
         Provide your evaluation in the following JSON format:
         {{
             "relevance_score": <int>,
@@ -212,7 +221,9 @@ class EvaluationAgent(BaseAgent):
                 "intensity": <float>,
                 "triggers": [<list of strings>]
             }},
-            "key_insights": [<list of 2-3 key insights about how this persona perceives the article>]
+            "key_insights": [
+                <list of 2-3 key insights about how this persona perceives the article>
+            ]
         }}
         """
 
