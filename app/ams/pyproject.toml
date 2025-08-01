@@ -91,6 +91,35 @@ select = [
     "UP", # pyupgrade
 ]
 
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/test_*.py",
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/site-packages/*",
+    "src/agents/persona_generator_optimized.py",
+    "src/agents/persona_generator_original.py",
+    "src/agents/population_architect_optimized.py",
+    "src/agents/population_architect_original.py",
+    "src/utils/async_llm_manager.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+precision = 2
+skip_covered = false
+show_missing = true
+
 [tool.mypy]
 python_version = "3.11"
 warn_return_any = true
