@@ -11,7 +11,7 @@ from typing import Any
 
 from src.agents.deep_context_analyzer import DeepContextAnalyzer
 from src.agents.population_architect import PopulationArchitect
-from src.core.types import InformationChannel, PersonaAttributes
+from src.core.types import InformationChannel, PersonaAttributes, PersonalityType
 from src.utils.json_parser import parse_llm_json_response
 from src.utils.llm_factory import create_llm
 
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class PersonaGenerator:
     """Coordinate hierarchical persona generation process."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the PersonaGenerator."""
         self.llm = create_llm()
         self.context_analyzer = DeepContextAnalyzer()
@@ -179,7 +179,7 @@ class PersonaGenerator:
 
         try:
             response = await self.llm.ainvoke(persona_prompt)
-            persona_data = parse_llm_json_response(response.content)
+            persona_data = parse_llm_json_response(str(response.content))
 
             # Add slot metadata
             persona_data["id"] = persona_slot.get("id", f"persona_{random.randint(1000, 9999)}")
@@ -259,17 +259,17 @@ class PersonaGenerator:
         if traits_list:
             # Simple mapping of traits to Big Five model
             trait_mapping = {
-                "curious": "openness",
-                "analytical": "openness",
-                "creative": "openness",
-                "organized": "conscientiousness",
-                "responsible": "conscientiousness",
-                "outgoing": "extraversion",
-                "social": "extraversion",
-                "cooperative": "agreeableness",
-                "empathetic": "agreeableness",
-                "anxious": "neuroticism",
-                "emotional": "neuroticism",
+                "curious": PersonalityType.OPENNESS,
+                "analytical": PersonalityType.OPENNESS,
+                "creative": PersonalityType.OPENNESS,
+                "organized": PersonalityType.CONSCIENTIOUSNESS,
+                "responsible": PersonalityType.CONSCIENTIOUSNESS,
+                "outgoing": PersonalityType.EXTRAVERSION,
+                "social": PersonalityType.EXTRAVERSION,
+                "cooperative": PersonalityType.AGREEABLENESS,
+                "empathetic": PersonalityType.AGREEABLENESS,
+                "anxious": PersonalityType.NEUROTICISM,
+                "emotional": PersonalityType.NEUROTICISM,
             }
 
             # Assign random scores for traits found in mapping

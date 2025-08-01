@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class EvaluationAgent(BaseAgent):
     """Agent that evaluates articles from individual persona perspectives"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the evaluation agent"""
         super().__init__()
         self.config = get_config()

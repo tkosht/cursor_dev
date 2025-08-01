@@ -15,7 +15,7 @@ from src.utils.llm_factory import create_llm
 class PopulationArchitect:
     """Design the hierarchical structure of the persona population."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the PopulationArchitect."""
         self.llm = create_llm()
 
@@ -117,7 +117,7 @@ class PopulationArchitect:
 
         try:
             response = await self.llm.ainvoke(segment_prompt)
-            segments = parse_llm_json_response(response.content)
+            segments = parse_llm_json_response(str(response.content))
 
             # Ensure it's a list
             if isinstance(segments, dict):
@@ -158,7 +158,7 @@ class PopulationArchitect:
 
         try:
             response = await self.llm.ainvoke(sub_segment_prompt)
-            sub_segments = parse_llm_json_response(response.content)
+            sub_segments = parse_llm_json_response(str(response.content))
 
             if isinstance(sub_segments, dict):
                 sub_segments = sub_segments.get("sub_segments", [])

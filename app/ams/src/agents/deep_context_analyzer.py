@@ -13,7 +13,7 @@ from src.utils.llm_factory import create_llm
 class DeepContextAnalyzer:
     """Extract multi-dimensional context from articles for persona generation."""
 
-    def __init__(self, force_lightweight: bool = False):
+    def __init__(self, force_lightweight: bool = False) -> None:
         """Initialize the DeepContextAnalyzer.
 
         Args:
@@ -279,6 +279,6 @@ class DeepContextAnalyzer:
         """
         try:
             # Use the utility parser
-            return parse_llm_json_response(response.content)
+            return parse_llm_json_response(str(response.content))
         except Exception:
             return {}

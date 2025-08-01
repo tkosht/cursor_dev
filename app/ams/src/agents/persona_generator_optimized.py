@@ -7,7 +7,7 @@ Optimized version reduces prompt size and improves performance.
 import random
 from typing import Any
 
-from src.core.types import PersonaAttributes
+from src.core.types import PersonaAttributes, PersonalityType
 from src.utils.json_parser import parse_llm_json_response
 from src.utils.llm_factory import create_llm
 
@@ -18,7 +18,7 @@ class PersonaGenerator:
     Optimized to reduce prompt sizes and improve performance.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.llm = create_llm()
 
     async def generate_personas(
@@ -133,7 +133,7 @@ class PersonaGenerator:
 
         try:
             response = await self.llm.ainvoke(persona_prompt)
-            persona_data = parse_llm_json_response(response.content)
+            persona_data = parse_llm_json_response(str(response.content))
 
             # Add metadata
             persona_data["id"] = persona_slot.get("id", f"persona_{random.randint(1000, 9999)}")
@@ -187,58 +187,66 @@ class PersonaGenerator:
         )
         influence = persona_data.get("network_position", {}).get("influence", 0.5)
 
+        # Map to PersonaAttributes fields
+        personality_traits_dict = {
+            PersonalityType.OPENNESS: 0.5,
+            PersonalityType.CONSCIENTIOUSNESS: 0.5,
+            PersonalityType.EXTRAVERSION: 0.5,
+            PersonalityType.AGREEABLENESS: 0.5,
+            PersonalityType.NEUROTICISM: 0.3,
+        }
+
+        # Extract personality traits from persona data if available
+        traits_list = persona_data.get("personality_traits", [])
+        for trait in traits_list:
+            trait_lower = trait.lower()
+            if "open" in trait_lower or "curious" in trait_lower:
+                personality_traits_dict[PersonalityType.OPENNESS] = 0.8
+            elif "conscientious" in trait_lower or "organized" in trait_lower:
+                personality_traits_dict[PersonalityType.CONSCIENTIOUSNESS] = 0.8
+            elif "extraverted" in trait_lower or "social" in trait_lower:
+                personality_traits_dict[PersonalityType.EXTRAVERSION] = 0.8
+
         return PersonaAttributes(
-            id=persona_data["id"],
-            name=persona_data.get("name", "Unknown User"),
             age=persona_data.get("age", 35),
             occupation=persona_data.get("occupation", "Professional"),
-            background=persona_data.get("background", ""),
-            personality_traits=persona_data.get("personality_traits", []),
+            location=persona_data.get("location"),
+            education_level=persona_data.get("education_level"),
+            income_bracket=persona_data.get("income_bracket"),
+            values=persona_data.get("values", []),
             interests=persona_data.get("interests", []),
-            decision_factors=persona_data.get("decision_factors", []),
-            information_preferences=persona_data.get("information_preferences", []),
-            network_metrics={
-                "influence_score": influence,
-                "connectivity": 0.5,
-                "propagation_likelihood": sharing_likelihood * influence,
-                "centrality": 0.5,
-            },
-            content_affinity={
-                "relevance_score": persona_data.get("article_relationship", {}).get(
-                    "relevance_score", 0.5
-                ),
-                "interest_level": persona_data.get("article_relationship", {}).get(
-                    "interest_level", "medium"
-                ),
-                "sharing_likelihood": sharing_likelihood,
-                "discussion_points": persona_data.get("article_relationship", {}).get(
-                    "discussion_points", []
-                ),
-            },
+            personality_traits=personality_traits_dict,
+            information_seeking_behavior=persona_data.get("information_seeking_behavior", "passive"),
+            decision_making_style=persona_data.get("decision_making_style", "analytical"),
+            content_sharing_likelihood=sharing_likelihood,
+            influence_susceptibility=0.5,
+            daily_routines=persona_data.get("daily_routines", []),
+            cognitive_biases=persona_data.get("cognitive_biases", []),
+            emotional_triggers=persona_data.get("emotional_triggers", []),
+            preferred_channels=[],
+            connections=[],
+            influence_score=influence,
+            network_centrality=0.5,
+            current_mood="neutral",
+            attention_span=1.0,
+            trust_level={},
         )
 
     def _create_default_persona(self, persona_id: str) -> PersonaAttributes:
         """Create a default persona."""
         return PersonaAttributes(
-            id=persona_id,
-            name=f"User {random.randint(100, 999)}",
             age=random.randint(25, 65),
             occupation="Professional",
-            background="General professional with diverse interests",
-            personality_traits=["analytical", "curious", "open-minded", "pragmatic"],
             interests=["technology", "business", "current events"],
-            decision_factors=["evidence", "practicality", "innovation"],
-            information_preferences=["online news", "professional networks"],
-            network_metrics={
-                "influence_score": 0.5,
-                "connectivity": 0.5,
-                "propagation_likelihood": 0.25,
-                "centrality": 0.5,
+            personality_traits={
+                PersonalityType.OPENNESS: 0.7,
+                PersonalityType.CONSCIENTIOUSNESS: 0.6,
+                PersonalityType.EXTRAVERSION: 0.5,
+                PersonalityType.AGREEABLENESS: 0.6,
+                PersonalityType.NEUROTICISM: 0.4,
             },
-            content_affinity={
-                "relevance_score": 0.5,
-                "interest_level": "medium",
-                "sharing_likelihood": 0.5,
-                "discussion_points": ["General insights", "Practical applications"],
-            },
+            values=["evidence", "practicality", "innovation"],
+            content_sharing_likelihood=0.5,
+            influence_score=0.5,
+            network_centrality=0.5,
         )

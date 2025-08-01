@@ -18,7 +18,7 @@ class PersonaGenerator:
     Optimized to reduce prompt sizes and improve performance.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.llm = create_llm()
 
     async def generate_personas(
@@ -133,7 +133,7 @@ class PersonaGenerator:
 
         try:
             response = await self.llm.ainvoke(persona_prompt)
-            persona_data = parse_llm_json_response(response.content)
+            persona_data = parse_llm_json_response(str(response.content))
 
             # Add metadata
             persona_data["id"] = persona_slot.get("id", f"persona_{random.randint(1000, 9999)}")

@@ -76,7 +76,7 @@ class ArticleReviewState(TypedDict):
 class OrchestratorAgent:
     """Main orchestrator agent that controls the article review workflow"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.config = get_config()
         self.llm = create_llm()
         self.workflow = self._build_workflow()

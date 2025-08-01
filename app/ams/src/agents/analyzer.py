@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class AnalysisAgent:
     """Agent responsible for deep multi-dimensional article analysis"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.config = get_config()
         # Select optimal LLM for analysis tasks
         provider, model = select_optimal_llm(
