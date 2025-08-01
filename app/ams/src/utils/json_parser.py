@@ -5,7 +5,7 @@ JSON parsing utilities for LLM responses
 import json
 import logging
 import re
-from typing import Any
+from typing import Any, cast
 
 logger = logging.getLogger(__name__)
 
@@ -70,11 +70,13 @@ def safe_json_loads(json_str: str) -> dict[str, Any]:
         Parsed JSON as dictionary
     """
     try:
-        return json.loads(json_str)
+        result = json.loads(json_str)
+        return cast(dict[str, Any], result)
     except json.JSONDecodeError:
         # Try to fix common issues
         fixed = _fix_common_json_issues(json_str)
-        return json.loads(fixed)
+        result = json.loads(fixed)
+        return cast(dict[str, Any], result)
 
 
 def _extract_json_block(response: str) -> str | None:

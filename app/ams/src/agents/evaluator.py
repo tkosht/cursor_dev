@@ -61,7 +61,7 @@ class EvaluationAgent(BaseAgent):
 
                 # Call LLM with timeout
                 response = await asyncio.wait_for(self.llm.ainvoke(prompt), timeout=timeout)
-                response_content = response.content
+                response_content = str(response.content)
                 break
 
             except TimeoutError:

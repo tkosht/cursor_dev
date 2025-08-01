@@ -5,7 +5,7 @@ Optimized version reduces prompt size and improves performance.
 """
 
 import asyncio
-from typing import Any
+from typing import Any, cast
 
 from src.utils.json_parser import parse_llm_json_response
 from src.utils.llm_factory import create_llm
@@ -139,7 +139,7 @@ class PopulationArchitect:
                 for segment in segments:
                     segment["percentage"] = (segment.get("percentage", 0) / total_percentage) * 100
 
-            return segments
+            return cast(list[dict[str, Any]], segments)
 
         except Exception:
             return []
@@ -156,7 +156,7 @@ class PopulationArchitect:
         # Execute all sub-segment designs in parallel
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        sub_segments = {}
+        sub_segments: dict[str, list[dict[str, Any]]] = {}
         for i, segment in enumerate(major_segments):
             if isinstance(results[i], list):
                 sub_segments[segment["id"]] = results[i]
@@ -191,7 +191,7 @@ class PopulationArchitect:
             if isinstance(sub_segs, dict):
                 sub_segs = sub_segs.get("sub_segments", [])
 
-            return sub_segs
+            return cast(list[dict[str, Any]], sub_segs)
 
         except Exception:
             return []

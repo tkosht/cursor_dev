@@ -98,7 +98,7 @@ class AnalysisAgent:
         """
 
         response = await self.llm.ainvoke(prompt)
-        return self._parse_json_response(response.content)
+        return self._parse_json_response(str(response.content))
 
     async def _analyze_structure(self, text: str) -> dict[str, Any]:
         """Analyze article structure"""
@@ -133,7 +133,7 @@ class AnalysisAgent:
         """
 
         response = await self.llm.ainvoke(prompt)
-        return self._parse_json_response(response.content)
+        return self._parse_json_response(str(response.content))
 
     async def _analyze_readability(self, text: str) -> dict[str, Any]:
         """Analyze readability metrics"""
@@ -166,7 +166,7 @@ class AnalysisAgent:
         """
 
         response = await self.llm.ainvoke(prompt)
-        return self._parse_json_response(response.content)
+        return self._parse_json_response(str(response.content))
 
     async def _analyze_target_audience(self, text: str) -> dict[str, Any]:
         """Identify target audience characteristics"""
@@ -185,7 +185,7 @@ class AnalysisAgent:
         """
 
         response = await self.llm.ainvoke(prompt)
-        return self._parse_json_response(response.content)
+        return self._parse_json_response(str(response.content))
 
     async def _analyze_technical_depth(self, text: str) -> dict[str, Any]:
         """Analyze technical depth and complexity"""
@@ -204,7 +204,7 @@ class AnalysisAgent:
         """
 
         response = await self.llm.ainvoke(prompt)
-        return self._parse_json_response(response.content)
+        return self._parse_json_response(str(response.content))
 
     async def _analyze_emotional_impact(self, text: str) -> dict[str, Any]:
         """Analyze potential emotional impact on readers"""
@@ -223,7 +223,7 @@ class AnalysisAgent:
         """
 
         response = await self.llm.ainvoke(prompt)
-        return self._parse_json_response(response.content)
+        return self._parse_json_response(str(response.content))
 
     def _estimate_difficulty(self, words: int, sentences: int, complex_words: int) -> str:
         """Estimate reading difficulty level"""

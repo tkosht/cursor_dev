@@ -6,7 +6,7 @@ based on article context analysis.
 
 import json
 import random
-from typing import Any
+from typing import Any, cast
 
 from src.utils.json_parser import parse_llm_json_response
 from src.utils.llm_factory import create_llm
@@ -129,7 +129,7 @@ class PopulationArchitect:
                 for segment in segments:
                     segment["percentage"] = (segment.get("percentage", 0) / total_percentage) * 100
 
-            return segments
+            return cast(list[dict[str, Any]], segments)
 
         except Exception:
             return []
@@ -169,7 +169,7 @@ class PopulationArchitect:
                 for sub in sub_segments:
                     sub["percentage_of_parent"] = (sub.get("percentage_of_parent", 0) / total) * 100
 
-            return sub_segments
+            return cast(list[dict[str, Any]], sub_segments)
 
         except Exception:
             return []
