@@ -385,12 +385,12 @@ class ReporterAgent(BaseAgent):
             if occupation not in segments:
                 segments[occupation] = {"count": 0, "average_age": 0, "interests": []}
             segments[occupation]["count"] += 1
-            if persona.age and isinstance(persona.age, (int, float)):
+            if persona.age and isinstance(persona.age, int | float):
                 segments[occupation]["average_age"] += persona.age
 
         # Calculate averages
         for segment in segments.values():
-            if segment["count"] > 0 and isinstance(segment["average_age"], (int, float)):
+            if segment["count"] > 0 and isinstance(segment["average_age"], int | float):
                 segment["average_age"] = segment["average_age"] / segment["count"]
 
         return {
