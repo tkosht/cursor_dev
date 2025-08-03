@@ -19,11 +19,11 @@ from src.utils.llm_transparency import LLMCallTracker
 class ReporterAgent(BaseAgent):
     """Agent responsible for generating comprehensive reports from simulation results."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the ReporterAgent."""
         super().__init__(
             agent_id=AgentID("reporter"),
-            attributes={"type": "reporter", "role": "report_generation"},
+            attributes=None,  # ReporterAgent doesn't use PersonaAttributes
         )
         self.config = get_config()
         self.llm = create_llm()
@@ -94,14 +94,16 @@ class ReporterAgent(BaseAgent):
         """Generate executive summary with LLM assistance."""
         # Extract key data
         aggregated_scores = state.get("aggregated_scores", {})
-        
+
         # Handle both simple values and dict with 'mean' key
-        overall_score_data = aggregated_scores.get("overall_score", aggregated_scores.get("overall", 0))
+        overall_score_data = aggregated_scores.get(
+            "overall_score", aggregated_scores.get("overall", 0)
+        )
         if isinstance(overall_score_data, dict) and "mean" in overall_score_data:
             overall_score = overall_score_data["mean"]
         else:
-            overall_score = overall_score_data if isinstance(overall_score_data, (int, float)) else 0
-            
+            overall_score = overall_score_data if isinstance(overall_score_data, int | float) else 0
+
         top_suggestions = state.get("improvement_suggestions", [])[:3]
 
         # Generate LLM insights
@@ -112,11 +114,12 @@ class ReporterAgent(BaseAgent):
             response = await self.llm.ainvoke(prompt)
             latency_ms = int((time.time() - start_time) * 1000)
 
+            response_str = response.content if hasattr(response, 'content') else str(response)
             self.call_tracker.track_call(
-                prompt=prompt, response=response.content, model=str(self.llm), latency_ms=latency_ms
+                prompt=prompt, response=response_str, model=str(self.llm), latency_ms=latency_ms
             )
 
-            parsed = parse_llm_json_response(response.content)
+            parsed = parse_llm_json_response(response_str)
             key_findings = parsed.get("key_findings", [])
             overview = parsed.get("overview", "")
 
@@ -163,11 +166,12 @@ class ReporterAgent(BaseAgent):
             response = await self.llm.ainvoke(prompt)
             latency_ms = int((time.time() - start_time) * 1000)
 
+            response_str = response.content if hasattr(response, 'content') else str(response)
             self.call_tracker.track_call(
-                prompt=prompt, response=response.content, model=str(self.llm), latency_ms=latency_ms
+                prompt=prompt, response=response_str, model=str(self.llm), latency_ms=latency_ms
             )
 
-            parsed = parse_llm_json_response(response.content)
+            parsed = parse_llm_json_response(response_str)
             return parsed.get("recommendations", [])
 
         except Exception:
@@ -255,13 +259,15 @@ class ReporterAgent(BaseAgent):
 
     def _generate_error_report(self, state: dict[str, Any], error: str) -> dict[str, Any]:
         """Generate report when an error occurs."""
-        aggregated_scores = state.get('aggregated_scores', {})
-        overall_score_data = aggregated_scores.get("overall_score", aggregated_scores.get("overall", 0))
+        aggregated_scores = state.get("aggregated_scores", {})
+        overall_score_data = aggregated_scores.get(
+            "overall_score", aggregated_scores.get("overall", 0)
+        )
         if isinstance(overall_score_data, dict) and "mean" in overall_score_data:
             overall_score = overall_score_data["mean"]
         else:
-            overall_score = overall_score_data if isinstance(overall_score_data, (int, float)) else 0
-            
+            overall_score = overall_score_data if isinstance(overall_score_data, int | float) else 0
+
         return {
             "executive_summary": {
                 "overview": "Report generation encountered an error",
@@ -281,21 +287,23 @@ class ReporterAgent(BaseAgent):
 
     def _create_summary_prompt(self, state: dict[str, Any]) -> str:
         """Create prompt for executive summary generation."""
-        aggregated_scores = state.get('aggregated_scores', {})
-        overall_score_data = aggregated_scores.get("overall_score", aggregated_scores.get("overall", 0))
+        aggregated_scores = state.get("aggregated_scores", {})
+        overall_score_data = aggregated_scores.get(
+            "overall_score", aggregated_scores.get("overall", 0)
+        )
         if isinstance(overall_score_data, dict) and "mean" in overall_score_data:
             overall_score = overall_score_data["mean"]
         else:
-            overall_score = overall_score_data if isinstance(overall_score_data, (int, float)) else 0
-            
+            overall_score = overall_score_data if isinstance(overall_score_data, int | float) else 0
+
         return f"""
         Based on the following article review simulation results, generate an executive summary:
-        
+
         Article: {state.get('article_metadata', {}).get('title', 'Unknown')}
         Overall Score: {overall_score:.1f}
         Number of Personas: {state.get('persona_count', 0)}
         Key Topics: {', '.join(state.get('analysis_results', {}).get('topics', []))}
-        
+
         Generate a JSON response with:
         - "overview": A 2-3 sentence overview of the simulation results
         - "key_findings": A list of 3-5 key findings (strings)
@@ -310,13 +318,14 @@ class ReporterAgent(BaseAgent):
         )
 
         return f"""
-        Based on the following evaluation scores and suggestions, generate actionable recommendations:
-        
+        Based on the following evaluation scores and suggestions, generate actionable
+        recommendations:
+
         Scores: {json.dumps(scores, indent=2)}
-        
+
         Suggestions:
         {suggestions_text}
-        
+
         Generate a JSON response with "recommendations" array, where each recommendation has:
         - "action": Specific action to take
         - "impact": Expected impact level (high/medium/low)
@@ -396,8 +405,8 @@ class ReporterAgent(BaseAgent):
 
         # Extract numeric scores from aggregated scores
         numeric_scores = []
-        for key, value in scores.items():
-            if isinstance(value, (int, float)):
+        for _key, value in scores.items():
+            if isinstance(value, int | float):
                 numeric_scores.append(value)
             elif isinstance(value, dict) and "mean" in value:
                 numeric_scores.append(value["mean"])
@@ -562,7 +571,7 @@ class ReporterAgent(BaseAgent):
             return 0
 
         # Simple diversity calculation based on unique occupations
-        occupations = set(p.occupation for p in personas if p.occupation)
+        occupations = {p.occupation for p in personas if p.occupation}
         return min((len(occupations) / len(personas)) * 100, 100)
 
     def _calculate_consensus(self, evaluations: dict[str, Any]) -> float:
@@ -621,8 +630,10 @@ class ReporterAgent(BaseAgent):
                 "",
                 "### Article Information",
                 f"- **Title**: {report_data['detailed_analysis']['article_analysis']['title']}",
-                f"- **Category**: {report_data['detailed_analysis']['article_analysis']['category']}",
-                f"- **Word Count**: {report_data['detailed_analysis']['article_analysis']['word_count']}",
+                f"- **Category**: "
+                f"{report_data['detailed_analysis']['article_analysis']['category']}",
+                f"- **Word Count**: "
+                f"{report_data['detailed_analysis']['article_analysis']['word_count']}",
                 "",
                 "## Recommendations",
                 "",
@@ -655,14 +666,14 @@ class ReporterAgent(BaseAgent):
         <body>
             <h1>Article Review Report</h1>
             <p><strong>Generated</strong>: {report_data['metadata']['generation_time']}</p>
-            
+
             <h2>Executive Summary</h2>
             <p>{report_data['executive_summary']['overview']}</p>
-            
+
             <div class="metric">
                 <h3>Overall Score: {report_data['executive_summary']['overall_score']:.1f}/100</h3>
             </div>
-            
+
             <h2>Key Findings</h2>
             <ul>
         """
@@ -672,7 +683,7 @@ class ReporterAgent(BaseAgent):
 
         html += """
             </ul>
-            
+
             <h2>Recommendations</h2>
         """
 
@@ -704,11 +715,11 @@ class ReporterAgent(BaseAgent):
         return f"""
         Executive Summary
         =================
-        
+
         {context.get('overview', '')}
-        
+
         Overall Score: {context.get('overall_score', 0):.1f}/100
-        
+
         Key Findings:
         {chr(10).join('- ' + f for f in context.get('key_findings', []))}
         """
@@ -718,10 +729,10 @@ class ReporterAgent(BaseAgent):
         return f"""
         Detailed Analysis
         ================
-        
+
         Article: {context.get('title', 'Unknown')}
         Category: {context.get('category', 'Unknown')}
-        
+
         Topics: {', '.join(context.get('topics', []))}
         Target Audience: {context.get('target_audience', 'Unknown')}
         """
@@ -735,10 +746,10 @@ class ReporterAgent(BaseAgent):
         """Make decisions based on perception (not used in reporter)."""
         return perception
 
-    def act(self, decision: Any) -> Any:
+    async def act(self, action: Any, environment: Any) -> Any:
         """Take action based on decision (not used in reporter)."""
-        return decision
+        return action
 
-    def update(self, feedback: Any) -> None:
+    async def update(self, feedback: Any) -> None:
         """Update internal state based on feedback (not used in reporter)."""
         pass
