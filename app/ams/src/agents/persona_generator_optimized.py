@@ -193,49 +193,62 @@ class PersonaGenerator:
             PersonalityType.CONSCIENTIOUSNESS: 0.5,
             PersonalityType.EXTRAVERSION: 0.5,
             PersonalityType.AGREEABLENESS: 0.5,
-            PersonalityType.NEUROTICISM: 0.5,
+            PersonalityType.NEUROTICISM: 0.3,
         }
 
+        # Extract personality traits from persona data if available
+        traits_list = persona_data.get("personality_traits", [])
+        for trait in traits_list:
+            trait_lower = trait.lower()
+            if "open" in trait_lower or "curious" in trait_lower:
+                personality_traits_dict[PersonalityType.OPENNESS] = 0.8
+            elif "conscientious" in trait_lower or "organized" in trait_lower:
+                personality_traits_dict[PersonalityType.CONSCIENTIOUSNESS] = 0.8
+            elif "extraverted" in trait_lower or "social" in trait_lower:
+                personality_traits_dict[PersonalityType.EXTRAVERSION] = 0.8
+
         return PersonaAttributes(
-            # Demographics
             age=persona_data.get("age", 35),
             occupation=persona_data.get("occupation", "Professional"),
-            # Psychographics
+            location=persona_data.get("location"),
+            education_level=persona_data.get("education_level"),
+            income_bracket=persona_data.get("income_bracket"),
+            values=persona_data.get("values", []),
             interests=persona_data.get("interests", []),
             personality_traits=personality_traits_dict,
-            # Behavioral
+            information_seeking_behavior=persona_data.get(
+                "information_seeking_behavior", "passive"
+            ),
+            decision_making_style=persona_data.get("decision_making_style", "analytical"),
             content_sharing_likelihood=sharing_likelihood,
             influence_susceptibility=0.5,
-            # Network position
+            daily_routines=persona_data.get("daily_routines", []),
+            cognitive_biases=persona_data.get("cognitive_biases", []),
+            emotional_triggers=persona_data.get("emotional_triggers", []),
+            preferred_channels=[],
+            connections=[],
             influence_score=influence,
             network_centrality=0.5,
-            # Dynamic attributes
-            trust_level={"article_source": 0.7},
+            current_mood="neutral",
+            attention_span=1.0,
+            trust_level={},
         )
 
     def _create_default_persona(self, persona_id: str) -> PersonaAttributes:
         """Create a default persona."""
-        personality_traits_dict = {
-            PersonalityType.OPENNESS: 0.7,
-            PersonalityType.CONSCIENTIOUSNESS: 0.6,
-            PersonalityType.EXTRAVERSION: 0.5,
-            PersonalityType.AGREEABLENESS: 0.6,
-            PersonalityType.NEUROTICISM: 0.3,
-        }
-
         return PersonaAttributes(
-            # Demographics
             age=random.randint(25, 65),
             occupation="Professional",
-            # Psychographics
             interests=["technology", "business", "current events"],
-            personality_traits=personality_traits_dict,
-            # Behavioral
+            personality_traits={
+                PersonalityType.OPENNESS: 0.7,
+                PersonalityType.CONSCIENTIOUSNESS: 0.6,
+                PersonalityType.EXTRAVERSION: 0.5,
+                PersonalityType.AGREEABLENESS: 0.6,
+                PersonalityType.NEUROTICISM: 0.4,
+            },
+            values=["evidence", "practicality", "innovation"],
             content_sharing_likelihood=0.5,
-            influence_susceptibility=0.5,
-            # Network position
             influence_score=0.5,
             network_centrality=0.5,
-            # Dynamic attributes
-            trust_level={"article_source": 0.5},
         )

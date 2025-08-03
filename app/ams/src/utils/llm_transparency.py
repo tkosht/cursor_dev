@@ -7,7 +7,8 @@ LLMの動作を透明化し、実際のAPI呼び出しであることを
 import functools
 import hashlib
 import time
-from typing import Any, Callable, Dict, Optional
+from collections.abc import Callable
+from typing import Any
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage
@@ -19,10 +20,10 @@ class TransparentLLM:
     def __init__(self, llm: BaseChatModel, enable_verification: bool = True):
         self.llm = llm
         self.enable_verification = enable_verification
-        self.call_history: list[Dict[str, Any]] = []
+        self.call_history: list[dict[str, Any]] = []
         self._call_count = 0
 
-    async def ainvoke(self, prompt: str, **kwargs) -> BaseMessage:
+    async def ainvoke(self, prompt: str, **kwargs: Any) -> BaseMessage:
         """透明性を確保したLLM呼び出し"""
         call_id = f"call_{self._call_count:04d}"
         self._call_count += 1
@@ -48,12 +49,14 @@ class TransparentLLM:
             latency_ms = int((time.time() - start_time) * 1000)
 
             # レスポンス記録
+            # Handle Union type for response.content (str or list)
+            content_str = (
+                response.content if isinstance(response.content, str) else str(response.content)
+            )
             call_record.update(
                 {
                     "response": response.content,
-                    "response_hash": hashlib.sha256(
-                        response.content.encode()
-                    ).hexdigest()[:16],
+                    "response_hash": hashlib.sha256(content_str.encode()).hexdigest()[:16],
                     "latency_ms": latency_ms,
                     "success": True,
                 }
@@ -62,7 +65,7 @@ class TransparentLLM:
             if self.enable_verification:
                 print(f"   Response hash: {call_record['response_hash']}")
                 print(f"   Latency: {latency_ms}ms")
-                print(f"   Response length: {len(response.content)} chars")
+                print(f"   Response length: {len(content_str)} chars")
 
         except Exception as e:
             call_record.update(
@@ -81,10 +84,10 @@ class TransparentLLM:
 
         finally:
             self.call_history.append(call_record)
-        
+
         return response
 
-    def get_verification_summary(self) -> Dict[str, Any]:
+    def get_verification_summary(self) -> dict[str, Any]:
         """呼び出し履歴のサマリーを取得"""
         if not self.call_history:
             return {"total_calls": 0, "summary": "No calls made"}
@@ -103,14 +106,10 @@ class TransparentLLM:
             "min_latency_ms": min(latencies) if latencies else 0,
             "max_latency_ms": max(latencies) if latencies else 0,
             "unique_prompts": len(
-                set(c.get("prompt_hash", "") for c in self.call_history if "prompt_hash" in c)
+                {c.get("prompt_hash", "") for c in self.call_history if "prompt_hash" in c}
             ),
             "unique_responses": len(
-                set(
-                    c.get("response_hash", "")
-                    for c in successful_calls
-                    if "response_hash" in c
-                )
+                {c.get("response_hash", "") for c in successful_calls if "response_hash" in c}
             ),
         }
 
@@ -119,16 +118,12 @@ def verify_llm_call(func: Callable) -> Callable:
     """LLM呼び出しを検証するデコレータ"""
 
     @functools.wraps(func)
-    async def wrapper(*args, **kwargs):
+    async def wrapper(*args: Any, **kwargs: Any) -> Any:
         print(f"\n🔍 Verifying LLM call in {func.__name__}")
         start_time = time.time()
 
-        # 関数実行前の状態を記録
-        pre_state = {
-            "timestamp": time.time(),
-            "args_hash": hashlib.sha256(str(args).encode()).hexdigest()[:16],
-            "kwargs_hash": hashlib.sha256(str(kwargs).encode()).hexdigest()[:16],
-        }
+        # 関数実行前の状態を記録 (for debugging if needed)
+        # pre_state recorded but not used in current implementation
 
         try:
             # 実際の関数実行
@@ -140,13 +135,11 @@ def verify_llm_call(func: Callable) -> Callable:
                 "execution_time_ms": int(execution_time * 1000),
                 "result_type": type(result).__name__,
                 "result_hash": (
-                    hashlib.sha256(str(result).encode()).hexdigest()[:16]
-                    if result
-                    else "none"
+                    hashlib.sha256(str(result).encode()).hexdigest()[:16] if result else "none"
                 ),
             }
 
-            print(f"✅ Verification passed:")
+            print("✅ Verification passed:")
             print(f"   Execution time: {post_state['execution_time_ms']}ms")
             print(f"   Result type: {post_state['result_type']}")
             print(f"   Result hash: {post_state['result_hash']}")
@@ -167,12 +160,12 @@ def verify_llm_call(func: Callable) -> Callable:
 class LLMCallTracker:
     """テスト用のLLM呼び出しトラッカー"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         """トラッキング情報をリセット"""
-        self.calls: list[Dict[str, Any]] = []
+        self.calls: list[dict[str, Any]] = []
         self.total_tokens = 0
         self.total_cost = 0.0
 
@@ -182,8 +175,8 @@ class LLMCallTracker:
         response: str,
         model: str,
         latency_ms: int,
-        tokens: Optional[Dict[str, int]] = None,
-    ):
+        tokens: dict[str, int] | None = None,
+    ) -> None:
         """LLM呼び出しを記録"""
         call_data = {
             "timestamp": time.time(),
@@ -200,13 +193,14 @@ class LLMCallTracker:
         if tokens:
             input_cost = (tokens.get("prompt_tokens", 0) / 1_000_000) * 0.075
             output_cost = (tokens.get("completion_tokens", 0) / 1_000_000) * 0.30
-            call_data["estimated_cost"] = input_cost + output_cost
-            self.total_cost += call_data["estimated_cost"]
+            estimated_cost = input_cost + output_cost
+            call_data["estimated_cost"] = estimated_cost
+            self.total_cost += estimated_cost
             self.total_tokens += tokens.get("total_tokens", 0)
 
         self.calls.append(call_data)
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """トラッキングサマリーを取得"""
         if not self.calls:
             return {"message": "No LLM calls tracked"}
@@ -220,10 +214,10 @@ class LLMCallTracker:
             "average_latency_ms": int(sum(latencies) / len(latencies)),
             "min_latency_ms": min(latencies),
             "max_latency_ms": max(latencies),
-            "models_used": list(set(c["model"] for c in self.calls)),
+            "models_used": list({c["model"] for c in self.calls}),
         }
 
-    def print_detailed_report(self):
+    def print_detailed_report(self) -> None:
         """詳細レポートを出力"""
         print("\n" + "=" * 60)
         print("LLM Call Tracking Report")

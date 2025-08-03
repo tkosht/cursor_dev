@@ -159,7 +159,7 @@ class PopulationArchitect:
         sub_segments: dict[str, list[dict[str, Any]]] = {}
         for i, segment in enumerate(major_segments):
             if isinstance(results[i], list):
-                sub_segments[segment["id"]] = cast(list[dict[str, Any]], results[i])
+                sub_segments[segment["id"]] = results[i]  # type: ignore[assignment]
             else:
                 sub_segments[segment["id"]] = []
 

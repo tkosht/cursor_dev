@@ -5,6 +5,8 @@ Core interfaces for the Article Market Simulator
 from abc import abstractmethod
 from typing import Any, Protocol, runtime_checkable
 
+from websockets.server import ServerProtocol
+
 from .types import (
     ActionResult,
     AgentID,
@@ -40,9 +42,7 @@ class IAgent(Protocol):
         ...
 
     @abstractmethod
-    async def act(
-        self, action: "IAction", environment: "IEnvironment"
-    ) -> ActionResult:
+    async def act(self, action: "IAction", environment: "IEnvironment") -> ActionResult:
         """Execute an action in the environment"""
         ...
 
@@ -68,9 +68,7 @@ class IEnvironment(Protocol):
         ...
 
     @abstractmethod
-    async def apply_action(
-        self, agent_id: AgentID, action: "IAction"
-    ) -> ActionResult:
+    async def apply_action(self, agent_id: AgentID, action: "IAction") -> ActionResult:
         """Apply an agent's action to the environment"""
         ...
 
@@ -155,9 +153,7 @@ class IPlugin(Protocol):
         ...
 
     @abstractmethod
-    async def on_timestep(
-        self, simulation: "ISimulation", timestep: int
-    ) -> None:
+    async def on_timestep(self, simulation: "ISimulation", timestep: int) -> None:
         """Called on each simulation timestep"""
         ...
 
@@ -246,12 +242,12 @@ class IVisualization(Protocol):
     """Interface for visualization components"""
 
     @abstractmethod
-    async def connect(self, websocket) -> None:
+    async def connect(self, websocket: ServerProtocol) -> None:
         """Connect a websocket client"""
         ...
 
     @abstractmethod
-    async def disconnect(self, websocket) -> None:
+    async def disconnect(self, websocket: ServerProtocol) -> None:
         """Disconnect a websocket client"""
         ...
 
@@ -266,8 +262,6 @@ class IVisualization(Protocol):
         ...
 
     @abstractmethod
-    def prepare_visualization_data(
-        self, simulation_state: SimulationState
-    ) -> dict[str, Any]:
+    def prepare_visualization_data(self, simulation_state: SimulationState) -> dict[str, Any]:
         """Prepare data for visualization"""
         ...

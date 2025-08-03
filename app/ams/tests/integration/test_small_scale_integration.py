@@ -18,9 +18,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Configure logging to see what's happening
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -63,7 +61,7 @@ class TestSmallScaleIntegration:
             from src.agents.persona_generator import PersonaGenerator
             from src.agents.population_architect import PopulationArchitect
             from src.core.types import PersonaAttributes
-            
+
             # Phase 1: Context Analysis
             logger.info("\n--- Phase 1: Context Analysis ---")
             # Use lightweight mode for testing to avoid timeouts
@@ -71,8 +69,7 @@ class TestSmallScaleIntegration:
 
             # タイムアウトを設定して実行
             context = await asyncio.wait_for(
-                analyzer.analyze_article_context(short_article),
-                timeout=90.0  # 90秒のタイムアウト
+                analyzer.analyze_article_context(short_article), timeout=90.0  # 90秒のタイムアウト
             )
             api_calls["analyzer"] = 1  # Lightweight mode: core only
 
@@ -98,12 +95,8 @@ class TestSmallScaleIntegration:
 
             logger.info("Population design complete.")
             logger.info(f"Population structure: {json.dumps(population, indent=2)}")
-            logger.info(
-                f"Major segments: {len(population['hierarchy']['major_segments'])}"
-            )
-            logger.info(
-                f"Persona slots: {len(population['hierarchy']['persona_slots'])}"
-            )
+            logger.info(f"Major segments: {len(population['hierarchy']['major_segments'])}")
+            logger.info(f"Persona slots: {len(population['hierarchy']['persona_slots'])}")
             logger.info(f"API calls so far: {sum(api_calls.values())}")
 
             # Verify population structure
@@ -130,9 +123,7 @@ class TestSmallScaleIntegration:
             assert len(personas) >= 3
             for i, persona in enumerate(personas):
                 assert isinstance(persona, PersonaAttributes)
-                logger.info(
-                    f"Persona {i + 1}: {persona.occupation}, Age: {persona.age}"
-                )
+                logger.info(f"Persona {i + 1}: {persona.occupation}, Age: {persona.age}")
                 logger.info(f"  Interests: {persona.interests[:2]}")
                 logger.info(f"  Influence: {persona.influence_score:.2f}")
 
@@ -144,15 +135,13 @@ class TestSmallScaleIntegration:
             logger.info(f"Total API calls: {total_api_calls}")
             logger.info(f"Breakdown: {api_calls}")
             logger.info(f"Execution time: {elapsed_time:.2f} seconds")
-            logger.info(
-                f"Estimated cost: ~${total_api_calls * 0.002:.4f} (assuming ~$0.002/call)"
-            )
+            logger.info(f"Estimated cost: ~${total_api_calls * 0.002:.4f} (assuming ~$0.002/call)")
 
             # Basic assertions
+            assert total_api_calls <= 10, "Too many API calls for small scale test"
             assert (
-                total_api_calls <= 10
-            ), "Too many API calls for small scale test"
-            assert elapsed_time < 300, "Test took too long"  # Allow up to 5 minutes for real API calls
+                elapsed_time < 300
+            ), "Test took too long"  # Allow up to 5 minutes for real API calls
 
         except Exception as e:
             logger.error(f"Test failed with error: {e}")
@@ -163,7 +152,7 @@ class TestSmallScaleIntegration:
     async def test_component_data_flow(self, short_article):
         """Test data flow between components."""
         logger.info("\n=== Testing Component Data Flow ===")
-        
+
         # Import inside test to avoid collection issues
         from src.agents.deep_context_analyzer import DeepContextAnalyzer
         from src.agents.persona_generator import PersonaGenerator
@@ -175,9 +164,7 @@ class TestSmallScaleIntegration:
         context = await analyzer.analyze_article_context(short_article)
 
         architect = PopulationArchitect()
-        population = await architect.design_population_hierarchy(
-            context, target_size=3
-        )
+        population = await architect.design_population_hierarchy(context, target_size=3)
 
         # Verify data compatibility
         assert isinstance(context, dict)
@@ -200,7 +187,7 @@ class TestSmallScaleIntegration:
     async def test_error_handling_integration(self):
         """Test error handling across components."""
         logger.info("\n=== Testing Error Handling ===")
-        
+
         # Import inside test to avoid collection issues
         from src.agents.deep_context_analyzer import DeepContextAnalyzer
         from src.agents.population_architect import PopulationArchitect
@@ -215,9 +202,7 @@ class TestSmallScaleIntegration:
 
         # Test population design with bad context
         architect = PopulationArchitect()
-        population = await architect.design_population_hierarchy(
-            {}, target_size=3
-        )
+        population = await architect.design_population_hierarchy({}, target_size=3)
 
         # Should return valid structure
         assert isinstance(population, dict)
@@ -227,15 +212,14 @@ class TestSmallScaleIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Performance baseline test times out with real LLM calls - needs optimization")
     async def test_performance_baseline(self, short_article):
         """Establish performance baseline for small scale."""
         logger.info("\n=== Performance Baseline Test ===")
-        
+
         # Import inside test to avoid collection issues
         from src.agents.deep_context_analyzer import DeepContextAnalyzer
-        from src.agents.population_architect import PopulationArchitect
         from src.agents.persona_generator import PersonaGenerator
+        from src.agents.population_architect import PopulationArchitect
 
         timings = {}
 
