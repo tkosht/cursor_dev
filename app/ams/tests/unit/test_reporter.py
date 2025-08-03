@@ -327,14 +327,17 @@ class TestReporterAgent:
         state = {
             "article_content": "Test article",
             "analysis_results": {"topics": ["AI"]},
-            "aggregated_results": {},  # Empty results
-            "phase": "reporting"
+            "aggregated_scores": {},  # Empty results
+            "improvement_suggestions": [],
+            "simulation_id": "test_001"
         }
         
         result = await agent.generate_report(state)
         
-        assert "report" in result
-        assert "error" not in result
+        assert "executive_summary" in result
+        assert "detailed_analysis" in result
+        assert "recommendations" in result
+        assert "metadata" in result
         # Should generate a minimal report even with empty data
         
     @pytest.mark.asyncio  
@@ -348,7 +351,9 @@ class TestReporterAgent:
             large_suggestions.append({
                 "suggestion": f"This is a very long suggestion number {i} with lots of details and explanations about improvements needed in the article content and structure",
                 "personas": [f"persona_{j}" for j in range(20)],
-                "impact": "high"
+                "impact": 15.0,  # Numeric impact value
+                "priority": "high",
+                "category": "content"
             })
         
         state = {
@@ -358,25 +363,20 @@ class TestReporterAgent:
                 "sentiment": "positive",
                 "complexity": 8.5
             },
-            "aggregated_results": {
-                "metrics": {
-                    "overall_score": {"mean": 75, "std": 10, "min": 50, "max": 95}
-                },
-                "sentiment_distribution": {
-                    "positive": 0.7,
-                    "neutral": 0.2,
-                    "negative": 0.1
-                },
-                "suggestions": large_suggestions,
-                "total_evaluations": 1000,
-                "insights": "Long insights " * 500
+            "aggregated_scores": {
+                "overall_score": {"mean": 75, "std": 10, "min": 50, "max": 95},
+                "relevance": {"mean": 80, "std": 8},
+                "clarity": {"mean": 70, "std": 12}
             },
-            "phase": "reporting"
+            "improvement_suggestions": large_suggestions,
+            "persona_evaluations": {},
+            "simulation_id": "test_large"
         }
         
         result = await agent.generate_report(state)
         
-        assert "report" in result
+        assert "executive_summary" in result
+        assert "detailed_analysis" in result
         # Should handle large data without crashing
         
     @pytest.mark.asyncio
@@ -390,23 +390,23 @@ class TestReporterAgent:
                 "topics": ["AI & ML", "Data <Science>", "Web\"Development\""],
                 "sentiment": "positive"
             },
-            "aggregated_results": {
-                "metrics": {
-                    "overall_score": {"mean": 80, "std": 5, "min": 70, "max": 90}
-                },
-                "suggestions": [{
-                    "suggestion": "Add more <examples> & \"quotes\"",
-                    "personas": ["tech_expert"],
-                    "impact": "medium"
-                }],
-                "total_evaluations": 10
+            "aggregated_scores": {
+                "overall_score": {"mean": 80, "std": 5, "min": 70, "max": 90}
             },
-            "phase": "reporting"
+            "improvement_suggestions": [{
+                "suggestion": "Add more <examples> & \"quotes\"",
+                "personas": ["tech_expert"],
+                "impact": 10.0,
+                "priority": "medium",
+                "category": "content"
+            }],
+            "simulation_id": "test_special"
         }
         
         result = await agent.generate_report(state)
         
-        assert "report" in result
+        assert "executive_summary" in result
+        assert "detailed_analysis" in result
         # Special characters should be properly escaped in different formats
         
     @pytest.mark.asyncio
@@ -417,11 +417,11 @@ class TestReporterAgent:
         state = {
             "article_content": "Test article",
             "analysis_results": {"topics": ["AI"]},
-            "aggregated_results": {
-                "metrics": {"overall_score": {"mean": 75}},
-                "total_evaluations": 5
+            "aggregated_scores": {
+                "overall_score": {"mean": 75}
             },
-            "phase": "reporting"
+            "improvement_suggestions": [],
+            "simulation_id": "test_format"
         }
         
         # Test invalid format
@@ -445,21 +445,23 @@ class TestReporterAgent:
                 "topics": ["多言語処理", "Multilingüe", "Multilingual"],
                 "sentiment": "positive"
             },
-            "aggregated_results": {
-                "metrics": {"overall_score": {"mean": 85}},
-                "suggestions": [{
-                    "suggestion": "もっと例を追加してください",
-                    "personas": ["japanese_reader"],
-                    "impact": "high"
-                }],
-                "total_evaluations": 15
+            "aggregated_scores": {
+                "overall_score": {"mean": 85}
             },
-            "phase": "reporting"
+            "improvement_suggestions": [{
+                "suggestion": "もっと例を追加してください",
+                "personas": ["japanese_reader"],
+                "impact": 15.0,
+                "priority": "high",
+                "category": "content"
+            }],
+            "simulation_id": "test_multilingual"
         }
         
         result = await agent.generate_report(state)
         
-        assert "report" in result
+        assert "executive_summary" in result
+        assert "detailed_analysis" in result
         # Should handle multilingual content properly
         
     @pytest.mark.asyncio
@@ -470,17 +472,16 @@ class TestReporterAgent:
         state = {
             "article_content": "Test article",
             "analysis_results": {"topics": ["AI"]},
-            "aggregated_results": {
-                "metrics": {},
-                "total_evaluations": 0,  # Zero evaluations
-                "suggestions": []
-            },
-            "phase": "reporting"
+            "aggregated_scores": {},
+            "improvement_suggestions": [],
+            "persona_evaluations": {},
+            "simulation_id": "test_zero"
         }
         
         result = await agent.generate_report(state)
         
-        assert "report" in result
+        assert "executive_summary" in result
+        assert "detailed_analysis" in result
         # Should handle zero evaluations gracefully
         
     @pytest.mark.asyncio
@@ -491,29 +492,28 @@ class TestReporterAgent:
         state = {
             "article_content": "Test article",
             "analysis_results": {"topics": ["AI"]},
-            "aggregated_results": {
-                "metrics": {
-                    "overall_score": {
-                        "mean": 0,  # Minimum possible score
-                        "std": 0,
-                        "min": 0,
-                        "max": 0
-                    },
-                    "extreme_metric": {
-                        "mean": 999999,  # Very large score
-                        "std": 100000,
-                        "min": -999999,  # Negative extreme
-                        "max": 999999
-                    }
+            "aggregated_scores": {
+                "overall_score": {
+                    "mean": 0,  # Minimum possible score
+                    "std": 0,
+                    "min": 0,
+                    "max": 0
                 },
-                "total_evaluations": 50
+                "extreme_metric": {
+                    "mean": 999999,  # Very large score
+                    "std": 100000,
+                    "min": -999999,  # Negative extreme
+                    "max": 999999
+                }
             },
-            "phase": "reporting"
+            "improvement_suggestions": [],
+            "simulation_id": "test_extreme"
         }
         
         result = await agent.generate_report(state)
         
-        assert "report" in result
+        assert "executive_summary" in result
+        assert "detailed_analysis" in result
         # Should handle extreme values without overflow issues
         
     @pytest.mark.asyncio
@@ -521,17 +521,18 @@ class TestReporterAgent:
         """Test report generation with missing required fields."""
         agent = ReporterAgent()
         
-        # Missing aggregated_results
+        # Missing aggregated_scores
         state = {
             "article_content": "Test article",
             "analysis_results": {"topics": ["AI"]},
-            "phase": "reporting"
-            # aggregated_results is missing
+            "simulation_id": "test_missing"
+            # aggregated_scores is missing
         }
         
         result = await agent.generate_report(state)
         
-        assert "report" in result
+        assert "executive_summary" in result
+        assert "detailed_analysis" in result
         # Should generate a report even with missing data
         
     @pytest.mark.asyncio
@@ -546,16 +547,17 @@ class TestReporterAgent:
         state = {
             "article_content": "Test article",
             "analysis_results": {"topics": ["AI"]},
-            "aggregated_results": {
-                "metrics": {"overall_score": {"mean": 75}},
-                "total_evaluations": 10
+            "aggregated_scores": {
+                "overall_score": {"mean": 75}
             },
-            "phase": "reporting"
+            "improvement_suggestions": [],
+            "simulation_id": "test_llm_fail"
         }
         
         result = await agent.generate_report(state)
         
-        assert "report" in result
+        assert "executive_summary" in result
+        assert "detailed_analysis" in result
         # Should generate a basic report even if LLM fails
         
     @pytest.mark.asyncio
@@ -563,16 +565,40 @@ class TestReporterAgent:
         """Test format conversion with edge cases."""
         agent = ReporterAgent()
         
-        # Create report with nested structures
+        # Create a properly structured report with edge case values
         complex_report = {
-            "title": "Complex Report",
-            "nested": {
-                "deep": {
-                    "value": [1, 2, {"even_deeper": True}]
+            "executive_summary": {
+                "overview": "Test report with special values 🎉",
+                "key_findings": ["Finding 1", "Finding 2 with unicode: 🚀"],
+                "overall_score": float('inf'),  # Edge case: infinity
+                "top_recommendations": []
+            },
+            "detailed_analysis": {
+                "article_analysis": {
+                    "title": "Test Article",
+                    "category": "Testing",
+                    "word_count": 100,
+                    "topics": ["AI", "Testing"],
+                    "complexity": 5.0
+                },
+                "persona_analysis": {
+                    "total_personas": 10,
+                    "persona_types": {}
+                },
+                "evaluation_results": {
+                    "total_evaluations": 10
+                },
+                "improvement_areas": {
+                    "total_suggestions": 5
                 }
             },
-            "special_values": [None, float('inf'), -float('inf')],
-            "unicode": "🎉 Success! 🚀"
+            "recommendations": [],
+            "visualization_data": {"charts": {}},
+            "metadata": {
+                "simulation_id": "test_edge_case",
+                "generation_time": "2025-08-03T00:00:00",
+                "special_value": float('-inf')  # Edge case: negative infinity
+            }
         }
         
         # Test JSON format with special values
@@ -583,9 +609,13 @@ class TestReporterAgent:
         # Test Markdown format
         md_report = agent._format_report(complex_report, "markdown")
         assert isinstance(md_report, str)
-        assert "#" in md_report  # Should have headers
+        assert "# Article Review Report" in md_report
+        assert "## Executive Summary" in md_report
+        assert "🎉" in md_report  # Unicode should be preserved
         
         # Test HTML format
         html_report = agent._format_report(complex_report, "html")
         assert isinstance(html_report, str)
-        assert "<" in html_report and ">" in html_report
+        assert "<html>" in html_report
+        assert "<body>" in html_report
+        assert "Article Review Report" in html_report

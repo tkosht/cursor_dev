@@ -1,0 +1,70 @@
+metadata:
+  task_name: "sample_task"
+  task_description: "サンプルタスクの実装"
+  created_at: "2025-08-03T19:00:00Z"
+  last_updated: "2025-08-03T19:15:30Z"
+  command_args:
+    phase: 1
+    verbose: false
+
+execution_state:
+  current_phase: 2
+  current_step: "テスト実施とエラー解析"
+  status: "in_progress"
+
+phase_states:
+  phase1:
+    status: "completed"
+    completed_steps:
+      - "ブランチ作成"
+      - "テストドリブン開発"
+      - "チェックリストドリブン設計・実装"
+      - "レビュー"
+      - "進捗更新"
+      - "プルリクエスト発行"
+    pending_steps: []
+    artifacts:
+      branch_name: "feature/sample-task"
+      test_files:
+        - "tests/test_sample.py"
+      implementation_files:
+        - "src/sample.py"
+      pr_url: "https://github.com/example/repo/pull/123"
+      
+  phase2:
+    status: "in_progress"
+    completed_steps:
+      - "レビュー結果反映"
+    pending_steps:
+      - "テスト実施とエラー解析"
+      - "テスト妥当性検証"
+      - "進捗管理"
+      - "知識更新"
+      - "コミット＆プッシュ"
+    artifacts:
+      debug_sessions: []
+      fixed_issues: []
+      test_improvements: []
+      knowledge_updates: []
+      
+  phase3:
+    status: "pending"
+    completed_steps: []
+    pending_steps:
+      - "CI/CD設定把握"
+      - "チェックリストドリブン実行"
+      - "全テスト確認"
+      - "進捗管理"
+      - "最終更新"
+      - "最終コミット＆プッシュ"
+    artifacts:
+      ci_checks: []
+      test_results: {}
+      final_commits: []
+
+recovery_data:
+  last_successful_action: "レビュー結果反映完了"
+  rollback_points:
+    - "phase1_completed"
+    - "phase2_review_applied"
+  temporary_files: []
