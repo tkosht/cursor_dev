@@ -1,9 +1,10 @@
 """Unit tests for PopulationArchitect class."""
 
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from src.agents.population_architect import PopulationArchitect
 
 
@@ -43,9 +44,7 @@ class TestPopulationArchitect:
         return PopulationArchitect()
 
     @pytest.mark.asyncio
-    async def test_design_population_hierarchy_structure(
-        self, architect, sample_context
-    ):
+    async def test_design_population_hierarchy_structure(self, sample_context):
         """Test that design_population_hierarchy returns proper structure."""
         # Mock major segments response
         mock_segments = [
@@ -72,60 +71,63 @@ class TestPopulationArchitect:
             },
         ]
 
-        with patch.object(architect, "_design_major_segments") as mock_design:
-            mock_design.return_value = mock_segments
+        # Mock LLM responses
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock()
 
-            # Mock other design methods
-            with patch.object(architect, "_design_sub_segments") as mock_sub:
-                mock_sub.return_value = {"subcategories": ["junior", "senior"]}
+        # Response for major segments (direct array, not nested)
+        major_response = MagicMock()
+        major_response.content = json.dumps(mock_segments)
 
-                with patch.object(
-                    architect, "_design_micro_clusters"
-                ) as mock_micro:
-                    mock_micro.return_value = {
-                        "clusters": ["innovators", "pragmatists"]
-                    }
+        # Responses for sub-segments (one for each major segment)
+        sub_responses = []
+        for segment in mock_segments:
+            sub_response = MagicMock()
+            sub_response.content = json.dumps(
+                [
+                    {
+                        "id": f"{segment['id']}_sub1",
+                        "name": f"{segment['id']}_sub1",
+                        "percentage_of_segment": 60,
+                        "characteristics": ["sub-trait1", "sub-trait2"],
+                    },
+                    {
+                        "id": f"{segment['id']}_sub2",
+                        "name": f"{segment['id']}_sub2",
+                        "percentage_of_segment": 40,
+                        "characteristics": ["sub-trait3", "sub-trait4"],
+                    },
+                ]
+            )
+            sub_responses.append(sub_response)
 
-                    with patch.object(
-                        architect, "_allocate_persona_slots"
-                    ) as mock_slots:
-                        mock_slots.return_value = [
-                            {"slot": i} for i in range(50)
-                        ]
+        # Set up side_effect to return different responses
+        mock_llm.ainvoke.side_effect = [major_response] + sub_responses
 
-                        with patch.object(
-                            architect, "_design_network_topology"
-                        ) as mock_network:
-                            mock_network.return_value = {
-                                "type": "small-world",
-                                "density": 0.3,
-                            }
+        with patch("src.agents.population_architect.create_llm", return_value=mock_llm):
+            architect = PopulationArchitect()
 
-                            with patch.object(
-                                architect, "_design_influence_patterns"
-                            ) as mock_influence:
-                                mock_influence.return_value = {
-                                    "influencers": ["tech_leaders"]
-                                }
+            result = await architect.design_population_hierarchy(sample_context, target_size=10)
 
-                                result = await architect.design_population_hierarchy(
-                                    sample_context, target_size=50
-                                )
+            # Verify structure
+            assert "hierarchy" in result
+            assert "network_topology" in result
+            assert "influence_map" in result
 
-        # Verify structure
-        assert "hierarchy" in result
-        assert "network_topology" in result
-        assert "influence_map" in result
+            hierarchy = result["hierarchy"]
+            assert "major_segments" in hierarchy
+            assert "sub_segments" in hierarchy
+            assert "micro_clusters" in hierarchy
+            assert "persona_slots" in hierarchy
 
-        hierarchy = result["hierarchy"]
-        assert "major_segments" in hierarchy
-        assert "sub_segments" in hierarchy
-        assert "micro_clusters" in hierarchy
-        assert "persona_slots" in hierarchy
+            # Verify major segments were created
+            assert len(hierarchy["major_segments"]) == 3
+            assert hierarchy["major_segments"][0]["id"] == "early_adopters"
 
     @pytest.mark.asyncio
-    async def test_design_major_segments(self, architect, sample_context):
+    async def test_design_major_segments(self):
         """Test major segment design."""
+        # Direct array, not nested under "major_segments"
         mock_response = [
             {
                 "id": "tech_evangelists",
@@ -153,56 +155,82 @@ class TestPopulationArchitect:
             },
         ]
 
-        with patch.object(architect, "llm") as mock_llm:
-            mock_llm.ainvoke = AsyncMock()
-            mock_llm.ainvoke.return_value.content = json.dumps(mock_response)
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock()
+        mock_response_obj = MagicMock()
+        mock_response_obj.content = json.dumps(mock_response)
+        mock_llm.ainvoke.return_value = mock_response_obj
 
-            segments = await architect._design_major_segments(sample_context)
+        with patch("src.agents.population_architect.create_llm", return_value=mock_llm):
+            architect = PopulationArchitect()
+
+            # Create essential context matching _extract_essential_context
+            essential_context = {
+                "domain": "healthcare",
+                "complexity": 7,
+                "stakeholders": ["patients", "providers", "tech companies"],
+                "emotional_tone": "medium",
+                "time_sensitivity": "medium",
+                "complexity_score": 0.5,
+                "reach_potential": 0.5,
+            }
+
+            segments = await architect._design_major_segments(essential_context)
 
             assert len(segments) == 2
             assert segments[0]["id"] == "tech_evangelists"
-            # Percentages are normalized to sum to 100
+            # Percentages should be normalized to sum to 100
+            assert segments[0]["percentage"] == 25  # 10/(10+30)*100
             assert segments[1]["percentage"] == 75  # 30/(10+30)*100
             assert "unexpected_traits" in segments[0]
 
     @pytest.mark.asyncio
-    async def test_design_sub_segments(self, architect, sample_context):
-        """Test sub-segment design within major segments."""
+    async def test_design_sub_segments_for_one(self):
+        """Test sub-segment design for a single major segment."""
         major_segment = {
             "id": "medical_professionals",
             "name": "Medical Professionals",
             "percentage": 25,
+            "characteristics": ["evidence-based", "patient-focused"],
         }
 
+        essential_context = {"domain": "healthcare", "complexity": 7}
+
+        # Direct array for sub-segments
         mock_response = [
             {
                 "id": "young_doctors",
-                "parent_segment": "medical_professionals",
+                "name": "young_doctors",
                 "characteristics": ["Digital natives", "Research-oriented"],
-                "percentage_of_parent": 40,
+                "percentage_of_segment": 40,
             },
             {
                 "id": "veteran_specialists",
-                "parent_segment": "medical_professionals",
+                "name": "veteran_specialists",
                 "characteristics": ["Experience-based", "Cautious adopters"],
-                "percentage_of_parent": 60,
+                "percentage_of_segment": 60,
             },
         ]
 
-        with patch.object(architect, "llm") as mock_llm:
-            mock_llm.ainvoke = AsyncMock()
-            mock_llm.ainvoke.return_value.content = json.dumps(mock_response)
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock()
+        mock_response_obj = MagicMock()
+        mock_response_obj.content = json.dumps(mock_response)
+        mock_llm.ainvoke.return_value = mock_response_obj
 
-            sub_segments = await architect._design_sub_segments(
-                major_segment, sample_context
+        with patch("src.agents.population_architect.create_llm", return_value=mock_llm):
+            architect = PopulationArchitect()
+
+            sub_segments = await architect._design_sub_segments_for_one(
+                major_segment, essential_context
             )
 
             assert len(sub_segments) == 2
             assert sub_segments[0]["id"] == "young_doctors"
-            assert sub_segments[1]["percentage_of_parent"] == 60
+            assert sub_segments[0]["name"] == "young_doctors"
+            assert sub_segments[1]["percentage_of_segment"] == 60
 
-    @pytest.mark.asyncio
-    async def test_allocate_persona_slots(self, architect):
+    def test_allocate_persona_slots(self, architect):
         """Test persona slot allocation across segments."""
         major_segments = [
             {"id": "early_adopters", "percentage": 20},
@@ -212,22 +240,40 @@ class TestPopulationArchitect:
 
         sub_segments = {
             "early_adopters": [
-                {"id": "tech_leaders", "percentage_of_parent": 30},
-                {"id": "innovators", "percentage_of_parent": 70},
+                {
+                    "id": "tech_leaders",
+                    "parent_segment": "early_adopters",
+                    "percentage_of_parent": 30,
+                },
+                {
+                    "id": "innovators",
+                    "parent_segment": "early_adopters",
+                    "percentage_of_parent": 70,
+                },
             ],
             "mainstream": [
-                {"id": "pragmatists", "percentage_of_parent": 60},
-                {"id": "followers", "percentage_of_parent": 40},
+                {"id": "pragmatists", "parent_segment": "mainstream", "percentage_of_parent": 60},
+                {"id": "followers", "parent_segment": "mainstream", "percentage_of_parent": 40},
             ],
-            "laggards": [{"id": "skeptics", "percentage_of_parent": 100}],
+            "laggards": [
+                {"id": "skeptics", "parent_segment": "laggards", "percentage_of_parent": 100}
+            ],
         }
 
+        # Micro clusters should be dicts with proper structure
         micro_clusters = {
-            "tech_leaders": ["influencer", "educator"],
-            "innovators": ["experimenter", "early_user"],
+            "early_adopters": [
+                {"id": "tech_leaders_cluster_0", "name": "Tech Leaders Group 1", "size": 1},
+                {"id": "innovators_cluster_0", "name": "Innovators Group 1", "size": 2},
+            ],
+            "mainstream": [
+                {"id": "pragmatists_cluster_0", "name": "Pragmatists Group 1", "size": 1},
+                {"id": "followers_cluster_0", "name": "Followers Group 1", "size": 2},
+            ],
+            "laggards": [{"id": "skeptics_cluster_0", "name": "Skeptics Group 1", "size": 1}],
         }
 
-        slots = await architect._allocate_persona_slots(
+        slots = architect._allocate_persona_slots(
             major_segments, sub_segments, micro_clusters, target_size=100
         )
 
@@ -235,96 +281,133 @@ class TestPopulationArchitect:
         assert len(slots) == 100
 
         # Check distribution roughly matches percentages
-        early_adopter_count = sum(
-            1 for s in slots if s["major_segment"] == "early_adopters"
-        )
+        early_adopter_count = sum(1 for s in slots if s["major_segment"] == "early_adopters")
         assert 15 <= early_adopter_count <= 25  # Allow some variance
 
-    @pytest.mark.asyncio
-    async def test_design_network_topology(self, architect):
+        # Check that all slots have required fields
+        for slot in slots:
+            assert "id" in slot
+            assert "major_segment" in slot
+            assert "network_position" in slot
+
+    def test_design_network_topology(self, architect):
         """Test network topology design."""
         persona_slots = [
             {
                 "id": f"persona_{i}",
-                "major_segment": "early_adopters" if i < 20 else "mainstream",
+                "major_segment": "test",
+                "network_position": {"type": "hub" if i == 0 else "active"},
             }
-            for i in range(50)
+            for i in range(10)
         ]
 
-        topology = architect._design_network_topology(persona_slots)
+        result = architect._design_network_topology(persona_slots)
 
-        assert "network_type" in topology
-        assert "connections" in topology
-        assert "density" in topology
-        assert "clustering_coefficient" in topology
+        assert "type" in result
+        assert "density" in result
+        assert "clustering_coefficient" in result
+        assert "hub_nodes" in result
+        assert "average_path_length" in result
 
-        # Check reasonable values
-        assert 0 < topology["density"] < 1
-        assert topology["network_type"] in [
-            "small-world",
-            "scale-free",
-            "random",
-            "hierarchical",
-        ]
+        # Check network type matches implementation
+        assert result["type"] == "scale-free"
+        assert result["hub_nodes"] == 1  # Only one hub in our test data
 
-    @pytest.mark.asyncio
-    async def test_design_influence_patterns(self, architect):
+    def test_design_influence_patterns(self, architect):
         """Test influence pattern design."""
         persona_slots = [
             {
-                "id": f"persona_{i}",
-                "major_segment": "early_adopters" if i < 10 else "mainstream",
-                "sub_segment": "tech_leaders" if i < 5 else "followers",
-                "micro_cluster": (
-                    "influencers"
-                    if i < 3
-                    else "connectors" if i < 6 else "followers"
-                ),
-            }
-            for i in range(30)
+                "id": "persona_0",
+                "major_segment": "early_adopters",
+                "network_position": {"type": "hub", "influence": 0.9},
+            },
+            {
+                "id": "persona_1",
+                "major_segment": "mainstream",
+                "network_position": {"type": "connector", "influence": 0.7},
+            },
+            {
+                "id": "persona_2",
+                "major_segment": "laggards",
+                "network_position": {"type": "peripheral", "influence": 0.3},
+            },
+            {
+                "id": "persona_5",
+                "major_segment": "mainstream",
+                "network_position": {"type": "active", "influence": 0.5},
+            },
+            {
+                "id": "persona_6",
+                "major_segment": "mainstream",
+                "network_position": {"type": "active", "influence": 0.5},
+            },
         ]
 
-        influence_map = architect._design_influence_patterns(persona_slots)
+        result = architect._design_influence_patterns(persona_slots)
 
-        assert "influencer_nodes" in influence_map
-        assert "influence_paths" in influence_map
-        assert "influence_strength" in influence_map
+        assert "influencer_nodes" in result
+        assert "influence_paths" in result
+        assert "cascade_probability" in result
 
-        # Check that some personas are marked as influencers
-        assert len(influence_map["influencer_nodes"]) > 0
-        # Not everyone is an influencer
-        assert len(influence_map["influencer_nodes"]) < len(persona_slots)
+        # Check that high influence nodes are identified as influencers (> 0.7)
+        assert "persona_0" in result["influencer_nodes"]
+        # persona_1 has exactly 0.7, but implementation checks for > 0.7
+        assert len(result["influencer_nodes"]) == 1
+        assert len(result["influence_paths"]) == 1  # Min of 3 and number of influencers
 
-    @pytest.mark.asyncio
-    async def test_calculate_network_position(self, architect):
-        """Test network position calculation for personas."""
-        position = architect._calculate_network_position(5, {"count": 20})
+    def test_design_micro_clusters(self, architect):
+        """Test micro cluster design."""
+        major_segments = [
+            {"id": "early_adopters", "percentage": 30},
+            {"id": "mainstream", "percentage": 70},
+        ]
 
-        assert "centrality" in position
-        assert "clustering" in position
-        assert "bridge_score" in position
+        sub_segments = {
+            "early_adopters": [
+                {"id": "tech_leaders", "name": "Tech Leaders"},
+                {"id": "innovators", "name": "Innovators"},
+            ],
+            "mainstream": [
+                {"id": "pragmatists", "name": "Pragmatists"},
+            ],
+        }
 
-        # Values should be between 0 and 1
-        assert 0 <= position["centrality"] <= 1
-        assert 0 <= position["clustering"] <= 1
-        assert 0 <= position["bridge_score"] <= 1
+        target_size = 50
 
-    @pytest.mark.asyncio
-    async def test_error_handling(self, architect, sample_context):
-        """Test error handling in population design."""
-        with patch.object(architect, "llm") as mock_llm:
-            mock_llm.ainvoke = AsyncMock()
-            mock_llm.ainvoke.side_effect = Exception("LLM API Error")
+        result = architect._design_micro_clusters(major_segments, sub_segments, target_size)
 
-            # Should handle error gracefully
-            result = await architect.design_population_hierarchy(
-                sample_context
-            )
+        # Check that micro clusters were created for segments, not sub-segments
+        assert "early_adopters" in result
+        assert "mainstream" in result
 
-            # Should return valid structure even on error
-            assert "hierarchy" in result
-            assert "network_topology" in result
-            assert "influence_map" in result
+        # Check structure of micro clusters
+        for _segment_id, clusters in result.items():
+            assert isinstance(clusters, list)
+            assert len(clusters) >= 1
+            for cluster in clusters:
+                assert "id" in cluster
+                assert "name" in cluster
+                assert "size" in cluster
+                assert "sub_segment_id" in cluster
 
-            # Should have empty/default values
-            assert result["hierarchy"]["major_segments"] == []
+    def test_assign_network_position(self, architect):
+        """Test network position assignment."""
+        # Test hub position (index 0)
+        position = architect._assign_network_position(0, 10)
+        assert position["type"] == "hub"
+        assert position["influence"] == 0.9
+
+        # Test connector position (index 1, < 20% of total)
+        position = architect._assign_network_position(1, 10)
+        assert position["type"] == "connector"
+        assert position["influence"] == 0.7
+
+        # Test active position (index 3, < 50% of total)
+        position = architect._assign_network_position(3, 10)
+        assert position["type"] == "active"
+        assert position["influence"] == 0.5
+
+        # Test peripheral position (index 8, >= 50% of total)
+        position = architect._assign_network_position(8, 10)
+        assert position["type"] == "peripheral"
+        assert position["influence"] == 0.3

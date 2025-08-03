@@ -30,6 +30,13 @@ VIOLATION_CONSEQUENCE="Immediate task termination and restart with knowledge loa
 ### 1️⃣ MANDATORY RULES VERIFICATION (必須ルール検証絶対)
 ```bash
 # MANDATORY RULES CHECKLIST DISPLAY (必須ルール群チェックリスト表示)
+# 📋 QUICK ACCESS TOOLS AVAILABLE:
+#   • show_rules - Interactive mandatory rules checklist
+#   • full_rules - Complete mandatory rules documentation
+#   • rules_summary - Quick 10-point summary
+#   • new_task_checklist [name] - Create task-specific checklist
+# 📚 SETUP: source /home/devuser/workspace/scripts/mandatory_rules_quick_access.sh
+
 function display_mandatory_rules_checklist() {
     echo "🚨 MANDATORY RULES VERIFICATION CHECKLIST"
     echo "========================================="
@@ -48,6 +55,7 @@ function display_mandatory_rules_checklist() {
     echo "   • memory-bank/00-core/*mandatory*.md"
     echo "   • memory-bank/11-checklist-driven/checklist_driven_execution_framework.md"
     echo "   • memory-bank/02-organization/tmux_organization_success_patterns.md (for tmux activities)"
+    echo "   • checklists/mandatory_rules_checklist.md (FULL CHECKLIST)"
     echo ""
     read -p "❓ Confirm ALL mandatory rules verified before starting task (y/N): " confirmation
     [[ "$confirmation" != "y" && "$confirmation" != "Y" ]] && return 1
@@ -280,6 +288,8 @@ FORBIDDEN=("probably" "maybe" "I think" "seems like")
 |-----------|----------------|-----------|
 | **Session Start** | Run initialization | `source memory-bank/00-core/session_initialization_script.md` |
 | **Any Task** | Load knowledge first | `smart_knowledge_load "domain"` |
+| **Mandatory Rules** | Interactive checklist | `show_rules` or `checklists/mandatory_rules_checklist.md` |
+| **Task Checklist** | Create from template | `new_task_checklist "task_name"` |
 | **Commands** | Essential reference | `memory-bank/09-meta/essential_commands_reference.md` |
 | **Cognee Ops** | Strategic hub | `memory-bank/01-cognee/cognee_strategic_operations_hub.md` |
 | **AI Coordination** | Complete guide | `memory-bank/02-organization/ai_coordination_comprehensive_guide.md` |

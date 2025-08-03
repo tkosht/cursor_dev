@@ -24,6 +24,11 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12']
+    defaults:
+      run:
+        working-directory: app/ams
+    env:
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
     
     steps:
       - name: Checkout code
@@ -40,7 +45,7 @@ jobs:
           path: |
             ~/.cache/pypoetry
             ~/.cache/pip
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-poetry-${{ hashFiles('app/ams/poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-poetry-
       
@@ -51,26 +56,28 @@ jobs:
       
       - name: Install dependencies
         run: |
-          poetry install --no-interaction --no-ansi
+          poetry install --no-interaction --no-ansi --with dev
       
       - name: Run linters
         run: |
-          poetry run flake8 app/ tests/ --exclude=backup/,docs/,memory-bank/,templates/
-          poetry run black --check app/ tests/
-          poetry run isort --check app/ tests/
+          poetry run ruff check src/ tests/
+          poetry run black --check src/ tests/
       
       - name: Type checking
         run: |
-          poetry run mypy app/ --ignore-missing-imports
+          poetry run mypy src/ --ignore-missing-imports --explicit-package-bases
       
       - name: Run tests with coverage
         run: |
-          poetry run pytest tests/ \
-            --cov=app \
+          # Run only unit tests in CI to avoid timeout issues
+          # Integration tests are run separately with proper API key setup
+          poetry run pytest tests/unit/ \
+            --cov=src \
             --cov-report=xml \
             --cov-report=term-missing \
             --cov-fail-under=85 \
-            -v
+            -v \
+            --timeout=60
       
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4

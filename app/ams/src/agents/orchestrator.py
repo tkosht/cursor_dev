@@ -76,7 +76,7 @@ class ArticleReviewState(TypedDict):
 class OrchestratorAgent:
     """Main orchestrator agent that controls the article review workflow"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.config = get_config()
         self.llm = create_llm()
         self.workflow = self._build_workflow()
@@ -155,9 +155,7 @@ class OrchestratorAgent:
                     update={
                         "current_phase": "completed",
                         "end_time": datetime.now(),
-                        "messages": [
-                            ("system", "Review process completed successfully")
-                        ],
+                        "messages": [("system", "Review process completed successfully")],
                     },
                 )
 
@@ -169,9 +167,7 @@ class OrchestratorAgent:
                         **state.get("phase_status", {}),
                         current_phase: "completed",
                     },
-                    "messages": [
-                        ("system", f"Transitioning to {next_phase} phase")
-                    ],
+                    "messages": [("system", f"Transitioning to {next_phase} phase")],
                 },
             )
 
@@ -252,9 +248,7 @@ class OrchestratorAgent:
         personas = await generator.generate_personas(
             article_content=state["article_content"],
             analysis_results=state["analysis_results"],
-            count=state.get(
-                "persona_count", self.config.simulation.population_size
-            ),
+            count=state.get("persona_count", self.config.simulation.population_size),
         )
 
         return {
@@ -345,19 +339,17 @@ class OrchestratorAgent:
             },
         )
 
-    def compile(self, checkpointer=None):
+    def compile(self, checkpointer: Any = None) -> Any:
         """Compile the workflow with optional checkpointing"""
         if checkpointer is None:
             checkpointer = MemorySaver()
 
         # Add the single persona evaluation node
-        self.workflow.add_node(
-            "evaluate_single_persona", self._evaluate_single_persona
-        )
+        self.workflow.add_node("evaluate_single_persona", self._evaluate_single_persona)  # type: ignore[type-var]
 
         return self.workflow.compile(checkpointer=checkpointer)
 
-    async def _evaluate_single_persona(self, state: dict) -> dict:
+    async def _evaluate_single_persona(self, state: dict[str, Any]) -> dict[str, Any]:
         """Evaluate a single persona"""
         from .evaluator import EvaluationAgent
 

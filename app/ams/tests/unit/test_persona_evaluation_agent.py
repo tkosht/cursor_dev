@@ -8,8 +8,8 @@ import json
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+
 from src.core.types import (
-    EvaluationMetric,
     EvaluationResult,
     InformationChannel,
     PersonaAttributes,
@@ -57,16 +57,16 @@ class TestPersonaEvaluationAgent:
         """Sample article content for testing"""
         return """
         # Advanced Machine Learning Techniques for Real-World Applications
-        
+
         Recent breakthroughs in deep learning have revolutionized how we approach
         complex problems. This article explores cutting-edge techniques including
         transformer architectures, reinforcement learning, and neural architecture search.
-        
+
         ## Key Innovations
         - Self-attention mechanisms for better context understanding
         - Transfer learning for efficient model training
         - AutoML for democratizing AI development
-        
+
         ## Practical Applications
         These techniques are being applied in healthcare, finance, and autonomous systems
         with remarkable success rates.
@@ -101,48 +101,50 @@ class TestPersonaEvaluationAgent:
     @pytest.fixture
     def mock_llm_response(self):
         """Mock LLM response for evaluation"""
-        return json.dumps({
-            "relevance_score": 95,
-            "clarity_score": 75,
-            "credibility_score": 88,
-            "emotional_impact_score": 82,
-            "action_potential_score": 78,
-            "interest_alignment": 0.92,
-            "value_alignment": 0.85,
-            "bias_resonance": 0.7,
-            "strengths": [
-                "Highly relevant to persona's interests in AI and ML",
-                "Technical depth matches persona's expertise level",
-                "Innovative content aligns with persona's values",
-                "Practical applications resonate with efficiency focus",
-            ],
-            "weaknesses": [
-                "Could be more accessible despite technical audience",
-                "Limited discussion of implementation challenges",
-                "Missing cost-benefit analysis for practical adoption",
-            ],
-            "improvement_suggestions": [
-                "Add code examples for better understanding",
-                "Include case studies from Japanese tech companies",
-                "Discuss ROI metrics for business applications",
-            ],
-            "predicted_engagement": {
-                "read_completion_probability": 0.88,
-                "share_probability": 0.75,
-                "bookmark_probability": 0.82,
-                "discussion_probability": 0.65,
-            },
-            "emotional_response": {
-                "primary_emotion": "excitement",
-                "intensity": 0.78,
-                "triggers": ["innovation", "practical_applications"],
-            },
-            "key_insights": [
-                "Article strongly resonates with technical innovation values",
-                "Content depth appropriate for persona's expertise",
-                "Practical focus aligns with efficiency orientation",
-            ],
-        })
+        return json.dumps(
+            {
+                "relevance_score": 95,
+                "clarity_score": 75,
+                "credibility_score": 88,
+                "emotional_impact_score": 82,
+                "action_potential_score": 78,
+                "interest_alignment": 0.92,
+                "value_alignment": 0.85,
+                "bias_resonance": 0.7,
+                "strengths": [
+                    "Highly relevant to persona's interests in AI and ML",
+                    "Technical depth matches persona's expertise level",
+                    "Innovative content aligns with persona's values",
+                    "Practical applications resonate with efficiency focus",
+                ],
+                "weaknesses": [
+                    "Could be more accessible despite technical audience",
+                    "Limited discussion of implementation challenges",
+                    "Missing cost-benefit analysis for practical adoption",
+                ],
+                "improvement_suggestions": [
+                    "Add code examples for better understanding",
+                    "Include case studies from Japanese tech companies",
+                    "Discuss ROI metrics for business applications",
+                ],
+                "predicted_engagement": {
+                    "read_completion_probability": 0.88,
+                    "share_probability": 0.75,
+                    "bookmark_probability": 0.82,
+                    "discussion_probability": 0.65,
+                },
+                "emotional_response": {
+                    "primary_emotion": "excitement",
+                    "intensity": 0.78,
+                    "triggers": ["innovation", "practical_applications"],
+                },
+                "key_insights": [
+                    "Article strongly resonates with technical innovation values",
+                    "Content depth appropriate for persona's expertise",
+                    "Practical focus aligns with efficiency orientation",
+                ],
+            }
+        )
 
     @pytest.mark.asyncio
     async def test_init(self):
@@ -150,14 +152,19 @@ class TestPersonaEvaluationAgent:
         from src.agents.evaluator import EvaluationAgent
 
         agent = EvaluationAgent()
-        
+
         assert agent.config is not None
         assert agent.llm is not None
         assert hasattr(agent, "evaluate_persona")
 
     @pytest.mark.asyncio
     async def test_evaluate_persona_success(
-        self, sample_persona, sample_article, sample_analysis_results, mock_llm_response, mock_config
+        self,
+        sample_persona,
+        sample_article,
+        sample_analysis_results,
+        mock_llm_response,
+        mock_config,
     ):
         """Test successful persona evaluation"""
         from src.agents.evaluator import EvaluationAgent
@@ -167,38 +174,38 @@ class TestPersonaEvaluationAgent:
             mock_llm = Mock()
             mock_llm.ainvoke = AsyncMock(return_value=Mock(content=mock_llm_response))
             mock_create_llm.return_value = mock_llm
-            
+
             agent = EvaluationAgent()
-            
+
             result = await agent.evaluate_persona(
                 persona=sample_persona,
                 article_content=sample_article,
                 analysis_results=sample_analysis_results,
             )
-            
+
             # Verify result structure
             assert isinstance(result, EvaluationResult)
             # Check persona_id is generated correctly
             assert len(result.persona_id) == 12  # MD5 hash truncated to 12 chars
-            
+
             # Verify metrics structure
             assert len(result.metrics) == 5
             relevance_metric = next(m for m in result.metrics if m.name == "relevance")
             assert relevance_metric.score == 95
-            
+
             # Verify overall score
             assert result.overall_score > 0
-            
+
             # Verify qualitative feedback
             assert len(result.strengths) == 4
             assert len(result.weaknesses) == 3
             assert len(result.suggestions) == 3
-            
+
             # Verify predicted behavior
             assert result.sharing_probability == 0.75
             assert result.engagement_level in ["low", "medium", "high"]
             assert result.sentiment in ["negative", "neutral", "positive"]
-            
+
             # Verify LLM was called with proper prompt
             mock_llm.ainvoke.assert_called_once()
             call_args = mock_llm.ainvoke.call_args[0][0]
@@ -216,20 +223,22 @@ class TestPersonaEvaluationAgent:
         # Mock LLM to fail once then succeed
         with patch("src.agents.evaluator.create_llm") as mock_create_llm:
             mock_llm = Mock()
-            mock_llm.ainvoke = AsyncMock(side_effect=[
-                Exception("API Error"),
-                Mock(content=mock_llm_response),
-            ])
+            mock_llm.ainvoke = AsyncMock(
+                side_effect=[
+                    Exception("API Error"),
+                    Mock(content=mock_llm_response),
+                ]
+            )
             mock_create_llm.return_value = mock_llm
-            
+
             agent = EvaluationAgent()
-            
+
             result = await agent.evaluate_persona(
                 persona=sample_persona,
                 article_content=sample_article,
                 analysis_results=sample_analysis_results,
             )
-        
+
         # Should succeed after retry
         assert isinstance(result, EvaluationResult)
         assert mock_llm.ainvoke.call_count == 2
@@ -246,15 +255,15 @@ class TestPersonaEvaluationAgent:
             mock_llm = Mock()
             mock_llm.ainvoke = AsyncMock(return_value=Mock(content="Invalid JSON response"))
             mock_create_llm.return_value = mock_llm
-            
+
             agent = EvaluationAgent()
-            
+
             result = await agent.evaluate_persona(
                 persona=sample_persona,
                 article_content=sample_article,
                 analysis_results=sample_analysis_results,
             )
-        
+
         # Should return default evaluation
         assert isinstance(result, EvaluationResult)
         assert len(result.metrics) > 0  # Should have default metrics
@@ -266,31 +275,31 @@ class TestPersonaEvaluationAgent:
     ):
         """Test timeout handling"""
         import asyncio
-        
+
         from src.agents.evaluator import EvaluationAgent
 
         # Mock LLM to timeout
         async def slow_response(*args, **kwargs):
             await asyncio.sleep(10)  # Longer than timeout
-            
+
         with patch("src.agents.evaluator.create_llm") as mock_create_llm:
             mock_llm = Mock()
             mock_llm.ainvoke = slow_response
             mock_create_llm.return_value = mock_llm
-            
+
             with patch("src.agents.evaluator.get_config") as mock_get_config:
                 mock_config = Mock()
                 mock_config.llm.timeout = 0.1  # Short timeout
                 mock_get_config.return_value = mock_config
-                
+
                 agent = EvaluationAgent()
-                
+
                 result = await agent.evaluate_persona(
                     persona=sample_persona,
                     article_content=sample_article,
                     analysis_results=sample_analysis_results,
                 )
-        
+
         # Should return result despite timeout
         assert isinstance(result, EvaluationResult)
 
@@ -305,15 +314,15 @@ class TestPersonaEvaluationAgent:
         with patch("src.agents.evaluator.create_llm") as mock_create_llm:
             mock_llm = Mock()
             prompt_captured = None
-            
+
             async def capture_prompt(prompt):
                 nonlocal prompt_captured
                 prompt_captured = prompt
                 return Mock(content="{}")
-                
+
             mock_llm.ainvoke = capture_prompt
             mock_create_llm.return_value = mock_llm
-            
+
             agent = EvaluationAgent()
             # Use the private method directly for testing
             prompt = agent._generate_evaluation_prompt(
@@ -321,7 +330,7 @@ class TestPersonaEvaluationAgent:
                 article_content=sample_article,
                 analysis_results=sample_analysis_results,
             )
-        
+
         # Verify prompt contains key information
         assert "Data Scientist" in prompt
         assert "28" in prompt
@@ -330,7 +339,7 @@ class TestPersonaEvaluationAgent:
         assert "machine learning" in prompt.lower()
         assert "Flesch Reading Ease" in prompt  # Check for the formatted version
         assert "positive" in prompt
-        
+
         # Verify prompt structure
         assert "You are evaluating" in prompt
         assert "Demographics:" in prompt
@@ -346,16 +355,16 @@ class TestPersonaEvaluationAgent:
         with patch("src.agents.evaluator.create_llm") as mock_create_llm:
             mock_llm = Mock()
             mock_create_llm.return_value = mock_llm
-            
+
             agent = EvaluationAgent()
-            
+
             # Use the private method directly for testing
             result = agent._parse_evaluation_response(
                 response=mock_llm_response,
                 persona_id="test_persona_123",
                 article_id="test_article_456",
             )
-        
+
         assert isinstance(result, EvaluationResult)
         assert result.persona_id == "test_persona_123"
         assert result.article_id == "test_article_456"
@@ -372,22 +381,24 @@ class TestPersonaEvaluationAgent:
         with patch("src.agents.evaluator.create_llm") as mock_create_llm:
             mock_llm = Mock()
             mock_create_llm.return_value = mock_llm
-            
+
             agent = EvaluationAgent()
-            
-            partial_response = json.dumps({
-                "relevance_score": 80,
-                "clarity_score": 70,
-                # Missing other required fields
-            })
-            
+
+            partial_response = json.dumps(
+                {
+                    "relevance_score": 80,
+                    "clarity_score": 70,
+                    # Missing other required fields
+                }
+            )
+
             # Use the private method directly for testing
             result = agent._parse_evaluation_response(
                 response=partial_response,
                 persona_id="test_persona_123",
                 article_id="test_article_456",
             )
-        
+
         # Should handle gracefully with defaults
         assert isinstance(result, EvaluationResult)
         # Check metrics instead of individual scores
@@ -418,26 +429,30 @@ class TestPersonaEvaluationAgent:
                 preferred_channels=[InformationChannel.NEWS_WEBSITE],
             )
             personas.append(persona)
-        
+
         # Mock LLM responses
         with patch("src.agents.evaluator.create_llm") as mock_create_llm:
             mock_llm = Mock()
-            mock_llm.ainvoke = AsyncMock(return_value=Mock(
-                content=json.dumps({
-                    "relevance_score": 85,
-                    "clarity_score": 75,
-                    "credibility_score": 80,
-                    "emotional_impact_score": 70,
-                    "action_potential_score": 75,
-                    "strengths": ["Good"],
-                    "weaknesses": ["Could improve"],
-                    "improvement_suggestions": ["Add examples"],
-                })
-            ))
+            mock_llm.ainvoke = AsyncMock(
+                return_value=Mock(
+                    content=json.dumps(
+                        {
+                            "relevance_score": 85,
+                            "clarity_score": 75,
+                            "credibility_score": 80,
+                            "emotional_impact_score": 70,
+                            "action_potential_score": 75,
+                            "strengths": ["Good"],
+                            "weaknesses": ["Could improve"],
+                            "improvement_suggestions": ["Add examples"],
+                        }
+                    )
+                )
+            )
             mock_create_llm.return_value = mock_llm
-            
+
             agent = EvaluationAgent()
-            
+
             # Evaluate all personas
             results = []
             for persona in personas:
@@ -447,7 +462,7 @@ class TestPersonaEvaluationAgent:
                     analysis_results=sample_analysis_results,
                 )
                 results.append(result)
-        
+
         assert len(results) == 3
         assert all(isinstance(r, EvaluationResult) for r in results)
         assert mock_llm.ainvoke.call_count == 3
@@ -464,15 +479,15 @@ class TestPersonaEvaluationAgent:
             mock_llm = Mock()
             mock_llm.ainvoke = AsyncMock(side_effect=Exception("Test error"))
             mock_create_llm.return_value = mock_llm
-            
+
             agent = EvaluationAgent()
-            
+
             # Should not raise, but log error
             result = await agent.evaluate_persona(
                 persona=sample_persona,
                 article_content=sample_article,
                 analysis_results=sample_analysis_results,
             )
-        
+
         assert isinstance(result, EvaluationResult)
         # Check if error was logged (implementation dependent)

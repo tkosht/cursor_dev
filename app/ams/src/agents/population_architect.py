@@ -1,57 +1,57 @@
-"""Population Architect for hierarchical persona generation.
+"""Optimized Population Architect for Article Market Simulator.
 
-This module designs the hierarchical structure of persona populations
-based on article context analysis.
+This module designs population hierarchies for realistic article distribution.
+Optimized version reduces prompt size and improves performance.
 """
 
-import json
-import random
-from typing import Any
+import asyncio
+from typing import Any, cast
 
 from src.utils.json_parser import parse_llm_json_response
 from src.utils.llm_factory import create_llm
 
 
 class PopulationArchitect:
-    """Design the hierarchical structure of the persona population."""
+    """Design population hierarchies and network structures.
 
-    def __init__(self):
-        """Initialize the PopulationArchitect."""
+    Optimized to reduce prompt sizes and improve performance.
+    """
+
+    def __init__(self) -> None:
         self.llm = create_llm()
 
     async def design_population_hierarchy(
-        self, context: dict[str, Any], target_size: int = 50
+        self, context: dict[str, Any], target_size: int = 10
     ) -> dict[str, Any]:
-        """Create a hierarchical population structure.
+        """Design a hierarchical population structure.
 
         Args:
-            context: Article context analysis results
-            target_size: Target number of personas to generate
+            context: Analysis context from DeepContextAnalyzer
+            target_size: Target number of personas
 
         Returns:
             Dict containing:
-                - hierarchy: Hierarchical population structure
-                - network_topology: Network relationship design
-                - influence_map: Influence patterns between personas
+                - hierarchy: Major segments, sub-segments, micro-clusters
+                - network_topology: Network structure
+                - influence_map: Influence patterns
         """
         try:
-            # Level 1: Major segments
-            major_segments = await self._design_major_segments(context)
+            # Extract only essential context info
+            essential_context = self._extract_essential_context(context)
 
-            # Level 2: Sub-segments within each major segment
-            sub_segments = {}
-            for segment in major_segments:
-                sub_segments[segment["id"]] = await self._design_sub_segments(
-                    segment, context
-                )
+            # Design major segments (3-5)
+            major_segments = await self._design_major_segments(essential_context)
 
-            # Level 3: Micro-clusters for nuanced behaviors
-            micro_clusters = await self._design_micro_clusters(
-                sub_segments, context
+            # Design sub-segments concurrently
+            sub_segments = await self._design_sub_segments_parallel(
+                major_segments, essential_context
             )
 
-            # Level 4: Individual persona slots with relationships
-            persona_slots = await self._allocate_persona_slots(
+            # Design micro-clusters based on segments
+            micro_clusters = self._design_micro_clusters(major_segments, sub_segments, target_size)
+
+            # Allocate personas to slots
+            persona_slots = self._allocate_persona_slots(
                 major_segments, sub_segments, micro_clusters, target_size
             )
 
@@ -62,12 +62,8 @@ class PopulationArchitect:
                     "micro_clusters": micro_clusters,
                     "persona_slots": persona_slots,
                 },
-                "network_topology": self._design_network_topology(
-                    persona_slots
-                ),
-                "influence_map": self._design_influence_patterns(
-                    persona_slots
-                ),
+                "network_topology": self._design_network_topology(persona_slots),
+                "influence_map": self._design_influence_patterns(persona_slots),
             }
 
         except Exception:
@@ -86,357 +82,240 @@ class PopulationArchitect:
                 },
             }
 
+    def _extract_essential_context(self, context: dict[str, Any]) -> dict[str, Any]:
+        """Extract only essential information from context to reduce prompt size."""
+        core_context = context.get("core_context", {})
+
+        return {
+            "domain": core_context.get("domain_analysis", {}).get("primary_domain", "general"),
+            "complexity": core_context.get("domain_analysis", {}).get("technical_complexity", 5),
+            "stakeholders": core_context.get("stakeholder_mapping", {}).get("beneficiaries", [])[
+                :3
+            ],
+            "emotional_tone": core_context.get("emotional_landscape", {}).get(
+                "controversy_potential", "medium"
+            ),
+            "time_sensitivity": core_context.get("temporal_aspects", {}).get(
+                "time_sensitivity", "medium"
+            ),
+            "complexity_score": context.get("complexity_score", 0.5),
+            "reach_potential": context.get("reach_potential", 0.5),
+        }
+
     async def _design_major_segments(
-        self, context: dict[str, Any]
+        self, essential_context: dict[str, Any]
     ) -> list[dict[str, Any]]:
-        """Design major population segments based on context."""
+        """Design major population segments based on essential context."""
+        # Much shorter prompt with only essential context
         segment_prompt = f"""
-        Context: {json.dumps(context, indent=2)}
+        Article domain: {essential_context['domain']}
+        Complexity level: {essential_context['complexity']}/10
+        Key stakeholders: {', '.join(essential_context['stakeholders'][:3])}
+        Emotional tone: {essential_context['emotional_tone']}
 
-        Design 3-5 major population segments for this article.
-        Go beyond obvious categories. Consider:
+        Design 3-5 major population segments considering:
+        - Unexpected intersections and bridge populations
+        - Temporal relationships (early adopters, etc.)
+        - Emotional and professional stakes
+        - Different cognitive styles
 
-        1. UNEXPECTED INTERSECTIONS:
-           - People at the intersection of multiple interests
-           - Those with contradictory positions
-           - Bridge populations between communities
-
-        2. TEMPORAL RELATIONSHIPS:
-           - Early adopters vs late majority
-           - Those who knew "before it was cool"
-           - People waiting for this information
-
-        3. EMOTIONAL STAKES:
-           - High emotional investment
-           - Professional stakes
-           - Personal history connections
-
-        4. COGNITIVE STYLES:
-           - Analytical vs intuitive processors
-           - Visual vs textual learners
-           - Systems vs detail thinkers
-
-        For each segment, provide JSON array with:
-        - id: unique identifier
-        - name: segment name
-        - percentage: population percentage (total should be 100)
-        - characteristics: key traits (array)
-        - relationship_to_article: how they relate to content
-        - unexpected_traits: non-obvious characteristics (array)
+        Return JSON array with segments containing:
+        - id, name, percentage (total 100)
+        - characteristics (3-5 key traits)
+        - relationship_to_article
+        - unexpected_traits (1-2 non-obvious traits)
         """
 
         try:
             response = await self.llm.ainvoke(segment_prompt)
-            segments = parse_llm_json_response(response.content)
+            segments = parse_llm_json_response(str(response.content))
 
-            # Ensure it's a list
             if isinstance(segments, dict):
                 segments = segments.get("segments", [])
 
-            # Normalize percentages to sum to 100
+            # Normalize percentages
             total_percentage = sum(s.get("percentage", 0) for s in segments)
             if total_percentage > 0:
                 for segment in segments:
-                    segment["percentage"] = (
-                        segment.get("percentage", 0) / total_percentage
-                    ) * 100
+                    segment["percentage"] = (segment.get("percentage", 0) / total_percentage) * 100
 
-            return segments
+            return cast(list[dict[str, Any]], segments)
 
         except Exception:
             return []
 
-    async def _design_sub_segments(
-        self, segment: dict[str, Any], context: dict[str, Any]
+    async def _design_sub_segments_parallel(
+        self, major_segments: list[dict[str, Any]], essential_context: dict[str, Any]
+    ) -> dict[str, list[dict[str, Any]]]:
+        """Design sub-segments for all major segments in parallel."""
+        tasks = []
+        for segment in major_segments:
+            task = self._design_sub_segments_for_one(segment, essential_context)
+            tasks.append(task)
+
+        # Execute all sub-segment designs in parallel
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        sub_segments: dict[str, list[dict[str, Any]]] = {}
+        for i, segment in enumerate(major_segments):
+            if isinstance(results[i], list):
+                sub_segments[segment["id"]] = cast(list[dict[str, Any]], results[i])
+            else:
+                sub_segments[segment["id"]] = []
+
+        return sub_segments
+
+    async def _design_sub_segments_for_one(
+        self, segment: dict[str, Any], essential_context: dict[str, Any]
     ) -> list[dict[str, Any]]:
         """Design sub-segments within a major segment."""
+        # Minimal prompt without full context
         sub_segment_prompt = f"""
-        Major segment: {json.dumps(segment, indent=2)}
-        Article context: {json.dumps(context.get('core_context', {}), indent=2)}
+        Major segment: {segment['name']} ({segment.get('percentage', 25):.0f}%)
+        Characteristics: {', '.join(segment.get('characteristics', [])[:3])}
+        Article domain: {essential_context['domain']}
 
-        Create 2-4 sub-segments within this major segment.
-        Consider variations in:
+        Create 2-4 sub-segments with variations in:
         - Experience levels
-        - Specific interests within the segment
-        - Demographic variations
-        - Behavioral patterns
+        - Information sources
+        - Network positions
+        - Action likelihood
 
-        Return JSON array with:
-        - id: unique identifier
-        - parent_segment: {segment['id']}
-        - characteristics: specific traits (array)
-        - percentage_of_parent: percentage within parent segment (total 100)
+        Return JSON array with: id, name, percentage_of_segment, characteristics (2-3 traits)
         """
 
         try:
             response = await self.llm.ainvoke(sub_segment_prompt)
-            sub_segments = parse_llm_json_response(response.content)
+            sub_segs = parse_llm_json_response(str(response.content))
 
-            if isinstance(sub_segments, dict):
-                sub_segments = sub_segments.get("sub_segments", [])
+            if isinstance(sub_segs, dict):
+                sub_segs = sub_segs.get("sub_segments", [])
 
-            # Normalize percentages
-            total = sum(s.get("percentage_of_parent", 0) for s in sub_segments)
-            if total > 0:
-                for sub in sub_segments:
-                    sub["percentage_of_parent"] = (
-                        sub.get("percentage_of_parent", 0) / total
-                    ) * 100
-
-            return sub_segments
+            return cast(list[dict[str, Any]], sub_segs)
 
         except Exception:
             return []
 
-    async def _design_micro_clusters(
-        self, sub_segments: dict[str, list[dict]], context: dict[str, Any]
-    ) -> dict[str, list[str]]:
-        """Design micro-clusters for nuanced behaviors."""
-        # Simplified implementation - create 2-3 micro-clusters per sub-segment
+    def _design_micro_clusters(
+        self,
+        major_segments: list[dict[str, Any]],
+        sub_segments: dict[str, list[dict[str, Any]]],
+        target_size: int,
+    ) -> dict[str, list[dict[str, Any]]]:
+        """Design micro-clusters based on segments."""
         micro_clusters = {}
 
-        cluster_types = [
-            "innovators",
-            "pragmatists",
-            "skeptics",
-            "enthusiasts",
-            "connectors",
-            "mavens",
-            "salespeople",
-            "early_users",
-            "influencers",
-            "followers",
-            "critics",
-            "observers",
-        ]
+        for segment in major_segments:
+            segment_id = segment["id"]
+            sub_segs = sub_segments.get(segment_id, [])
 
-        for _segment_id, sub_segs in sub_segments.items():
+            clusters = []
             for sub_seg in sub_segs:
-                # Randomly assign 2-3 cluster types
-                num_clusters = random.randint(2, 3)
-                selected_clusters = random.sample(cluster_types, num_clusters)
-                micro_clusters[sub_seg["id"]] = selected_clusters
+                # Create 1-2 micro clusters per sub-segment
+                cluster_count = min(2, max(1, target_size // 10))
+                for i in range(cluster_count):
+                    clusters.append(
+                        {
+                            "id": f"{sub_seg['id']}_cluster_{i}",
+                            "name": f"{sub_seg['name']} Group {i+1}",
+                            "size": 1 + (i % 2),  # Alternate between 1-2 people
+                            "sub_segment_id": sub_seg["id"],
+                            "characteristics": sub_seg.get("characteristics", []),
+                        }
+                    )
+
+            micro_clusters[segment_id] = clusters
 
         return micro_clusters
 
-    async def _allocate_persona_slots(
+    def _allocate_persona_slots(
         self,
-        major_segments: list[dict],
-        sub_segments: dict[str, list[dict]],
-        micro_clusters: dict[str, list[str]],
+        major_segments: list[dict[str, Any]],
+        sub_segments: dict[str, list[dict[str, Any]]],
+        micro_clusters: dict[str, list[dict[str, Any]]],
         target_size: int,
     ) -> list[dict[str, Any]]:
-        """Allocate individual persona slots across the hierarchy."""
-        persona_slots: list[dict[str, Any]] = []
+        """Allocate personas to specific slots in the hierarchy."""
+        slots = []
+        persona_id = 0
 
-        # Calculate slots per major segment
-        for major_seg in major_segments:
-            segment_size = int(target_size * major_seg["percentage"] / 100)
+        for segment in major_segments:
+            segment_id = segment["id"]
+            segment_percentage = segment.get("percentage", 25) / 100
+            segment_personas = int(target_size * segment_percentage)
 
-            # Get sub-segments for this major segment
-            sub_segs = sub_segments.get(major_seg["id"], [])
+            sub_segs = sub_segments.get(segment_id, [])
+            clusters = micro_clusters.get(segment_id, [])
 
-            if not sub_segs:
-                # No sub-segments, create slots directly
-                for i in range(segment_size):
-                    persona_slots.append(
+            # Distribute personas across sub-segments
+            for i in range(segment_personas):
+                if sub_segs:
+                    sub_seg = sub_segs[i % len(sub_segs)]
+                    cluster = clusters[i % len(clusters)] if clusters else None
+
+                    slots.append(
                         {
-                            "id": f"persona_{len(persona_slots)}",
-                            "major_segment": major_seg["id"],
-                            "sub_segment": None,
-                            "micro_cluster": None,
-                            "network_position": self._calculate_network_position(
-                                i, major_seg
-                            ),
+                            "id": f"persona_{persona_id}",
+                            "major_segment": segment_id,
+                            "sub_segment": sub_seg["id"],
+                            "micro_cluster": (cluster["id"] if cluster else None),
+                            "network_position": self._assign_network_position(i, segment_personas),
                         }
                     )
-            else:
-                # Distribute across sub-segments
-                for sub_seg in sub_segs:
-                    sub_size = int(
-                        segment_size * sub_seg["percentage_of_parent"] / 100
-                    )
-                    clusters = micro_clusters.get(sub_seg["id"], [])
+                    persona_id += 1
 
-                    for i in range(sub_size):
-                        # Assign to a micro-cluster
-                        cluster = (
-                            clusters[i % len(clusters)] if clusters else None
-                        )
-
-                        persona_slots.append(
-                            {
-                                "id": f"persona_{len(persona_slots)}",
-                                "major_segment": major_seg["id"],
-                                "sub_segment": sub_seg["id"],
-                                "micro_cluster": cluster,
-                                "network_position": self._calculate_network_position(
-                                    i, sub_seg
-                                ),
-                            }
-                        )
-
-        # Ensure we hit target size
-        while len(persona_slots) < target_size:
-            # Add to largest segment
-            persona_slots.append(
+        # Ensure we have exactly target_size personas
+        while len(slots) < target_size:
+            slots.append(
                 {
-                    "id": f"persona_{len(persona_slots)}",
+                    "id": f"persona_{len(slots)}",
                     "major_segment": major_segments[0]["id"],
                     "sub_segment": None,
                     "micro_cluster": None,
-                    "network_position": self._calculate_network_position(
-                        len(persona_slots), {}
-                    ),
+                    "network_position": {"type": "peripheral"},
                 }
             )
 
-        # Trim if over
-        return persona_slots[:target_size]
+        return slots[:target_size]
 
-    def _design_network_topology(
-        self, persona_slots: list[dict]
-    ) -> dict[str, Any]:
-        """Design the network topology for persona connections."""
-        num_personas = len(persona_slots)
-
-        # Choose network type based on population characteristics
-        if num_personas < 20:
-            network_type = "fully-connected"
-            density = 0.8
-        elif num_personas < 50:
-            network_type = "small-world"
-            density = 0.3
+    def _assign_network_position(self, index: int, total_in_segment: int) -> dict[str, Any]:
+        """Assign network position based on index."""
+        if index == 0:
+            return {"type": "hub", "influence": 0.9}
+        elif index < total_in_segment * 0.2:
+            return {"type": "connector", "influence": 0.7}
+        elif index < total_in_segment * 0.5:
+            return {"type": "active", "influence": 0.5}
         else:
-            network_type = "scale-free"
-            density = 0.2
+            return {"type": "peripheral", "influence": 0.3}
 
-        # Calculate basic network metrics
-        avg_connections = int(density * (num_personas - 1))
-        clustering_coefficient = 0.4 + (0.3 * random.random())
-
-        # Create connection matrix (simplified)
-        connections = []
-        for i, persona in enumerate(persona_slots):
-            # Connect to others in same segment
-            same_segment = [
-                j
-                for j, p in enumerate(persona_slots)
-                if p["major_segment"] == persona["major_segment"] and i != j
-            ]
-
-            # Connect to some random others
-            others = [
-                j
-                for j in range(num_personas)
-                if j != i and j not in same_segment
-            ]
-
-            # Make connections
-            num_connections = min(
-                avg_connections, len(same_segment) + len(others)
-            )
-            segment_connections = min(
-                int(num_connections * 0.7), len(same_segment)
-            )
-            other_connections = num_connections - segment_connections
-
-            connected_to = random.sample(
-                same_segment, segment_connections
-            ) + random.sample(others, min(other_connections, len(others)))
-
-            connections.append(
-                {
-                    "node": i,
-                    "connected_to": connected_to,
-                    "strength": [
-                        0.5 + 0.5 * random.random() for _ in connected_to
-                    ],
-                }
-            )
+    def _design_network_topology(self, persona_slots: list[dict[str, Any]]) -> dict[str, Any]:
+        """Design the network topology."""
+        hub_count = sum(
+            1 for p in persona_slots if p.get("network_position", {}).get("type") == "hub"
+        )
 
         return {
-            "network_type": network_type,
-            "density": density,
-            "clustering_coefficient": clustering_coefficient,
-            "average_connections": avg_connections,
-            "connections": connections,
+            "type": "scale-free",
+            "density": 0.15,
+            "clustering_coefficient": 0.3,
+            "hub_nodes": hub_count,
+            "average_path_length": 3.5,
         }
 
-    def _design_influence_patterns(
-        self, persona_slots: list[dict]
-    ) -> dict[str, Any]:
-        """Design influence patterns between personas."""
-        # Identify potential influencers
-        influencer_nodes = []
-
-        for i, persona in enumerate(persona_slots):
-            # Check if persona has influencer characteristics
-            if persona.get("micro_cluster") in [
-                "influencers",
-                "connectors",
-                "mavens",
-            ]:
-                influence_score = 0.7 + 0.3 * random.random()
-            elif persona.get("micro_cluster") in ["innovators", "early_users"]:
-                influence_score = 0.5 + 0.3 * random.random()
-            else:
-                influence_score = 0.1 + 0.3 * random.random()
-
-            if influence_score > 0.6:
-                influencer_nodes.append(
-                    {
-                        "id": persona["id"],
-                        "index": i,
-                        "influence_score": influence_score,
-                        "influence_radius": int(5 + 10 * influence_score),
-                    }
-                )
-
-        # Create influence paths
-        influence_paths = []
-        for influencer in influencer_nodes:
-            # Create paths to nearby nodes
-            for target in range(len(persona_slots)):
-                if target != influencer["index"]:
-                    distance = abs(target - influencer["index"])
-                    if distance <= influencer["influence_radius"]:
-                        influence_strength = influencer["influence_score"] * (
-                            1 - distance / influencer["influence_radius"]
-                        )
-                        influence_paths.append(
-                            {
-                                "from": influencer["index"],
-                                "to": target,
-                                "strength": influence_strength,
-                            }
-                        )
+    def _design_influence_patterns(self, persona_slots: list[dict[str, Any]]) -> dict[str, Any]:
+        """Design influence patterns."""
+        influencers = [
+            p["id"]
+            for p in persona_slots
+            if p.get("network_position", {}).get("influence", 0) > 0.7
+        ]
 
         return {
-            "influencer_nodes": influencer_nodes,
-            "influence_paths": influence_paths,
-            "influence_strength": {
-                node["index"]: node["influence_score"]
-                for node in influencer_nodes
-            },
-        }
-
-    def _calculate_network_position(
-        self, index: int, segment_info: dict
-    ) -> dict[str, float]:
-        """Calculate network position metrics for a persona."""
-        # Simple calculation based on index and segment
-        base_centrality = 0.3 + 0.4 * random.random()
-
-        # Adjust based on segment characteristics
-        if (
-            "leader" in str(segment_info).lower()
-            or "influencer" in str(segment_info).lower()
-        ):
-            base_centrality += 0.2
-
-        return {
-            "centrality": min(base_centrality, 1.0),
-            "clustering": 0.2 + 0.6 * random.random(),
-            "bridge_score": 0.1 + 0.3 * random.random(),
+            "influencer_nodes": influencers,
+            "influence_paths": [
+                {"from": influencers[i], "to": f"persona_{i+5}", "weight": 0.8}
+                for i in range(min(3, len(influencers)))
+            ],
+            "cascade_probability": 0.6,
         }
