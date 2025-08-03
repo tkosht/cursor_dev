@@ -23,9 +23,14 @@ execution_model:
     → 進捗・ナレッジ更新とコミット
     
     Phase3: GitHub Actions対応
-    → CI/CD設定の把握とテスト実行
+    → CI/CD設定の把握とテスト実行（/dag-debug-enhanced活用）
     → 全テストのチェックリストドリブン実行
     → 進捗管理と知識更新
+    → 最終コミット・プッシュ
+
+    Phase4: ナレッジの記録
+    → チェックリストドリブン実行
+    → Phase1～3 で得られた知見を適切にserena, cognee に記録（/dag-debug-enhanced活用）
     → 最終コミット・プッシュ
 
 phases:
@@ -159,6 +164,67 @@ phases:
           - "プルリクエストの最終確認"
           - "マージ準備完了の確認"
 
+  phase4_knowledge_recording:
+    name: "ナレッジ記録フェーズ"
+    steps:
+      - name: "ナレッジ収集・整理"
+        actions:
+          - "Phase1-3で生成された知見の収集"
+          - "実装パターンの抽出"
+          - "デバッグ手法の整理"
+          - "ベストプラクティスの特定"
+      
+      - name: "チェックリストベースのナレッジ記録"
+        actions:
+          - "ナレッジ記録チェックリスト作成（checklists/knowledge_recording.md）"
+          - checklist_items:
+              - "実装パターン記録"
+              - "エラー解決パターン記録"
+              - "パフォーマンス改善手法記録"
+              - "セキュリティ考慮事項記録"
+              - "テスト戦略記録"
+      
+      - name: "Serena統合ナレッジ記録"
+        protocol: "/dag-debug-enhanced"
+        actions:
+          - "mcp__serena__write_memory でのパターン記録"
+            - "implementation_patterns: 実装パターンとその効果"
+            - "debug_solutions: デバッグ解決策と根本原因"
+            - "optimization_techniques: 最適化手法と測定結果"
+          - "mcp__serena__find_symbol での既存ナレッジとの関連付け"
+          - "mcp__serena__get_symbols_overview での体系的整理"
+      
+      - name: "Cognee知識ベース更新"
+        protocol: "/dag-debug-enhanced"
+        actions:
+          - "cogneeへの構造化知識の追加"
+            - "問題カテゴリと解決策のマッピング"
+            - "アンチパターンの記録"
+            - "推奨アプローチの文書化"
+          - "関連する既存知識との紐付け"
+          - "検索可能な形式での保存"
+      
+      - name: "ドキュメント生成"
+        actions:
+          - "memory-bank/[タスク名]_learnings.md の作成"
+          - "docs/patterns/[パターン名].md の作成"
+          - "README.md への重要な知見の追加"
+          - "CHANGELOG.md への学習事項の記載"
+      
+      - name: "知識の検証と品質保証"
+        actions:
+          - "記録したナレッジの正確性確認"
+          - "再現可能性の検証"
+          - "他のプロジェクトへの適用可能性評価"
+          - "既存ナレッジとの矛盾チェック"
+      
+      - name: "最終コミット＆プッシュ"
+        actions:
+          - "git add memory-bank/ docs/patterns/ checklists/"
+          - "git commit -m 'docs: ナレッジとパターンの記録'"
+          - "git push origin [ブランチ名]"
+          - "プルリクエストへのナレッジサマリー追加"
+
 verification_requirements:
   phase1_checks:
     - "ブランチが正しく作成されているか"
@@ -179,6 +245,13 @@ verification_requirements:
     - "ローカルでCI相当のテストが通るか"
     - "ドキュメントが最新化されているか"
     - "プルリクエストがマージ可能な状態か"
+  
+  phase4_checks:
+    - "全フェーズの知見が適切に収集されているか"
+    - "ナレッジがSerenaとCogneeに記録されているか"
+    - "ドキュメントが生成・更新されているか"
+    - "知識の品質と再現性が検証されているか"
+    - "他プロジェクトへの適用可能性が評価されているか"
 
 task_tracking_template:
   structure: |
@@ -205,16 +278,22 @@ knowledge_update_locations:
     - "progress/[日付]_[タスク名]_progress.md"
     - "docs/implementation_notes.md"
     - "checklists/[タスク名]_checklist.md"
+    - "memory-bank/[タスク名]_learnings.md"
+    - "docs/patterns/[パターン名].md"
   
   serena_memories:
     - "[タスク名]_implementation_knowledge"
     - "[タスク名]_debug_patterns"
     - "[タスク名]_best_practices"
+    - "[タスク名]_optimization_techniques"
+    - "[タスク名]_antipatterns"
   
   cognee_entries:
     - "implementation_patterns"
     - "debug_solutions"
     - "ci_cd_learnings"
+    - "performance_optimizations"
+    - "security_considerations"
 
 state_management:
   context_preservation:
@@ -244,6 +323,13 @@ state_management:
         - test_results         # テスト実行結果
         - validation_status    # 検証状態
         - final_adjustments    # 最終調整内容
+      
+      phase4_context:
+        - collected_insights   # 収集した知見
+        - pattern_catalog      # パターンカタログ
+        - serena_records       # Serena記録内容
+        - cognee_entries       # Cognee登録内容
+        - documentation_paths  # 生成したドキュメントパス
     
     step_level:
       - current_step_id        # 現在のステップID
@@ -271,7 +357,7 @@ progress_persistence:
         command_args: object
         
       execution_state:
-        current_phase: 1|2|3
+        current_phase: 1|2|3|4
         current_step: string
         status: "in_progress"|"paused"|"completed"|"failed"
         
@@ -304,6 +390,17 @@ progress_persistence:
             ci_checks: []
             test_results: {}
             final_commits: []
+            
+        phase4:
+          status: "pending"|"in_progress"|"completed"|"skipped"
+          completed_steps: []
+          pending_steps: []
+          artifacts:
+            collected_patterns: []
+            serena_memories: []
+            cognee_entries: []
+            generated_docs: []
+            verification_results: {}
             
       recovery_data:
         last_successful_action: string
@@ -357,7 +454,7 @@ usage:
   options:
     - name: "--phase"
       value: "PHASE"
-      description: "特定フェーズから開始 (1/2/3)"
+      description: "特定フェーズから開始 (1/2/3/4)"
       default: "1"
     
     - name: "--skip-pr"
@@ -406,7 +503,7 @@ usage:
   examples:
     - description: "新機能開発の完全フロー実行"
       command: '/dev-flow "ユーザー認証機能の追加"'
-      expected_behavior: "Phase1から開始し、3つのフェーズすべてを実行"
+      expected_behavior: "Phase1から開始し、4つのフェーズすべてを実行"
     
     - description: "デバッグフェーズから開始"
       command: '/dev-flow "既存バグの修正" --phase 2'
@@ -427,6 +524,10 @@ usage:
     - description: "CI/CD対応のみ実行"
       command: '/dev-flow "CI修正" --phase 3'
       expected_behavior: "Phase3のGitHub Actions対応のみを実行"
+    
+    - description: "ナレッジ記録のみ実行"
+      command: '/dev-flow "完了タスクの知見記録" --phase 4'
+      expected_behavior: "Phase4のナレッジ記録のみを実行"
     
     - description: "中断したタスクの再開"
       command: '/dev-flow --resume'
@@ -493,6 +594,11 @@ error_handling:
   phase3_errors:
     ci_failure: "ローカル再現と修正"
     merge_conflict: "競合解決の支援"
+    
+  phase4_errors:
+    knowledge_conflict: "既存ナレッジとの矛盾を検出・解決"
+    serena_write_failure: "代替記録方法の提供とリトライ"
+    documentation_generation_failure: "手動テンプレートの提供"
 
 success_criteria:
   phase1:
@@ -512,6 +618,13 @@ success_criteria:
     - "ドキュメントの最新化"
     - "マージ可能な状態の達成"
     - "知識ベースへの貢献"
+    
+  phase4:
+    - "全フェーズの知見の体系的収集"
+    - "SerenaとCogneeへの適切な記録"
+    - "再利用可能なパターンの文書化"
+    - "知識の品質と一貫性の確保"
+    - "他プロジェクトへの適用性の確立"
   
   progress_management:
     - "進捗ファイルの自動保存が機能"
