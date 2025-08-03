@@ -17,11 +17,11 @@ from src.utils.llm_transparency import LLMCallTracker
 class AggregatorAgent(BaseAgent):
     """Agent responsible for aggregating persona evaluation results."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the AggregatorAgent."""
         super().__init__(
             agent_id=AgentID("aggregator"),
-            attributes={"type": "aggregator", "role": "result_aggregation"},
+            attributes=None,  # AggregatorAgent doesn't use PersonaAttributes
         )
         self.config = get_config()
         self.llm = create_llm()
@@ -135,8 +135,8 @@ class AggregatorAgent(BaseAgent):
             return []
 
         # Count suggestion frequency
-        suggestion_counter = Counter()
-        suggestion_personas = defaultdict(list)
+        suggestion_counter: Counter[str] = Counter()
+        suggestion_personas: dict[str, list[str]] = defaultdict(list)
 
         for eval_result in evaluations:
             for suggestion in eval_result.suggestions:
@@ -168,7 +168,7 @@ class AggregatorAgent(BaseAgent):
         self, evaluations: list[EvaluationResult]
     ) -> dict[str, Any]:
         """Analyze the distribution of sentiments across evaluations."""
-        sentiment_counts = Counter()
+        sentiment_counts: Counter[str] = Counter()
 
         for eval_result in evaluations:
             sentiment_counts[eval_result.sentiment] += 1
@@ -186,7 +186,7 @@ class AggregatorAgent(BaseAgent):
         return {
             "distribution": distribution,
             "percentages": percentages,
-            "dominant": max(distribution, key=distribution.get) if distribution else None,
+            "dominant": max(distribution, key=lambda k: distribution[k]) if distribution else None,
         }
 
     def _create_segments(self, evaluations: list[EvaluationResult]) -> dict[str, Any]:
@@ -208,12 +208,12 @@ class AggregatorAgent(BaseAgent):
             )
 
         # Calculate average scores per sentiment
-        segment_stats = {}
+        segment_stats: dict[str, Any] = {}
         for sentiment, personas in sentiment_segments.items():
-            scores = [p["overall_score"] for p in personas]
+            scores = [float(p["overall_score"]) for p in personas]  # type: ignore[arg-type]
             segment_stats[sentiment] = {
                 "count": len(personas),
-                "average_score": np.mean(scores) if scores else 0,
+                "average_score": float(np.mean(scores)) if scores else 0,
                 "personas": personas,
             }
 
@@ -257,12 +257,14 @@ class AggregatorAgent(BaseAgent):
             latency_ms = int((time.time() - start_time) * 1000)
 
             # Track the call
+            response_str = str(response.content) if hasattr(response, "content") else str(response)
             self.call_tracker.track_call(
-                prompt=prompt, response=response.content, model=str(self.llm), latency_ms=latency_ms
+                prompt=prompt, response=response_str, model=str(self.llm), latency_ms=latency_ms
             )
 
-            parsed = parse_llm_json_response(response.content)
-            return parsed.get("insights", "Unable to generate insights")
+            parsed = parse_llm_json_response(response_str)
+            insights = parsed.get("insights", "Unable to generate insights")
+            return insights if isinstance(insights, str) else str(insights)
 
         except Exception as e:
             return f"Error generating insights: {str(e)}"
@@ -324,10 +326,10 @@ class AggregatorAgent(BaseAgent):
         """Make decisions based on perception (not used in aggregator)."""
         return perception
 
-    def act(self, decision: Any) -> Any:
+    async def act(self, action: Any, environment: Any) -> Any:
         """Take action based on decision (not used in aggregator)."""
-        return decision
+        return action
 
-    def update(self, feedback: Any) -> None:
+    async def update(self, feedback: Any) -> None:
         """Update internal state based on feedback (not used in aggregator)."""
         pass

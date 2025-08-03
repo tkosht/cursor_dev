@@ -114,7 +114,7 @@ class ReporterAgent(BaseAgent):
             response = await self.llm.ainvoke(prompt)
             latency_ms = int((time.time() - start_time) * 1000)
 
-            response_str = response.content if hasattr(response, "content") else str(response)
+            response_str = str(response.content) if hasattr(response, "content") else str(response)
             self.call_tracker.track_call(
                 prompt=prompt, response=response_str, model=str(self.llm), latency_ms=latency_ms
             )
@@ -166,13 +166,14 @@ class ReporterAgent(BaseAgent):
             response = await self.llm.ainvoke(prompt)
             latency_ms = int((time.time() - start_time) * 1000)
 
-            response_str = response.content if hasattr(response, "content") else str(response)
+            response_str = str(response.content) if hasattr(response, "content") else str(response)
             self.call_tracker.track_call(
                 prompt=prompt, response=response_str, model=str(self.llm), latency_ms=latency_ms
             )
 
             parsed = parse_llm_json_response(response_str)
-            return parsed.get("recommendations", [])
+            recommendations = parsed.get("recommendations", [])
+            return recommendations if isinstance(recommendations, list) else []
 
         except Exception:
             # Fallback to basic recommendations
@@ -378,19 +379,19 @@ class ReporterAgent(BaseAgent):
             return {"total_count": 0, "segments": {}}
 
         # Analyze persona segments
-        segments = {}
+        segments: dict[str, dict[str, Any]] = {}
         for persona in personas:
             occupation = persona.occupation or "Unknown"
             if occupation not in segments:
                 segments[occupation] = {"count": 0, "average_age": 0, "interests": []}
             segments[occupation]["count"] += 1
-            if persona.age:
+            if persona.age and isinstance(persona.age, (int, float)):
                 segments[occupation]["average_age"] += persona.age
 
         # Calculate averages
         for segment in segments.values():
-            if segment["count"] > 0:
-                segment["average_age"] /= segment["count"]
+            if segment["count"] > 0 and isinstance(segment["average_age"], (int, float)):
+                segment["average_age"] = segment["average_age"] / segment["count"]
 
         return {
             "total_count": len(personas),
@@ -426,7 +427,7 @@ class ReporterAgent(BaseAgent):
         suggestions = state.get("improvement_suggestions", [])
 
         # Group by category
-        by_category = {}
+        by_category: dict[str, list[dict[str, Any]]] = {}
         for suggestion in suggestions:
             category = suggestion.get("category", "general")
             if category not in by_category:
@@ -585,9 +586,9 @@ class ReporterAgent(BaseAgent):
 
         # Calculate standard deviation as inverse measure of consensus
 
-        std_dev = np.std(scores)
+        std_dev = float(np.std(scores))
         # Convert to consensus score (lower std = higher consensus)
-        consensus = max(0, 100 - (std_dev * 2))
+        consensus: float = max(0, 100 - (std_dev * 2))
         return consensus
 
     def _format_as_markdown(self, report_data: dict[str, Any]) -> str:

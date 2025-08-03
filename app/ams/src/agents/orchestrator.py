@@ -296,7 +296,7 @@ class OrchestratorAgent:
         from .reporter import ReporterAgent
 
         reporter = ReporterAgent()
-        report = await reporter.generate_report(dict(state))  # type: ignore[arg-type]
+        report = await reporter.generate_report(dict(state))
 
         return {
             "final_report": report,
