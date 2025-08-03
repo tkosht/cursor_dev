@@ -23,17 +23,26 @@ source memory-bank/00-core/knowledge_loading_functions.md
 
 MANDATORY_SEQUENCE=(
     "0. DATE: Establish temporal context with date command"
-    "1. LOAD: Execute smart_knowledge_load() for domain context OR Serena/Cognee memories"
-    "2. VERIFY: Cross-check loaded knowledge completeness"
-    "3. EXECUTE: Implement with continuous verification"
+    "1. MCP_SELECT: Choose Serena (code/project) or Cognee (knowledge/principles) based on task"
+    "2. LOAD: Execute chosen MCP or smart_knowledge_load() for domain context"
+    "3. VERIFY: Cross-check loaded knowledge completeness"
+    "4. EXECUTE: Implement with continuous verification"
 )
 
 # COMMAND EXECUTION SPECIFIC
 COMMAND_EXECUTION_PROTOCOL=(
     "1. IMMEDIATE: Before processing command arguments"
-    "2. SCOPE: Load relevant domain knowledge"
-    "3. MCP: Use Serena list_memories/read_memory if available"
+    "2. MCP_CHOICE: Determine Serena vs Cognee based on task type"
+    "3. KNOWLEDGE_LOAD: Use selected MCP for relevant domain knowledge"
     "4. FALLBACK: Use smart_knowledge_load() if MCP unavailable"
+)
+
+# MCP SELECTION CRITERIA
+MCP_SELECTION_CRITERIA=(
+    "CODE_TASK: Use Serena (editing, debugging, project structure)"
+    "KNOWLEDGE_TASK: Use Cognee (patterns, principles, cross-project insights)"
+    "HYBRID_TASK: Start with Cognee (strategy) → Apply via Serena (implementation)"
+    "DISCOVERY_TASK: Record in Serena → Evaluate for Cognee promotion"
 )
 
 # ENFORCEMENT
@@ -305,6 +314,9 @@ FORBIDDEN=("probably" "maybe" "I think" "seems like")
 | Task Type | Required Action | Reference |
 |-----------|----------------|-----------|
 | **Session Start** | Run initialization | `source memory-bank/00-core/session_initialization_script.md` |
+| **MCP Strategy** | Select optimal MCP | `mcp__serena__read_memory("serena_cognee_mcp_usage_strategy")` |
+| **Memory Design** | Understand hierarchy | `mcp__serena__read_memory("memory_hierarchy_design_framework")` |
+| **Auto-Updates** | Event-driven framework | `mcp__serena__read_memory("ai_agent_event_driven_update_framework")` |
 | **Any Task** | Load knowledge first | `smart_knowledge_load "domain"` |
 | **Mandatory Rules** | Interactive checklist | `show_rules` or `checklists/mandatory_rules_checklist.md` |
 | **Task Checklist** | Create from template | `new_task_checklist "task_name"` |
@@ -315,19 +327,48 @@ FORBIDDEN=("probably" "maybe" "I think" "seems like")
 | **Quality Review** | Framework | `memory-bank/04-quality/enhanced_review_process_framework.md` |
 | **Detailed Impl** | Full guide | `CLAUDE_structured.md` |
 
+## 🔄 MCP SELECTION PROTOCOL (MCP選択必須プロトコル)
+
+```bash
+# 🎯 TASK-BASED MCP SELECTION
+MCP_SELECTION_FLOWCHART=(
+    "CODE_EDITING_NEEDED: → Serena (semantic operations, project-specific)"
+    "DESIGN_KNOWLEDGE_NEEDED: → Cognee (patterns, principles, cross-project)"
+    "PROJECT_START: → Cognee(strategy) → Serena(implementation)"
+    "LEARNING_COMPLETE: → Serena(record) → Cognee(abstract)"
+    "PROBLEM_SOLVING: → Cognee(similar cases) → Serena(specific analysis)"
+)
+
+# 📚 SELECTION REFERENCE
+SERENA_USE_CASES="Code editing, type fixes, project structure, symbol operations, project-specific constraints"
+COGNEE_USE_CASES="Architecture patterns, design principles, cross-project knowledge, abstracted solutions"
+
+# 🚨 MANDATORY ACCESS POINTS
+MCP_STRATEGY_GUIDE="mcp__serena__read_memory('serena_cognee_mcp_usage_strategy')"
+MEMORY_HIERARCHY="mcp__serena__read_memory('memory_hierarchy_design_framework')"
+EVENT_FRAMEWORK="mcp__serena__read_memory('ai_agent_event_driven_update_framework')"
+
+# ⚡ QUICK DECISION CRITERIA
+IMMEDIATE_CODE_WORK="Use Serena directly"
+ARCHITECTURAL_DECISION="Check Cognee first, then apply via Serena"
+NEW_DISCOVERY="Record in Serena, evaluate for Cognee promotion"
+CROSS_PROJECT_QUESTION="Search Cognee knowledge graph"
+```
+
 ## 🚨 QUICK EXECUTION CHECKLIST
 
 **Before ANY task execution (including /commands):**
 ```bash
-0. ✓ PRE-TASK KNOWLEDGE: ALWAYS load first (Serena/Cognee MCP or smart_knowledge_load)
-1. ✓ AI COMPLIANCE: python scripts/pre_action_check.py --strict-mode
-2. ✓ WORK MANAGEMENT: Verify on task branch (not main/master)
-3. ✓ KNOWLEDGE LOAD: smart_knowledge_load "domain" or mcp__serena__read_memory
-4. ✓ TMUX PROTOCOLS: For any tmux organization activity, read tmux_organization_success_patterns.md
-5. ✓ TDD FOUNDATION: Write test FIRST
-6. ✓ FACT VERIFICATION: No speculation allowed
-7. ✓ QUALITY GATES: Before commit
-8. ✓ COMPLETION: Create Pull Request when done
+0. ✓ MCP SELECTION: Choose Serena (code/project-specific) or Cognee (knowledge/principles) based on task type
+1. ✓ PRE-TASK KNOWLEDGE: ALWAYS load first (Serena/Cognee MCP or smart_knowledge_load)
+2. ✓ AI COMPLIANCE: python scripts/pre_action_check.py --strict-mode
+3. ✓ WORK MANAGEMENT: Verify on task branch (not main/master)
+4. ✓ KNOWLEDGE LOAD: smart_knowledge_load "domain" or mcp__serena__read_memory
+5. ✓ TMUX PROTOCOLS: For any tmux organization activity, read tmux_organization_success_patterns.md
+6. ✓ TDD FOUNDATION: Write test FIRST
+7. ✓ FACT VERIFICATION: No speculation allowed
+8. ✓ QUALITY GATES: Before commit
+9. ✓ COMPLETION: Create Pull Request when done
 ```
 
 **Command-specific reminder:**

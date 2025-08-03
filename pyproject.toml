@@ -38,6 +38,9 @@ flake8 = "*"
 isort = "*"
 pytest-asyncio = "*"
 mypy = "*"
+pytest-benchmark = "*"
+memory-profiler = "*"
+psutil = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -95,6 +98,7 @@ markers = [
     "security: セキュリティ関連テスト",
     "asyncio: mark the test as a coroutine, it will be run using an asyncio event loop",
     "timeout: mark a test as having a timeout (seconds)",
+    "performance: パフォーマンステスト（ベンチマーク・プロファイリング）",
 ]
 addopts = [
     "-v",
