@@ -23,5 +23,9 @@
       "mcp__serena__execute_shell_command"
     ],
     "deny": []
-  }
+  },
+  "enabledMcpjsonServers": [
+    "playwright"
+  ],
+  "enableAllProjectMcpServers": true
 }
