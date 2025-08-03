@@ -114,7 +114,7 @@ class ReporterAgent(BaseAgent):
             response = await self.llm.ainvoke(prompt)
             latency_ms = int((time.time() - start_time) * 1000)
 
-            response_str = response.content if hasattr(response, 'content') else str(response)
+            response_str = response.content if hasattr(response, "content") else str(response)
             self.call_tracker.track_call(
                 prompt=prompt, response=response_str, model=str(self.llm), latency_ms=latency_ms
             )
@@ -166,7 +166,7 @@ class ReporterAgent(BaseAgent):
             response = await self.llm.ainvoke(prompt)
             latency_ms = int((time.time() - start_time) * 1000)
 
-            response_str = response.content if hasattr(response, 'content') else str(response)
+            response_str = response.content if hasattr(response, "content") else str(response)
             self.call_tracker.track_call(
                 prompt=prompt, response=response_str, model=str(self.llm), latency_ms=latency_ms
             )
