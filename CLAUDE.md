@@ -12,19 +12,34 @@ This file contains MANDATORY protocols for Claude/Gemini Code or Claude/Gemini A
 # DEFAULT: smart_knowledge_load() for ALL tasks (5-15s)
 # UPGRADE: comprehensive_knowledge_load() ONLY on explicit user request (30-60s)
 
+# 🚨 IMPORTANT: APPLIES TO ALL CONTEXTS
+# - Regular conversation start
+# - Command execution (/command)
+# - Task continuation
+# - ANY task regardless of entry point
+
 # 📚 IMPLEMENTATION: memory-bank/00-core/knowledge_loading_functions.md
 source memory-bank/00-core/knowledge_loading_functions.md
 
 MANDATORY_SEQUENCE=(
     "0. DATE: Establish temporal context with date command"
-    "1. LOAD: Execute smart_knowledge_load() for domain context"
+    "1. LOAD: Execute smart_knowledge_load() for domain context OR Serena/Cognee memories"
     "2. VERIFY: Cross-check loaded knowledge completeness"
     "3. EXECUTE: Implement with continuous verification"
+)
+
+# COMMAND EXECUTION SPECIFIC
+COMMAND_EXECUTION_PROTOCOL=(
+    "1. IMMEDIATE: Before processing command arguments"
+    "2. SCOPE: Load relevant domain knowledge"
+    "3. MCP: Use Serena list_memories/read_memory if available"
+    "4. FALLBACK: Use smart_knowledge_load() if MCP unavailable"
 )
 
 # ENFORCEMENT
 NO_KNOWLEDGE_NO_ACTION="Task execution without knowledge loading is FORBIDDEN"
 VIOLATION_CONSEQUENCE="Immediate task termination and restart with knowledge loading"
+COMMAND_VIOLATION="Command execution without knowledge = CRITICAL FAILURE"
 ```
 
 ### 1️⃣ MANDATORY RULES VERIFICATION (必須ルール検証絶対)
@@ -40,11 +55,12 @@ VIOLATION_CONSEQUENCE="Immediate task termination and restart with knowledge loa
 function display_mandatory_rules_checklist() {
     echo "🚨 MANDATORY RULES VERIFICATION CHECKLIST"
     echo "========================================="
+    echo "□ 0️⃣ PRE-TASK KNOWLEDGE: Loaded before ANY task/command"
     echo "□ 1️⃣ SECURITY ABSOLUTE: No secrets/credentials exposure"
     echo "□ 2️⃣ VALUE ASSESSMENT: 5-point evaluation completed"  
     echo "□ 3️⃣ CORE PRINCIPLES: Excellence mindset maintained"
     echo "□ 4️⃣ WORK MANAGEMENT: Feature branch verification"
-    echo "□ 5️⃣ KNOWLEDGE ACCESS: Proper knowledge loading"
+    echo "□ 5️⃣ KNOWLEDGE ACCESS: Proper knowledge loading (Serena/Cognee MCP if available)"
     echo "□ 6️⃣ AI-OPTIMIZED FORMAT: Structured knowledge recording"
     echo "□ 7️⃣ CHECKLIST-DRIVEN: CDTE framework applied when applicable"
     echo "□ 8️⃣ NO MOCKS: Real API calls only - NO mocking in tests"
@@ -56,6 +72,8 @@ function display_mandatory_rules_checklist() {
     echo "   • memory-bank/11-checklist-driven/checklist_driven_execution_framework.md"
     echo "   • memory-bank/02-organization/tmux_organization_success_patterns.md (for tmux activities)"
     echo "   • checklists/mandatory_rules_checklist.md (FULL CHECKLIST)"
+    echo ""
+    echo "⚠️ REMINDER: Commands (/command) ALSO require knowledge loading!"
     echo ""
     read -p "❓ Confirm ALL mandatory rules verified before starting task (y/N): " confirmation
     [[ "$confirmation" != "y" && "$confirmation" != "Y" ]] && return 1
@@ -299,16 +317,25 @@ FORBIDDEN=("probably" "maybe" "I think" "seems like")
 
 ## 🚨 QUICK EXECUTION CHECKLIST
 
-**Before ANY task execution:**
+**Before ANY task execution (including /commands):**
 ```bash
+0. ✓ PRE-TASK KNOWLEDGE: ALWAYS load first (Serena/Cognee MCP or smart_knowledge_load)
 1. ✓ AI COMPLIANCE: python scripts/pre_action_check.py --strict-mode
 2. ✓ WORK MANAGEMENT: Verify on task branch (not main/master)
-3. ✓ KNOWLEDGE LOAD: smart_knowledge_load "domain"
+3. ✓ KNOWLEDGE LOAD: smart_knowledge_load "domain" or mcp__serena__read_memory
 4. ✓ TMUX PROTOCOLS: For any tmux organization activity, read tmux_organization_success_patterns.md
 5. ✓ TDD FOUNDATION: Write test FIRST
 6. ✓ FACT VERIFICATION: No speculation allowed
 7. ✓ QUALITY GATES: Before commit
 8. ✓ COMPLETION: Create Pull Request when done
+```
+
+**Command-specific reminder:**
+```bash
+# BEFORE processing ANY /command:
+1. Check Serena/Cognee MCP availability
+2. Load relevant memories/knowledge
+3. THEN process command arguments
 ```
 
 **Key Principle**: 事実ベース判断 - No speculation, only verified facts.
