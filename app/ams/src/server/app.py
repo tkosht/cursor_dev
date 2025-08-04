@@ -5,31 +5,40 @@ Article Market Simulator のWebAPI/WebSocketサーバー実装。
 シミュレーションの作成、実行、結果取得、リアルタイム更新を提供。
 """
 
+import asyncio
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any
+from typing import Any, AsyncGenerator
 
 import structlog
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from ..core.types import SimulationConfig, SimulationResult, SimulationStatus
+from .app_types import SimulationData
+from .simulation_service import SimulationService
 
 # Structured logging setup
 logger = structlog.get_logger()
 
 # In-memory storage for simulations (後でRedis/DBに置き換え)
-simulations: dict[str, dict[str, Any]] = {}
+simulations: dict[str, SimulationData] = {}
+
+# Simulation service instance
+simulation_service: SimulationService | None = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """FastAPIアプリケーションのライフサイクル管理"""
     # Startup
     logger.info("Starting AMS API Server")
+    global simulation_service
+    simulation_service = SimulationService(simulations, manager)
+    logger.info("Simulation service initialized")
     yield
     # Shutdown
     logger.info("Shutting down AMS API Server")
@@ -90,24 +99,24 @@ class HealthCheckResponse(BaseModel):
 class ConnectionManager:
     """WebSocket接続管理"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.active_connections: dict[str, list[WebSocket]] = {}
 
-    async def connect(self, websocket: WebSocket, simulation_id: str):
+    async def connect(self, websocket: WebSocket, simulation_id: str) -> None:
         await websocket.accept()
         if simulation_id not in self.active_connections:
             self.active_connections[simulation_id] = []
         self.active_connections[simulation_id].append(websocket)
         logger.info(f"WebSocket connected for simulation {simulation_id}")
 
-    def disconnect(self, websocket: WebSocket, simulation_id: str):
+    def disconnect(self, websocket: WebSocket, simulation_id: str) -> None:
         if simulation_id in self.active_connections:
             self.active_connections[simulation_id].remove(websocket)
             if not self.active_connections[simulation_id]:
                 del self.active_connections[simulation_id]
         logger.info(f"WebSocket disconnected for simulation {simulation_id}")
 
-    async def send_update(self, simulation_id: str, message: dict):
+    async def send_update(self, simulation_id: str, message: dict[str, Any]) -> None:
         if simulation_id in self.active_connections:
             disconnected_clients = []
             for websocket in self.active_connections[simulation_id]:
@@ -126,7 +135,7 @@ manager = ConnectionManager()
 
 # Routes
 @app.get("/health", response_model=HealthCheckResponse)
-async def health_check():
+async def health_check() -> HealthCheckResponse:
     """ヘルスチェックエンドポイント"""
     return HealthCheckResponse(status="healthy", timestamp=datetime.utcnow(), version="0.1.0")
 
@@ -134,28 +143,33 @@ async def health_check():
 @app.post(
     "/api/simulations", response_model=SimulationResponse, status_code=status.HTTP_201_CREATED
 )
-async def create_simulation(request: SimulationCreateRequest):
+async def create_simulation(request: SimulationCreateRequest, background_tasks: BackgroundTasks) -> SimulationResponse:
     """シミュレーション作成エンドポイント"""
     simulation_id = str(uuid.uuid4())
 
     # シミュレーション情報を保存
-    simulation_data = {
-        "id": simulation_id,
-        "status": SimulationStatus.PENDING,
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow(),
-        "progress": 0.0,
-        "article_content": request.article_content,
-        "article_metadata": request.article_metadata,
-        "config": request.config or SimulationConfig(),
-        "result": None,
-        "error": None,
-    }
+    simulation_data = SimulationData(
+        id=simulation_id,
+        status=SimulationStatus.PENDING,
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+        progress=0.0,
+        article_content=request.article_content,
+        article_metadata=request.article_metadata or {},
+        config=request.config or SimulationConfig(focus_segments=None),
+        result=None,
+        error=None,
+    )
 
     simulations[simulation_id] = simulation_data
 
-    # TODO: バックグラウンドタスクでシミュレーション実行
-    # background_tasks.add_task(run_simulation, simulation_id)
+    # バックグラウンドタスクでシミュレーション実行
+    if simulation_service:
+        background_tasks.add_task(simulation_service.run_simulation, simulation_id)
+    else:
+        logger.error("Simulation service not initialized")
+        simulation_data["status"] = SimulationStatus.FAILED
+        simulation_data["error"] = "Simulation service not available"
 
     return SimulationResponse(
         id=simulation_id,
@@ -163,11 +177,13 @@ async def create_simulation(request: SimulationCreateRequest):
         created_at=simulation_data["created_at"],
         updated_at=simulation_data["updated_at"],
         progress=simulation_data["progress"],
+        result=simulation_data["result"],
+        error=simulation_data["error"],
     )
 
 
 @app.get("/api/simulations/{simulation_id}", response_model=SimulationResponse)
-async def get_simulation(simulation_id: str):
+async def get_simulation(simulation_id: str) -> SimulationResponse:
     """シミュレーション情報取得エンドポイント"""
     if simulation_id not in simulations:
         raise HTTPException(
@@ -187,7 +203,7 @@ async def get_simulation(simulation_id: str):
 
 
 @app.get("/api/simulations/{simulation_id}/status")
-async def get_simulation_status(simulation_id: str):
+async def get_simulation_status(simulation_id: str) -> dict[str, Any]:
     """シミュレーションステータス取得エンドポイント"""
     if simulation_id not in simulations:
         raise HTTPException(
@@ -204,7 +220,7 @@ async def get_simulation_status(simulation_id: str):
 
 
 @app.get("/api/simulations/{simulation_id}/results")
-async def get_simulation_results(simulation_id: str):
+async def get_simulation_results(simulation_id: str) -> dict[str, Any]:
     """シミュレーション結果取得エンドポイント"""
     if simulation_id not in simulations:
         raise HTTPException(
@@ -226,7 +242,7 @@ async def get_simulation_results(simulation_id: str):
 
 
 @app.websocket("/ws/simulations/{simulation_id}")
-async def websocket_endpoint(websocket: WebSocket, simulation_id: str):
+async def websocket_endpoint(websocket: WebSocket, simulation_id: str) -> None:
     """WebSocketエンドポイント for リアルタイム更新"""
     if simulation_id not in simulations:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
@@ -252,7 +268,7 @@ async def websocket_endpoint(websocket: WebSocket, simulation_id: str):
 
 # Error handlers
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc: HTTPException):
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -264,7 +280,7 @@ async def http_exception_handler(request, exc: HTTPException):
 
 
 @app.exception_handler(Exception)
-async def general_exception_handler(request, exc: Exception):
+async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.error("Unhandled exception", exc_info=exc)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
