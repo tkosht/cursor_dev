@@ -53,9 +53,10 @@ app = FastAPI(
 )
 
 # CORS設定（開発環境用）
+# 開発環境では全てのオリジンを許可（本番環境では制限すること）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # React dev servers
+    allow_origins=["*"],  # 開発環境のみ。本番では特定のドメインに制限
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
