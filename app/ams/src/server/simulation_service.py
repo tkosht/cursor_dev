@@ -25,6 +25,7 @@ class SimulationService:
 
     async def run_simulation(self, simulation_id: str) -> None:
         """Run a simulation asynchronously"""
+        logger.info(f"Starting simulation {simulation_id}")
         try:
             simulation = self.simulations[simulation_id]
             
@@ -43,23 +44,33 @@ class SimulationService:
                 "persona_count": simulation["config"].num_personas,
                 "generated_personas": [],
                 "persona_generation_complete": False,
-                "persona_evaluations": [],
-                "aggregation_results": {},
-                "final_report": "",
+                "persona_evaluations": {},  # Changed from list to dict
+                "evaluation_complete": False,  # Added missing field
+                "aggregated_scores": {},  # Added missing field
+                "improvement_suggestions": [],  # Added missing field
+                "final_report": {},  # Changed from str to dict
                 "errors": [],
                 "messages": [],
+                "retry_count": {},  # Added missing field
+                "simulation_id": simulation_id,  # Added missing field
                 "start_time": datetime.now(),
                 "end_time": None,
             }
+            
+            logger.info(f"Initial state prepared for simulation {simulation_id}")
             
             # Update status to running
             await self._update_status(simulation_id, SimulationStatus.RUNNING, 0.2)
             
             # Run the orchestrator workflow
+            logger.info(f"Starting workflow execution for simulation {simulation_id}")
+            chunk_count = 0
             async for chunk in self.graph.astream(
                 initial_state, 
                 config={"configurable": {"thread_id": simulation_id}}
             ):
+                chunk_count += 1
+                logger.info(f"Processing chunk {chunk_count} for simulation {simulation_id}: {list(chunk.keys())}")
                 # Process updates from the workflow
                 await self._process_workflow_update(simulation_id, chunk)
             
@@ -123,9 +134,34 @@ class SimulationService:
     ) -> None:
         """Process updates from the workflow execution"""
         # Extract progress information from the update
-        if "orchestrator" in update:
-            state = update["orchestrator"]
-            current_phase = state.get("current_phase", "")
+        # LangGraph sends updates with node names as keys
+        
+        # Check for any node updates (not just orchestrator)
+        state = None
+        updated_node = None
+        
+        # Find which node was updated
+        for node_name in ["orchestrator", "analyzer", "persona_generator", 
+                          "persona_evaluator", "aggregator", "reporter"]:
+            if node_name in update:
+                state = update[node_name]
+                updated_node = node_name
+                break
+        
+        if state:
+            # Get current phase from state or from orchestrator updates
+            current_phase = state.get("current_phase")
+            
+            # If current phase not in this update, check if we can infer from node name
+            if not current_phase and updated_node:
+                node_to_phase = {
+                    "analyzer": "analysis",
+                    "persona_generator": "persona_generation",
+                    "persona_evaluator": "evaluation",
+                    "aggregator": "aggregation",
+                    "reporter": "reporting",
+                }
+                current_phase = node_to_phase.get(updated_node)
             
             # Map phases to progress percentages
             phase_progress = {
@@ -138,14 +174,16 @@ class SimulationService:
                 "completed": 1.0,
             }
             
-            progress = phase_progress.get(current_phase, self.simulations[simulation_id]["progress"])
-            await self._update_status(simulation_id, SimulationStatus.RUNNING, progress)
+            # Update progress if we have a valid phase
+            if current_phase and current_phase in phase_progress:
+                progress = phase_progress[current_phase]
+                await self._update_status(simulation_id, SimulationStatus.RUNNING, progress)
             
             # Log phase transitions and send WebSocket updates
             if "messages" in state:
                 for message in state["messages"]:
                     if isinstance(message, tuple) and len(message) > 1:
-                        logger.info(f"Simulation {simulation_id}: {message[1]}")
+                        logger.info(f"Simulation {simulation_id} [{updated_node}]: {message[1]}")
                         # Send phase update via WebSocket
                         if self.manager:
                             await self.manager.send_update(
@@ -153,8 +191,9 @@ class SimulationService:
                                 {
                                     "type": "phase_update",
                                     "data": {
-                                        "phase": current_phase,
+                                        "phase": current_phase or updated_node,
                                         "message": message[1],
+                                        "node": updated_node,
                                         "timestamp": datetime.utcnow().isoformat(),
                                     }
                                 }
