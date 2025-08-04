@@ -381,12 +381,13 @@ class ReporterAgent(BaseAgent):
         # Analyze persona segments
         segments: dict[str, dict[str, Any]] = {}
         for persona in personas:
-            occupation = persona.occupation or "Unknown"
+            occupation = persona.get("occupation", "Unknown")
             if occupation not in segments:
                 segments[occupation] = {"count": 0, "average_age": 0, "interests": []}
             segments[occupation]["count"] += 1
-            if persona.age and isinstance(persona.age, int | float):
-                segments[occupation]["average_age"] += persona.age
+            age = persona.get("age")
+            if age and isinstance(age, int | float):
+                segments[occupation]["average_age"] += age
 
         # Calculate averages
         for segment in segments.values():
@@ -444,7 +445,7 @@ class ReporterAgent(BaseAgent):
     def _create_score_distribution_data(self, state: dict[str, Any]) -> dict[str, Any]:
         """Create data for score distribution histogram."""
         evaluations = state.get("persona_evaluations", {})
-        scores = [e.overall_score for e in evaluations.values()]
+        scores = [e.get("overall_score", 0) for e in evaluations.values()]
 
         if not scores:
             return {"type": "histogram", "data": {}, "layout": {}}
@@ -572,7 +573,7 @@ class ReporterAgent(BaseAgent):
             return 0
 
         # Simple diversity calculation based on unique occupations
-        occupations = {p.occupation for p in personas if p.occupation}
+        occupations = {p.get("occupation") for p in personas if p.get("occupation")}
         return min((len(occupations) / len(personas)) * 100, 100)
 
     def _calculate_consensus(self, evaluations: dict[str, Any]) -> float:
@@ -580,7 +581,7 @@ class ReporterAgent(BaseAgent):
         if len(evaluations) < 2:
             return 100
 
-        scores = [e.overall_score for e in evaluations.values()]
+        scores = [e.get("overall_score", 0) for e in evaluations.values()]
         if not scores:
             return 0
 

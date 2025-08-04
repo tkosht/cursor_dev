@@ -19,6 +19,22 @@ ActionResult = Dict[str, Any]
 EvaluationResult = Dict[str, Any]
 
 
+class PersonalityType(str, Enum):
+    """ビッグファイブ性格特性"""
+    OPENNESS = "openness"
+    CONSCIENTIOUSNESS = "conscientiousness"
+    EXTRAVERSION = "extraversion"
+    AGREEABLENESS = "agreeableness"
+    NEUROTICISM = "neuroticism"
+
+
+class EvaluationMetric(BaseModel):
+    """評価メトリクス"""
+    name: str = Field(..., description="メトリクス名")
+    score: float = Field(..., ge=0.0, le=100.0, description="スコア (0-100)")
+    weight: float = Field(..., ge=0.0, le=1.0, description="重み付け")
+
+
 class SimulationStatus(str, Enum):
     """シミュレーションのステータス"""
     PENDING = "pending"

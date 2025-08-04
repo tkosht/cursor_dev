@@ -225,7 +225,7 @@ class SimulationService:
         
         # Calculate processing time
         start_time = final_state.get("start_time", datetime.now())
-        end_time = final_state.get("end_time", datetime.now())
+        end_time = final_state.get("end_time") or datetime.now()
         processing_time = (end_time - start_time).total_seconds()
         
         return SimulationResult(
