@@ -150,6 +150,28 @@ pytest tests/unit/test_llm_transparency.py -v
    mypy src
    ```
 
+## Deployment
+
+### Docker Deployment
+
+```bash
+# Build and run with Docker Compose
+docker-compose up --build
+
+# Access the application:
+# - Frontend: http://localhost:3000
+# - Backend API: http://localhost:8000
+# - API Docs: http://localhost:8000/docs
+```
+
+### Manual Deployment
+
+See [docs/deployment_guide.md](docs/deployment_guide.md) for detailed deployment instructions including:
+- Production configuration
+- Cloud deployment options (AWS, GCP)
+- Security considerations
+- Performance optimization
+
 ## Performance 
 
 ### Requirements

@@ -1,226 +1,141 @@
 """
-Type definitions for the Article Market Simulator
+Core type definitions for AMS
+
+シミュレーション、ペルソナ、結果などの中心的なデータ型定義。
 """
 
-from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal, TypeAlias
+from typing import Any, Dict, List, Optional, NewType
 
 from pydantic import BaseModel, Field
 
+
 # Type aliases
-AgentID: TypeAlias = str
-SimulationID: TypeAlias = str
-ActionType: TypeAlias = str
+AgentID = NewType("AgentID", str)
+PersonaAttributes = Dict[str, Any]  # TODO: Replace with proper Persona type
+SimulationState = Dict[str, Any]
+ActionResult = Dict[str, Any]
+EvaluationResult = Dict[str, Any]
 
 
-class PersonalityType(str, Enum):
-    """Personality types based on Big Five model"""
-
-    OPENNESS = "openness"
-    CONSCIENTIOUSNESS = "conscientiousness"
-    EXTRAVERSION = "extraversion"
-    AGREEABLENESS = "agreeableness"
-    NEUROTICISM = "neuroticism"
-
-
-class InformationChannel(str, Enum):
-    """Information channels for content consumption"""
-
-    SOCIAL_MEDIA = "social_media"
-    NEWS_WEBSITE = "news_website"
-    EMAIL = "email"
-    WORD_OF_MOUTH = "word_of_mouth"
-    SEARCH_ENGINE = "search_engine"
-    RSS_FEED = "rss_feed"
+class SimulationStatus(str, Enum):
+    """シミュレーションのステータス"""
+    PENDING = "pending"
+    INITIALIZING = "initializing"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
 
 
-@dataclass
-class PersonaAttributes:
-    """Attributes defining a persona"""
-
-    # Demographics (dynamically generated)
-    age: int | None = None
-    occupation: str | None = None
-    location: str | None = None
-    education_level: str | None = None
-    income_bracket: str | None = None
-
-    # Psychographics
-    values: list[str] = field(default_factory=list)
-    interests: list[str] = field(default_factory=list)
-    personality_traits: dict[PersonalityType, float] = field(default_factory=dict)
-
-    # Behavioral patterns
-    information_seeking_behavior: str = "passive"
-    decision_making_style: str = "analytical"
-    content_sharing_likelihood: float = 0.5
-    influence_susceptibility: float = 0.5
-
-    # Micro-details
-    daily_routines: list[str] = field(default_factory=list)
-    cognitive_biases: list[str] = field(default_factory=list)
-    emotional_triggers: list[str] = field(default_factory=list)
-    preferred_channels: list[InformationChannel] = field(default_factory=list)
-
-    # Network position
-    connections: list[AgentID] = field(default_factory=list)
-    influence_score: float = 0.5
-    network_centrality: float = 0.5
-
-    # Dynamic attributes
-    current_mood: str = "neutral"
-    attention_span: float = 1.0
-    trust_level: dict[str, float] = field(default_factory=dict)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary representation"""
-        return {
-            "demographics": {
-                "age": self.age,
-                "occupation": self.occupation,
-                "location": self.location,
-                "education_level": self.education_level,
-                "income_bracket": self.income_bracket,
-            },
-            "psychographics": {
-                "values": self.values,
-                "interests": self.interests,
-                "personality_traits": {k.value: v for k, v in self.personality_traits.items()},
-            },
-            "behavioral": {
-                "information_seeking": self.information_seeking_behavior,
-                "decision_making": self.decision_making_style,
-                "sharing_likelihood": self.content_sharing_likelihood,
-                "influence_susceptibility": self.influence_susceptibility,
-            },
-            "micro_details": {
-                "daily_routines": self.daily_routines,
-                "cognitive_biases": self.cognitive_biases,
-                "emotional_triggers": self.emotional_triggers,
-                "preferred_channels": [ch.value for ch in self.preferred_channels],
-            },
-            "network": {
-                "connections": self.connections,
-                "influence_score": self.influence_score,
-                "network_centrality": self.network_centrality,
-            },
-            "dynamic": {
-                "current_mood": self.current_mood,
-                "attention_span": self.attention_span,
-                "trust_level": self.trust_level,
-            },
-        }
+class PersonaDemographics(BaseModel):
+    """ペルソナの人口統計学的属性"""
+    age_range: str = Field(..., description="年齢範囲（例: 25-34）")
+    occupation: str = Field(..., description="職業")
+    education_level: str = Field(..., description="教育レベル")
+    location: str = Field(..., description="居住地域")
+    income_bracket: Optional[str] = Field(None, description="収入層")
 
 
-@dataclass
-class ActionResult:
-    """Result of an agent's action"""
-
-    success: bool
-    action_type: ActionType
-    agent_id: AgentID
-    timestamp: datetime = field(default_factory=datetime.now)
-    effects: dict[str, Any] = field(default_factory=dict)
-    message: str = ""
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "success": self.success,
-            "action_type": self.action_type,
-            "agent_id": self.agent_id,
-            "timestamp": self.timestamp.isoformat(),
-            "effects": self.effects,
-            "message": self.message,
-        }
+class PersonaPsychographics(BaseModel):
+    """ペルソナの心理的属性"""
+    values: List[str] = Field(..., description="価値観")
+    interests: List[str] = Field(..., description="興味・関心")
+    lifestyle: str = Field(..., description="ライフスタイル")
+    personality_traits: List[str] = Field(..., description="性格特性")
 
 
-class EvaluationMetric(BaseModel):
-    """Individual evaluation metric"""
-
-    name: str
-    score: float = Field(ge=0.0, le=100.0)
-    weight: float = Field(ge=0.0, le=1.0, default=1.0)
-    details: str | None = None
-
-
-class EvaluationResult(BaseModel):
-    """Result of persona evaluation"""
-
-    persona_id: AgentID
-    persona_type: str
-    article_id: str
-    timestamp: datetime = Field(default_factory=datetime.now)
-
-    # Evaluation scores
-    metrics: list[EvaluationMetric] = Field(default_factory=list)
-    overall_score: float = Field(ge=0.0, le=100.0)
-
-    # Qualitative feedback
-    strengths: list[str] = Field(default_factory=list)
-    weaknesses: list[str] = Field(default_factory=list)
-    suggestions: list[str] = Field(default_factory=list)
-
-    # Predicted behaviors
-    sharing_probability: float = Field(ge=0.0, le=1.0)
-    engagement_level: Literal["low", "medium", "high"]
-    sentiment: Literal["negative", "neutral", "positive"]
-
-    # Additional context
-    reasoning: str | None = None
-    confidence: float = Field(ge=0.0, le=1.0, default=0.8)
-
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+class PersonaBehavior(BaseModel):
+    """ペルソナの行動パターン"""
+    media_consumption: List[str] = Field(..., description="メディア消費習慣")
+    decision_making_style: str = Field(..., description="意思決定スタイル")
+    technology_adoption: str = Field(..., description="技術採用傾向")
+    social_influence: float = Field(..., ge=0.0, le=1.0, description="社会的影響度")
 
 
-@dataclass
-class SimulationState:
-    """State of the simulation at a given time"""
-
-    timestep: int = 0
-    agents: dict[AgentID, PersonaAttributes] = field(default_factory=dict)
-
-    # Article being evaluated
-    article_content: str = ""
-    article_metadata: dict[str, Any] = field(default_factory=dict)
-
-    # Simulation metrics
-    total_shares: int = 0
-    total_engagements: int = 0
-    sentiment_distribution: dict[str, int] = field(default_factory=dict)
-
-    # Network state
-    interaction_history: list[dict[str, Any]] = field(default_factory=list)
-    information_cascade: list[dict[str, Any]] = field(default_factory=list)
-
-    # Time series data
-    metrics_history: list[dict[str, Any]] = field(default_factory=list)
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "timestep": self.timestep,
-            "num_agents": len(self.agents),
-            "article_metadata": self.article_metadata,
-            "metrics": {
-                "total_shares": self.total_shares,
-                "total_engagements": self.total_engagements,
-                "sentiment_distribution": self.sentiment_distribution,
-            },
-            "network": {
-                "interactions": len(self.interaction_history),
-                "cascades": len(self.information_cascade),
-            },
-        }
+class Persona(BaseModel):
+    """評価を行うペルソナ"""
+    id: str = Field(..., description="ペルソナID")
+    name: str = Field(..., description="ペルソナ名")
+    demographics: PersonaDemographics = Field(..., description="人口統計学的属性")
+    psychographics: PersonaPsychographics = Field(..., description="心理的属性")
+    behavior: PersonaBehavior = Field(..., description="行動パターン")
+    background_story: str = Field(..., description="背景ストーリー")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
-class VisualizationUpdate(BaseModel):
-    """Update message for visualization clients"""
+class ArticleEvaluation(BaseModel):
+    """記事に対する個別評価"""
+    persona_id: str = Field(..., description="評価したペルソナのID")
+    relevance_score: float = Field(..., ge=0.0, le=1.0, description="関連性スコア")
+    quality_score: float = Field(..., ge=0.0, le=1.0, description="品質スコア")
+    engagement_score: float = Field(..., ge=0.0, le=1.0, description="エンゲージメントスコア")
+    sentiment: str = Field(..., description="感情（positive/neutral/negative）")
+    reasoning: str = Field(..., description="評価の理由")
+    would_share: bool = Field(..., description="共有意向")
+    would_take_action: bool = Field(..., description="行動意向")
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
 
-    update_type: Literal["full", "differential", "event"]
-    timestamp: datetime = Field(default_factory=datetime.now)
-    data: dict[str, Any]
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+class MarketSegment(BaseModel):
+    """市場セグメント分析結果"""
+    segment_name: str = Field(..., description="セグメント名")
+    size: int = Field(..., description="セグメントサイズ")
+    average_scores: Dict[str, float] = Field(..., description="平均スコア")
+    key_characteristics: List[str] = Field(..., description="主要特性")
+    opportunities: List[str] = Field(..., description="機会")
+    challenges: List[str] = Field(..., description="課題")
+
+
+class SimulationResult(BaseModel):
+    """シミュレーション結果"""
+    simulation_id: str = Field(..., description="シミュレーションID")
+    total_personas: int = Field(..., description="評価ペルソナ総数")
+    evaluations: List[ArticleEvaluation] = Field(..., description="個別評価結果")
+    
+    # 集計結果
+    overall_relevance: float = Field(..., ge=0.0, le=1.0, description="全体関連性スコア")
+    overall_quality: float = Field(..., ge=0.0, le=1.0, description="全体品質スコア")
+    overall_engagement: float = Field(..., ge=0.0, le=1.0, description="全体エンゲージメントスコア")
+    
+    # セグメント分析
+    market_segments: List[MarketSegment] = Field(..., description="市場セグメント分析")
+    
+    # 推奨事項
+    key_insights: List[str] = Field(..., description="主要な洞察")
+    recommendations: List[str] = Field(..., description="推奨アクション")
+    
+    # メタデータ
+    completed_at: datetime = Field(default_factory=datetime.utcnow)
+    processing_time_seconds: float = Field(..., description="処理時間（秒）")
+
+
+class SimulationConfig(BaseModel):
+    """シミュレーション設定"""
+    num_personas: int = Field(default=50, ge=10, le=1000, description="生成するペルソナ数")
+    diversity_level: float = Field(default=0.7, ge=0.0, le=1.0, description="多様性レベル")
+    analysis_depth: str = Field(default="standard", description="分析深度（quick/standard/deep）")
+    focus_segments: Optional[List[str]] = Field(None, description="重点セグメント")
+    llm_provider: str = Field(default="gemini", description="使用するLLMプロバイダー")
+    parallel_processing: bool = Field(default=True, description="並列処理の有効化")
+    include_minority_perspectives: bool = Field(default=True, description="マイノリティ視点の包含")
+
+
+class ProgressUpdate(BaseModel):
+    """進捗更新メッセージ"""
+    simulation_id: str
+    status: SimulationStatus
+    progress: float = Field(..., ge=0.0, le=1.0)
+    current_step: str
+    message: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ErrorInfo(BaseModel):
+    """エラー情報"""
+    error_type: str
+    error_message: str
+    error_details: Optional[Dict[str, Any]] = None
+    traceback: Optional[str] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
