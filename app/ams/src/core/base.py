@@ -54,7 +54,7 @@ class BaseAgent(IAgent):
         attributes: PersonaAttributes | None = None,
     ):
         self._agent_id = agent_id or str(uuid.uuid4())
-        self._attributes = attributes or PersonaAttributes()
+        self._attributes = attributes or dict()
         self._state: dict[str, Any] = {}
         self._action_history: list[ActionResult] = []
 

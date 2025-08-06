@@ -196,22 +196,22 @@ class PersonaGenerator:
             PersonalityType.NEUROTICISM: 0.5,
         }
 
-        return PersonaAttributes(
+        return {
             # Demographics
-            age=persona_data.get("age", 35),
-            occupation=persona_data.get("occupation", "Professional"),
+            "age": persona_data.get("age", 35),
+            "occupation": persona_data.get("occupation", "Professional"),
             # Psychographics
-            interests=persona_data.get("interests", []),
-            personality_traits=personality_traits_dict,
+            "interests": persona_data.get("interests", []),
+            "personality_traits": personality_traits_dict,
             # Behavioral
-            content_sharing_likelihood=sharing_likelihood,
-            influence_susceptibility=0.5,
+            "content_sharing_likelihood": sharing_likelihood,
+            "influence_susceptibility": 0.5,
             # Network position
-            influence_score=influence,
-            network_centrality=0.5,
+            "influence_score": influence,
+            "network_centrality": 0.5,
             # Dynamic attributes
-            trust_level={"article_source": 0.7},
-        )
+            "trust_level": {"article_source": 0.7},
+        }
 
     def _create_default_persona(self, persona_id: str) -> PersonaAttributes:
         """Create a default persona."""
@@ -223,19 +223,19 @@ class PersonaGenerator:
             PersonalityType.NEUROTICISM: 0.3,
         }
 
-        return PersonaAttributes(
+        return {
             # Demographics
-            age=random.randint(25, 65),
-            occupation="Professional",
+            "age": random.randint(25, 65),
+            "occupation": "Professional",
             # Psychographics
-            interests=["technology", "business", "current events"],
-            personality_traits=personality_traits_dict,
+            "interests": ["technology", "business", "current events"],
+            "personality_traits": personality_traits_dict,
             # Behavioral
-            content_sharing_likelihood=0.5,
-            influence_susceptibility=0.5,
+            "content_sharing_likelihood": 0.5,
+            "influence_susceptibility": 0.5,
             # Network position
-            influence_score=0.5,
-            network_centrality=0.5,
+            "influence_score": 0.5,
+            "network_centrality": 0.5,
             # Dynamic attributes
-            trust_level={"article_source": 0.5},
-        )
+            "trust_level": {"article_source": 0.5},
+        }
