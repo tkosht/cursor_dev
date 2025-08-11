@@ -1,18 +1,19 @@
 diff --git a/cognee-mcp/src/server.py b/cognee-mcp/src/server.py
-index fffbaf22..f5a72771 100755
+index a657225f..f5bf28d1 100755
 --- a/cognee-mcp/src/server.py
 +++ b/cognee-mcp/src/server.py
-@@ -16,6 +16,7 @@ from cognee.api.v1.cognify.code_graph_pipeline import run_code_graph_pipeline
+@@ -19,6 +19,8 @@ from cognee.api.v1.cognify.code_graph_pipeline import run_code_graph_pipeline
  from cognee.modules.search.types import SearchType
  from cognee.shared.data_models import KnowledgeGraph
  from cognee.modules.storage.utils import JSONEncoder
 +from cognee.modules.engine.operations.setup import setup
++
  
- mcp = FastMCP("Cognee")
  
-@@ -443,6 +444,15 @@ async def main():
- 
-     args = parser.parse_args()
+ try:
+@@ -950,6 +952,15 @@ async def main():
+     mcp.settings.host = args.host
+     mcp.settings.port = args.port
  
 +    # Initialize database and tables before starting server
 +    logger.info("Initializing Cognee database...")
@@ -23,14 +24,14 @@ index fffbaf22..f5a72771 100755
 +        logger.warning(f"Database initialization warning: {str(e)}")
 +        # Continue anyway as it might already be initialized
 +
-     logger.info(f"Starting MCP server with transport: {args.transport}")
-     if args.transport == "stdio":
-         await mcp.run_stdio_async()
+     if not args.no_migration:
+         # Run Alembic migrations from the main cognee directory where alembic.ini is located
+         logger.info("Running database migrations...")
 diff --git a/docker-compose.yml b/docker-compose.yml
-index f6c1b4da..fc50060e 100644
+index 1c0a7dbd..6074b036 100644
 --- a/docker-compose.yml
 +++ b/docker-compose.yml
-@@ -53,8 +53,13 @@ services:
+@@ -91,8 +91,13 @@ services:
        - 7474:7474
        - 7687:7687
      environment:
@@ -45,7 +46,7 @@ index f6c1b4da..fc50060e 100644
      networks:
        - cognee-network
  
-@@ -96,7 +101,8 @@ services:
+@@ -134,7 +139,8 @@ services:
        POSTGRES_USER: cognee
        POSTGRES_PASSWORD: cognee
        POSTGRES_DB: cognee_db
@@ -55,7 +56,7 @@ index f6c1b4da..fc50060e 100644
      ports:
        - 5432:5432
      networks:
-@@ -108,4 +114,4 @@ networks:
+@@ -146,4 +152,4 @@ networks:
  
  volumes:
    chromadb_data:
