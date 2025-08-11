@@ -124,7 +124,7 @@ export UV_LINK_MODE=copy
 export GOOGLE_CLOUD_PROJECT=gen-lang-client-0389906364
 
 alias auto_claude="claude --dangerously-skip-permissions"
-# alias claude="auto_claude"
+alias auto_codex="codex --dangerously-bypass-approvals-and-sandbox"
 alias ccusage="npx ccusage@latest blocks --live"
 alias geminiflash="gemini -m gemini-2.5-flash"
 

@@ -381,11 +381,17 @@ class ReporterAgent(BaseAgent):
         # Analyze persona segments
         segments: dict[str, dict[str, Any]] = {}
         for persona in personas:
-            occupation = persona.get("occupation", "Unknown")
+            # Handle both dict and PersonaAttributes objects
+            if hasattr(persona, 'occupation'):
+                occupation = persona.occupation
+                age = persona.age if hasattr(persona, 'age') else None
+            else:
+                occupation = persona.get("occupation", "Unknown")
+                age = persona.get("age")
+            
             if occupation not in segments:
                 segments[occupation] = {"count": 0, "average_age": 0, "interests": []}
             segments[occupation]["count"] += 1
-            age = persona.get("age")
             if age and isinstance(age, int | float):
                 segments[occupation]["average_age"] += age
 
@@ -445,7 +451,14 @@ class ReporterAgent(BaseAgent):
     def _create_score_distribution_data(self, state: dict[str, Any]) -> dict[str, Any]:
         """Create data for score distribution histogram."""
         evaluations = state.get("persona_evaluations", {})
-        scores = [e.get("overall_score", 0) for e in evaluations.values()]
+        scores = []
+        for e in evaluations.values():
+            if hasattr(e, 'overall_score'):
+                scores.append(e.overall_score)
+            elif isinstance(e, dict):
+                scores.append(e.get("overall_score", 0))
+            else:
+                scores.append(0)
 
         if not scores:
             return {"type": "histogram", "data": {}, "layout": {}}
@@ -573,15 +586,27 @@ class ReporterAgent(BaseAgent):
             return 0
 
         # Simple diversity calculation based on unique occupations
-        occupations = {p.get("occupation") for p in personas if p.get("occupation")}
-        return min((len(occupations) / len(personas)) * 100, 100)
+        occupations = set()
+        for p in personas:
+            if hasattr(p, 'occupation'):
+                occupations.add(p.occupation)
+            elif isinstance(p, dict) and p.get("occupation"):
+                occupations.add(p.get("occupation"))
+        return min((len(occupations) / len(personas)) * 100, 100) if personas else 0
 
     def _calculate_consensus(self, evaluations: dict[str, Any]) -> float:
         """Calculate consensus level among evaluations."""
         if len(evaluations) < 2:
             return 100
 
-        scores = [e.get("overall_score", 0) for e in evaluations.values()]
+        scores = []
+        for e in evaluations.values():
+            if hasattr(e, 'overall_score'):
+                scores.append(e.overall_score)
+            elif isinstance(e, dict):
+                scores.append(e.get("overall_score", 0))
+            else:
+                scores.append(0)
         if not scores:
             return 0
 

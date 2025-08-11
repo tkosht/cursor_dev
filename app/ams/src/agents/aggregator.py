@@ -94,14 +94,11 @@ class AggregatorAgent(BaseAgent):
         # Aggregate overall scores
         overall_scores = []
         for eval_result in evaluations:
-            overall_scores.append(eval_result["overall_score"])
+            overall_scores.append(eval_result.overall_score)
 
             # Aggregate individual metrics
-            for metric in eval_result.get("metrics", []):
-                if isinstance(metric, dict):
-                    metrics_data[metric["name"]].append(metric["score"])
-                else:
-                    metrics_data[metric.name].append(metric.score)
+            for metric in eval_result.metrics:
+                metrics_data[metric.name].append(metric.score)
 
         # Calculate statistics for overall score
         aggregated = {}
@@ -142,9 +139,9 @@ class AggregatorAgent(BaseAgent):
         suggestion_personas: dict[str, list[str]] = defaultdict(list)
 
         for eval_result in evaluations:
-            for suggestion in eval_result.get("suggestions", []):
+            for suggestion in eval_result.suggestions:
                 suggestion_counter[suggestion] += 1
-                suggestion_personas[suggestion].append(eval_result.get("persona_id", "unknown"))
+                suggestion_personas[suggestion].append(eval_result.persona_id)
 
         # Create prioritized list
         prioritized = []
@@ -174,7 +171,7 @@ class AggregatorAgent(BaseAgent):
         sentiment_counts: Counter[str] = Counter()
 
         for eval_result in evaluations:
-            sentiment_counts[eval_result.get("sentiment", "neutral")] += 1
+            sentiment_counts[eval_result.sentiment] += 1
 
         total = len(evaluations)
         distribution = {
@@ -206,8 +203,8 @@ class AggregatorAgent(BaseAgent):
         sentiment_segments = defaultdict(list)
 
         for eval_result in evaluations:
-            sentiment_segments[eval_result.get("sentiment", "neutral")].append(
-                {"persona_id": eval_result.get("persona_id", "unknown"), "overall_score": eval_result.get("overall_score", 0)}
+            sentiment_segments[eval_result.sentiment].append(
+                {"persona_id": eval_result.persona_id, "overall_score": eval_result.overall_score}
             )
 
         # Calculate average scores per sentiment
@@ -227,7 +224,7 @@ class AggregatorAgent(BaseAgent):
         if len(evaluations) < 3:
             return {}
 
-        overall_scores = [eval_result.get("overall_score", 0) for eval_result in evaluations]
+        overall_scores = [eval_result.overall_score for eval_result in evaluations]
 
         scores_array = np.array(overall_scores)
         q1 = np.percentile(scores_array, 25)

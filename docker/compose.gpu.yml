@@ -33,7 +33,8 @@ services:
       - "17474:7474"    # cognee neo4j
       - "17687:7687"    # cognee neo4j/bolt
       - "15432:5432"    # cognee postgres
-      - "18000:8000"    # cognee sse / app
+      - "18000:8000"    # cognee sse
+      - "19121:9121"    # serena sse
       - "15173:5173"    # web app frontend
       # - "8502:8501"   # streamlit
 

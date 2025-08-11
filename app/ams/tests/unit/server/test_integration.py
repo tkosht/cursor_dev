@@ -3,7 +3,6 @@ Integration tests for FastAPI server with OrchestratorAgent
 """
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -22,48 +21,18 @@ def test_client():
 class TestOrchestratorIntegration:
     """Test orchestrator integration with FastAPI server"""
 
-    @patch("src.server.simulation_service.OrchestratorAgent")
-    def test_simulation_with_orchestrator_mock(self, mock_orchestrator_class, test_client):
-        """Test simulation creation triggers orchestrator (with mocked orchestrator)"""
-        # Setup mock orchestrator
-        mock_orchestrator = MagicMock()
-        mock_graph = MagicMock()
-        
-        # Make astream return an async generator
-        async def mock_astream(*args, **kwargs):
-            yield {"orchestrator": {"current_phase": "initialization"}}
-            yield {"orchestrator": {"current_phase": "completed"}}
-        
-        # Make aget_state return a mock state
-        async def mock_aget_state(*args, **kwargs):
-            mock_state = MagicMock()
-            mock_state.values = {
-                "persona_evaluations": [],
-                "aggregation_results": {
-                    "overall_relevance": 0.8,
-                    "overall_quality": 0.9,
-                    "overall_engagement": 0.7,
-                    "market_segments": [],
-                    "key_insights": ["Test insight"],
-                    "recommendations": ["Test recommendation"],
-                },
-                "persona_count": 10,
-                "start_time": None,
-                "end_time": None,
-            }
-            return mock_state
-        
-        mock_graph.astream = mock_astream
-        mock_graph.aget_state = mock_aget_state
-        mock_orchestrator.compile.return_value = mock_graph
-        mock_orchestrator_class.return_value = mock_orchestrator
-        
-        # Create simulation
+    def test_simulation_with_orchestrator_mock(self, test_client):
+        """Test simulation creation with real orchestrator (minimal test)"""
+        # Create simulation with minimal config for quick test
         response = test_client.post(
             "/api/simulations",
             json={
                 "article_content": "Test article content",
                 "article_metadata": {"title": "Test Article"},
+                "config": {
+                    "num_personas": 10,  # Minimum required personas
+                    "parallel_processing": True
+                }
             }
         )
         
@@ -72,11 +41,10 @@ class TestOrchestratorIntegration:
         assert "id" in data
         assert data["status"] == "pending"
         
-        # Give background task time to start
-        # In a real test, we'd wait for the status to change
-        # But for unit tests, we just verify the orchestrator was called
-        assert mock_orchestrator_class.called
-        assert mock_orchestrator.compile.called
+        # Verify the simulation was created
+        sim_id = data["id"]
+        status_response = test_client.get(f"/api/simulations/{sim_id}/status")
+        assert status_response.status_code == 200
 
     def test_simulation_status_tracking(self, test_client):
         """Test simulation status can be tracked"""

@@ -105,25 +105,25 @@ class EvaluationAgent(BaseAgent):
         # Format persona attributes
         demographics = f"""
         Demographics:
-        - Age: {persona.get('age', 'Not specified')}
-        - Occupation: {persona.get('occupation', 'Not specified')}
-        - Location: {persona.get('location', 'Not specified')}
-        - Education: {persona.get('education_level', 'Not specified')}
-        - Income Bracket: {persona.get('income_bracket', 'Not specified')}
+        - Age: {persona.age}
+        - Occupation: {persona.occupation}
+        - Location: {persona.location}
+        - Education: {persona.education_level}
+        - Income Bracket: {persona.income_bracket or 'Not specified'}
         """
 
         psychographics = f"""
         Psychographics:
-        - Values: {', '.join(persona.get('values', []))}
-        - Interests: {', '.join(persona.get('interests', []))}
-        - Personality Traits: {self._format_personality_traits(persona.get('personality_traits', {}))}
-        - Information Seeking: {persona.get('information_seeking_behavior', 'Not specified')}
-        - Preferred Channels: {', '.join(persona.get('preferred_channels', []))}
-        - Cognitive Biases: {', '.join(persona.get('cognitive_biases', [])) or 'None specified'}
-        - Emotional Triggers: {', '.join(persona.get('emotional_triggers', [])) or 'None specified'}
-        - Decision Making Style: {persona.get('decision_making_style', 'Not specified')}
-        - Content Sharing Likelihood: {persona.get('content_sharing_likelihood', 0.5)}
-        - Influence Susceptibility: {persona.get('influence_susceptibility', 0.5)}
+        - Values: {', '.join(persona.values)}
+        - Interests: {', '.join(persona.interests)}
+        - Personality Traits: {self._format_personality_traits(persona.personality_traits)}
+        - Information Seeking: {persona.information_seeking_behavior}
+        - Preferred Channels: {', '.join([str(ch.value) for ch in persona.preferred_channels])}
+        - Cognitive Biases: {', '.join(persona.cognitive_biases or []) or 'None specified'}
+        - Emotional Triggers: {', '.join(persona.emotional_triggers or []) or 'None specified'}
+        - Decision Making Style: {persona.decision_making_style or 'Not specified'}
+        - Content Sharing Likelihood: {persona.content_sharing_likelihood or 0.5}
+        - Influence Susceptibility: {persona.influence_susceptibility or 0.5}
         """
 
         # Format analysis results
@@ -229,7 +229,7 @@ class EvaluationAgent(BaseAgent):
         import hashlib
 
         # Create a stable ID based on persona attributes
-        key_attrs = f"{persona.get('age', 'unknown')}_{persona.get('occupation', 'unknown')}_{persona.get('location', 'unknown')}"
+        key_attrs = f"{persona.age}_{persona.occupation}_{persona.location}"
         return hashlib.md5(key_attrs.encode()).hexdigest()[:12]
 
     async def decide(self, perception: dict[str, Any]) -> IAction:
@@ -312,32 +312,20 @@ class EvaluationAgent(BaseAgent):
                 )
             )
 
-            return {
-                "persona_id": persona_id,
-                "persona_type": "dynamic",  # Will be set by orchestrator
-                "article_id": article_id,
-                "metrics": metrics,
-                "overall_score": overall,
-                "strengths": parsed.get("strengths", ["Unable to parse strengths"]),
-                "weaknesses": parsed.get("weaknesses", ["Unable to parse weaknesses"]),
-                "suggestions": parsed.get("improvement_suggestions", ["Unable to parse suggestions"]),
-                "sharing_probability": parsed.get("predicted_engagement", {}).get(
+            return EvaluationResult(
+                persona_id=persona_id,
+                article_id=article_id,
+                metrics=metrics,
+                overall_score=overall,
+                strengths=parsed.get("strengths", ["Unable to parse strengths"]),
+                weaknesses=parsed.get("weaknesses", ["Unable to parse weaknesses"]),
+                suggestions=parsed.get("improvement_suggestions", ["Unable to parse suggestions"]),
+                sharing_probability=parsed.get("predicted_engagement", {}).get(
                     "share_probability", 0.3
                 ),
-                "engagement_level": engagement_level,
-                "sentiment": sentiment,
-                "reasoning": "\n".join(
-                    parsed.get("key_insights", ["Evaluation completed with partial data"])
-                ),
-                "confidence": (
-                    0.8
-                    if all(
-                        key in parsed
-                        for key in ["relevance_score", "clarity_score", "credibility_score"]
-                    )
-                    else 0.5
-                ),
-            }
+                engagement_level=engagement_level,
+                sentiment=sentiment,
+            )
 
         except Exception as e:
             logger.error(f"Failed to parse evaluation response: {str(e)}")
@@ -369,18 +357,15 @@ class EvaluationAgent(BaseAgent):
             EvaluationMetric(name="action_potential", score=50, weight=0.15),
         ]
 
-        return {
-            "persona_id": persona_id,
-            "persona_type": "dynamic",
-            "article_id": article_id,
-            "metrics": default_metrics,
-            "overall_score": 50,
-            "strengths": ["Content is present", "Article is readable"],
-            "weaknesses": ["Unable to perform detailed evaluation"],
-            "suggestions": ["Evaluation system needs review"],
-            "sharing_probability": 0.3,
-            "engagement_level": "medium",
-            "sentiment": "neutral",
-            "reasoning": "Default evaluation due to system error",
-            "confidence": 0.1,
-        }
+        return EvaluationResult(
+            persona_id=persona_id,
+            article_id=article_id,
+            metrics=default_metrics,
+            overall_score=50,
+            strengths=["Content is present", "Article is readable"],
+            weaknesses=["Unable to perform detailed evaluation"],
+            suggestions=["Evaluation system needs review"],
+            sharing_probability=0.3,
+            engagement_level="medium",
+            sentiment="neutral",
+        )

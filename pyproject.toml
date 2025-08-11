@@ -41,6 +41,7 @@ mypy = "*"
 pytest-benchmark = "*"
 memory-profiler = "*"
 psutil = "*"
+ruff = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -83,6 +84,19 @@ exclude = [
     "backup",
     "output"
 ]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+# Enable common rulesets: pycodestyle (E/W), Pyflakes (F), isort (I), bugbear (B), pyupgrade (UP)
+select = ["E", "W", "F", "I", "B", "UP"]
+ignore = []
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+combine-as-imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

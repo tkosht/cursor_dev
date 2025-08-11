@@ -2,6 +2,7 @@
 meta:
   name: "Enhanced_DAG_Debugger_with_Serena_Sequential_Runner_Multi_Agent"
   version: "2.0.0"
+  canonical: true
   purpose: >
     超高難度のデバッグ・問題解決を、Serenaのセマンティック理解と
     Sequential Thinkingの段階的推論を組み合わせたDAG探索で遂行。

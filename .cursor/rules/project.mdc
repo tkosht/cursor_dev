@@ -73,12 +73,12 @@ alwaysApply: true
 
 ## 4. コーディング規約
 
-- **フォーマッタ:** Black (設定は [pyproject.toml](mdc:pyproject.toml) の `[tool.black]` セクション参照)
+- **フォーマッタ:** Black（当面維持。将来 Ruff formatter への統合を評価）
   - コミット前に `black .` を実行
-- **リンター:** Flake8 (設定は [.flake8](mdc:.flake8) 参照)
-  - `flake8 .` で警告ゼロを目指す
-- **型チェック:** MyPy (設定は [pyproject.toml](mdc:pyproject.toml) の `[tool.mypy]` セクション参照)
-  - `mypy src` でエラーゼロを目指す
+- **リンター:** Ruff を標準採用（Flake8 は互換・補助に限定）
+  - `ruff check .` を実行
+- **型チェック:** MyPy（設定は [pyproject.toml](mdc:pyproject.toml) の `[tool.mypy]` セクション参照）
+  - `mypy app` を基本ターゲットとする（相対パス原則）
 - **命名規則:**
   - 変数・関数: スネークケース (`variable_name`, `function_name`)
   - クラス: パスカルケース (`ClassName`)
@@ -126,7 +126,12 @@ alwaysApply: true
 ### 6.6 git リポジトリの公開範囲
 - 本リポジトリは機密情報を含まない前提で、公開範囲は開発チーム内とする。 (もし public ならその旨を記載し、機密情報混入により一層注意)
 
-## 7. プロジェクト固有ツール・戦略と `CLAUDE.md` との連携
+## 7. パス・設定の原則
+
+- 相対パス原則: コマンド・設定・スクリプトは相対パスで記述する。絶対パスは明示許可がない限り禁止。
+- 可変値のハードコード禁止: パス/閾値/キー/エンドポイントなどは設定ファイル・環境変数・引数で外出しする。
+
+## 8. プロジェクト固有ツール・戦略と `CLAUDE.md` との連携
 
 ### 7.1 Cognee 関連
 - **目的:** プロジェクトの知識ベースの管理と検索性向上。
@@ -138,11 +143,11 @@ alwaysApply: true
 - **`CLAUDE.md` との連携:** この組織フレームワークは、[CLAUDE.md](mdc:CLAUDE.md) の `MINDSET` および `VALUE ASSESSMENT` に基づく高度な意思決定を自動化・スケールさせるための具体的な実装パターンである。
 - **関連ドキュメント:** [memory-bank/02-organization/](mdc:memory-bank/02-organization)
 
-### 7.3 品質・テスト戦略
+### 8.3 品質・テスト戦略
 - **目的:** 高品質なソフトウェア開発の維持。
 - **`CLAUDE.md` との連携:** テスト駆動開発(TDD)や品質ゲート (`quality_gate_check.py`) の運用は、[CLAUDE.md](mdc:CLAUDE.md) の `TDD-MANDATORY` や `QUALITY COMMITMENT` の原則を遵守するための必須プラクティスである。
 - **関連ドキュメント:** [memory-bank/04-quality/](mdc:memory-bank/04-quality), [memory-bank/00-core/tdd_implementation_knowledge.md](mdc:memory-bank/00-core/tdd_implementation_knowledge.md)
-### 7.4 Git Worktree 並列開発
+### 8.4 Git Worktree 並列開発
 - **目的:** 複数タスクの並行開発による効率化。
 - **`CLAUDE.md` との連携:** Git Worktreeの利用は、@CLAUDE.md が要求する迅速な価値提供と、安全な開発環境の分離を両立させるための技術的手段である。
 - **関連ドキュメント:** @memory-bank/08-automatio[n/git_work](mdc:CLAUDE.md)tree_parallel_development.md 

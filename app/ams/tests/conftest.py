@@ -8,7 +8,16 @@ import gc
 # Add src to path
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+env_path = Path(__file__).parent.parent / ".env"
+if env_path.exists():
+    load_dotenv(env_path)
+
+# NO MOCKS - Following CLAUDE.md mandatory rules
+# from unittest.mock import MagicMock  # REMOVED - Real APIs only
 
 import pytest
 
@@ -60,14 +69,28 @@ def event_loop():
 
 
 @pytest.fixture
-def mock_config(monkeypatch):
-    """Mock configuration for testing"""
-    # Set test environment variables
-    monkeypatch.setenv("LLM_PROVIDER", "gemini")
-    monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
+def test_config(monkeypatch):
+    """Test configuration with real API keys"""
+    # Load test environment from .env.test
+    import os
+    from pathlib import Path
+    from dotenv import load_dotenv
+    
+    test_env_path = Path(__file__).parent.parent / ".env.test"
+    if test_env_path.exists():
+        load_dotenv(test_env_path, override=True)
+    
+    # Ensure we're in test mode
     monkeypatch.setenv("TEST_MODE", "true")
-    monkeypatch.setenv("AMS_MAX_PERSONAS", "10")
-    monkeypatch.setenv("AMS_LOG_LEVEL", "DEBUG")
+    
+    # Verify API key is set (fail fast if not)
+    provider = os.getenv("TEST_LLM_PROVIDER", "gemini")
+    if provider == "gemini" and not os.getenv("GOOGLE_API_KEY"):
+        pytest.skip("GOOGLE_API_KEY not set - cannot run tests with real API")
+    elif provider == "openai" and not os.getenv("OPENAI_API_KEY"):
+        pytest.skip("OPENAI_API_KEY not set - cannot run tests with real API")
+    elif provider == "anthropic" and not os.getenv("ANTHROPIC_API_KEY"):
+        pytest.skip("ANTHROPIC_API_KEY not set - cannot run tests with real API")
 
     # Import after env vars are set
     from config import get_config
@@ -76,12 +99,10 @@ def mock_config(monkeypatch):
 
 
 @pytest.fixture
-def mock_llm():
-    """Mock LLM for testing"""
-    mock = MagicMock()
-    mock.ainvoke = MagicMock(return_value=MagicMock(content='{"result": "test"}'))
-    mock.invoke = MagicMock(return_value=MagicMock(content='{"result": "test"}'))
-    return mock
+def real_llm():
+    """Real LLM for testing - NO MOCKS ALLOWED"""
+    from llm_test_helper import get_llm_helper
+    return get_llm_helper()
 
 
 @pytest.fixture
@@ -153,11 +174,30 @@ def sample_persona_attributes():
 
 
 @pytest.fixture
-def mock_websocket():
-    """Mock websocket for testing"""
-    mock = MagicMock()
-    mock.send = MagicMock(return_value=asyncio.Future())
-    mock.send.return_value.set_result(None)
-    mock.recv = MagicMock(return_value=asyncio.Future())
-    mock.recv.return_value.set_result('{"type": "test"}')
-    return mock
+def test_websocket():
+    """Test websocket fixture - real implementation preferred"""
+    # For websocket, we can use a test implementation since it's not an LLM
+    # This is for internal communication, not external API mocking
+    import asyncio
+    from unittest.mock import AsyncMock
+    
+    class TestWebSocket:
+        def __init__(self):
+            self.messages = []
+            self.closed = False
+            
+        async def send(self, message):
+            if self.closed:
+                raise ConnectionError("WebSocket is closed")
+            self.messages.append(message)
+            
+        async def recv(self):
+            if self.closed:
+                raise ConnectionError("WebSocket is closed")
+            await asyncio.sleep(0.01)  # Simulate network delay
+            return '{"type": "test", "data": {}}'
+            
+        async def close(self):
+            self.closed = True
+    
+    return TestWebSocket()

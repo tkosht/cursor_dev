@@ -125,7 +125,10 @@ class TestSmallScaleIntegration:
                 assert isinstance(persona, PersonaAttributes)
                 logger.info(f"Persona {i + 1}: {persona.occupation}, Age: {persona.age}")
                 logger.info(f"  Interests: {persona.interests[:2]}")
-                logger.info(f"  Influence: {persona.influence_score:.2f}")
+                if persona.influence_susceptibility is not None:
+                    logger.info(f"  Influence susceptibility: {persona.influence_susceptibility:.2f}")
+                else:
+                    logger.info(f"  Influence susceptibility: Not calculated")
 
             # Cost estimation
             elapsed_time = time.time() - start_time

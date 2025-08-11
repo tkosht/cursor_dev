@@ -1,57 +1,67 @@
-"""LLM透明性ユーティリティのユニットテスト"""
+"""LLM透明性ユーティリティのユニットテスト - Real LLM API calls only"""
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
-
 import pytest
+from dataclasses import dataclass
 
 from src.utils.llm_transparency import (
     LLMCallTracker,
     TransparentLLM,
     verify_llm_call,
 )
+from src.utils.llm_factory import create_llm
+
+
+@dataclass
+class SimpleLLMResponse:
+    """Simple response object for testing"""
+    content: str
 
 
 class TestTransparentLLM:
     """TransparentLLMクラスのテスト"""
 
     @pytest.fixture
-    def mock_llm(self):
-        """モックLLMフィクスチャ"""
-        mock = MagicMock()
-        mock.ainvoke = AsyncMock()
-        mock.ainvoke.return_value = MagicMock(content="test response")
-        return mock
+    def real_llm(self):
+        """Real LLM fixture using llm_factory"""
+        return create_llm()
 
     @pytest.mark.asyncio
-    async def test_transparent_llm_creation(self, mock_llm):
+    async def test_transparent_llm_creation(self, real_llm):
         """TransparentLLMの作成テスト"""
-        transparent_llm = TransparentLLM(mock_llm, enable_verification=True)
-        assert transparent_llm.llm == mock_llm
+        transparent_llm = TransparentLLM(real_llm, enable_verification=True)
+        assert transparent_llm.llm == real_llm
         assert transparent_llm.enable_verification is True
         assert transparent_llm.call_history == []
 
     @pytest.mark.asyncio
-    async def test_transparent_llm_invoke(self, mock_llm):
-        """透明な呼び出しのテスト"""
-        transparent_llm = TransparentLLM(mock_llm, enable_verification=False)
+    async def test_transparent_llm_invoke(self, real_llm):
+        """透明な呼び出しのテスト with real LLM"""
+        transparent_llm = TransparentLLM(real_llm, enable_verification=False)
 
-        response = await transparent_llm.ainvoke("test prompt")
+        # Simple prompt to minimize API usage
+        response = await transparent_llm.ainvoke("Reply with 'OK' only")
 
-        # モックが呼ばれたことを確認
-        mock_llm.ainvoke.assert_called_once_with("test prompt")
-        assert response.content == "test response"
+        # Real LLMが応答を返したことを確認
+        assert response is not None
+        assert hasattr(response, 'content')
+        assert len(response.content) > 0
 
         # 履歴が記録されていることを確認
         assert len(transparent_llm.call_history) == 1
-        assert transparent_llm.call_history[0]["prompt"] == "test prompt"
+        assert transparent_llm.call_history[0]["prompt"] == "Reply with 'OK' only"
         assert transparent_llm.call_history[0]["success"] is True
 
     @pytest.mark.asyncio
-    async def test_transparent_llm_error_handling(self, mock_llm):
-        """エラーハンドリングのテスト"""
-        mock_llm.ainvoke.side_effect = Exception("Test error")
-        transparent_llm = TransparentLLM(mock_llm, enable_verification=False)
+    async def test_transparent_llm_error_handling(self):
+        """エラーハンドリングのテスト with invalid LLM"""
+        # Create a broken LLM that always fails
+        class BrokenLLM:
+            async def ainvoke(self, prompt):
+                raise Exception("Test error")
+        
+        broken_llm = BrokenLLM()
+        transparent_llm = TransparentLLM(broken_llm, enable_verification=False)
 
         with pytest.raises(Exception, match="Test error"):
             await transparent_llm.ainvoke("test prompt")
@@ -61,9 +71,9 @@ class TestTransparentLLM:
         assert transparent_llm.call_history[0]["success"] is False
         assert transparent_llm.call_history[0]["error"] == "Test error"
 
-    def test_verification_summary(self, mock_llm):
+    def test_verification_summary(self, real_llm):
         """検証サマリーのテスト"""
-        transparent_llm = TransparentLLM(mock_llm)
+        transparent_llm = TransparentLLM(real_llm)
 
         # 履歴なしの場合
         summary = transparent_llm.get_verification_summary()

@@ -1,4 +1,4 @@
-# CLAUDE.md (and GEMINI.md) - AI Agent Mandatory Protocol
+# CLAUDE.md (and GEMINI.md, AGENT.md) - AI Agent Mandatory Protocol
 
 **🤖 IMPORTANT: This is an AI AGENT-ONLY knowledge base. Human operators should NOT attempt to read or reference these files due to volume and AI-optimized formatting.**
 
@@ -169,14 +169,15 @@ AI_KNOWLEDGE_FORMAT=(
 )
 ```
 
-### 8️⃣ MOCK USAGE ABSOLUTE BAN (モック使用絶対禁止)
+### 8️⃣ MOCK USAGE POLICY (モック利用ポリシー)
 ```bash
-# 🚫 MOCK TESTING IS STRICTLY FORBIDDEN
-MOCK_BAN_ABSOLUTE=(
-    "NO_MOCKS: NEVER use mock/patch for integration/E2E tests"
-    "REAL_ONLY: ALWAYS use actual LLM API calls for verification"
-    "COST_AWARE: Use small-scale tests (3-5 calls) but REAL calls"
-    "VIOLATION: Using mocks = Immediate task failure + penalty"
+# 🚫 Integration/E2E: Mocks are STRICTLY FORBIDDEN
+# ✅ Unit: Boundary-only mocking MAY be allowed with prior approval
+MOCK_POLICY=(
+    "INTEGRATION_E2E_NO_MOCKS: NEVER use mock/patch for integration/E2E tests"
+    "UNIT_BOUNDARY_ONLY: For unit tests, mocking is limited to external I/O and LLM boundaries with approval"
+    "REAL_ONLY_PREF: Prefer real calls; minimize count and scope (3-5 calls max in CI)"
+    "VIOLATION: Unauthorized mocking = Immediate task failure + penalty"
 )
 
 # Detection patterns that trigger immediate failure

@@ -6,7 +6,13 @@ from unittest.mock import patch
 import pytest
 
 from src.agents.orchestrator import ArticleReviewState, OrchestratorAgent
-from src.core.types import EvaluationMetric, EvaluationResult, PersonaAttributes
+from src.core.types import (
+    EvaluationMetric,
+    EvaluationResult,
+    InformationChannel,
+    PersonaAttributes,
+    PersonalityType,
+)
 
 
 class TestOrchestratorIntegration:
@@ -43,20 +49,53 @@ class TestOrchestratorIntegration:
                 PersonaAttributes(
                     age=30,
                     occupation="Software Engineer",
+                    location="Tokyo, Japan",
+                    education_level="Bachelor's Degree",
                     interests=["AI", "Programming"],
                     values=["Innovation", "Efficiency"],
+                    personality_traits={
+                        PersonalityType.OPENNESS: 0.8,
+                        PersonalityType.CONSCIENTIOUSNESS: 0.7,
+                        PersonalityType.EXTRAVERSION: 0.5,
+                        PersonalityType.AGREEABLENESS: 0.6,
+                        PersonalityType.NEUROTICISM: 0.3,
+                    },
+                    information_seeking_behavior="active_searcher",
+                    preferred_channels=[InformationChannel.TECH_BLOGS, InformationChannel.SOCIAL_MEDIA],
                 ),
                 PersonaAttributes(
                     age=35,
                     occupation="Data Scientist",
+                    location="San Francisco, USA",
+                    education_level="Master's Degree",
                     interests=["Machine Learning", "Statistics"],
                     values=["Accuracy", "Research"],
+                    personality_traits={
+                        PersonalityType.OPENNESS: 0.9,
+                        PersonalityType.CONSCIENTIOUSNESS: 0.8,
+                        PersonalityType.EXTRAVERSION: 0.4,
+                        PersonalityType.AGREEABLENESS: 0.5,
+                        PersonalityType.NEUROTICISM: 0.2,
+                    },
+                    information_seeking_behavior="methodical_researcher",
+                    preferred_channels=[InformationChannel.TECH_BLOGS, InformationChannel.NEWS_WEBSITE],
                 ),
                 PersonaAttributes(
                     age=28,
                     occupation="Product Manager",
+                    location="London, UK",
+                    education_level="MBA",
                     interests=["Technology", "Business"],
                     values=["User Experience", "Growth"],
+                    personality_traits={
+                        PersonalityType.OPENNESS: 0.7,
+                        PersonalityType.CONSCIENTIOUSNESS: 0.8,
+                        PersonalityType.EXTRAVERSION: 0.7,
+                        PersonalityType.AGREEABLENESS: 0.7,
+                        PersonalityType.NEUROTICISM: 0.3,
+                    },
+                    information_seeking_behavior="trend_follower",
+                    preferred_channels=[InformationChannel.EMAIL, InformationChannel.SOCIAL_MEDIA],
                 ),
             ],
             persona_generation_complete=True,
@@ -67,9 +106,9 @@ class TestOrchestratorIntegration:
                     article_id="test_001",
                     overall_score=85,
                     metrics=[
-                        EvaluationMetric(name="relevance", score=90),
-                        EvaluationMetric(name="clarity", score=80),
-                        EvaluationMetric(name="engagement", score=85),
+                        EvaluationMetric(name="relevance", score=90, weight=0.4),
+                        EvaluationMetric(name="clarity", score=80, weight=0.3),
+                        EvaluationMetric(name="engagement", score=85, weight=0.3),
                     ],
                     sentiment="positive",
                     suggestions=["Add more code examples", "Include real-world use cases"],
@@ -84,9 +123,9 @@ class TestOrchestratorIntegration:
                     article_id="test_001",
                     overall_score=78,
                     metrics=[
-                        EvaluationMetric(name="relevance", score=85),
-                        EvaluationMetric(name="clarity", score=70),
-                        EvaluationMetric(name="engagement", score=75),
+                        EvaluationMetric(name="relevance", score=85, weight=0.4),
+                        EvaluationMetric(name="clarity", score=70, weight=0.3),
+                        EvaluationMetric(name="engagement", score=75, weight=0.3),
                     ],
                     sentiment="neutral",
                     suggestions=["Add more technical depth", "Include benchmarks"],
@@ -101,9 +140,9 @@ class TestOrchestratorIntegration:
                     article_id="test_001",
                     overall_score=82,
                     metrics=[
-                        EvaluationMetric(name="relevance", score=80),
-                        EvaluationMetric(name="clarity", score=85),
-                        EvaluationMetric(name="engagement", score=80),
+                        EvaluationMetric(name="relevance", score=80, weight=0.4),
+                        EvaluationMetric(name="clarity", score=85, weight=0.3),
+                        EvaluationMetric(name="engagement", score=80, weight=0.3),
                     ],
                     sentiment="positive",
                     suggestions=["Add ROI analysis", "Include case studies"],

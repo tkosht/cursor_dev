@@ -2,6 +2,13 @@
 meta:
   name: "Enhanced_DAG_Debugger_with_Serena_Sequential_Runner"
   version: "1.0.0"
+  deprecated: true
+  supersedes:
+    - path: "tasks/dag-debug-enhanced.md"
+      version: "2.0.0"
+  note: |
+    このテンプレートは `tasks/dag-debug-enhanced.md` (v2.0.0) に置き換えられました。
+    可能な限り最新のテンプレートを使用してください。
   purpose: >
     超高難度のデバッグ・問題解決を、Serenaのセマンティック理解と
     Sequential Thinkingの段階的推論を組み合わせたDAG探索で遂行。
@@ -15,6 +22,7 @@ execution_model:
     2. DAG探索フェーズ (DAG + Serena)
        → 各ノードでSerenaのセマンティック分析を実行
        → Sequential Thinkingで思考過程を記録
+       → 分岐をサブエージェントで分析実行
     
     3. 検証・確定フェーズ (All Tools)
        → 修正案の実装と全テストスイートの実行
@@ -139,6 +147,9 @@ usage_command: |
     
     # 複雑な統合問題
     /dag-debug-enhanced "API timeout after recent deployment" --verbose --time-limit 60
+
+  Migration:
+    このテンプレートは非推奨です。`tasks/dag-debug-enhanced.md` を参照してください。
 
 output_format:
   summary:

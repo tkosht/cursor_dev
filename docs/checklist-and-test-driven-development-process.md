@@ -27,7 +27,7 @@
 
 ### 開発ツール
 - [ ] pytest.iniが設定されている
-- [ ] .flake8/.pylintrcが設定されている
+- [ ] Ruff/Black の設定が整備されている（Ruff標準、Flake8は補助）
 - [ ] .pre-commit-config.yamlが設定されている
 - [ ] logging設定ファイルが準備されている
 
@@ -51,7 +51,7 @@
 - [ ] 単体テストファイルが作成されている
 - [ ] 失敗するテストが書かれている（Red）
 - [ ] エッジケースのテストが含まれている
-- [ ] モックが適切に使用されている
+- [ ] モックは原則禁止（単体の外部I/O・LLM境界のみ、事前承認がある場合に限る）
 
 ### 実装
 - [ ] 基本実装が完了している
@@ -71,8 +71,8 @@
 - [ ] 制限事項が記載されている
 
 ### レビュー準備
-- [ ] linterチェックが通る
-- [ ] テストカバレッジが80%以上
+- [ ] `ruff check .` が通る（必要に応じ `black .`）
+- [ ] テストカバレッジが85%以上
 - [ ] 実装がベストプラクティスに従っている
 ```
 
@@ -415,8 +415,8 @@ class TestWorkflowIntegration:
 # 全テスト実行
 pytest
 
-# カバレッジ付き実行
-pytest --cov=src --cov-report=html
+# カバレッジ付き実行（相対パス原則）
+pytest --cov=app --cov-report=html
 
 # 特定のマーカーのみ実行
 pytest -m "not integration"  # 統合テスト以外
@@ -540,18 +540,17 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
     
-    - name: Lint with flake8
+    - name: Lint with Ruff
       run: |
-        flake8 src tests --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 src tests --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+        ruff check .
     
     - name: Type check with mypy
       run: |
-        mypy src --ignore-missing-imports
+        mypy app --ignore-missing-imports
     
     - name: Test with pytest
       run: |
-        pytest tests/unit -v --cov=src --cov-report=xml
+        pytest tests/unit -v --cov=app --cov-report=xml
     
     - name: Upload coverage
       uses: codecov/codecov-action@v3
