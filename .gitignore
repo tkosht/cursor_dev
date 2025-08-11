@@ -195,3 +195,4 @@ dmypy.json
 .claude/organization_state.json
 .claude/organization_activity.log
 .claude/settings.local.json.backup
+auth.json

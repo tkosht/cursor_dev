@@ -7,5 +7,5 @@ cd $d/../
 cd dev-tools/external-repos/cognee/cognee-mcp
 . .venv/bin/activate
 . ../../.env
-python src/server.py --transport sse
+python src/server.py --host 0.0.0.0 --transport sse
 

@@ -13,10 +13,75 @@ from pydantic import BaseModel, Field
 
 # Type aliases
 AgentID = NewType("AgentID", str)
-PersonaAttributes = Dict[str, Any]  # TODO: Replace with proper Persona type
 SimulationState = Dict[str, Any]
 ActionResult = Dict[str, Any]
-EvaluationResult = Dict[str, Any]
+
+
+class PersonalityType(str, Enum):
+    """ビッグファイブ性格特性"""
+    OPENNESS = "openness"
+    CONSCIENTIOUSNESS = "conscientiousness"
+    EXTRAVERSION = "extraversion"
+    AGREEABLENESS = "agreeableness"
+    NEUROTICISM = "neuroticism"
+
+
+class InformationChannel(str, Enum):
+    """情報チャネルの種類"""
+    SOCIAL_MEDIA = "social_media"
+    NEWS_WEBSITE = "news_website"
+    NEWS_SITES = "news_sites"  # Alias for NEWS_WEBSITE
+    EMAIL = "email"
+    EMAIL_NEWSLETTERS = "email_newsletters"
+    WORD_OF_MOUTH = "word_of_mouth"
+    SEARCH_ENGINE = "search_engine"
+    RSS_FEED = "rss_feed"
+    TECH_BLOGS = "tech_blogs"
+    FORUMS = "forums"
+    PODCASTS = "podcasts"
+    VIDEO_PLATFORMS = "video_platforms"
+    MESSAGING_APPS = "messaging_apps"
+    TRADITIONAL_MEDIA = "traditional_media"
+
+
+class PersonaAttributes(BaseModel):
+    """ペルソナの属性"""
+    age: int = Field(..., description="年齢")
+    occupation: str = Field(..., description="職業")
+    location: str = Field(..., description="居住地")
+    education_level: str = Field(..., description="教育レベル")
+    values: List[str] = Field(..., description="価値観")
+    interests: List[str] = Field(..., description="興味・関心")
+    personality_traits: Dict[PersonalityType, float] = Field(..., description="性格特性スコア")
+    information_seeking_behavior: str = Field(..., description="情報探索行動")
+    preferred_channels: List[InformationChannel] = Field(..., description="好む情報チャネル")
+    cognitive_biases: Optional[List[str]] = Field(default=None, description="認知バイアス")
+    emotional_triggers: Optional[List[str]] = Field(default=None, description="感情的トリガー")
+    income_bracket: Optional[str] = Field(default=None, description="収入層")
+    decision_making_style: Optional[str] = Field(default=None, description="意思決定スタイル")
+    content_sharing_likelihood: Optional[float] = Field(default=None, description="コンテンツ共有確率")
+    influence_susceptibility: Optional[float] = Field(default=None, description="影響受容性")
+
+
+class EvaluationResult(BaseModel):
+    """評価結果"""
+    persona_id: str = Field(..., description="評価したペルソナのID")
+    article_id: Optional[str] = Field(default=None, description="評価した記事のID")
+    metrics: List["EvaluationMetric"] = Field(..., description="評価メトリクス")
+    overall_score: float = Field(..., ge=0.0, le=100.0, description="総合スコア")
+    strengths: List[str] = Field(..., description="強み")
+    weaknesses: List[str] = Field(..., description="弱み")
+    suggestions: List[str] = Field(..., description="改善提案")
+    sharing_probability: float = Field(..., ge=0.0, le=1.0, description="共有確率")
+    engagement_level: str = Field(..., description="エンゲージメントレベル")
+    sentiment: str = Field(..., description="感情（positive/neutral/negative）")
+
+
+class EvaluationMetric(BaseModel):
+    """評価メトリクス"""
+    name: str = Field(..., description="メトリクス名")
+    score: float = Field(..., ge=0.0, le=100.0, description="スコア (0-100)")
+    weight: float = Field(..., ge=0.0, le=1.0, description="重み付け")
 
 
 class SimulationStatus(str, Enum):

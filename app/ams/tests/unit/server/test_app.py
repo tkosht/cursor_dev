@@ -4,19 +4,24 @@ Tests for FastAPI server application
 
 import uuid
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
 from src.core.types import SimulationStatus
+from src.server import app as app_module
 from src.server.app import app, simulations
 
 
 @pytest.fixture
 def test_client():
     """FastAPI test client fixture"""
+    # Initialize simulation_service with a mock for testing
+    mock_service = MagicMock()
+    mock_service.run_simulation = MagicMock()
+    app_module.simulation_service = mock_service
     return TestClient(app)
 
 
@@ -24,6 +29,10 @@ def test_client():
 def clear_simulations():
     """Clear simulations between tests"""
     simulations.clear()
+    # Initialize mock simulation service for all tests
+    mock_service = MagicMock()
+    mock_service.run_simulation = MagicMock()
+    app_module.simulation_service = mock_service
     yield
     simulations.clear()
 

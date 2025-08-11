@@ -8,6 +8,25 @@ AMS uses LangGraph and LLMs to dynamically generate diverse personas and simulat
 
 **Current Status (2025-08-03)**: ~70-75% complete with core functionality implemented and optimized. All tests passing with 100% success rate.
 
+## ⚠️ CRITICAL UPDATE (2025-08-10)
+
+**重要**: テストケースの精密レビューにより、要件定義との重大な乖離が発見されました。
+
+### 発見された問題:
+- **モック使用違反**: 実LLM API使用が必須のところでモックを使用
+- **動的ペルソナ生成未実装**: 固定的な役割を使用（要件違反）
+- **ネットワークシミュレーション欠落**: コア機能が未実装
+
+### 必須参照ドキュメント:
+- 📋 [アクションアイテム一覧](docs/ams_test_review_action_items.md) - **次回作業はここから開始**
+- 📊 [詳細レビュー報告書](docs/ams_test_review_critical_issues_report.md)
+
+**次回セッション開始手順**:
+```bash
+cd /home/devuser/workspace/app/ams
+cat docs/ams_test_review_action_items.md  # Priority 1から着手
+```
+
 ## Architecture
 
 ### Core Components

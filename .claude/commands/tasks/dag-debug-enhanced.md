@@ -2,11 +2,13 @@
 meta:
   name: "Enhanced_DAG_Debugger_with_Serena_Sequential_Runner_Multi_Agent"
   version: "2.0.0"
+  canonical: true
   purpose: >
     超高難度のデバッグ・問題解決を、Serenaのセマンティック理解と
     Sequential Thinkingの段階的推論を組み合わせたDAG探索で遂行。
     厳密な検証基準と回帰テストにより、確実な問題解決を保証する。
-    さらに階層化されたサブエージェントによる協調的実行で複雑性を管理。
+    さらにDAG構造で階層化されたタスクノードに対応するサブエージェントによる協調的実行で複雑性を管理。
+    ノード実行の度に、エラー確認、事実確認など都度DAGチェックリストを動的に見直し・更新・深堀・精緻化し表示しながら進めること
 
 execution_model:
   core_flow: |

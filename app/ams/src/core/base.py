@@ -53,8 +53,30 @@ class BaseAgent(IAgent):
         agent_id: AgentID | None = None,
         attributes: PersonaAttributes | None = None,
     ):
+        from .types import PersonalityType, InformationChannel
+        
         self._agent_id = agent_id or str(uuid.uuid4())
-        self._attributes = attributes or PersonaAttributes()
+        if attributes is None:
+            # Create default PersonaAttributes with minimal valid values
+            self._attributes = PersonaAttributes(
+                age=30,
+                occupation="Default",
+                location="Unknown",
+                education_level="Unknown",
+                values=[],
+                interests=[],
+                personality_traits={
+                    PersonalityType.OPENNESS: 0.5,
+                    PersonalityType.CONSCIENTIOUSNESS: 0.5,
+                    PersonalityType.EXTRAVERSION: 0.5,
+                    PersonalityType.AGREEABLENESS: 0.5,
+                    PersonalityType.NEUROTICISM: 0.5,
+                },
+                information_seeking_behavior="balanced",
+                preferred_channels=[InformationChannel.NEWS_WEBSITE],
+            )
+        else:
+            self._attributes = attributes
         self._state: dict[str, Any] = {}
         self._action_history: list[ActionResult] = []
 
@@ -84,14 +106,19 @@ class BaseAgent(IAgent):
     async def update(self, result: ActionResult) -> None:
         """Update internal state based on action result"""
         self._state["last_action_result"] = result
-        logger.debug(f"Agent {self._agent_id} updated with result: {result.success}")
+        logger.debug(f"Agent {self._agent_id} updated with result: {result.get('success', 'unknown')}")
 
 
 class BaseEnvironment(IEnvironment):
     """Base implementation of IEnvironment"""
 
     def __init__(self) -> None:
-        self._state = SimulationState()
+        # SimulationState is a type alias for Dict[str, Any], so we use dict()
+        self._state = {
+            "timestep": 0,
+            "agents": {},
+            "article_metadata": {},
+        }
         self._agents: dict[AgentID, IAgent] = {}
         self._action_queue: list[tuple[AgentID, IAction]] = []
 
@@ -103,10 +130,10 @@ class BaseEnvironment(IEnvironment):
         """Get state observable by a specific agent"""
         # Default implementation - agents can see basic state info
         return {
-            "timestep": self._state.timestep,
+            "timestep": self._state.get("timestep", 0),
             "num_agents": len(self._agents),
-            "article_metadata": self._state.article_metadata,
-            "my_connections": self._state.agents.get(agent_id, PersonaAttributes()).connections,
+            "article_metadata": self._state.get("article_metadata", {}),
+            "my_connections": getattr(self._state.get("agents", {}).get(agent_id, None), "connections", []) if agent_id in self._state.get("agents", {}) else [],
         }
 
     @abstractmethod
@@ -116,7 +143,7 @@ class BaseEnvironment(IEnvironment):
 
     async def update_state(self) -> None:
         """Update environment state"""
-        self._state.timestep += 1
+        self._state["timestep"] = self._state.get("timestep", 0) + 1
         # Process any queued actions
         while self._action_queue:
             agent_id, action = self._action_queue.pop(0)
@@ -125,14 +152,17 @@ class BaseEnvironment(IEnvironment):
     def add_agent(self, agent: IAgent) -> None:
         """Add an agent to the environment"""
         self._agents[agent.agent_id] = agent
-        self._state.agents[agent.agent_id] = agent.attributes
+        if "agents" not in self._state:
+            self._state["agents"] = {}
+        self._state["agents"][agent.agent_id] = agent.attributes
         logger.info(f"Added agent {agent.agent_id} to environment")
 
     def remove_agent(self, agent_id: AgentID) -> None:
         """Remove an agent from the environment"""
         if agent_id in self._agents:
             del self._agents[agent_id]
-            del self._state.agents[agent_id]
+            if "agents" in self._state and agent_id in self._state["agents"]:
+                del self._state["agents"][agent_id]
             logger.info(f"Removed agent {agent_id} from environment")
 
     def get_agents(self) -> list[IAgent]:
@@ -310,6 +340,6 @@ class BaseSimulation(ISimulation):
                 if self._start_time and self._end_time
                 else None
             ),
-            "environment_state": self._environment.state.to_dict(),
+            "environment_state": self._environment.state,
             **self._results,
         }

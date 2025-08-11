@@ -60,8 +60,8 @@ jobs:
       
       - name: Run linters
         run: |
-          poetry run ruff check src/ tests/
-          poetry run black --check src/ tests/
+          poetry run ruff check .
+          poetry run black --check .
       
       - name: Type checking
         run: |

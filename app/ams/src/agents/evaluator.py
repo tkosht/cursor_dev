@@ -109,7 +109,7 @@ class EvaluationAgent(BaseAgent):
         - Occupation: {persona.occupation}
         - Location: {persona.location}
         - Education: {persona.education_level}
-        - Income Bracket: {persona.income_bracket if persona.income_bracket else 'Not specified'}
+        - Income Bracket: {persona.income_bracket or 'Not specified'}
         """
 
         psychographics = f"""
@@ -118,17 +118,12 @@ class EvaluationAgent(BaseAgent):
         - Interests: {', '.join(persona.interests)}
         - Personality Traits: {self._format_personality_traits(persona.personality_traits)}
         - Information Seeking: {persona.information_seeking_behavior}
-        - Preferred Channels: {', '.join([ch.value for ch in persona.preferred_channels])}
-        - Cognitive Biases: {(
-            ', '.join(persona.cognitive_biases) if persona.cognitive_biases else 'None specified'
-        )}
-        - Emotional Triggers: {(
-            ', '.join(persona.emotional_triggers)
-            if persona.emotional_triggers else 'None specified'
-        )}
-        - Decision Making Style: {persona.decision_making_style}
-        - Content Sharing Likelihood: {persona.content_sharing_likelihood}
-        - Influence Susceptibility: {persona.influence_susceptibility}
+        - Preferred Channels: {', '.join([str(ch.value) for ch in persona.preferred_channels])}
+        - Cognitive Biases: {', '.join(persona.cognitive_biases or []) or 'None specified'}
+        - Emotional Triggers: {', '.join(persona.emotional_triggers or []) or 'None specified'}
+        - Decision Making Style: {persona.decision_making_style or 'Not specified'}
+        - Content Sharing Likelihood: {persona.content_sharing_likelihood or 0.5}
+        - Influence Susceptibility: {persona.influence_susceptibility or 0.5}
         """
 
         # Format analysis results
@@ -319,7 +314,6 @@ class EvaluationAgent(BaseAgent):
 
             return EvaluationResult(
                 persona_id=persona_id,
-                persona_type="dynamic",  # Will be set by orchestrator
                 article_id=article_id,
                 metrics=metrics,
                 overall_score=overall,
@@ -331,17 +325,6 @@ class EvaluationAgent(BaseAgent):
                 ),
                 engagement_level=engagement_level,
                 sentiment=sentiment,
-                reasoning="\n".join(
-                    parsed.get("key_insights", ["Evaluation completed with partial data"])
-                ),
-                confidence=(
-                    0.8
-                    if all(
-                        key in parsed
-                        for key in ["relevance_score", "clarity_score", "credibility_score"]
-                    )
-                    else 0.5
-                ),
             )
 
         except Exception as e:
@@ -376,7 +359,6 @@ class EvaluationAgent(BaseAgent):
 
         return EvaluationResult(
             persona_id=persona_id,
-            persona_type="dynamic",
             article_id=article_id,
             metrics=default_metrics,
             overall_score=50,
@@ -386,6 +368,4 @@ class EvaluationAgent(BaseAgent):
             sharing_probability=0.3,
             engagement_level="medium",
             sentiment="neutral",
-            reasoning="Default evaluation due to system error",
-            confidence=0.1,
         )

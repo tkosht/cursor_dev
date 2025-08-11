@@ -1,0 +1,3438 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-8.4.1, pluggy-1.6.0 -- /home/devuser/workspace/app/ams/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/devuser/workspace/app/ams
+configfile: pyproject.toml
+plugins: asyncio-1.1.0, langsmith-0.4.8, xdist-3.8.0, anyio-4.9.0, cov-6.2.1, timeout-2.4.0, mock-3.14.1
+asyncio: mode=auto, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 167 items
+
+tests/unit/server/test_app.py::TestHealthCheck::test_health_check_returns_healthy PASSED [  0%]
+tests/unit/server/test_app.py::TestSimulationCreate::test_create_simulation_minimal FAILED [  1%]
+tests/unit/server/test_app.py::TestSimulationCreate::test_create_simulation_with_metadata PASSED [  1%]
+tests/unit/server/test_app.py::TestSimulationCreate::test_create_simulation_with_config PASSED [  2%]
+tests/unit/server/test_app.py::TestSimulationCreate::test_create_simulation_invalid_data PASSED [  2%]
+tests/unit/server/test_app.py::TestSimulationGet::test_get_simulation_success PASSED [  3%]
+tests/unit/server/test_app.py::TestSimulationGet::test_get_simulation_not_found PASSED [  4%]
+tests/unit/server/test_app.py::TestSimulationStatus::test_get_status_success PASSED [  4%]
+tests/unit/server/test_app.py::TestSimulationStatus::test_get_status_not_found PASSED [  5%]
+tests/unit/server/test_app.py::TestSimulationResults::test_get_results_completed PASSED [  5%]
+tests/unit/server/test_app.py::TestSimulationResults::test_get_results_not_completed PASSED [  6%]
+tests/unit/server/test_app.py::TestSimulationResults::test_get_results_not_found PASSED [  7%]
+tests/unit/server/test_app.py::TestWebSocket::test_websocket_connection_valid_simulation PASSED [  7%]
+tests/unit/server/test_app.py::TestWebSocket::test_websocket_connection_invalid_simulation PASSED [  8%]
+tests/unit/server/test_app.py::TestErrorHandlers::test_http_exception_handler PASSED [  8%]
+tests/unit/server/test_app.py::TestErrorHandlers::test_general_exception_handler PASSED [  9%]
+tests/unit/server/test_integration.py::TestOrchestratorIntegration::test_simulation_with_orchestrator_mock FAILED [ 10%]
+tests/unit/server/test_integration.py::TestOrchestratorIntegration::test_simulation_status_tracking PASSED [ 10%]
+tests/unit/server/test_integration.py::TestOrchestratorIntegration::test_simulation_with_custom_config PASSED [ 11%]
+tests/unit/server/test_integration.py::TestOrchestratorIntegration::test_websocket_updates_during_simulation PASSED [ 11%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_aggregate_basic_metrics ERROR [ 12%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_suggestion_prioritization ERROR [ 13%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_sentiment_distribution ERROR [ 13%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_segment_analysis ERROR [ 14%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_empty_evaluations PASSED [ 14%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_single_evaluation FAILED [ 15%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_metric_aggregation_completeness ERROR [ 16%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_outlier_handling FAILED [ 16%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_llm_insights_generation ERROR [ 17%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_aggregate_metrics_calculation FAILED [ 17%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_boundary_value_zero_score FAILED [ 18%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_boundary_value_maximum_score FAILED [ 19%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_boundary_value_invalid_negative_score FAILED [ 19%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_boundary_value_invalid_above_maximum FAILED [ 20%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_large_dataset_aggregation FAILED [ 20%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_all_same_score_aggregation FAILED [ 21%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_extreme_outlier_detection FAILED [ 22%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_llm_insights_error_handling FAILED [ 22%]
+tests/unit/test_aggregator.py::TestAggregatorAgent::test_empty_suggestions_handling FAILED [ 23%]
+tests/unit/test_analyzer.py::TestAnalysisAgent::test_initialization PASSED [ 23%]
+tests/unit/test_analyzer.py::TestAnalysisAgent::test_analyze_success PASSED [ 24%]
+tests/unit/test_analyzer.py::TestAnalysisAgent::test_analyze_with_errors PASSED [ 25%]
+tests/unit/test_analyzer.py::TestAnalysisAgent::test_analyze_structure PASSED [ 25%]
+tests/unit/test_analyzer.py::TestAnalysisAgent::test_analyze_readability PASSED [ 26%]
+tests/unit/test_analyzer.py::TestAnalysisAgent::test_estimate_difficulty PASSED [ 26%]
+tests/unit/test_analyzer.py::TestAnalysisAgent::test_parse_json_response PASSED [ 27%]
+tests/unit/test_analyzer.py::TestAnalysisAgent::test_parallel_execution PASSED [ 28%]
+tests/unit/test_config.py::TestLLMConfig::test_default_config PASSED     [ 28%]
+tests/unit/test_config.py::TestLLMConfig::test_config_with_api_key PASSED [ 29%]
+tests/unit/test_config.py::TestLLMConfig::test_invalid_provider_without_key PASSED [ 29%]
+tests/unit/test_config.py::TestSimulationConfig::test_default_config PASSED [ 30%]
+tests/unit/test_config.py::TestSimulationConfig::test_config_validation PASSED [ 31%]
+tests/unit/test_config.py::TestAMSConfig::test_from_env PASSED           [ 31%]
+tests/unit/test_config.py::TestAMSConfig::test_to_dict PASSED            [ 32%]
+tests/unit/test_config.py::TestLLMSelector::test_selector_initialization PASSED [ 32%]
+tests/unit/test_config.py::TestLLMSelector::test_select_model_basic PASSED [ 33%]
+tests/unit/test_config.py::TestLLMSelector::test_select_model_with_features PASSED [ 34%]
+tests/unit/test_config.py::TestLLMSelector::test_select_model_with_cost_constraint PASSED [ 34%]
+tests/unit/test_config.py::TestLLMSelector::test_select_model_fallback PASSED [ 35%]
+tests/unit/test_config.py::TestLLMSelector::test_estimate_cost PASSED    [ 35%]
+tests/unit/test_config.py::TestLLMSelector::test_provider_preference PASSED [ 36%]
+tests/unit/test_config.py::TestLLMSelectorIntegration::test_select_optimal_llm PASSED [ 37%]
+tests/unit/test_config.py::TestPerformanceConfig::test_directory_creation PASSED [ 37%]
+tests/unit/test_config.py::TestPerformanceConfig::test_default_values PASSED [ 38%]
+tests/unit/test_core_interfaces.py::TestBaseAction::test_action_creation PASSED [ 38%]
+tests/unit/test_core_interfaces.py::TestBaseAction::test_action_string_representation PASSED [ 39%]
+tests/unit/test_core_interfaces.py::TestBaseAction::test_action_validation PASSED [ 40%]
+tests/unit/test_core_interfaces.py::TestBaseAgent::test_agent_creation FAILED [ 40%]
+tests/unit/test_core_interfaces.py::TestBaseAgent::test_agent_with_custom_attributes FAILED [ 41%]
+tests/unit/test_core_interfaces.py::TestBaseAgent::test_agent_perceive PASSED [ 41%]
+tests/unit/test_core_interfaces.py::TestBaseAgent::test_agent_act FAILED [ 42%]
+tests/unit/test_core_interfaces.py::TestBaseAgent::test_agent_update FAILED [ 43%]
+tests/unit/test_core_interfaces.py::TestBaseEnvironment::test_environment_creation FAILED [ 43%]
+tests/unit/test_core_interfaces.py::TestBaseEnvironment::test_add_remove_agents FAILED [ 44%]
+tests/unit/test_core_interfaces.py::TestBaseEnvironment::test_get_observable_state FAILED [ 44%]
+tests/unit/test_core_interfaces.py::TestBaseEnvironment::test_update_state FAILED [ 45%]
+tests/unit/test_core_interfaces.py::TestBasePlugin::test_plugin_creation PASSED [ 46%]
+tests/unit/test_core_interfaces.py::TestBasePlugin::test_plugin_initialization PASSED [ 46%]
+tests/unit/test_core_interfaces.py::TestBasePlugin::test_plugin_lifecycle PASSED [ 47%]
+tests/unit/test_core_interfaces.py::TestBaseSimulation::test_simulation_creation FAILED [ 47%]
+tests/unit/test_core_interfaces.py::TestBaseSimulation::test_add_plugin FAILED [ 48%]
+tests/unit/test_core_interfaces.py::TestBaseSimulation::test_simulation_step FAILED [ 49%]
+tests/unit/test_core_interfaces.py::TestBaseSimulation::test_simulation_run FAILED [ 49%]
+tests/unit/test_core_interfaces.py::TestBaseSimulation::test_get_results FAILED [ 50%]
+tests/unit/test_deep_context_analyzer.py::TestDeepContextAnalyzer::test_analyze_article_context_structure PASSED [ 50%]
+tests/unit/test_deep_context_analyzer.py::TestDeepContextAnalyzer::test_discover_hidden_dimensions PASSED [ 51%]
+tests/unit/test_deep_context_analyzer.py::TestDeepContextAnalyzer::test_calculate_complexity_score PASSED [ 52%]
+tests/unit/test_deep_context_analyzer.py::TestDeepContextAnalyzer::test_estimate_reach_potential PASSED [ 52%]
+tests/unit/test_deep_context_analyzer.py::TestDeepContextAnalyzer::test_analyze_article_context_integration PASSED [ 53%]
+tests/unit/test_deep_context_analyzer.py::TestDeepContextAnalyzer::test_parse_analysis_response PASSED [ 53%]
+tests/unit/test_deep_context_analyzer.py::TestDeepContextAnalyzer::test_error_handling PASSED [ 54%]
+tests/unit/test_deep_context_analyzer.py::TestDeepContextAnalyzer::test_lightweight_mode_for_short_articles PASSED [ 55%]
+tests/unit/test_json_parser.py::TestParseLLMJsonResponse::test_empty_response PASSED [ 55%]
+tests/unit/test_json_parser.py::TestParseLLMJsonResponse::test_plain_json PASSED [ 56%]
+tests/unit/test_json_parser.py::TestParseLLMJsonResponse::test_json_in_code_block PASSED [ 56%]
+tests/unit/test_json_parser.py::TestParseLLMJsonResponse::test_json_in_plain_code_block PASSED [ 57%]
+tests/unit/test_json_parser.py::TestParseLLMJsonResponse::test_json_with_surrounding_text PASSED [ 58%]
+tests/unit/test_json_parser.py::TestParseLLMJsonResponse::test_array_json PASSED [ 58%]
+tests/unit/test_json_parser.py::TestParseLLMJsonResponse::test_malformed_json_recovery PASSED [ 59%]
+tests/unit/test_json_parser.py::TestParseLLMJsonResponse::test_parse_failure PASSED [ 59%]
+tests/unit/test_json_parser.py::TestSafeJsonLoads::test_valid_json PASSED [ 60%]
+tests/unit/test_json_parser.py::TestSafeJsonLoads::test_json_with_trailing_comma PASSED [ 61%]
+tests/unit/test_json_parser.py::TestSafeJsonLoads::test_json_with_single_quotes PASSED [ 61%]
+tests/unit/test_json_parser.py::TestSafeJsonLoads::test_json_with_python_booleans PASSED [ 62%]
+tests/unit/test_json_parser.py::TestExtractors::test_extract_json_block PASSED [ 62%]
+tests/unit/test_json_parser.py::TestExtractors::test_extract_code_block PASSED [ 63%]
+tests/unit/test_json_parser.py::TestExtractors::test_extract_curly_braces PASSED [ 64%]
+tests/unit/test_json_parser.py::TestExtractors::test_extract_plain_json PASSED [ 64%]
+tests/unit/test_json_parser.py::TestHelperFunctions::test_clean_response PASSED [ 65%]
+tests/unit/test_json_parser.py::TestHelperFunctions::test_fix_common_json_issues PASSED [ 65%]
+tests/unit/test_json_parser.py::TestLogging::test_debug_logging_on_extractor_failure PASSED [ 66%]
+tests/unit/test_json_parser.py::TestLogging::test_error_logging_on_final_failure PASSED [ 67%]
+tests/unit/test_llm_transparency.py::TestTransparentLLM::test_transparent_llm_creation PASSED [ 67%]
+tests/unit/test_llm_transparency.py::TestTransparentLLM::test_transparent_llm_invoke PASSED [ 68%]
+tests/unit/test_llm_transparency.py::TestTransparentLLM::test_transparent_llm_error_handling PASSED [ 68%]
+tests/unit/test_llm_transparency.py::TestTransparentLLM::test_verification_summary PASSED [ 69%]
+tests/unit/test_llm_transparency.py::TestVerifyLLMCallDecorator::test_verify_decorator PASSED [ 70%]
+tests/unit/test_llm_transparency.py::TestVerifyLLMCallDecorator::test_verify_decorator_with_error PASSED [ 70%]
+tests/unit/test_llm_transparency.py::TestLLMCallTracker::test_tracker_initialization PASSED [ 71%]
+tests/unit/test_llm_transparency.py::TestLLMCallTracker::test_track_call PASSED [ 71%]
+tests/unit/test_llm_transparency.py::TestLLMCallTracker::test_get_summary PASSED [ 72%]
+tests/unit/test_persona_evaluation_agent.py::TestPersonaEvaluationAgent::test_init PASSED [ 73%]
+tests/unit/test_persona_evaluation_agent.py::TestPersonaEvaluationAgent::test_evaluate_persona_success PASSED [ 73%]
+tests/unit/test_persona_evaluation_agent.py::TestPersonaEvaluationAgent::test_evaluate_persona_with_retry PASSED [ 74%]
+tests/unit/test_persona_evaluation_agent.py::TestPersonaEvaluationAgent::test_evaluate_persona_json_parse_error PASSED [ 74%]
+tests/unit/test_persona_evaluation_agent.py::TestPersonaEvaluationAgent::test_evaluate_persona_timeout PASSED [ 75%]
+tests/unit/test_persona_evaluation_agent.py::TestPersonaEvaluationAgent::test_generate_evaluation_prompt PASSED [ 76%]
+tests/unit/test_persona_evaluation_agent.py::TestPersonaEvaluationAgent::test_parse_evaluation_response_success PASSED [ 76%]
+tests/unit/test_persona_evaluation_agent.py::TestPersonaEvaluationAgent::test_parse_evaluation_response_partial PASSED [ 77%]
+tests/unit/test_persona_evaluation_agent.py::TestPersonaEvaluationAgent::test_batch_evaluation PASSED [ 77%]
+tests/unit/test_persona_evaluation_agent.py::TestPersonaEvaluationAgent::test_error_logging PASSED [ 78%]
+tests/unit/test_persona_generator.py::TestPersonaGenerator::test_generate_personas_structure FAILED [ 79%]
+tests/unit/test_persona_generator.py::TestPersonaGenerator::test_generate_personas_with_multiple_slots FAILED [ 79%]
+tests/unit/test_persona_generator.py::TestPersonaGenerator::test_generate_single_persona_optimized PASSED [ 80%]
+tests/unit/test_persona_generator.py::TestPersonaGenerator::test_convert_to_persona_attributes FAILED [ 80%]
+tests/unit/test_persona_generator.py::TestPersonaGenerator::test_error_handling FAILED [ 81%]
+tests/unit/test_persona_generator.py::TestPersonaGenerator::test_persona_count_compliance FAILED [ 82%]
+tests/unit/test_population_architect.py::TestPopulationArchitect::test_design_population_hierarchy_structure PASSED [ 82%]
+tests/unit/test_population_architect.py::TestPopulationArchitect::test_design_major_segments PASSED [ 83%]
+tests/unit/test_population_architect.py::TestPopulationArchitect::test_design_sub_segments_for_one PASSED [ 83%]
+tests/unit/test_population_architect.py::TestPopulationArchitect::test_allocate_persona_slots PASSED [ 84%]
+tests/unit/test_population_architect.py::TestPopulationArchitect::test_design_network_topology PASSED [ 85%]
+tests/unit/test_population_architect.py::TestPopulationArchitect::test_design_influence_patterns PASSED [ 85%]
+tests/unit/test_population_architect.py::TestPopulationArchitect::test_design_micro_clusters PASSED [ 86%]
+tests/unit/test_population_architect.py::TestPopulationArchitect::test_assign_network_position PASSED [ 86%]
+tests/unit/test_reporter.py::TestReporterAgent::test_generate_report_basic ERROR [ 87%]
+tests/unit/test_reporter.py::TestReporterAgent::test_executive_summary_generation ERROR [ 88%]
+tests/unit/test_reporter.py::TestReporterAgent::test_detailed_analysis_generation ERROR [ 88%]
+tests/unit/test_reporter.py::TestReporterAgent::test_recommendations_generation ERROR [ 89%]
+tests/unit/test_reporter.py::TestReporterAgent::test_visualization_data_preparation ERROR [ 89%]
+tests/unit/test_reporter.py::TestReporterAgent::test_format_report_json ERROR [ 90%]
+tests/unit/test_reporter.py::TestReporterAgent::test_format_report_markdown ERROR [ 91%]
+tests/unit/test_reporter.py::TestReporterAgent::test_format_report_html ERROR [ 91%]
+tests/unit/test_reporter.py::TestReporterAgent::test_empty_state_handling PASSED [ 92%]
+tests/unit/test_reporter.py::TestReporterAgent::test_error_handling_in_generation ERROR [ 92%]
+tests/unit/test_reporter.py::TestReporterAgent::test_calculate_metrics ERROR [ 93%]
+tests/unit/test_reporter.py::TestReporterAgent::test_template_rendering ERROR [ 94%]
+tests/unit/test_reporter.py::TestReporterAgent::test_boundary_empty_aggregated_results PASSED [ 94%]
+tests/unit/test_reporter.py::TestReporterAgent::test_boundary_maximum_size_report PASSED [ 95%]
+tests/unit/test_reporter.py::TestReporterAgent::test_boundary_special_characters_handling PASSED [ 95%]
+tests/unit/test_reporter.py::TestReporterAgent::test_boundary_invalid_format_request PASSED [ 96%]
+tests/unit/test_reporter.py::TestReporterAgent::test_boundary_multilingual_content PASSED [ 97%]
+tests/unit/test_reporter.py::TestReporterAgent::test_boundary_zero_evaluations PASSED [ 97%]
+tests/unit/test_reporter.py::TestReporterAgent::test_boundary_extreme_scores PASSED [ 98%]
+tests/unit/test_reporter.py::TestReporterAgent::test_boundary_missing_required_fields PASSED [ 98%]
+tests/unit/test_reporter.py::TestReporterAgent::test_llm_failure_during_report_generation PASSED [ 99%]
+tests/unit/test_reporter.py::TestReporterAgent::test_format_conversion_edge_cases PASSED [100%]
+
+==================================== ERRORS ====================================
+______ ERROR at setup of TestAggregatorAgent.test_aggregate_basic_metrics ______
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d22470>
+
+    @pytest.fixture
+    def sample_evaluations(self) -> dict[str, EvaluationResult]:
+        """Create sample evaluation results for testing."""
+        return {
+            "persona_1": EvaluationResult(
+                persona_id="persona_1",
+                persona_type="tech_enthusiast",
+                article_id="test_article_001",
+                overall_score=85,
+                metrics=[
+>                   EvaluationMetric(name="relevance", score=90),
+                    EvaluationMetric(name="clarity", score=80),
+                    EvaluationMetric(name="engagement", score=85),
+                ],
+                sentiment="positive",
+                suggestions=["Add more examples", "Improve introduction"],
+                strengths=["Well-structured", "Good flow"],
+                weaknesses=["Lacks examples"],
+                sharing_probability=0.8,
+                engagement_level="high",
+                reasoning="Well-structured article with good technical content",
+            ),
+            "persona_2": EvaluationResult(
+                persona_id="persona_2",
+                persona_type="general_reader",
+                article_id="test_article_001",
+                overall_score=70,
+                metrics=[
+                    EvaluationMetric(name="relevance", score=75),
+                    EvaluationMetric(name="clarity", score=65),
+                    EvaluationMetric(name="engagement", score=70),
+                ],
+                sentiment="neutral",
+                suggestions=["Add more examples", "Simplify technical terms"],
+                strengths=["Good structure"],
+                weaknesses=["Too technical"],
+                sharing_probability=0.5,
+                engagement_level="medium",
+                reasoning="Good but needs simplification",
+            ),
+            "persona_3": EvaluationResult(
+                persona_id="persona_3",
+                persona_type="novice",
+                article_id="test_article_001",
+                overall_score=60,
+                metrics=[
+                    EvaluationMetric(name="relevance", score=55),
+                    EvaluationMetric(name="clarity", score=65),
+                    EvaluationMetric(name="engagement", score=60),
+                ],
+                sentiment="negative",
+                suggestions=["Improve introduction", "Add visual aids"],
+                strengths=["Has structure"],
+                weaknesses=["Hard to follow", "Too complex"],
+                sharing_probability=0.3,
+                engagement_level="low",
+                reasoning="Difficult to follow",
+            ),
+        }
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+E       weight
+E         Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_aggregator.py:25: ValidationError
+_____ ERROR at setup of TestAggregatorAgent.test_suggestion_prioritization _____
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d226b0>
+
+    @pytest.fixture
+    def sample_evaluations(self) -> dict[str, EvaluationResult]:
+        """Create sample evaluation results for testing."""
+        return {
+            "persona_1": EvaluationResult(
+                persona_id="persona_1",
+                persona_type="tech_enthusiast",
+                article_id="test_article_001",
+                overall_score=85,
+                metrics=[
+>                   EvaluationMetric(name="relevance", score=90),
+                    EvaluationMetric(name="clarity", score=80),
+                    EvaluationMetric(name="engagement", score=85),
+                ],
+                sentiment="positive",
+                suggestions=["Add more examples", "Improve introduction"],
+                strengths=["Well-structured", "Good flow"],
+                weaknesses=["Lacks examples"],
+                sharing_probability=0.8,
+                engagement_level="high",
+                reasoning="Well-structured article with good technical content",
+            ),
+            "persona_2": EvaluationResult(
+                persona_id="persona_2",
+                persona_type="general_reader",
+                article_id="test_article_001",
+                overall_score=70,
+                metrics=[
+                    EvaluationMetric(name="relevance", score=75),
+                    EvaluationMetric(name="clarity", score=65),
+                    EvaluationMetric(name="engagement", score=70),
+                ],
+                sentiment="neutral",
+                suggestions=["Add more examples", "Simplify technical terms"],
+                strengths=["Good structure"],
+                weaknesses=["Too technical"],
+                sharing_probability=0.5,
+                engagement_level="medium",
+                reasoning="Good but needs simplification",
+            ),
+            "persona_3": EvaluationResult(
+                persona_id="persona_3",
+                persona_type="novice",
+                article_id="test_article_001",
+                overall_score=60,
+                metrics=[
+                    EvaluationMetric(name="relevance", score=55),
+                    EvaluationMetric(name="clarity", score=65),
+                    EvaluationMetric(name="engagement", score=60),
+                ],
+                sentiment="negative",
+                suggestions=["Improve introduction", "Add visual aids"],
+                strengths=["Has structure"],
+                weaknesses=["Hard to follow", "Too complex"],
+                sharing_probability=0.3,
+                engagement_level="low",
+                reasoning="Difficult to follow",
+            ),
+        }
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+E       weight
+E         Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_aggregator.py:25: ValidationError
+______ ERROR at setup of TestAggregatorAgent.test_sentiment_distribution _______
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d228f0>
+
+    @pytest.fixture
+    def sample_evaluations(self) -> dict[str, EvaluationResult]:
+        """Create sample evaluation results for testing."""
+        return {
+            "persona_1": EvaluationResult(
+                persona_id="persona_1",
+                persona_type="tech_enthusiast",
+                article_id="test_article_001",
+                overall_score=85,
+                metrics=[
+>                   EvaluationMetric(name="relevance", score=90),
+                    EvaluationMetric(name="clarity", score=80),
+                    EvaluationMetric(name="engagement", score=85),
+                ],
+                sentiment="positive",
+                suggestions=["Add more examples", "Improve introduction"],
+                strengths=["Well-structured", "Good flow"],
+                weaknesses=["Lacks examples"],
+                sharing_probability=0.8,
+                engagement_level="high",
+                reasoning="Well-structured article with good technical content",
+            ),
+            "persona_2": EvaluationResult(
+                persona_id="persona_2",
+                persona_type="general_reader",
+                article_id="test_article_001",
+                overall_score=70,
+                metrics=[
+                    EvaluationMetric(name="relevance", score=75),
+                    EvaluationMetric(name="clarity", score=65),
+                    EvaluationMetric(name="engagement", score=70),
+                ],
+                sentiment="neutral",
+                suggestions=["Add more examples", "Simplify technical terms"],
+                strengths=["Good structure"],
+                weaknesses=["Too technical"],
+                sharing_probability=0.5,
+                engagement_level="medium",
+                reasoning="Good but needs simplification",
+            ),
+            "persona_3": EvaluationResult(
+                persona_id="persona_3",
+                persona_type="novice",
+                article_id="test_article_001",
+                overall_score=60,
+                metrics=[
+                    EvaluationMetric(name="relevance", score=55),
+                    EvaluationMetric(name="clarity", score=65),
+                    EvaluationMetric(name="engagement", score=60),
+                ],
+                sentiment="negative",
+                suggestions=["Improve introduction", "Add visual aids"],
+                strengths=["Has structure"],
+                weaknesses=["Hard to follow", "Too complex"],
+                sharing_probability=0.3,
+                engagement_level="low",
+                reasoning="Difficult to follow",
+            ),
+        }
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+E       weight
+E         Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_aggregator.py:25: ValidationError
+_________ ERROR at setup of TestAggregatorAgent.test_segment_analysis __________
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d22b30>
+
+    @pytest.fixture
+    def sample_evaluations(self) -> dict[str, EvaluationResult]:
+        """Create sample evaluation results for testing."""
+        return {
+            "persona_1": EvaluationResult(
+                persona_id="persona_1",
+                persona_type="tech_enthusiast",
+                article_id="test_article_001",
+                overall_score=85,
+                metrics=[
+>                   EvaluationMetric(name="relevance", score=90),
+                    EvaluationMetric(name="clarity", score=80),
+                    EvaluationMetric(name="engagement", score=85),
+                ],
+                sentiment="positive",
+                suggestions=["Add more examples", "Improve introduction"],
+                strengths=["Well-structured", "Good flow"],
+                weaknesses=["Lacks examples"],
+                sharing_probability=0.8,
+                engagement_level="high",
+                reasoning="Well-structured article with good technical content",
+            ),
+            "persona_2": EvaluationResult(
+                persona_id="persona_2",
+                persona_type="general_reader",
+                article_id="test_article_001",
+                overall_score=70,
+                metrics=[
+                    EvaluationMetric(name="relevance", score=75),
+                    EvaluationMetric(name="clarity", score=65),
+                    EvaluationMetric(name="engagement", score=70),
+                ],
+                sentiment="neutral",
+                suggestions=["Add more examples", "Simplify technical terms"],
+                strengths=["Good structure"],
+                weaknesses=["Too technical"],
+                sharing_probability=0.5,
+                engagement_level="medium",
+                reasoning="Good but needs simplification",
+            ),
+            "persona_3": EvaluationResult(
+                persona_id="persona_3",
+                persona_type="novice",
+                article_id="test_article_001",
+                overall_score=60,
+                metrics=[
+                    EvaluationMetric(name="relevance", score=55),
+                    EvaluationMetric(name="clarity", score=65),
+                    EvaluationMetric(name="engagement", score=60),
+                ],
+                sentiment="negative",
+                suggestions=["Improve introduction", "Add visual aids"],
+                strengths=["Has structure"],
+                weaknesses=["Hard to follow", "Too complex"],
+                sharing_probability=0.3,
+                engagement_level="low",
+                reasoning="Difficult to follow",
+            ),
+        }
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+E       weight
+E         Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_aggregator.py:25: ValidationError
+__ ERROR at setup of TestAggregatorAgent.test_metric_aggregation_completeness __
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d231f0>
+
+    @pytest.fixture
+    def sample_evaluations(self) -> dict[str, EvaluationResult]:
+        """Create sample evaluation results for testing."""
+        return {
+            "persona_1": EvaluationResult(
+                persona_id="persona_1",
+                persona_type="tech_enthusiast",
+                article_id="test_article_001",
+                overall_score=85,
+                metrics=[
+>                   EvaluationMetric(name="relevance", score=90),
+                    EvaluationMetric(name="clarity", score=80),
+                    EvaluationMetric(name="engagement", score=85),
+                ],
+                sentiment="positive",
+                suggestions=["Add more examples", "Improve introduction"],
+                strengths=["Well-structured", "Good flow"],
+                weaknesses=["Lacks examples"],
+                sharing_probability=0.8,
+                engagement_level="high",
+                reasoning="Well-structured article with good technical content",
+            ),
+            "persona_2": EvaluationResult(
+                persona_id="persona_2",
+                persona_type="general_reader",
+                article_id="test_article_001",
+                overall_score=70,
+                metrics=[
+                    EvaluationMetric(name="relevance", score=75),
+                    EvaluationMetric(name="clarity", score=65),
+                    EvaluationMetric(name="engagement", score=70),
+                ],
+                sentiment="neutral",
+                suggestions=["Add more examples", "Simplify technical terms"],
+                strengths=["Good structure"],
+                weaknesses=["Too technical"],
+                sharing_probability=0.5,
+                engagement_level="medium",
+                reasoning="Good but needs simplification",
+            ),
+            "persona_3": EvaluationResult(
+                persona_id="persona_3",
+                persona_type="novice",
+                article_id="test_article_001",
+                overall_score=60,
+                metrics=[
+                    EvaluationMetric(name="relevance", score=55),
+                    EvaluationMetric(name="clarity", score=65),
+                    EvaluationMetric(name="engagement", score=60),
+                ],
+                sentiment="negative",
+                suggestions=["Improve introduction", "Add visual aids"],
+                strengths=["Has structure"],
+                weaknesses=["Hard to follow", "Too complex"],
+                sharing_probability=0.3,
+                engagement_level="low",
+                reasoning="Difficult to follow",
+            ),
+        }
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+E       weight
+E         Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_aggregator.py:25: ValidationError
+______ ERROR at setup of TestAggregatorAgent.test_llm_insights_generation ______
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d233a0>
+
+    @pytest.fixture
+    def sample_evaluations(self) -> dict[str, EvaluationResult]:
+        """Create sample evaluation results for testing."""
+        return {
+            "persona_1": EvaluationResult(
+                persona_id="persona_1",
+                persona_type="tech_enthusiast",
+                article_id="test_article_001",
+                overall_score=85,
+                metrics=[
+>                   EvaluationMetric(name="relevance", score=90),
+                    EvaluationMetric(name="clarity", score=80),
+                    EvaluationMetric(name="engagement", score=85),
+                ],
+                sentiment="positive",
+                suggestions=["Add more examples", "Improve introduction"],
+                strengths=["Well-structured", "Good flow"],
+                weaknesses=["Lacks examples"],
+                sharing_probability=0.8,
+                engagement_level="high",
+                reasoning="Well-structured article with good technical content",
+            ),
+            "persona_2": EvaluationResult(
+                persona_id="persona_2",
+                persona_type="general_reader",
+                article_id="test_article_001",
+                overall_score=70,
+                metrics=[
+                    EvaluationMetric(name="relevance", score=75),
+                    EvaluationMetric(name="clarity", score=65),
+                    EvaluationMetric(name="engagement", score=70),
+                ],
+                sentiment="neutral",
+                suggestions=["Add more examples", "Simplify technical terms"],
+                strengths=["Good structure"],
+                weaknesses=["Too technical"],
+                sharing_probability=0.5,
+                engagement_level="medium",
+                reasoning="Good but needs simplification",
+            ),
+            "persona_3": EvaluationResult(
+                persona_id="persona_3",
+                persona_type="novice",
+                article_id="test_article_001",
+                overall_score=60,
+                metrics=[
+                    EvaluationMetric(name="relevance", score=55),
+                    EvaluationMetric(name="clarity", score=65),
+                    EvaluationMetric(name="engagement", score=60),
+                ],
+                sentiment="negative",
+                suggestions=["Improve introduction", "Add visual aids"],
+                strengths=["Has structure"],
+                weaknesses=["Hard to follow", "Too complex"],
+                sharing_probability=0.3,
+                engagement_level="low",
+                reasoning="Difficult to follow",
+            ),
+        }
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+E       weight
+E         Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_aggregator.py:25: ValidationError
+________ ERROR at setup of TestReporterAgent.test_generate_report_basic ________
+
+self = <test_reporter.TestReporterAgent object at 0x705930be1180>
+
+    @pytest.fixture
+    def sample_state(self) -> dict[str, Any]:
+        """Create sample ArticleReviewState for testing."""
+        return {
+            "article_content": "This is a test article about AI and machine learning.",
+            "article_metadata": {
+                "title": "Understanding AI",
+                "author": "Test Author",
+                "category": "Technology",
+            },
+            "current_phase": "reporting",
+            "phase_status": {
+                "initialization": "completed",
+                "analysis": "completed",
+                "persona_generation": "completed",
+                "evaluation": "completed",
+                "aggregation": "completed",
+                "reporting": "in_progress",
+            },
+            "active_agents": ["reporter"],
+            "agent_status": {"reporter": "active"},
+            "analysis_results": {
+                "topics": ["AI", "Machine Learning", "Technology"],
+                "tone": "informative",
+                "target_audience": "tech professionals",
+                "complexity": "intermediate",
+            },
+            "persona_count": 3,
+            "generated_personas": [
+>               PersonaAttributes(
+                    age=30,
+                    occupation="Software Engineer",
+                    interests=["AI", "Technology"],
+                    values=["Innovation", "Learning"],
+                ),
+                PersonaAttributes(
+                    age=25,
+                    occupation="Data Scientist",
+                    interests=["Machine Learning", "Statistics"],
+                    values=["Accuracy", "Research"],
+                ),
+                PersonaAttributes(
+                    age=35,
+                    occupation="Product Manager",
+                    interests=["Technology", "Business"],
+                    values=["Efficiency", "User Experience"],
+                ),
+            ],
+            "persona_generation_complete": True,
+            "persona_evaluations": {
+                "persona_1": EvaluationResult(
+                    persona_id="persona_1",
+                    persona_type="tech_enthusiast",
+                    article_id="test_001",
+                    overall_score=85,
+                    metrics=[
+                        EvaluationMetric(name="relevance", score=90),
+                        EvaluationMetric(name="clarity", score=80),
+                    ],
+                    sentiment="positive",
+                    suggestions=["Add more examples"],
+                    strengths=["Clear structure"],
+                    weaknesses=["Lacks examples"],
+                    sharing_probability=0.8,
+                    engagement_level="high",
+                )
+            },
+            "evaluation_complete": True,
+            "aggregated_scores": {
+                "overall": 82.5,
+                "relevance": 87.0,
+                "clarity": 78.0,
+                "engagement": 80.0,
+            },
+            "improvement_suggestions": [
+                {
+                    "suggestion": "Add more examples",
+                    "priority": "high",
+                    "affected_personas": 2,
+                    "impact": 15.0,
+                    "category": "content",
+                },
+                {
+                    "suggestion": "Simplify technical terms",
+                    "priority": "medium",
+                    "affected_personas": 1,
+                    "impact": 10.0,
+                    "category": "clarity",
+                },
+            ],
+            "final_report": {},
+            "messages": [],
+            "errors": [],
+            "retry_count": {},
+            "simulation_id": "test_sim_001",
+            "start_time": datetime.now(),
+            "end_time": None,
+        }
+E       pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+E       location
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       education_level
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       personality_traits
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       information_seeking_behavior
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       preferred_channels
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_reporter.py:45: ValidationError
+____ ERROR at setup of TestReporterAgent.test_executive_summary_generation _____
+
+self = <test_reporter.TestReporterAgent object at 0x705930be13c0>
+
+    @pytest.fixture
+    def sample_state(self) -> dict[str, Any]:
+        """Create sample ArticleReviewState for testing."""
+        return {
+            "article_content": "This is a test article about AI and machine learning.",
+            "article_metadata": {
+                "title": "Understanding AI",
+                "author": "Test Author",
+                "category": "Technology",
+            },
+            "current_phase": "reporting",
+            "phase_status": {
+                "initialization": "completed",
+                "analysis": "completed",
+                "persona_generation": "completed",
+                "evaluation": "completed",
+                "aggregation": "completed",
+                "reporting": "in_progress",
+            },
+            "active_agents": ["reporter"],
+            "agent_status": {"reporter": "active"},
+            "analysis_results": {
+                "topics": ["AI", "Machine Learning", "Technology"],
+                "tone": "informative",
+                "target_audience": "tech professionals",
+                "complexity": "intermediate",
+            },
+            "persona_count": 3,
+            "generated_personas": [
+>               PersonaAttributes(
+                    age=30,
+                    occupation="Software Engineer",
+                    interests=["AI", "Technology"],
+                    values=["Innovation", "Learning"],
+                ),
+                PersonaAttributes(
+                    age=25,
+                    occupation="Data Scientist",
+                    interests=["Machine Learning", "Statistics"],
+                    values=["Accuracy", "Research"],
+                ),
+                PersonaAttributes(
+                    age=35,
+                    occupation="Product Manager",
+                    interests=["Technology", "Business"],
+                    values=["Efficiency", "User Experience"],
+                ),
+            ],
+            "persona_generation_complete": True,
+            "persona_evaluations": {
+                "persona_1": EvaluationResult(
+                    persona_id="persona_1",
+                    persona_type="tech_enthusiast",
+                    article_id="test_001",
+                    overall_score=85,
+                    metrics=[
+                        EvaluationMetric(name="relevance", score=90),
+                        EvaluationMetric(name="clarity", score=80),
+                    ],
+                    sentiment="positive",
+                    suggestions=["Add more examples"],
+                    strengths=["Clear structure"],
+                    weaknesses=["Lacks examples"],
+                    sharing_probability=0.8,
+                    engagement_level="high",
+                )
+            },
+            "evaluation_complete": True,
+            "aggregated_scores": {
+                "overall": 82.5,
+                "relevance": 87.0,
+                "clarity": 78.0,
+                "engagement": 80.0,
+            },
+            "improvement_suggestions": [
+                {
+                    "suggestion": "Add more examples",
+                    "priority": "high",
+                    "affected_personas": 2,
+                    "impact": 15.0,
+                    "category": "content",
+                },
+                {
+                    "suggestion": "Simplify technical terms",
+                    "priority": "medium",
+                    "affected_personas": 1,
+                    "impact": 10.0,
+                    "category": "clarity",
+                },
+            ],
+            "final_report": {},
+            "messages": [],
+            "errors": [],
+            "retry_count": {},
+            "simulation_id": "test_sim_001",
+            "start_time": datetime.now(),
+            "end_time": None,
+        }
+E       pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+E       location
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       education_level
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       personality_traits
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       information_seeking_behavior
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       preferred_channels
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_reporter.py:45: ValidationError
+____ ERROR at setup of TestReporterAgent.test_detailed_analysis_generation _____
+
+self = <test_reporter.TestReporterAgent object at 0x705930be1600>
+
+    @pytest.fixture
+    def sample_state(self) -> dict[str, Any]:
+        """Create sample ArticleReviewState for testing."""
+        return {
+            "article_content": "This is a test article about AI and machine learning.",
+            "article_metadata": {
+                "title": "Understanding AI",
+                "author": "Test Author",
+                "category": "Technology",
+            },
+            "current_phase": "reporting",
+            "phase_status": {
+                "initialization": "completed",
+                "analysis": "completed",
+                "persona_generation": "completed",
+                "evaluation": "completed",
+                "aggregation": "completed",
+                "reporting": "in_progress",
+            },
+            "active_agents": ["reporter"],
+            "agent_status": {"reporter": "active"},
+            "analysis_results": {
+                "topics": ["AI", "Machine Learning", "Technology"],
+                "tone": "informative",
+                "target_audience": "tech professionals",
+                "complexity": "intermediate",
+            },
+            "persona_count": 3,
+            "generated_personas": [
+>               PersonaAttributes(
+                    age=30,
+                    occupation="Software Engineer",
+                    interests=["AI", "Technology"],
+                    values=["Innovation", "Learning"],
+                ),
+                PersonaAttributes(
+                    age=25,
+                    occupation="Data Scientist",
+                    interests=["Machine Learning", "Statistics"],
+                    values=["Accuracy", "Research"],
+                ),
+                PersonaAttributes(
+                    age=35,
+                    occupation="Product Manager",
+                    interests=["Technology", "Business"],
+                    values=["Efficiency", "User Experience"],
+                ),
+            ],
+            "persona_generation_complete": True,
+            "persona_evaluations": {
+                "persona_1": EvaluationResult(
+                    persona_id="persona_1",
+                    persona_type="tech_enthusiast",
+                    article_id="test_001",
+                    overall_score=85,
+                    metrics=[
+                        EvaluationMetric(name="relevance", score=90),
+                        EvaluationMetric(name="clarity", score=80),
+                    ],
+                    sentiment="positive",
+                    suggestions=["Add more examples"],
+                    strengths=["Clear structure"],
+                    weaknesses=["Lacks examples"],
+                    sharing_probability=0.8,
+                    engagement_level="high",
+                )
+            },
+            "evaluation_complete": True,
+            "aggregated_scores": {
+                "overall": 82.5,
+                "relevance": 87.0,
+                "clarity": 78.0,
+                "engagement": 80.0,
+            },
+            "improvement_suggestions": [
+                {
+                    "suggestion": "Add more examples",
+                    "priority": "high",
+                    "affected_personas": 2,
+                    "impact": 15.0,
+                    "category": "content",
+                },
+                {
+                    "suggestion": "Simplify technical terms",
+                    "priority": "medium",
+                    "affected_personas": 1,
+                    "impact": 10.0,
+                    "category": "clarity",
+                },
+            ],
+            "final_report": {},
+            "messages": [],
+            "errors": [],
+            "retry_count": {},
+            "simulation_id": "test_sim_001",
+            "start_time": datetime.now(),
+            "end_time": None,
+        }
+E       pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+E       location
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       education_level
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       personality_traits
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       information_seeking_behavior
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       preferred_channels
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_reporter.py:45: ValidationError
+_____ ERROR at setup of TestReporterAgent.test_recommendations_generation ______
+
+self = <test_reporter.TestReporterAgent object at 0x705930be1840>
+
+    @pytest.fixture
+    def sample_state(self) -> dict[str, Any]:
+        """Create sample ArticleReviewState for testing."""
+        return {
+            "article_content": "This is a test article about AI and machine learning.",
+            "article_metadata": {
+                "title": "Understanding AI",
+                "author": "Test Author",
+                "category": "Technology",
+            },
+            "current_phase": "reporting",
+            "phase_status": {
+                "initialization": "completed",
+                "analysis": "completed",
+                "persona_generation": "completed",
+                "evaluation": "completed",
+                "aggregation": "completed",
+                "reporting": "in_progress",
+            },
+            "active_agents": ["reporter"],
+            "agent_status": {"reporter": "active"},
+            "analysis_results": {
+                "topics": ["AI", "Machine Learning", "Technology"],
+                "tone": "informative",
+                "target_audience": "tech professionals",
+                "complexity": "intermediate",
+            },
+            "persona_count": 3,
+            "generated_personas": [
+>               PersonaAttributes(
+                    age=30,
+                    occupation="Software Engineer",
+                    interests=["AI", "Technology"],
+                    values=["Innovation", "Learning"],
+                ),
+                PersonaAttributes(
+                    age=25,
+                    occupation="Data Scientist",
+                    interests=["Machine Learning", "Statistics"],
+                    values=["Accuracy", "Research"],
+                ),
+                PersonaAttributes(
+                    age=35,
+                    occupation="Product Manager",
+                    interests=["Technology", "Business"],
+                    values=["Efficiency", "User Experience"],
+                ),
+            ],
+            "persona_generation_complete": True,
+            "persona_evaluations": {
+                "persona_1": EvaluationResult(
+                    persona_id="persona_1",
+                    persona_type="tech_enthusiast",
+                    article_id="test_001",
+                    overall_score=85,
+                    metrics=[
+                        EvaluationMetric(name="relevance", score=90),
+                        EvaluationMetric(name="clarity", score=80),
+                    ],
+                    sentiment="positive",
+                    suggestions=["Add more examples"],
+                    strengths=["Clear structure"],
+                    weaknesses=["Lacks examples"],
+                    sharing_probability=0.8,
+                    engagement_level="high",
+                )
+            },
+            "evaluation_complete": True,
+            "aggregated_scores": {
+                "overall": 82.5,
+                "relevance": 87.0,
+                "clarity": 78.0,
+                "engagement": 80.0,
+            },
+            "improvement_suggestions": [
+                {
+                    "suggestion": "Add more examples",
+                    "priority": "high",
+                    "affected_personas": 2,
+                    "impact": 15.0,
+                    "category": "content",
+                },
+                {
+                    "suggestion": "Simplify technical terms",
+                    "priority": "medium",
+                    "affected_personas": 1,
+                    "impact": 10.0,
+                    "category": "clarity",
+                },
+            ],
+            "final_report": {},
+            "messages": [],
+            "errors": [],
+            "retry_count": {},
+            "simulation_id": "test_sim_001",
+            "start_time": datetime.now(),
+            "end_time": None,
+        }
+E       pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+E       location
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       education_level
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       personality_traits
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       information_seeking_behavior
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       preferred_channels
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_reporter.py:45: ValidationError
+___ ERROR at setup of TestReporterAgent.test_visualization_data_preparation ____
+
+self = <test_reporter.TestReporterAgent object at 0x705930be1a80>
+
+    @pytest.fixture
+    def sample_state(self) -> dict[str, Any]:
+        """Create sample ArticleReviewState for testing."""
+        return {
+            "article_content": "This is a test article about AI and machine learning.",
+            "article_metadata": {
+                "title": "Understanding AI",
+                "author": "Test Author",
+                "category": "Technology",
+            },
+            "current_phase": "reporting",
+            "phase_status": {
+                "initialization": "completed",
+                "analysis": "completed",
+                "persona_generation": "completed",
+                "evaluation": "completed",
+                "aggregation": "completed",
+                "reporting": "in_progress",
+            },
+            "active_agents": ["reporter"],
+            "agent_status": {"reporter": "active"},
+            "analysis_results": {
+                "topics": ["AI", "Machine Learning", "Technology"],
+                "tone": "informative",
+                "target_audience": "tech professionals",
+                "complexity": "intermediate",
+            },
+            "persona_count": 3,
+            "generated_personas": [
+>               PersonaAttributes(
+                    age=30,
+                    occupation="Software Engineer",
+                    interests=["AI", "Technology"],
+                    values=["Innovation", "Learning"],
+                ),
+                PersonaAttributes(
+                    age=25,
+                    occupation="Data Scientist",
+                    interests=["Machine Learning", "Statistics"],
+                    values=["Accuracy", "Research"],
+                ),
+                PersonaAttributes(
+                    age=35,
+                    occupation="Product Manager",
+                    interests=["Technology", "Business"],
+                    values=["Efficiency", "User Experience"],
+                ),
+            ],
+            "persona_generation_complete": True,
+            "persona_evaluations": {
+                "persona_1": EvaluationResult(
+                    persona_id="persona_1",
+                    persona_type="tech_enthusiast",
+                    article_id="test_001",
+                    overall_score=85,
+                    metrics=[
+                        EvaluationMetric(name="relevance", score=90),
+                        EvaluationMetric(name="clarity", score=80),
+                    ],
+                    sentiment="positive",
+                    suggestions=["Add more examples"],
+                    strengths=["Clear structure"],
+                    weaknesses=["Lacks examples"],
+                    sharing_probability=0.8,
+                    engagement_level="high",
+                )
+            },
+            "evaluation_complete": True,
+            "aggregated_scores": {
+                "overall": 82.5,
+                "relevance": 87.0,
+                "clarity": 78.0,
+                "engagement": 80.0,
+            },
+            "improvement_suggestions": [
+                {
+                    "suggestion": "Add more examples",
+                    "priority": "high",
+                    "affected_personas": 2,
+                    "impact": 15.0,
+                    "category": "content",
+                },
+                {
+                    "suggestion": "Simplify technical terms",
+                    "priority": "medium",
+                    "affected_personas": 1,
+                    "impact": 10.0,
+                    "category": "clarity",
+                },
+            ],
+            "final_report": {},
+            "messages": [],
+            "errors": [],
+            "retry_count": {},
+            "simulation_id": "test_sim_001",
+            "start_time": datetime.now(),
+            "end_time": None,
+        }
+E       pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+E       location
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       education_level
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       personality_traits
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       information_seeking_behavior
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       preferred_channels
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_reporter.py:45: ValidationError
+_________ ERROR at setup of TestReporterAgent.test_format_report_json __________
+
+self = <test_reporter.TestReporterAgent object at 0x705930be1cc0>
+
+    @pytest.fixture
+    def sample_state(self) -> dict[str, Any]:
+        """Create sample ArticleReviewState for testing."""
+        return {
+            "article_content": "This is a test article about AI and machine learning.",
+            "article_metadata": {
+                "title": "Understanding AI",
+                "author": "Test Author",
+                "category": "Technology",
+            },
+            "current_phase": "reporting",
+            "phase_status": {
+                "initialization": "completed",
+                "analysis": "completed",
+                "persona_generation": "completed",
+                "evaluation": "completed",
+                "aggregation": "completed",
+                "reporting": "in_progress",
+            },
+            "active_agents": ["reporter"],
+            "agent_status": {"reporter": "active"},
+            "analysis_results": {
+                "topics": ["AI", "Machine Learning", "Technology"],
+                "tone": "informative",
+                "target_audience": "tech professionals",
+                "complexity": "intermediate",
+            },
+            "persona_count": 3,
+            "generated_personas": [
+>               PersonaAttributes(
+                    age=30,
+                    occupation="Software Engineer",
+                    interests=["AI", "Technology"],
+                    values=["Innovation", "Learning"],
+                ),
+                PersonaAttributes(
+                    age=25,
+                    occupation="Data Scientist",
+                    interests=["Machine Learning", "Statistics"],
+                    values=["Accuracy", "Research"],
+                ),
+                PersonaAttributes(
+                    age=35,
+                    occupation="Product Manager",
+                    interests=["Technology", "Business"],
+                    values=["Efficiency", "User Experience"],
+                ),
+            ],
+            "persona_generation_complete": True,
+            "persona_evaluations": {
+                "persona_1": EvaluationResult(
+                    persona_id="persona_1",
+                    persona_type="tech_enthusiast",
+                    article_id="test_001",
+                    overall_score=85,
+                    metrics=[
+                        EvaluationMetric(name="relevance", score=90),
+                        EvaluationMetric(name="clarity", score=80),
+                    ],
+                    sentiment="positive",
+                    suggestions=["Add more examples"],
+                    strengths=["Clear structure"],
+                    weaknesses=["Lacks examples"],
+                    sharing_probability=0.8,
+                    engagement_level="high",
+                )
+            },
+            "evaluation_complete": True,
+            "aggregated_scores": {
+                "overall": 82.5,
+                "relevance": 87.0,
+                "clarity": 78.0,
+                "engagement": 80.0,
+            },
+            "improvement_suggestions": [
+                {
+                    "suggestion": "Add more examples",
+                    "priority": "high",
+                    "affected_personas": 2,
+                    "impact": 15.0,
+                    "category": "content",
+                },
+                {
+                    "suggestion": "Simplify technical terms",
+                    "priority": "medium",
+                    "affected_personas": 1,
+                    "impact": 10.0,
+                    "category": "clarity",
+                },
+            ],
+            "final_report": {},
+            "messages": [],
+            "errors": [],
+            "retry_count": {},
+            "simulation_id": "test_sim_001",
+            "start_time": datetime.now(),
+            "end_time": None,
+        }
+E       pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+E       location
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       education_level
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       personality_traits
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       information_seeking_behavior
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       preferred_channels
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_reporter.py:45: ValidationError
+_______ ERROR at setup of TestReporterAgent.test_format_report_markdown ________
+
+self = <test_reporter.TestReporterAgent object at 0x705930be1f00>
+
+    @pytest.fixture
+    def sample_state(self) -> dict[str, Any]:
+        """Create sample ArticleReviewState for testing."""
+        return {
+            "article_content": "This is a test article about AI and machine learning.",
+            "article_metadata": {
+                "title": "Understanding AI",
+                "author": "Test Author",
+                "category": "Technology",
+            },
+            "current_phase": "reporting",
+            "phase_status": {
+                "initialization": "completed",
+                "analysis": "completed",
+                "persona_generation": "completed",
+                "evaluation": "completed",
+                "aggregation": "completed",
+                "reporting": "in_progress",
+            },
+            "active_agents": ["reporter"],
+            "agent_status": {"reporter": "active"},
+            "analysis_results": {
+                "topics": ["AI", "Machine Learning", "Technology"],
+                "tone": "informative",
+                "target_audience": "tech professionals",
+                "complexity": "intermediate",
+            },
+            "persona_count": 3,
+            "generated_personas": [
+>               PersonaAttributes(
+                    age=30,
+                    occupation="Software Engineer",
+                    interests=["AI", "Technology"],
+                    values=["Innovation", "Learning"],
+                ),
+                PersonaAttributes(
+                    age=25,
+                    occupation="Data Scientist",
+                    interests=["Machine Learning", "Statistics"],
+                    values=["Accuracy", "Research"],
+                ),
+                PersonaAttributes(
+                    age=35,
+                    occupation="Product Manager",
+                    interests=["Technology", "Business"],
+                    values=["Efficiency", "User Experience"],
+                ),
+            ],
+            "persona_generation_complete": True,
+            "persona_evaluations": {
+                "persona_1": EvaluationResult(
+                    persona_id="persona_1",
+                    persona_type="tech_enthusiast",
+                    article_id="test_001",
+                    overall_score=85,
+                    metrics=[
+                        EvaluationMetric(name="relevance", score=90),
+                        EvaluationMetric(name="clarity", score=80),
+                    ],
+                    sentiment="positive",
+                    suggestions=["Add more examples"],
+                    strengths=["Clear structure"],
+                    weaknesses=["Lacks examples"],
+                    sharing_probability=0.8,
+                    engagement_level="high",
+                )
+            },
+            "evaluation_complete": True,
+            "aggregated_scores": {
+                "overall": 82.5,
+                "relevance": 87.0,
+                "clarity": 78.0,
+                "engagement": 80.0,
+            },
+            "improvement_suggestions": [
+                {
+                    "suggestion": "Add more examples",
+                    "priority": "high",
+                    "affected_personas": 2,
+                    "impact": 15.0,
+                    "category": "content",
+                },
+                {
+                    "suggestion": "Simplify technical terms",
+                    "priority": "medium",
+                    "affected_personas": 1,
+                    "impact": 10.0,
+                    "category": "clarity",
+                },
+            ],
+            "final_report": {},
+            "messages": [],
+            "errors": [],
+            "retry_count": {},
+            "simulation_id": "test_sim_001",
+            "start_time": datetime.now(),
+            "end_time": None,
+        }
+E       pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+E       location
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       education_level
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       personality_traits
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       information_seeking_behavior
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       preferred_channels
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_reporter.py:45: ValidationError
+_________ ERROR at setup of TestReporterAgent.test_format_report_html __________
+
+self = <test_reporter.TestReporterAgent object at 0x705930be2140>
+
+    @pytest.fixture
+    def sample_state(self) -> dict[str, Any]:
+        """Create sample ArticleReviewState for testing."""
+        return {
+            "article_content": "This is a test article about AI and machine learning.",
+            "article_metadata": {
+                "title": "Understanding AI",
+                "author": "Test Author",
+                "category": "Technology",
+            },
+            "current_phase": "reporting",
+            "phase_status": {
+                "initialization": "completed",
+                "analysis": "completed",
+                "persona_generation": "completed",
+                "evaluation": "completed",
+                "aggregation": "completed",
+                "reporting": "in_progress",
+            },
+            "active_agents": ["reporter"],
+            "agent_status": {"reporter": "active"},
+            "analysis_results": {
+                "topics": ["AI", "Machine Learning", "Technology"],
+                "tone": "informative",
+                "target_audience": "tech professionals",
+                "complexity": "intermediate",
+            },
+            "persona_count": 3,
+            "generated_personas": [
+>               PersonaAttributes(
+                    age=30,
+                    occupation="Software Engineer",
+                    interests=["AI", "Technology"],
+                    values=["Innovation", "Learning"],
+                ),
+                PersonaAttributes(
+                    age=25,
+                    occupation="Data Scientist",
+                    interests=["Machine Learning", "Statistics"],
+                    values=["Accuracy", "Research"],
+                ),
+                PersonaAttributes(
+                    age=35,
+                    occupation="Product Manager",
+                    interests=["Technology", "Business"],
+                    values=["Efficiency", "User Experience"],
+                ),
+            ],
+            "persona_generation_complete": True,
+            "persona_evaluations": {
+                "persona_1": EvaluationResult(
+                    persona_id="persona_1",
+                    persona_type="tech_enthusiast",
+                    article_id="test_001",
+                    overall_score=85,
+                    metrics=[
+                        EvaluationMetric(name="relevance", score=90),
+                        EvaluationMetric(name="clarity", score=80),
+                    ],
+                    sentiment="positive",
+                    suggestions=["Add more examples"],
+                    strengths=["Clear structure"],
+                    weaknesses=["Lacks examples"],
+                    sharing_probability=0.8,
+                    engagement_level="high",
+                )
+            },
+            "evaluation_complete": True,
+            "aggregated_scores": {
+                "overall": 82.5,
+                "relevance": 87.0,
+                "clarity": 78.0,
+                "engagement": 80.0,
+            },
+            "improvement_suggestions": [
+                {
+                    "suggestion": "Add more examples",
+                    "priority": "high",
+                    "affected_personas": 2,
+                    "impact": 15.0,
+                    "category": "content",
+                },
+                {
+                    "suggestion": "Simplify technical terms",
+                    "priority": "medium",
+                    "affected_personas": 1,
+                    "impact": 10.0,
+                    "category": "clarity",
+                },
+            ],
+            "final_report": {},
+            "messages": [],
+            "errors": [],
+            "retry_count": {},
+            "simulation_id": "test_sim_001",
+            "start_time": datetime.now(),
+            "end_time": None,
+        }
+E       pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+E       location
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       education_level
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       personality_traits
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       information_seeking_behavior
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       preferred_channels
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_reporter.py:45: ValidationError
+____ ERROR at setup of TestReporterAgent.test_error_handling_in_generation _____
+
+self = <test_reporter.TestReporterAgent object at 0x705930be25c0>
+
+    @pytest.fixture
+    def sample_state(self) -> dict[str, Any]:
+        """Create sample ArticleReviewState for testing."""
+        return {
+            "article_content": "This is a test article about AI and machine learning.",
+            "article_metadata": {
+                "title": "Understanding AI",
+                "author": "Test Author",
+                "category": "Technology",
+            },
+            "current_phase": "reporting",
+            "phase_status": {
+                "initialization": "completed",
+                "analysis": "completed",
+                "persona_generation": "completed",
+                "evaluation": "completed",
+                "aggregation": "completed",
+                "reporting": "in_progress",
+            },
+            "active_agents": ["reporter"],
+            "agent_status": {"reporter": "active"},
+            "analysis_results": {
+                "topics": ["AI", "Machine Learning", "Technology"],
+                "tone": "informative",
+                "target_audience": "tech professionals",
+                "complexity": "intermediate",
+            },
+            "persona_count": 3,
+            "generated_personas": [
+>               PersonaAttributes(
+                    age=30,
+                    occupation="Software Engineer",
+                    interests=["AI", "Technology"],
+                    values=["Innovation", "Learning"],
+                ),
+                PersonaAttributes(
+                    age=25,
+                    occupation="Data Scientist",
+                    interests=["Machine Learning", "Statistics"],
+                    values=["Accuracy", "Research"],
+                ),
+                PersonaAttributes(
+                    age=35,
+                    occupation="Product Manager",
+                    interests=["Technology", "Business"],
+                    values=["Efficiency", "User Experience"],
+                ),
+            ],
+            "persona_generation_complete": True,
+            "persona_evaluations": {
+                "persona_1": EvaluationResult(
+                    persona_id="persona_1",
+                    persona_type="tech_enthusiast",
+                    article_id="test_001",
+                    overall_score=85,
+                    metrics=[
+                        EvaluationMetric(name="relevance", score=90),
+                        EvaluationMetric(name="clarity", score=80),
+                    ],
+                    sentiment="positive",
+                    suggestions=["Add more examples"],
+                    strengths=["Clear structure"],
+                    weaknesses=["Lacks examples"],
+                    sharing_probability=0.8,
+                    engagement_level="high",
+                )
+            },
+            "evaluation_complete": True,
+            "aggregated_scores": {
+                "overall": 82.5,
+                "relevance": 87.0,
+                "clarity": 78.0,
+                "engagement": 80.0,
+            },
+            "improvement_suggestions": [
+                {
+                    "suggestion": "Add more examples",
+                    "priority": "high",
+                    "affected_personas": 2,
+                    "impact": 15.0,
+                    "category": "content",
+                },
+                {
+                    "suggestion": "Simplify technical terms",
+                    "priority": "medium",
+                    "affected_personas": 1,
+                    "impact": 10.0,
+                    "category": "clarity",
+                },
+            ],
+            "final_report": {},
+            "messages": [],
+            "errors": [],
+            "retry_count": {},
+            "simulation_id": "test_sim_001",
+            "start_time": datetime.now(),
+            "end_time": None,
+        }
+E       pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+E       location
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       education_level
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       personality_traits
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       information_seeking_behavior
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       preferred_channels
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_reporter.py:45: ValidationError
+__________ ERROR at setup of TestReporterAgent.test_calculate_metrics __________
+
+self = <test_reporter.TestReporterAgent object at 0x705930be2800>
+
+    @pytest.fixture
+    def sample_state(self) -> dict[str, Any]:
+        """Create sample ArticleReviewState for testing."""
+        return {
+            "article_content": "This is a test article about AI and machine learning.",
+            "article_metadata": {
+                "title": "Understanding AI",
+                "author": "Test Author",
+                "category": "Technology",
+            },
+            "current_phase": "reporting",
+            "phase_status": {
+                "initialization": "completed",
+                "analysis": "completed",
+                "persona_generation": "completed",
+                "evaluation": "completed",
+                "aggregation": "completed",
+                "reporting": "in_progress",
+            },
+            "active_agents": ["reporter"],
+            "agent_status": {"reporter": "active"},
+            "analysis_results": {
+                "topics": ["AI", "Machine Learning", "Technology"],
+                "tone": "informative",
+                "target_audience": "tech professionals",
+                "complexity": "intermediate",
+            },
+            "persona_count": 3,
+            "generated_personas": [
+>               PersonaAttributes(
+                    age=30,
+                    occupation="Software Engineer",
+                    interests=["AI", "Technology"],
+                    values=["Innovation", "Learning"],
+                ),
+                PersonaAttributes(
+                    age=25,
+                    occupation="Data Scientist",
+                    interests=["Machine Learning", "Statistics"],
+                    values=["Accuracy", "Research"],
+                ),
+                PersonaAttributes(
+                    age=35,
+                    occupation="Product Manager",
+                    interests=["Technology", "Business"],
+                    values=["Efficiency", "User Experience"],
+                ),
+            ],
+            "persona_generation_complete": True,
+            "persona_evaluations": {
+                "persona_1": EvaluationResult(
+                    persona_id="persona_1",
+                    persona_type="tech_enthusiast",
+                    article_id="test_001",
+                    overall_score=85,
+                    metrics=[
+                        EvaluationMetric(name="relevance", score=90),
+                        EvaluationMetric(name="clarity", score=80),
+                    ],
+                    sentiment="positive",
+                    suggestions=["Add more examples"],
+                    strengths=["Clear structure"],
+                    weaknesses=["Lacks examples"],
+                    sharing_probability=0.8,
+                    engagement_level="high",
+                )
+            },
+            "evaluation_complete": True,
+            "aggregated_scores": {
+                "overall": 82.5,
+                "relevance": 87.0,
+                "clarity": 78.0,
+                "engagement": 80.0,
+            },
+            "improvement_suggestions": [
+                {
+                    "suggestion": "Add more examples",
+                    "priority": "high",
+                    "affected_personas": 2,
+                    "impact": 15.0,
+                    "category": "content",
+                },
+                {
+                    "suggestion": "Simplify technical terms",
+                    "priority": "medium",
+                    "affected_personas": 1,
+                    "impact": 10.0,
+                    "category": "clarity",
+                },
+            ],
+            "final_report": {},
+            "messages": [],
+            "errors": [],
+            "retry_count": {},
+            "simulation_id": "test_sim_001",
+            "start_time": datetime.now(),
+            "end_time": None,
+        }
+E       pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+E       location
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       education_level
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       personality_traits
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       information_seeking_behavior
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       preferred_channels
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_reporter.py:45: ValidationError
+_________ ERROR at setup of TestReporterAgent.test_template_rendering __________
+
+self = <test_reporter.TestReporterAgent object at 0x705930be29b0>
+
+    @pytest.fixture
+    def sample_state(self) -> dict[str, Any]:
+        """Create sample ArticleReviewState for testing."""
+        return {
+            "article_content": "This is a test article about AI and machine learning.",
+            "article_metadata": {
+                "title": "Understanding AI",
+                "author": "Test Author",
+                "category": "Technology",
+            },
+            "current_phase": "reporting",
+            "phase_status": {
+                "initialization": "completed",
+                "analysis": "completed",
+                "persona_generation": "completed",
+                "evaluation": "completed",
+                "aggregation": "completed",
+                "reporting": "in_progress",
+            },
+            "active_agents": ["reporter"],
+            "agent_status": {"reporter": "active"},
+            "analysis_results": {
+                "topics": ["AI", "Machine Learning", "Technology"],
+                "tone": "informative",
+                "target_audience": "tech professionals",
+                "complexity": "intermediate",
+            },
+            "persona_count": 3,
+            "generated_personas": [
+>               PersonaAttributes(
+                    age=30,
+                    occupation="Software Engineer",
+                    interests=["AI", "Technology"],
+                    values=["Innovation", "Learning"],
+                ),
+                PersonaAttributes(
+                    age=25,
+                    occupation="Data Scientist",
+                    interests=["Machine Learning", "Statistics"],
+                    values=["Accuracy", "Research"],
+                ),
+                PersonaAttributes(
+                    age=35,
+                    occupation="Product Manager",
+                    interests=["Technology", "Business"],
+                    values=["Efficiency", "User Experience"],
+                ),
+            ],
+            "persona_generation_complete": True,
+            "persona_evaluations": {
+                "persona_1": EvaluationResult(
+                    persona_id="persona_1",
+                    persona_type="tech_enthusiast",
+                    article_id="test_001",
+                    overall_score=85,
+                    metrics=[
+                        EvaluationMetric(name="relevance", score=90),
+                        EvaluationMetric(name="clarity", score=80),
+                    ],
+                    sentiment="positive",
+                    suggestions=["Add more examples"],
+                    strengths=["Clear structure"],
+                    weaknesses=["Lacks examples"],
+                    sharing_probability=0.8,
+                    engagement_level="high",
+                )
+            },
+            "evaluation_complete": True,
+            "aggregated_scores": {
+                "overall": 82.5,
+                "relevance": 87.0,
+                "clarity": 78.0,
+                "engagement": 80.0,
+            },
+            "improvement_suggestions": [
+                {
+                    "suggestion": "Add more examples",
+                    "priority": "high",
+                    "affected_personas": 2,
+                    "impact": 15.0,
+                    "category": "content",
+                },
+                {
+                    "suggestion": "Simplify technical terms",
+                    "priority": "medium",
+                    "affected_personas": 1,
+                    "impact": 10.0,
+                    "category": "clarity",
+                },
+            ],
+            "final_report": {},
+            "messages": [],
+            "errors": [],
+            "retry_count": {},
+            "simulation_id": "test_sim_001",
+            "start_time": datetime.now(),
+            "end_time": None,
+        }
+E       pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+E       location
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       education_level
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       personality_traits
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       information_seeking_behavior
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       preferred_channels
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_reporter.py:45: ValidationError
+=================================== FAILURES ===================================
+_____________ TestSimulationCreate.test_create_simulation_minimal ______________
+
+self = <server.test_app.TestSimulationCreate object at 0x70594742bd00>
+test_client = <starlette.testclient.TestClient object at 0x705930be3040>
+
+    def test_create_simulation_minimal(self, test_client):
+        """最小限のパラメータでシミュレーション作成"""
+        request_data = {"article_content": "This is a test article about AI and technology."}
+    
+        response = test_client.post("/api/simulations", json=request_data)
+    
+        assert response.status_code == status.HTTP_201_CREATED
+        data = response.json()
+        assert "id" in data
+>       assert data["status"] == SimulationStatus.PENDING.value
+E       AssertionError: assert 'failed' == 'pending'
+E         
+E         - pending
+E         + failed
+
+tests/unit/server/test_app.py:57: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2025-08-09 16:18:23 [error    ] Simulation service not initialized
+______ TestOrchestratorIntegration.test_simulation_with_orchestrator_mock ______
+
+self = <server.test_integration.TestOrchestratorIntegration object at 0x705947471e70>
+mock_orchestrator_class = <MagicMock name='OrchestratorAgent' id='123528371183456'>
+test_client = <starlette.testclient.TestClient object at 0x705930da4e50>
+
+    @patch("src.server.simulation_service.OrchestratorAgent")
+    def test_simulation_with_orchestrator_mock(self, mock_orchestrator_class, test_client):
+        """Test simulation creation triggers orchestrator (with mocked orchestrator)"""
+        # Setup mock orchestrator
+        mock_orchestrator = MagicMock()
+        mock_graph = MagicMock()
+    
+        # Make astream return an async generator
+        async def mock_astream(*args, **kwargs):
+            yield {"orchestrator": {"current_phase": "initialization"}}
+            yield {"orchestrator": {"current_phase": "completed"}}
+    
+        # Make aget_state return a mock state
+        async def mock_aget_state(*args, **kwargs):
+            mock_state = MagicMock()
+            mock_state.values = {
+                "persona_evaluations": [],
+                "aggregation_results": {
+                    "overall_relevance": 0.8,
+                    "overall_quality": 0.9,
+                    "overall_engagement": 0.7,
+                    "market_segments": [],
+                    "key_insights": ["Test insight"],
+                    "recommendations": ["Test recommendation"],
+                },
+                "persona_count": 10,
+                "start_time": None,
+                "end_time": None,
+            }
+            return mock_state
+    
+        mock_graph.astream = mock_astream
+        mock_graph.aget_state = mock_aget_state
+        mock_orchestrator.compile.return_value = mock_graph
+        mock_orchestrator_class.return_value = mock_orchestrator
+    
+        # Create simulation
+        response = test_client.post(
+            "/api/simulations",
+            json={
+                "article_content": "Test article content",
+                "article_metadata": {"title": "Test Article"},
+            }
+        )
+    
+        assert response.status_code == 201
+        data = response.json()
+        assert "id" in data
+        assert data["status"] == "pending"
+    
+        # Give background task time to start
+        # In a real test, we'd wait for the status to change
+        # But for unit tests, we just verify the orchestrator was called
+>       assert mock_orchestrator_class.called
+E       AssertionError: assert False
+E        +  where False = <MagicMock name='OrchestratorAgent' id='123528371183456'>.called
+
+tests/unit/server/test_integration.py:78: AssertionError
+---------------------------- Captured stdout setup -----------------------------
+2025-08-09 16:18:24 [info     ] Starting AMS API Server
+2025-08-09 16:18:24 [info     ] Simulation service initialized
+------------------------------ Captured log call -------------------------------
+ERROR    src.server.simulation_service:simulation_service.py:92 Error in simulation a05b3cbd-5ce4-45dd-a1be-c5d0643c4a13: 'dict' object has no attribute 'age'
+Traceback (most recent call last):
+  File "/home/devuser/workspace/app/ams/src/server/simulation_service.py", line 68, in run_simulation
+    async for chunk in self.graph.astream(
+  File "/home/devuser/workspace/app/ams/.venv/lib/python3.10/site-packages/langgraph/pregel/main.py", line 2926, in astream
+    async for _ in runner.atick(
+  File "/home/devuser/workspace/app/ams/.venv/lib/python3.10/site-packages/langgraph/pregel/_runner.py", line 401, in atick
+    _panic_or_proceed(
+  File "/home/devuser/workspace/app/ams/.venv/lib/python3.10/site-packages/langgraph/pregel/_runner.py", line 511, in _panic_or_proceed
+    raise exc
+  File "/home/devuser/workspace/app/ams/.venv/lib/python3.10/site-packages/langgraph/pregel/_retry.py", line 137, in arun_with_retry
+    return await task.proc.ainvoke(task.input, config)
+  File "/home/devuser/workspace/app/ams/.venv/lib/python3.10/site-packages/langgraph/_internal/_runnable.py", line 693, in ainvoke
+    input = await step.ainvoke(input, config, **kwargs)
+  File "/home/devuser/workspace/app/ams/.venv/lib/python3.10/site-packages/langgraph/_internal/_runnable.py", line 457, in ainvoke
+    ret = await self.afunc(*args, **kwargs)
+  File "/home/devuser/workspace/app/ams/src/agents/orchestrator.py", line 417, in _evaluate_single_persona
+    result = await evaluator.evaluate_persona(
+  File "/home/devuser/workspace/app/ams/src/agents/evaluator.py", line 53, in evaluate_persona
+    prompt = self._generate_evaluation_prompt(persona, article_content, analysis_results)
+  File "/home/devuser/workspace/app/ams/src/agents/evaluator.py", line 108, in _generate_evaluation_prompt
+    - Age: {persona.age}
+AttributeError: 'dict' object has no attribute 'age'
+--------------------------- Captured stdout teardown ---------------------------
+2025-08-09 16:18:56 [info     ] Shutting down AMS API Server
+__________________ TestAggregatorAgent.test_single_evaluation __________________
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d22fb0>
+
+    @pytest.mark.asyncio
+    async def test_single_evaluation(self):
+        """Test handling of single evaluation."""
+        agent = AggregatorAgent()
+        single_eval = {
+            "persona_1": EvaluationResult(
+                persona_id="persona_1",
+                persona_type="general",
+                article_id="test_001",
+                overall_score=80,
+                metrics=[],
+                sentiment="positive",
+                suggestions=["Test suggestion"],
+                strengths=[],
+                weaknesses=[],
+                sharing_probability=0.7,
+                engagement_level="high",
+            )
+        }
+    
+>       result = await agent.aggregate(single_eval)
+
+tests/unit/test_aggregator.py:164: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/agents/aggregator.py:47: in aggregate
+    scores = self._aggregate_metrics(evaluations)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <src.agents.aggregator.AggregatorAgent object at 0x705920925d20>
+evaluations = [EvaluationResult(persona_id='persona_1', article_id='test_001', metrics=[], overall_score=80.0, strengths=[], weaknesses=[], suggestions=['Test suggestion'], sharing_probability=0.7, engagement_level='high', sentiment='positive')]
+
+    def _aggregate_metrics(
+        self, evaluations: list[EvaluationResult]
+    ) -> dict[str, dict[str, float]]:
+        """Aggregate score metrics across all evaluations."""
+        if not evaluations:
+            return {}
+    
+        # Collect all metrics
+        metrics_data = defaultdict(list)
+    
+        # Aggregate overall scores
+        overall_scores = []
+        for eval_result in evaluations:
+>           overall_scores.append(eval_result["overall_score"])
+E           TypeError: 'EvaluationResult' object is not subscriptable
+
+src/agents/aggregator.py:97: TypeError
+__________________ TestAggregatorAgent.test_outlier_handling ___________________
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d23430>
+
+    @pytest.mark.asyncio
+    async def test_outlier_handling(self):
+        """Test handling of outlier values."""
+        evaluations_with_outlier = {
+            "persona_1": EvaluationResult(
+                persona_id="persona_1",
+                persona_type="general",
+                article_id="test_001",
+                overall_score=80,
+                metrics=[],
+                sentiment="positive",
+                suggestions=[],
+                strengths=[],
+                weaknesses=[],
+                sharing_probability=0.7,
+                engagement_level="high",
+            ),
+            "persona_2": EvaluationResult(
+                persona_id="persona_2",
+                persona_type="general",
+                article_id="test_001",
+                overall_score=85,
+                metrics=[],
+                sentiment="positive",
+                suggestions=[],
+                strengths=[],
+                weaknesses=[],
+                sharing_probability=0.8,
+                engagement_level="high",
+            ),
+            "persona_3": EvaluationResult(
+                persona_id="persona_3",
+                persona_type="general",
+                article_id="test_001",
+                overall_score=10,  # Outlier
+                metrics=[],
+                sentiment="negative",
+                suggestions=[],
+                strengths=[],
+                weaknesses=[],
+                sharing_probability=0.1,
+                engagement_level="low",
+            ),
+        }
+    
+        agent = AggregatorAgent()
+>       result = await agent.aggregate(evaluations_with_outlier)
+
+tests/unit/test_aggregator.py:239: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/agents/aggregator.py:47: in aggregate
+    scores = self._aggregate_metrics(evaluations)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <src.agents.aggregator.AggregatorAgent object at 0x7059209cf1f0>
+evaluations = [EvaluationResult(persona_id='persona_1', article_id='test_001', metrics=[], overall_score=80.0, strengths=[], weaknes...0, strengths=[], weaknesses=[], suggestions=[], sharing_probability=0.1, engagement_level='low', sentiment='negative')]
+
+    def _aggregate_metrics(
+        self, evaluations: list[EvaluationResult]
+    ) -> dict[str, dict[str, float]]:
+        """Aggregate score metrics across all evaluations."""
+        if not evaluations:
+            return {}
+    
+        # Collect all metrics
+        metrics_data = defaultdict(list)
+    
+        # Aggregate overall scores
+        overall_scores = []
+        for eval_result in evaluations:
+>           overall_scores.append(eval_result["overall_score"])
+E           TypeError: 'EvaluationResult' object is not subscriptable
+
+src/agents/aggregator.py:97: TypeError
+____________ TestAggregatorAgent.test_aggregate_metrics_calculation ____________
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d22f20>
+
+    def test_aggregate_metrics_calculation(self):
+        """Test the internal metrics aggregation method."""
+        agent = AggregatorAgent()
+    
+        evaluations = [
+            EvaluationResult(
+                persona_id="p1",
+                persona_type="general",
+                article_id="test_001",
+                overall_score=80,
+                metrics=[
+>                   EvaluationMetric(name="relevance", score=90),
+                    EvaluationMetric(name="clarity", score=85),
+                ],
+                sentiment="positive",
+                suggestions=[],
+                strengths=[],
+                weaknesses=[],
+                sharing_probability=0.7,
+                engagement_level="high",
+            ),
+            EvaluationResult(
+                persona_id="p2",
+                persona_type="general",
+                article_id="test_001",
+                overall_score=70,
+                metrics=[
+                    EvaluationMetric(name="relevance", score=80),
+                    EvaluationMetric(name="clarity", score=75),
+                ],
+                sentiment="neutral",
+                suggestions=[],
+                strengths=[],
+                weaknesses=[],
+                sharing_probability=0.5,
+                engagement_level="medium",
+            ),
+        ]
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+E       weight
+E         Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_aggregator.py:270: ValidationError
+______________ TestAggregatorAgent.test_boundary_value_zero_score ______________
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d22bc0>
+
+    async def test_boundary_value_zero_score(self):
+        """Test aggregation with zero scores."""
+        agent = AggregatorAgent()
+    
+        evaluations = [
+            EvaluationResult(
+                persona_id="persona_1",
+                persona_type="test_type",
+                article_id="test_article",
+                overall_score=0,  # Boundary value: minimum score
+                metrics=[
+>                   EvaluationMetric(name="relevance", score=0),
+                    EvaluationMetric(name="clarity", score=0),
+                ],
+                sentiment="negative",
+                suggestions=["Complete rewrite needed"],
+                strengths=[],
+                weaknesses=["No value provided"],
+                sharing_probability=0.0,
+                engagement_level="low",
+            )
+        ]
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+E       weight
+E         Field required [type=missing, input_value={'name': 'relevance', 'score': 0}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_aggregator.py:316: ValidationError
+____________ TestAggregatorAgent.test_boundary_value_maximum_score _____________
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d22650>
+
+    async def test_boundary_value_maximum_score(self):
+        """Test aggregation with maximum scores (100)."""
+        agent = AggregatorAgent()
+    
+        evaluations = [
+            EvaluationResult(
+                persona_id="persona_1",
+                persona_type="test_type",
+                article_id="test_article",
+                overall_score=100,  # Boundary value: maximum score
+                metrics=[
+>                   EvaluationMetric(name="relevance", score=100),
+                    EvaluationMetric(name="clarity", score=100),
+                ],
+                sentiment="positive",
+                suggestions=[],
+                strengths=["Perfect in every way"],
+                weaknesses=[],
+                sharing_probability=1.0,
+                engagement_level="high",
+            )
+        ]
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+E       weight
+E         Field required [type=missing, input_value={'name': 'relevance', 'score': 100}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_aggregator.py:345: ValidationError
+________ TestAggregatorAgent.test_boundary_value_invalid_negative_score ________
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d23790>
+
+    async def test_boundary_value_invalid_negative_score(self):
+        """Test handling of invalid negative scores."""
+        # Test that negative overall_score raises validation error
+        with pytest.raises(pydantic_core._pydantic_core.ValidationError) as exc_info:
+            EvaluationResult(
+                persona_id="persona_1",
+                persona_type="test_type",
+                article_id="test_article",
+                overall_score=-10,  # Invalid negative score
+                metrics=[
+                    EvaluationMetric(name="relevance", score=0),
+                    EvaluationMetric(name="clarity", score=0),
+                ],
+                sentiment="negative",
+                suggestions=["Fix negative scores"],
+                strengths=[],
+                weaknesses=["Invalid data"],
+                sharing_probability=0,
+                engagement_level="low",
+            )
+>       assert "greater than or equal to 0" in str(exc_info.value)
+E       assert 'greater than or equal to 0' in "1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing"
+E        +  where "1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing" = str(1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing)
+E        +    where 1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing = <ExceptionInfo 1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing tblen=2>.value
+
+tests/unit/test_aggregator.py:383: AssertionError
+________ TestAggregatorAgent.test_boundary_value_invalid_above_maximum _________
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d23a90>
+
+    async def test_boundary_value_invalid_above_maximum(self):
+        """Test handling of scores above maximum (>100)."""
+        # Test that score > 100 raises validation error
+        with pytest.raises(pydantic_core._pydantic_core.ValidationError) as exc_info:
+            EvaluationResult(
+                persona_id="persona_1",
+                persona_type="test_type",
+                article_id="test_article",
+                overall_score=150,  # Invalid score above maximum
+                metrics=[
+                    EvaluationMetric(name="relevance", score=100),
+                    EvaluationMetric(name="clarity", score=100),
+                ],
+                sentiment="positive",
+                suggestions=[],
+                strengths=["Too good to be true"],
+                weaknesses=[],
+                sharing_probability=1.0,
+                engagement_level="high",
+            )
+>       assert "less than or equal to 100" in str(exc_info.value)
+E       assert 'less than or equal to 100' in "1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 100}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing"
+E        +  where "1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 100}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing" = str(1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 100}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing)
+E        +    where 1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 100}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing = <ExceptionInfo 1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 100}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing tblen=2>.value
+
+tests/unit/test_aggregator.py:410: AssertionError
+______________ TestAggregatorAgent.test_large_dataset_aggregation ______________
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d23d90>
+
+    async def test_large_dataset_aggregation(self):
+        """Test aggregation with large number of evaluations."""
+        agent = AggregatorAgent()
+    
+        # Generate 1000 evaluations
+        evaluations = []
+        for i in range(1000):
+            score = 50 + (i % 50)  # Scores between 50-99
+            evaluations.append(
+                EvaluationResult(
+                    persona_id=f"persona_{i}",
+                    persona_type=f"type_{i % 10}",
+                    article_id="test_article",
+                    overall_score=score,
+                    metrics=[
+>                       EvaluationMetric(name="relevance", score=min(score + 5, 100)),
+                        EvaluationMetric(name="clarity", score=max(score - 5, 0)),
+                    ],
+                    sentiment="positive" if score > 75 else "neutral",
+                    suggestions=["Improvement needed"] if score < 60 else [],
+                    strengths=["Good content"],
+                    weaknesses=[],
+                    sharing_probability=score / 100,
+                    engagement_level="high" if score > 80 else "medium",
+                )
+            )
+E           pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+E           weight
+E             Field required [type=missing, input_value={'name': 'relevance', 'score': 55}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_aggregator.py:432: ValidationError
+_____________ TestAggregatorAgent.test_all_same_score_aggregation ______________
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d580d0>
+
+    async def test_all_same_score_aggregation(self):
+        """Test when all personas give the same score."""
+        agent = AggregatorAgent()
+    
+        evaluations = []
+        for i in range(10):
+            evaluations.append(
+                EvaluationResult(
+                    persona_id=f"persona_{i}",
+                    persona_type="uniform_type",
+                    article_id="test_article",
+                    overall_score=75,  # All same score
+                    metrics=[
+>                       EvaluationMetric(name="relevance", score=75),
+                        EvaluationMetric(name="clarity", score=75),
+                    ],
+                    sentiment="neutral",
+                    suggestions=["Standard improvement"],
+                    strengths=["Consistent"],
+                    weaknesses=[],
+                    sharing_probability=0.75,
+                    engagement_level="medium",
+                )
+            )
+E           pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+E           weight
+E             Field required [type=missing, input_value={'name': 'relevance', 'score': 75}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_aggregator.py:464: ValidationError
+______________ TestAggregatorAgent.test_extreme_outlier_detection ______________
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d583d0>
+
+    async def test_extreme_outlier_detection(self):
+        """Test outlier detection with extreme values."""
+        agent = AggregatorAgent()
+    
+        evaluations = []
+        # Most scores around 70-80
+        for i in range(8):
+            evaluations.append(
+                EvaluationResult(
+                    persona_id=f"persona_{i}",
+                    persona_type="normal_type",
+                    article_id="test_article",
+                    overall_score=75,
+                    metrics=[
+>                       EvaluationMetric(name="relevance", score=75),
+                        EvaluationMetric(name="clarity", score=75),
+                    ],
+                    sentiment="neutral",
+                    suggestions=[],
+                    strengths=["Consistent"],
+                    weaknesses=[],
+                    sharing_probability=0.75,
+                    engagement_level="medium",
+                )
+            )
+E           pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+E           weight
+E             Field required [type=missing, input_value={'name': 'relevance', 'score': 75}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_aggregator.py:498: ValidationError
+_____________ TestAggregatorAgent.test_llm_insights_error_handling _____________
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d586d0>
+
+    async def test_llm_insights_error_handling(self):
+        """Test error handling in LLM insights generation."""
+        agent = AggregatorAgent()
+    
+        # Mock LLM to raise an exception
+        agent.llm = AsyncMock()
+        agent.llm.ainvoke.side_effect = Exception("LLM API Error")
+    
+        evaluations = [
+            EvaluationResult(
+                persona_id="persona_1",
+                persona_type="test_type",
+                article_id="test_article",
+                overall_score=75,
+                metrics=[
+>                   EvaluationMetric(name="relevance", score=75),
+                    EvaluationMetric(name="clarity", score=75),
+                ],
+                sentiment="neutral",
+                suggestions=["Improvement needed"],
+                strengths=["Good structure"],
+                weaknesses=["Lacks depth"],
+                sharing_probability=0.75,
+                engagement_level="medium",
+            )
+        ]
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+E       weight
+E         Field required [type=missing, input_value={'name': 'relevance', 'score': 75}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_aggregator.py:574: ValidationError
+_____________ TestAggregatorAgent.test_empty_suggestions_handling ______________
+
+self = <test_aggregator.TestAggregatorAgent object at 0x705930d589d0>
+
+    async def test_empty_suggestions_handling(self):
+        """Test handling when no suggestions are provided."""
+        agent = AggregatorAgent()
+    
+        evaluations = []
+        for i in range(5):
+            evaluations.append(
+                EvaluationResult(
+                    persona_id=f"persona_{i}",
+                    persona_type="satisfied_type",
+                    article_id="test_article",
+                    overall_score=90,
+                    metrics=[
+>                       EvaluationMetric(name="relevance", score=90),
+                        EvaluationMetric(name="clarity", score=90),
+                    ],
+                    sentiment="positive",
+                    suggestions=[],  # No suggestions
+                    strengths=["Excellent content"],
+                    weaknesses=[],
+                    sharing_probability=0.9,
+                    engagement_level="high",
+                )
+            )
+E           pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+E           weight
+E             Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_aggregator.py:605: ValidationError
+______________________ TestBaseAgent.test_agent_creation _______________________
+
+self = <test_core_interfaces.TestBaseAgent object at 0x705930de9ed0>
+
+    def test_agent_creation(self):
+        """Test creating a basic agent"""
+        agent = ConcreteTestAgent()
+    
+        assert isinstance(agent.agent_id, str)
+>       assert isinstance(agent.attributes, PersonaAttributes)
+E       assert False
+E        +  where False = isinstance({}, PersonaAttributes)
+E        +    where {} = <test_core_interfaces.ConcreteTestAgent object at 0x705920a8ce20>.attributes
+
+tests/unit/test_core_interfaces.py:87: AssertionError
+_______________ TestBaseAgent.test_agent_with_custom_attributes ________________
+
+self = <test_core_interfaces.TestBaseAgent object at 0x705930dea080>
+
+    def test_agent_with_custom_attributes(self):
+        """Test agent with custom attributes"""
+>       attrs = PersonaAttributes(age=30, occupation="Engineer", values=["innovation", "quality"])
+E       pydantic_core._pydantic_core.ValidationError: 6 validation errors for PersonaAttributes
+E       location
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...innovation', 'quality']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       education_level
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...innovation', 'quality']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       interests
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...innovation', 'quality']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       personality_traits
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...innovation', 'quality']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       information_seeking_behavior
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...innovation', 'quality']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       preferred_channels
+E         Field required [type=missing, input_value={'age': 30, 'occupation':...innovation', 'quality']}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+tests/unit/test_core_interfaces.py:91: ValidationError
+_________________________ TestBaseAgent.test_agent_act _________________________
+
+self = <test_core_interfaces.TestBaseAgent object at 0x705930dea470>
+
+    @pytest.mark.asyncio
+    async def test_agent_act(self):
+        """Test agent action execution"""
+        agent = ConcreteTestAgent()
+        action = BaseAction("test_action", {})
+    
+        mock_env = MagicMock(spec=IEnvironment)
+>       expected_result = ActionResult(
+            success=True, action_type="test_action", agent_id=agent.agent_id
+        )
+
+tests/unit/test_core_interfaces.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = typing.Dict[str, typing.Any], args = ()
+kwargs = {'action_type': 'test_action', 'agent_id': '027ab816-965b-483c-a70a-437cf722c9c8', 'success': True}
+
+    def __call__(self, *args, **kwargs):
+        if not self._inst:
+>           raise TypeError(f"Type {self._name} cannot be instantiated; "
+                            f"use {self.__origin__.__name__}() instead")
+E           TypeError: Type Dict cannot be instantiated; use dict() instead
+
+/usr/lib/python3.10/typing.py:955: TypeError
+_______________________ TestBaseAgent.test_agent_update ________________________
+
+self = <test_core_interfaces.TestBaseAgent object at 0x705930dea6b0>
+
+    @pytest.mark.asyncio
+    async def test_agent_update(self):
+        """Test agent state update"""
+        agent = ConcreteTestAgent()
+>       result = ActionResult(
+            success=True,
+            action_type="test_action",
+            agent_id=agent.agent_id,
+            effects={"health": -10},
+        )
+
+tests/unit/test_core_interfaces.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = typing.Dict[str, typing.Any], args = ()
+kwargs = {'action_type': 'test_action', 'agent_id': 'fb53e1e1-7083-4df8-9ecf-3a3e7af66308', 'effects': {'health': -10}, 'success': True}
+
+    def __call__(self, *args, **kwargs):
+        if not self._inst:
+>           raise TypeError(f"Type {self._name} cannot be instantiated; "
+                            f"use {self.__origin__.__name__}() instead")
+E           TypeError: Type Dict cannot be instantiated; use dict() instead
+
+/usr/lib/python3.10/typing.py:955: TypeError
+________________ TestBaseEnvironment.test_environment_creation _________________
+
+self = <test_core_interfaces.TestBaseEnvironment object at 0x705930dea9b0>
+
+    def test_environment_creation(self):
+        """Test creating a basic environment"""
+>       env = ConcreteTestEnvironment()
+
+tests/unit/test_core_interfaces.py:150: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/core/base.py:94: in __init__
+    self._state = SimulationState()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = typing.Dict[str, typing.Any], args = (), kwargs = {}
+
+    def __call__(self, *args, **kwargs):
+        if not self._inst:
+>           raise TypeError(f"Type {self._name} cannot be instantiated; "
+                            f"use {self.__origin__.__name__}() instead")
+E           TypeError: Type Dict cannot be instantiated; use dict() instead
+
+/usr/lib/python3.10/typing.py:955: TypeError
+__________________ TestBaseEnvironment.test_add_remove_agents __________________
+
+self = <test_core_interfaces.TestBaseEnvironment object at 0x705930deab60>
+
+    def test_add_remove_agents(self):
+        """Test adding and removing agents"""
+>       env = ConcreteTestEnvironment()
+
+tests/unit/test_core_interfaces.py:158: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/core/base.py:94: in __init__
+    self._state = SimulationState()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = typing.Dict[str, typing.Any], args = (), kwargs = {}
+
+    def __call__(self, *args, **kwargs):
+        if not self._inst:
+>           raise TypeError(f"Type {self._name} cannot be instantiated; "
+                            f"use {self.__origin__.__name__}() instead")
+E           TypeError: Type Dict cannot be instantiated; use dict() instead
+
+/usr/lib/python3.10/typing.py:955: TypeError
+________________ TestBaseEnvironment.test_get_observable_state _________________
+
+self = <test_core_interfaces.TestBaseEnvironment object at 0x705930dead10>
+
+    @pytest.mark.asyncio
+    async def test_get_observable_state(self):
+        """Test getting observable state for agent"""
+>       env = ConcreteTestEnvironment()
+
+tests/unit/test_core_interfaces.py:180: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/core/base.py:94: in __init__
+    self._state = SimulationState()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = typing.Dict[str, typing.Any], args = (), kwargs = {}
+
+    def __call__(self, *args, **kwargs):
+        if not self._inst:
+>           raise TypeError(f"Type {self._name} cannot be instantiated; "
+                            f"use {self.__origin__.__name__}() instead")
+E           TypeError: Type Dict cannot be instantiated; use dict() instead
+
+/usr/lib/python3.10/typing.py:955: TypeError
+____________________ TestBaseEnvironment.test_update_state _____________________
+
+self = <test_core_interfaces.TestBaseEnvironment object at 0x705930deaf50>
+
+    @pytest.mark.asyncio
+    async def test_update_state(self):
+        """Test environment state update"""
+>       env = ConcreteTestEnvironment()
+
+tests/unit/test_core_interfaces.py:195: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/core/base.py:94: in __init__
+    self._state = SimulationState()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = typing.Dict[str, typing.Any], args = (), kwargs = {}
+
+    def __call__(self, *args, **kwargs):
+        if not self._inst:
+>           raise TypeError(f"Type {self._name} cannot be instantiated; "
+                            f"use {self.__origin__.__name__}() instead")
+E           TypeError: Type Dict cannot be instantiated; use dict() instead
+
+/usr/lib/python3.10/typing.py:955: TypeError
+_________________ TestBaseSimulation.test_simulation_creation __________________
+
+self = <test_core_interfaces.TestBaseSimulation object at 0x705930deadd0>
+
+    def test_simulation_creation(self):
+        """Test creating a basic simulation"""
+>       env = ConcreteTestEnvironment()
+
+tests/unit/test_core_interfaces.py:247: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/core/base.py:94: in __init__
+    self._state = SimulationState()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = typing.Dict[str, typing.Any], args = (), kwargs = {}
+
+    def __call__(self, *args, **kwargs):
+        if not self._inst:
+>           raise TypeError(f"Type {self._name} cannot be instantiated; "
+                            f"use {self.__origin__.__name__}() instead")
+E           TypeError: Type Dict cannot be instantiated; use dict() instead
+
+/usr/lib/python3.10/typing.py:955: TypeError
+______________________ TestBaseSimulation.test_add_plugin ______________________
+
+self = <test_core_interfaces.TestBaseSimulation object at 0x705930dea8c0>
+
+    @pytest.mark.asyncio
+    async def test_add_plugin(self):
+        """Test adding plugins to simulation"""
+>       env = ConcreteTestEnvironment()
+
+tests/unit/test_core_interfaces.py:258: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/core/base.py:94: in __init__
+    self._state = SimulationState()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = typing.Dict[str, typing.Any], args = (), kwargs = {}
+
+    def __call__(self, *args, **kwargs):
+        if not self._inst:
+>           raise TypeError(f"Type {self._name} cannot be instantiated; "
+                            f"use {self.__origin__.__name__}() instead")
+E           TypeError: Type Dict cannot be instantiated; use dict() instead
+
+/usr/lib/python3.10/typing.py:955: TypeError
+___________________ TestBaseSimulation.test_simulation_step ____________________
+
+self = <test_core_interfaces.TestBaseSimulation object at 0x705930dea380>
+
+    @pytest.mark.asyncio
+    async def test_simulation_step(self):
+        """Test single simulation step"""
+>       env = ConcreteTestEnvironment()
+
+tests/unit/test_core_interfaces.py:269: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/core/base.py:94: in __init__
+    self._state = SimulationState()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = typing.Dict[str, typing.Any], args = (), kwargs = {}
+
+    def __call__(self, *args, **kwargs):
+        if not self._inst:
+>           raise TypeError(f"Type {self._name} cannot be instantiated; "
+                            f"use {self.__origin__.__name__}() instead")
+E           TypeError: Type Dict cannot be instantiated; use dict() instead
+
+/usr/lib/python3.10/typing.py:955: TypeError
+____________________ TestBaseSimulation.test_simulation_run ____________________
+
+self = <test_core_interfaces.TestBaseSimulation object at 0x705930de9de0>
+
+    @pytest.mark.asyncio
+    async def test_simulation_run(self):
+        """Test running simulation for multiple steps"""
+>       env = ConcreteTestEnvironment()
+
+tests/unit/test_core_interfaces.py:294: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/core/base.py:94: in __init__
+    self._state = SimulationState()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = typing.Dict[str, typing.Any], args = (), kwargs = {}
+
+    def __call__(self, *args, **kwargs):
+        if not self._inst:
+>           raise TypeError(f"Type {self._name} cannot be instantiated; "
+                            f"use {self.__origin__.__name__}() instead")
+E           TypeError: Type Dict cannot be instantiated; use dict() instead
+
+/usr/lib/python3.10/typing.py:955: TypeError
+_____________________ TestBaseSimulation.test_get_results ______________________
+
+self = <test_core_interfaces.TestBaseSimulation object at 0x705930deb610>
+
+    def test_get_results(self):
+        """Test getting simulation results"""
+>       env = ConcreteTestEnvironment()
+
+tests/unit/test_core_interfaces.py:318: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/core/base.py:94: in __init__
+    self._state = SimulationState()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = typing.Dict[str, typing.Any], args = (), kwargs = {}
+
+    def __call__(self, *args, **kwargs):
+        if not self._inst:
+>           raise TypeError(f"Type {self._name} cannot be instantiated; "
+                            f"use {self.__origin__.__name__}() instead")
+E           TypeError: Type Dict cannot be instantiated; use dict() instead
+
+/usr/lib/python3.10/typing.py:955: TypeError
+____________ TestPersonaGenerator.test_generate_personas_structure _____________
+
+self = <test_persona_generator.TestPersonaGenerator object at 0x705930c8b790>
+sample_article = '\n        # The Future of AI in Healthcare: A Revolutionary Approach\n\n        Artificial Intelligence is transformi...onalized treatment plans, AI algorithms are\n        enhancing medical decision-making and patient outcomes.\n        '
+sample_analysis_results = {'complexity_score': 0.8, 'core_context': {'domain_analysis': {'primary_domain': 'healthcare', 'sub_domains': ['AI', '...s': {'early_adopters': [{'id': 'tech_leaders', 'parent_segment': 'early_adopters', 'percentage_of_parent': 40}]}}, ...}
+sample_population_structure = {'hierarchy': {'major_segments': [{'characteristics': ['tech-savvy', 'innovation-seeking'], 'id': 'early_adopters', 'n...': [{'id': 'persona_0', 'influence_score': 0.8}]}, 'network_topology': {'density': 0.3, 'network_type': 'small-world'}}
+
+    @pytest.mark.asyncio
+    async def test_generate_personas_structure(
+        self,
+        sample_article,
+        sample_analysis_results,
+        sample_population_structure,
+    ):
+        """Test that generate_personas returns proper structure."""
+        # Add hierarchy to analysis results for new implementation
+        sample_analysis_results["hierarchy"] = sample_population_structure["hierarchy"]
+    
+        # Mock LLM response
+        mock_llm_response = {
+            "name": "Dr. Sarah Chen",
+            "age": 32,
+            "occupation": "Healthcare IT Director",
+            "background": "Leading digital transformation in healthcare",
+            "personality_traits": ["analytical", "pragmatic", "innovative", "collaborative"],
+            "interests": ["AI", "healthcare innovation", "digital health"],
+            "decision_factors": ["innovation potential", "evidence quality"],
+            "article_relationship": {
+                "relevance_score": 0.9,
+                "interest_level": "high",
+                "sharing_likelihood": 0.8,
+                "discussion_points": ["AI implementation", "Patient safety"],
+                "action_likelihood": 0.7,
+            },
+            "information_preferences": ["tech blogs", "medical journals"],
+        }
+    
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock()
+        mock_response = MagicMock()
+        mock_response.content = json.dumps(mock_llm_response)
+        mock_llm.ainvoke.return_value = mock_response
+    
+        with patch("src.agents.persona_generator.create_llm", return_value=mock_llm):
+            generator = PersonaGenerator()
+    
+            result = await generator.generate_personas(
+                article_content=sample_article,
+                analysis_results=sample_analysis_results,
+                count=1,
+            )
+    
+            # Verify result is list of PersonaAttributes
+            assert isinstance(result, list)
+            assert len(result) == 1
+>           assert isinstance(result[0], PersonaAttributes)
+E           AssertionError: assert False
+E            +  where False = isinstance({'age': 32, 'occupation': 'Healthcare IT Director', 'interests': ['AI', 'healthcare innovation', 'digital health'], 'personality_traits': {<PersonalityType.OPENNESS: 'openness'>: 0.5, <PersonalityType.CONSCIENTIOUSNESS: 'conscientiousness'>: 0.5, <PersonalityType.EXTRAVERSION: 'extraversion'>: 0.5, <PersonalityType.AGREEABLENESS: 'agreeableness'>: 0.5, <PersonalityType.NEUROTICISM: 'neuroticism'>: 0.5}, 'content_sharing_likelihood': 0.8, 'influence_susceptibility': 0.5, 'influence_score': 0.5, 'network_centrality': 0.5, 'trust_level': {'article_source': 0.7}}, PersonaAttributes)
+
+tests/unit/test_persona_generator.py:176: AssertionError
+_______ TestPersonaGenerator.test_generate_personas_with_multiple_slots ________
+
+self = <test_persona_generator.TestPersonaGenerator object at 0x705930c8ba60>
+sample_article = '\n        # The Future of AI in Healthcare: A Revolutionary Approach\n\n        Artificial Intelligence is transformi...onalized treatment plans, AI algorithms are\n        enhancing medical decision-making and patient outcomes.\n        '
+sample_analysis_results = {'complexity_score': 0.8, 'core_context': {'domain_analysis': {'primary_domain': 'healthcare', 'sub_domains': ['AI', '...s': {'early_adopters': [{'id': 'tech_leaders', 'parent_segment': 'early_adopters', 'percentage_of_parent': 40}]}}, ...}
+sample_population_structure = {'hierarchy': {'major_segments': [{'characteristics': ['tech-savvy', 'innovation-seeking'], 'id': 'early_adopters', 'n...': [{'id': 'persona_0', 'influence_score': 0.8}]}, 'network_topology': {'density': 0.3, 'network_type': 'small-world'}}
+
+    @pytest.mark.asyncio
+    async def test_generate_personas_with_multiple_slots(
+        self, sample_article, sample_analysis_results, sample_population_structure
+    ):
+        """Test persona generation with multiple slots."""
+        # Add hierarchy to analysis results
+        sample_analysis_results["hierarchy"] = sample_population_structure["hierarchy"]
+    
+        # Mock different LLM responses for each persona
+        mock_llm_responses = [
+            {
+                "name": "Dr. Sarah Chen",
+                "age": 45,
+                "occupation": "Emergency Medicine Physician",
+                "background": "20 years in emergency medicine, early AI adopter",
+                "personality_traits": ["analytical", "pragmatic", "innovative", "dedicated"],
+                "interests": ["medical AI", "patient safety", "emergency protocols"],
+                "decision_factors": ["evidence quality", "patient impact", "time efficiency"],
+                "article_relationship": {
+                    "relevance_score": 0.9,
+                    "interest_level": "high",
+                    "sharing_likelihood": 0.8,
+                    "discussion_points": ["Clinical applications", "Safety protocols"],
+                    "action_likelihood": 0.85,
+                },
+                "information_preferences": ["medical journals", "peer networks"],
+            },
+            {
+                "name": "Dr. Alex Rodriguez",
+                "age": 38,
+                "occupation": "Chief Medical Information Officer",
+                "background": "Physician turned healthcare technology executive",
+                "personality_traits": ["visionary", "analytical", "collaborative", "strategic"],
+                "interests": ["AI in healthcare", "digital transformation", "clinical workflow"],
+                "decision_factors": ["innovation potential", "clinical evidence", "scalability"],
+                "article_relationship": {
+                    "relevance_score": 0.95,
+                    "interest_level": "very high",
+                    "sharing_likelihood": 0.9,
+                    "discussion_points": ["Implementation challenges", "ROI metrics"],
+                    "action_likelihood": 0.9,
+                },
+                "information_preferences": ["tech publications", "industry reports"],
+            },
+        ]
+    
+        response_iter = iter(mock_llm_responses)
+    
+        mock_llm = MagicMock()
+    
+        def mock_ainvoke(prompt):
+            mock_response = MagicMock()
+            mock_response.content = json.dumps(next(response_iter))
+            return mock_response
+    
+        mock_llm.ainvoke = AsyncMock(side_effect=mock_ainvoke)
+    
+        with patch("src.agents.persona_generator.create_llm", return_value=mock_llm):
+            generator = PersonaGenerator()
+    
+            result = await generator.generate_personas(
+                article_content=sample_article,
+                analysis_results=sample_analysis_results,
+                count=2,
+            )
+    
+            # Should generate 2 personas
+            assert len(result) == 2
+>           assert all(isinstance(p, PersonaAttributes) for p in result)
+E           assert False
+E            +  where False = all(<generator object TestPersonaGenerator.test_generate_personas_with_multiple_slots.<locals>.<genexpr> at 0x7059207517e0>)
+
+tests/unit/test_persona_generator.py:248: AssertionError
+___________ TestPersonaGenerator.test_convert_to_persona_attributes ____________
+
+self = <test_persona_generator.TestPersonaGenerator object at 0x705930c8bee0>
+generator = <src.agents.persona_generator.PersonaGenerator object at 0x7059216dc790>
+
+    def test_convert_to_persona_attributes(self, generator):
+        """Test conversion to PersonaAttributes."""
+        persona_data = {
+            "id": "persona_0",
+            "name": "Dr. Emma Wilson",
+            "age": 42,
+            "occupation": "Radiologist",
+            "background": "Specialist in diagnostic imaging with AI research interest",
+            "personality_traits": ["curious", "analytical", "organized"],
+            "interests": [
+                "medical imaging",
+                "AI diagnostics",
+                "patient safety",
+            ],
+            "decision_factors": ["accuracy", "evidence", "patient impact"],
+            "information_preferences": [
+                "medical journals",
+                "news websites",
+                "professional networks",
+            ],
+            "network_position": {"centrality": 0.7},
+            "article_relationship": {
+                "relevance_score": 0.8,
+                "sharing_likelihood": 0.6,
+            },
+        }
+    
+        result = generator._convert_to_persona_attributes(persona_data)
+    
+>       assert isinstance(result, PersonaAttributes)
+E       AssertionError: assert False
+E        +  where False = isinstance({'age': 42, 'occupation': 'Radiologist', 'interests': ['medical imaging', 'AI diagnostics', 'patient safety'], 'personality_traits': {<PersonalityType.OPENNESS: 'openness'>: 0.5, <PersonalityType.CONSCIENTIOUSNESS: 'conscientiousness'>: 0.5, <PersonalityType.EXTRAVERSION: 'extraversion'>: 0.5, <PersonalityType.AGREEABLENESS: 'agreeableness'>: 0.5, <PersonalityType.NEUROTICISM: 'neuroticism'>: 0.5}, 'content_sharing_likelihood': 0.6, 'influence_susceptibility': 0.5, 'influence_score': 0.5, 'network_centrality': 0.5, 'trust_level': {'article_source': 0.7}}, PersonaAttributes)
+
+tests/unit/test_persona_generator.py:337: AssertionError
+___________________ TestPersonaGenerator.test_error_handling ___________________
+
+self = <test_persona_generator.TestPersonaGenerator object at 0x705930ca40d0>
+sample_article = '\n        # The Future of AI in Healthcare: A Revolutionary Approach\n\n        Artificial Intelligence is transformi...onalized treatment plans, AI algorithms are\n        enhancing medical decision-making and patient outcomes.\n        '
+sample_analysis_results = {'complexity_score': 0.8, 'core_context': {'domain_analysis': {'primary_domain': 'healthcare', 'sub_domains': ['AI', '...l_perspectives': {'boomers': 'Concerns about human touch', 'gen_z': 'Expects AI integration'}}, 'reach_potential': 0.7}
+
+    @pytest.mark.asyncio
+    async def test_error_handling(self, sample_article, sample_analysis_results):
+        """Test error handling in persona generation."""
+        # Mock LLM to raise an exception
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(side_effect=Exception("LLM API error"))
+    
+        with patch("src.agents.persona_generator.create_llm", return_value=mock_llm):
+            generator = PersonaGenerator()
+    
+            # Should handle error gracefully and return default personas
+            result = await generator.generate_personas(
+                article_content=sample_article,
+                analysis_results=sample_analysis_results,
+                count=5,
+            )
+    
+            assert isinstance(result, list)
+            assert len(result) == 5  # Should return default personas
+            # Check that all are valid PersonaAttributes
+            for persona in result:
+>               assert isinstance(persona, PersonaAttributes)
+E               AssertionError: assert False
+E                +  where False = isinstance({'age': 57, 'occupation': 'Professional', 'interests': ['technology', 'business', 'current events'], 'personality_traits': {<PersonalityType.OPENNESS: 'openness'>: 0.7, <PersonalityType.CONSCIENTIOUSNESS: 'conscientiousness'>: 0.6, <PersonalityType.EXTRAVERSION: 'extraversion'>: 0.5, <PersonalityType.AGREEABLENESS: 'agreeableness'>: 0.6, <PersonalityType.NEUROTICISM: 'neuroticism'>: 0.3}, 'content_sharing_likelihood': 0.5, 'influence_susceptibility': 0.5, 'influence_score': 0.5, 'network_centrality': 0.5, 'trust_level': {'article_source': 0.5}}, PersonaAttributes)
+
+tests/unit/test_persona_generator.py:378: AssertionError
+______________ TestPersonaGenerator.test_persona_count_compliance ______________
+
+self = <test_persona_generator.TestPersonaGenerator object at 0x705930ca4370>
+sample_article = '\n        # The Future of AI in Healthcare: A Revolutionary Approach\n\n        Artificial Intelligence is transformi...onalized treatment plans, AI algorithms are\n        enhancing medical decision-making and patient outcomes.\n        '
+sample_analysis_results = {'complexity_score': 0.8, 'core_context': {'domain_analysis': {'primary_domain': 'healthcare', 'sub_domains': ['AI', '... {'type': 'central'}}, {'id': 'persona_1', 'major_segment': 'test', 'network_position': {'type': 'peripheral'}}]}, ...}
+
+    @pytest.mark.asyncio
+    async def test_persona_count_compliance(self, sample_article, sample_analysis_results):
+        """Test that correct number of personas are generated."""
+        # Mock population with fewer slots than requested
+        sample_analysis_results["hierarchy"] = {
+            "major_segments": [
+                {"id": "test", "name": "Test Segment", "characteristics": ["curious"]}
+            ],
+            "persona_slots": [
+                {
+                    "id": "persona_0",
+                    "major_segment": "test",
+                    "network_position": {"type": "central"},
+                },
+                {
+                    "id": "persona_1",
+                    "major_segment": "test",
+                    "network_position": {"type": "peripheral"},
+                },
+            ],
+        }
+    
+        # Mock LLM responses for the two available slots
+        mock_response = {
+            "name": "Test Person",
+            "age": 30,
+            "occupation": "Test Professional",
+            "background": "Test background",
+            "personality_traits": ["curious", "analytical", "open", "friendly"],
+            "interests": ["testing", "technology", "innovation"],
+            "decision_factors": ["quality", "reliability"],
+            "article_relationship": {
+                "relevance_score": 0.5,
+                "interest_level": "medium",
+                "sharing_likelihood": 0.5,
+                "discussion_points": ["Point 1", "Point 2"],
+                "action_likelihood": 0.5,
+            },
+            "information_preferences": ["online", "social media"],
+        }
+    
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock()
+        mock_response_obj = MagicMock()
+        mock_response_obj.content = json.dumps(mock_response)
+        mock_llm.ainvoke.return_value = mock_response_obj
+    
+        with patch("src.agents.persona_generator.create_llm", return_value=mock_llm):
+            generator = PersonaGenerator()
+    
+            result = await generator.generate_personas(
+                article_content=sample_article,
+                analysis_results=sample_analysis_results,
+                count=5,  # Request 5 but only 2 slots available
+            )
+    
+            # Should generate 5 personas (2 from slots + 3 defaults)
+            assert len(result) == 5
+>           assert all(isinstance(p, PersonaAttributes) for p in result)
+E           assert False
+E            +  where False = all(<generator object TestPersonaGenerator.test_persona_count_compliance.<locals>.<genexpr> at 0x7059208a5e70>)
+
+tests/unit/test_persona_generator.py:440: AssertionError
+=============================== warnings summary ===============================
+src/config/config.py:44
+src/config/config.py:44
+  /home/devuser/workspace/app/ams/src/config/config.py:44: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    @validator("provider")
+
+src/config/config.py:127
+src/config/config.py:127
+  /home/devuser/workspace/app/ams/src/config/config.py:127: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    @validator("cache_dir", "profile_output_dir")
+
+.venv/lib/python3.10/site-packages/pydantic/_internal/_config.py:323
+.venv/lib/python3.10/site-packages/pydantic/_internal/_config.py:323
+  /home/devuser/workspace/app/ams/.venv/lib/python3.10/site-packages/pydantic/_internal/_config.py:323: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.10.12-final-0 _______________
+
+Name                                  Stmts   Miss   Cover   Missing
+--------------------------------------------------------------------
+src/__init__.py                           5      0 100.00%
+src/agents/__init__.py                    3      0 100.00%
+src/agents/aggregator.py                136     94  30.88%   50-82, 89, 100-133, 137-168, 174-189, 197-202, 206-223, 227-246, 254-273, 277, 290-292, 296-307, 326, 330, 334, 338
+src/agents/analyzer.py                   86      0 100.00%
+src/agents/deep_context_analyzer.py      82      0 100.00%
+src/agents/evaluator.py                  81      6  92.59%   68-75, 243, 254
+src/agents/orchestrator.py              175     53  69.71%   148-149, 155-156, 176, 192, 202, 208, 212-214, 218-220, 224-226, 230-234, 238-245, 251, 258, 262, 266, 270, 281, 336-346, 352-357, 365-370, 377-400, 424
+src/agents/persona_generator.py          58      6  89.66%   80-82, 145, 149-150, 156
+src/agents/population_architect.py      100      9  91.00%   69-71, 134, 144-145, 164, 192, 196-197
+src/agents/reporter.py                  275     87  68.36%   89-91, 105, 178-180, 234-239, 263-272, 298, 343, 345, 351, 355, 382-397, 412, 454-462, 499-501, 521-530, 548-554, 572-577, 584-593, 625-626, 646-651, 693-702, 717, 731, 745, 749, 753, 757
+src/config/__init__.py                    3      0 100.00%
+src/config/config.py                    111     13  88.29%   165-172, 242-251
+src/config/llm_selector.py               83      3  96.39%   228, 230, 299
+src/core/__init__.py                      4      0 100.00%
+src/core/base.py                        165     70  57.58%   80-82, 86-87, 95-96, 100, 105, 119-123, 127-129, 133-136, 140, 193-200, 204, 208, 212, 216, 220-223, 227-228, 232-247, 251-277, 281-282, 286-287, 291-299, 303
+src/core/interfaces.py                    4      0 100.00%
+src/core/types.py                       133      0 100.00%
+src/server/__init__.py                    0      0 100.00%
+src/server/app.py                       121     10  91.74%   122-131, 285-286
+src/server/app_types.py                  17      1  94.12%   30
+src/server/simulation_service.py         86     22  74.42%   78-89, 208-231
+src/utils/__init__.py                     3      0 100.00%
+src/utils/json_parser.py                 82      0 100.00%
+src/utils/llm_factory.py                 52     12  76.92%   45-51, 62-70, 119, 141, 152
+src/utils/llm_transparency.py           109     26  76.15%   41-43, 66-68, 81, 149, 222-240, 249
+--------------------------------------------------------------------
+TOTAL                                  1974    412  79.13%
+Coverage HTML written to dir htmlcov
+=========================== short test summary info ============================
+ERROR tests/unit/test_aggregator.py::TestAggregatorAgent::test_aggregate_basic_metrics - pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+weight
+  Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_aggregator.py::TestAggregatorAgent::test_suggestion_prioritization - pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+weight
+  Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_aggregator.py::TestAggregatorAgent::test_sentiment_distribution - pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+weight
+  Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_aggregator.py::TestAggregatorAgent::test_segment_analysis - pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+weight
+  Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_aggregator.py::TestAggregatorAgent::test_metric_aggregation_completeness - pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+weight
+  Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_aggregator.py::TestAggregatorAgent::test_llm_insights_generation - pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+weight
+  Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_reporter.py::TestReporterAgent::test_generate_report_basic - pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+location
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+education_level
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+personality_traits
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+information_seeking_behavior
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+preferred_channels
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_reporter.py::TestReporterAgent::test_executive_summary_generation - pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+location
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+education_level
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+personality_traits
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+information_seeking_behavior
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+preferred_channels
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_reporter.py::TestReporterAgent::test_detailed_analysis_generation - pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+location
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+education_level
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+personality_traits
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+information_seeking_behavior
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+preferred_channels
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_reporter.py::TestReporterAgent::test_recommendations_generation - pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+location
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+education_level
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+personality_traits
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+information_seeking_behavior
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+preferred_channels
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_reporter.py::TestReporterAgent::test_visualization_data_preparation - pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+location
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+education_level
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+personality_traits
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+information_seeking_behavior
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+preferred_channels
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_reporter.py::TestReporterAgent::test_format_report_json - pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+location
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+education_level
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+personality_traits
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+information_seeking_behavior
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+preferred_channels
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_reporter.py::TestReporterAgent::test_format_report_markdown - pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+location
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+education_level
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+personality_traits
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+information_seeking_behavior
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+preferred_channels
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_reporter.py::TestReporterAgent::test_format_report_html - pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+location
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+education_level
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+personality_traits
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+information_seeking_behavior
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+preferred_channels
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_reporter.py::TestReporterAgent::test_error_handling_in_generation - pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+location
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+education_level
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+personality_traits
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+information_seeking_behavior
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+preferred_channels
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_reporter.py::TestReporterAgent::test_calculate_metrics - pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+location
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+education_level
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+personality_traits
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+information_seeking_behavior
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+preferred_channels
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+ERROR tests/unit/test_reporter.py::TestReporterAgent::test_template_rendering - pydantic_core._pydantic_core.ValidationError: 5 validation errors for PersonaAttributes
+location
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+education_level
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+personality_traits
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+information_seeking_behavior
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+preferred_channels
+  Field required [type=missing, input_value={'age': 30, 'occupation':...nnovation', 'Learning']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+FAILED tests/unit/server/test_app.py::TestSimulationCreate::test_create_simulation_minimal - AssertionError: assert 'failed' == 'pending'
+  
+  - pending
+  + failed
+FAILED tests/unit/server/test_integration.py::TestOrchestratorIntegration::test_simulation_with_orchestrator_mock - AssertionError: assert False
+ +  where False = <MagicMock name='OrchestratorAgent' id='123528371183456'>.called
+FAILED tests/unit/test_aggregator.py::TestAggregatorAgent::test_single_evaluation - TypeError: 'EvaluationResult' object is not subscriptable
+FAILED tests/unit/test_aggregator.py::TestAggregatorAgent::test_outlier_handling - TypeError: 'EvaluationResult' object is not subscriptable
+FAILED tests/unit/test_aggregator.py::TestAggregatorAgent::test_aggregate_metrics_calculation - pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+weight
+  Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+FAILED tests/unit/test_aggregator.py::TestAggregatorAgent::test_boundary_value_zero_score - pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+weight
+  Field required [type=missing, input_value={'name': 'relevance', 'score': 0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+FAILED tests/unit/test_aggregator.py::TestAggregatorAgent::test_boundary_value_maximum_score - pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+weight
+  Field required [type=missing, input_value={'name': 'relevance', 'score': 100}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+FAILED tests/unit/test_aggregator.py::TestAggregatorAgent::test_boundary_value_invalid_negative_score - assert 'greater than or equal to 0' in "1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing"
+ +  where "1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing" = str(1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing)
+ +    where 1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing = <ExceptionInfo 1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing tblen=2>.value
+FAILED tests/unit/test_aggregator.py::TestAggregatorAgent::test_boundary_value_invalid_above_maximum - assert 'less than or equal to 100' in "1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 100}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing"
+ +  where "1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 100}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing" = str(1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 100}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing)
+ +    where 1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 100}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing = <ExceptionInfo 1 validation error for EvaluationMetric\nweight\n  Field required [type=missing, input_value={'name': 'relevance', 'score': 100}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing tblen=2>.value
+FAILED tests/unit/test_aggregator.py::TestAggregatorAgent::test_large_dataset_aggregation - pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+weight
+  Field required [type=missing, input_value={'name': 'relevance', 'score': 55}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+FAILED tests/unit/test_aggregator.py::TestAggregatorAgent::test_all_same_score_aggregation - pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+weight
+  Field required [type=missing, input_value={'name': 'relevance', 'score': 75}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+FAILED tests/unit/test_aggregator.py::TestAggregatorAgent::test_extreme_outlier_detection - pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+weight
+  Field required [type=missing, input_value={'name': 'relevance', 'score': 75}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+FAILED tests/unit/test_aggregator.py::TestAggregatorAgent::test_llm_insights_error_handling - pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+weight
+  Field required [type=missing, input_value={'name': 'relevance', 'score': 75}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+FAILED tests/unit/test_aggregator.py::TestAggregatorAgent::test_empty_suggestions_handling - pydantic_core._pydantic_core.ValidationError: 1 validation error for EvaluationMetric
+weight
+  Field required [type=missing, input_value={'name': 'relevance', 'score': 90}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+FAILED tests/unit/test_core_interfaces.py::TestBaseAgent::test_agent_creation - assert False
+ +  where False = isinstance({}, PersonaAttributes)
+ +    where {} = <test_core_interfaces.ConcreteTestAgent object at 0x705920a8ce20>.attributes
+FAILED tests/unit/test_core_interfaces.py::TestBaseAgent::test_agent_with_custom_attributes - pydantic_core._pydantic_core.ValidationError: 6 validation errors for PersonaAttributes
+location
+  Field required [type=missing, input_value={'age': 30, 'occupation':...innovation', 'quality']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+education_level
+  Field required [type=missing, input_value={'age': 30, 'occupation':...innovation', 'quality']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+interests
+  Field required [type=missing, input_value={'age': 30, 'occupation':...innovation', 'quality']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+personality_traits
+  Field required [type=missing, input_value={'age': 30, 'occupation':...innovation', 'quality']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+information_seeking_behavior
+  Field required [type=missing, input_value={'age': 30, 'occupation':...innovation', 'quality']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+preferred_channels
+  Field required [type=missing, input_value={'age': 30, 'occupation':...innovation', 'quality']}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+FAILED tests/unit/test_core_interfaces.py::TestBaseAgent::test_agent_act - TypeError: Type Dict cannot be instantiated; use dict() instead
+FAILED tests/unit/test_core_interfaces.py::TestBaseAgent::test_agent_update - TypeError: Type Dict cannot be instantiated; use dict() instead
+FAILED tests/unit/test_core_interfaces.py::TestBaseEnvironment::test_environment_creation - TypeError: Type Dict cannot be instantiated; use dict() instead
+FAILED tests/unit/test_core_interfaces.py::TestBaseEnvironment::test_add_remove_agents - TypeError: Type Dict cannot be instantiated; use dict() instead
+FAILED tests/unit/test_core_interfaces.py::TestBaseEnvironment::test_get_observable_state - TypeError: Type Dict cannot be instantiated; use dict() instead
+FAILED tests/unit/test_core_interfaces.py::TestBaseEnvironment::test_update_state - TypeError: Type Dict cannot be instantiated; use dict() instead
+FAILED tests/unit/test_core_interfaces.py::TestBaseSimulation::test_simulation_creation - TypeError: Type Dict cannot be instantiated; use dict() instead
+FAILED tests/unit/test_core_interfaces.py::TestBaseSimulation::test_add_plugin - TypeError: Type Dict cannot be instantiated; use dict() instead
+FAILED tests/unit/test_core_interfaces.py::TestBaseSimulation::test_simulation_step - TypeError: Type Dict cannot be instantiated; use dict() instead
+FAILED tests/unit/test_core_interfaces.py::TestBaseSimulation::test_simulation_run - TypeError: Type Dict cannot be instantiated; use dict() instead
+FAILED tests/unit/test_core_interfaces.py::TestBaseSimulation::test_get_results - TypeError: Type Dict cannot be instantiated; use dict() instead
+FAILED tests/unit/test_persona_generator.py::TestPersonaGenerator::test_generate_personas_structure - AssertionError: assert False
+ +  where False = isinstance({'age': 32, 'occupation': 'Healthcare IT Director', 'interests': ['AI', 'healthcare innovation', 'digital health'], 'personality_traits': {<PersonalityType.OPENNESS: 'openness'>: 0.5, <PersonalityType.CONSCIENTIOUSNESS: 'conscientiousness'>: 0.5, <PersonalityType.EXTRAVERSION: 'extraversion'>: 0.5, <PersonalityType.AGREEABLENESS: 'agreeableness'>: 0.5, <PersonalityType.NEUROTICISM: 'neuroticism'>: 0.5}, 'content_sharing_likelihood': 0.8, 'influence_susceptibility': 0.5, 'influence_score': 0.5, 'network_centrality': 0.5, 'trust_level': {'article_source': 0.7}}, PersonaAttributes)
+FAILED tests/unit/test_persona_generator.py::TestPersonaGenerator::test_generate_personas_with_multiple_slots - assert False
+ +  where False = all(<generator object TestPersonaGenerator.test_generate_personas_with_multiple_slots.<locals>.<genexpr> at 0x7059207517e0>)
+FAILED tests/unit/test_persona_generator.py::TestPersonaGenerator::test_convert_to_persona_attributes - AssertionError: assert False
+ +  where False = isinstance({'age': 42, 'occupation': 'Radiologist', 'interests': ['medical imaging', 'AI diagnostics', 'patient safety'], 'personality_traits': {<PersonalityType.OPENNESS: 'openness'>: 0.5, <PersonalityType.CONSCIENTIOUSNESS: 'conscientiousness'>: 0.5, <PersonalityType.EXTRAVERSION: 'extraversion'>: 0.5, <PersonalityType.AGREEABLENESS: 'agreeableness'>: 0.5, <PersonalityType.NEUROTICISM: 'neuroticism'>: 0.5}, 'content_sharing_likelihood': 0.6, 'influence_susceptibility': 0.5, 'influence_score': 0.5, 'network_centrality': 0.5, 'trust_level': {'article_source': 0.7}}, PersonaAttributes)
+FAILED tests/unit/test_persona_generator.py::TestPersonaGenerator::test_error_handling - AssertionError: assert False
+ +  where False = isinstance({'age': 57, 'occupation': 'Professional', 'interests': ['technology', 'business', 'current events'], 'personality_traits': {<PersonalityType.OPENNESS: 'openness'>: 0.7, <PersonalityType.CONSCIENTIOUSNESS: 'conscientiousness'>: 0.6, <PersonalityType.EXTRAVERSION: 'extraversion'>: 0.5, <PersonalityType.AGREEABLENESS: 'agreeableness'>: 0.6, <PersonalityType.NEUROTICISM: 'neuroticism'>: 0.3}, 'content_sharing_likelihood': 0.5, 'influence_susceptibility': 0.5, 'influence_score': 0.5, 'network_centrality': 0.5, 'trust_level': {'article_source': 0.5}}, PersonaAttributes)
+FAILED tests/unit/test_persona_generator.py::TestPersonaGenerator::test_persona_count_compliance - assert False
+ +  where False = all(<generator object TestPersonaGenerator.test_persona_count_compliance.<locals>.<genexpr> at 0x7059208a5e70>)
+====== 32 failed, 118 passed, 6 warnings, 17 errors in 230.39s (0:03:50) =======

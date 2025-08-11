@@ -88,7 +88,25 @@ class TestBaseAgent:
 
     def test_agent_with_custom_attributes(self):
         """Test agent with custom attributes"""
-        attrs = PersonaAttributes(age=30, occupation="Engineer", values=["innovation", "quality"])
+        from core.types import PersonalityType, InformationChannel
+        
+        attrs = PersonaAttributes(
+            age=30,
+            occupation="Engineer",
+            location="Tokyo",
+            education_level="Master's",
+            values=["innovation", "quality"],
+            interests=["technology", "science"],
+            personality_traits={
+                PersonalityType.OPENNESS: 0.8,
+                PersonalityType.CONSCIENTIOUSNESS: 0.7,
+                PersonalityType.EXTRAVERSION: 0.6,
+                PersonalityType.AGREEABLENESS: 0.6,
+                PersonalityType.NEUROTICISM: 0.3,
+            },
+            information_seeking_behavior="proactive",
+            preferred_channels=[InformationChannel.TECH_BLOGS, InformationChannel.NEWS_WEBSITE],
+        )
         agent = ConcreteTestAgent(agent_id="test-123", attributes=attrs)
 
         assert agent.agent_id == "test-123"
@@ -114,27 +132,29 @@ class TestBaseAgent:
         action = BaseAction("test_action", {})
 
         mock_env = MagicMock(spec=IEnvironment)
-        expected_result = ActionResult(
-            success=True, action_type="test_action", agent_id=agent.agent_id
-        )
+        expected_result = {
+            "success": True,
+            "action_type": "test_action",
+            "agent_id": agent.agent_id,
+        }
         mock_env.apply_action = AsyncMock(return_value=expected_result)
 
         result = await agent.act(action, mock_env)
 
-        assert result.success is True
-        assert result.action_type == "test_action"
+        assert result["success"] is True
+        assert result["action_type"] == "test_action"
         mock_env.apply_action.assert_called_once_with(agent.agent_id, action)
 
     @pytest.mark.asyncio
     async def test_agent_update(self):
         """Test agent state update"""
         agent = ConcreteTestAgent()
-        result = ActionResult(
-            success=True,
-            action_type="test_action",
-            agent_id=agent.agent_id,
-            effects={"health": -10},
-        )
+        result = {
+            "success": True,
+            "action_type": "test_action",
+            "agent_id": agent.agent_id,
+            "effects": {"health": -10},
+        }
 
         await agent.update(result)
 
@@ -149,8 +169,8 @@ class TestBaseEnvironment:
         """Test creating a basic environment"""
         env = ConcreteTestEnvironment()
 
-        assert isinstance(env.state, SimulationState)
-        assert env.state.timestep == 0
+        assert isinstance(env.state, dict)
+        assert env.state["timestep"] == 0
         assert len(env.get_agents()) == 0
 
     def test_add_remove_agents(self):
@@ -181,7 +201,7 @@ class TestBaseEnvironment:
         agent = ConcreteTestAgent(agent_id="test-agent")
         env.add_agent(agent)
 
-        env.state.article_metadata = {"title": "Test Article"}
+        env.state["article_metadata"] = {"title": "Test Article"}
 
         observable = await env.get_observable_state("test-agent")
 
@@ -193,11 +213,11 @@ class TestBaseEnvironment:
     async def test_update_state(self):
         """Test environment state update"""
         env = ConcreteTestEnvironment()
-        initial_timestep = env.state.timestep
+        initial_timestep = env.state["timestep"]
 
         await env.update_state()
 
-        assert env.state.timestep == initial_timestep + 1
+        assert env.state["timestep"] == initial_timestep + 1
 
 
 class TestBasePlugin:
@@ -273,7 +293,7 @@ class TestBaseSimulation:
         agent = MagicMock(spec=IAgent)
         agent.perceive = AsyncMock(return_value={"test": "perception"})
         agent.decide = AsyncMock(return_value=BaseAction("test", {}))
-        agent.act = AsyncMock(return_value=ActionResult(True, "test", "agent-1"))
+        agent.act = AsyncMock(return_value={"success": True, "action_type": "test", "agent_id": "agent-1"})
         agent.update = AsyncMock()
 
         env.add_agent(agent)

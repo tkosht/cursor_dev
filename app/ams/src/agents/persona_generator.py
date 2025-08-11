@@ -196,25 +196,29 @@ class PersonaGenerator:
             PersonalityType.NEUROTICISM: 0.5,
         }
 
+        from src.core.types import InformationChannel
+        
         return PersonaAttributes(
             # Demographics
             age=persona_data.get("age", 35),
             occupation=persona_data.get("occupation", "Professional"),
+            location="United States",  # Default location
+            education_level="Bachelor's",  # Default education
             # Psychographics
             interests=persona_data.get("interests", []),
+            values=[],  # Empty by default as per test expectations
             personality_traits=personality_traits_dict,
             # Behavioral
+            information_seeking_behavior="proactive",  # Default behavior
+            preferred_channels=[],  # Empty by default as per test expectations
             content_sharing_likelihood=sharing_likelihood,
             influence_susceptibility=0.5,
-            # Network position
-            influence_score=influence,
-            network_centrality=0.5,
-            # Dynamic attributes
-            trust_level={"article_source": 0.7},
         )
 
     def _create_default_persona(self, persona_id: str) -> PersonaAttributes:
         """Create a default persona."""
+        from src.core.types import InformationChannel
+        
         personality_traits_dict = {
             PersonalityType.OPENNESS: 0.7,
             PersonalityType.CONSCIENTIOUSNESS: 0.6,
@@ -227,15 +231,15 @@ class PersonaGenerator:
             # Demographics
             age=random.randint(25, 65),
             occupation="Professional",
+            location="United States",  # Default location
+            education_level="Bachelor's",  # Default education
             # Psychographics
             interests=["technology", "business", "current events"],
+            values=[],  # Empty by default as per test expectations
             personality_traits=personality_traits_dict,
             # Behavioral
+            information_seeking_behavior="moderate",  # Default behavior
+            preferred_channels=[],  # Empty by default as per test expectations
             content_sharing_likelihood=0.5,
             influence_susceptibility=0.5,
-            # Network position
-            influence_score=0.5,
-            network_centrality=0.5,
-            # Dynamic attributes
-            trust_level={"article_source": 0.5},
         )
