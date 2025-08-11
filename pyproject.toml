@@ -28,6 +28,8 @@ langchain-openai = "^0.3.28"
 langchain-google-genai = "^2.1.8"
 langchain-tavily = "^0.2.10"
 langchain-experimental = "^0.3.4"
+mcp = "^1.12.4"
+fastmcp = "^2.11.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"

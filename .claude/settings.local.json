@@ -20,7 +20,10 @@
       "mcp__serena__write_memory",
       "mcp__serena__list_memories",
       "mcp__serena__activate_project",
-      "mcp__serena__execute_shell_command"
+      "mcp__serena__execute_shell_command",
+      "mcp__cognee__list_data",
+      "mcp__cognee__get_developer_rules",
+      "mcp__cognee__search"
     ],
     "deny": []
   },
