@@ -9,7 +9,7 @@ args = ["-y", "@modelcontextprotocol/server-sequential-thinking"]
 
 [mcp_servers.serena]
 command = "npx"
-args = ["-y", "mcp-remote", "http://localhost:9121/sse", "--transport", "sse-only"]
+args = ["-y", "mcp-remote", "http://localhost:9121/sse", "--transport", "sse-only", "--context", "codex"]
 
 [mcp_servers.cognee]
 command = "sh"
