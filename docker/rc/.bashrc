@@ -125,6 +125,7 @@ export GOOGLE_CLOUD_PROJECT=gen-lang-client-0389906364
 
 alias auto_claude="claude --dangerously-skip-permissions"
 alias auto_codex="codex --dangerously-bypass-approvals-and-sandbox"
+alias auto_cursoragent="cursor-agent --force"
 alias ccusage="npx ccusage@latest blocks --live"
 alias geminiflash="gemini -m gemini-2.5-flash"
 alias cx="bash bin/cx.sh"
