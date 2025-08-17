@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+    "serena": {
+      "url": "http://localhost:9121/sse"
+    },
+    "cognee": {
+      "command": "sh",
+      "args": ["bin/run_cognee.sh"]
+    }
+  }
+}
+
