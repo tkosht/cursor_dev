@@ -1,21 +1,33 @@
 """LLM接続テスト - 実際のAPI呼び出し確認
 
-設定ベースの実装で、ハードコードなし。
-pytest形式で実装。
+設定ベースの実装で、ハードコードなし。pytest形式。
+
+Requirements/Design traceability:
+- AMS-REQ-001: LLMプロバイダ設定/モデル選択の要件
+- AMS-IG-006: 設定仕様（環境変数・デフォルト切替の確認）
 """
 
 import asyncio
 import time
 
+import os
 import pytest
 
 from src.config import get_config
 from src.utils.llm_factory import create_llm
 
 
+def _keys_available() -> bool:
+    return bool(
+        os.getenv("GOOGLE_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+    )
+
+
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_basic_llm_connection():
+    if not _keys_available():
+        pytest.skip("No LLM API key available for testing")
     """基本的なLLM接続テスト"""
     config = get_config()
 
@@ -47,6 +59,8 @@ async def test_basic_llm_connection():
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_llm_natural_language_response():
+    if not _keys_available():
+        pytest.skip("No LLM API key available for testing")
     """実際のLLM応答の自然さを確認"""
     llm = create_llm()
 
@@ -71,6 +85,8 @@ async def test_llm_natural_language_response():
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_llm_with_japanese(llm_manager):
+    if not _keys_available():
+        pytest.skip("No LLM API key available for testing")
     """日本語処理のテスト"""
     response = await llm_manager.ainvoke("「こんにちは」を英語に翻訳してください。")
 
@@ -84,6 +100,8 @@ async def test_llm_with_japanese(llm_manager):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_llm_error_handling():
+    if not _keys_available():
+        pytest.skip("No LLM API key available for testing")
     """エラーハンドリングのテスト"""
     # 空のプロンプトでもエラーにならないことを確認
     llm = create_llm()
@@ -100,6 +118,8 @@ async def test_llm_error_handling():
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_llm_configuration():
+    if not _keys_available():
+        pytest.skip("No LLM API key available for testing")
     """設定が正しく適用されているかのテスト"""
     config = get_config()
     llm = create_llm()
@@ -116,6 +136,8 @@ async def test_llm_configuration():
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_multiple_llm_calls(llm_manager):
+    if not _keys_available():
+        pytest.skip("No LLM API key available for testing")
     """複数回の呼び出しテスト"""
     prompts = [
         "1 + 1 = ?",

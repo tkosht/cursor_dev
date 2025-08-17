@@ -1,6 +1,10 @@
 """
 Unit tests for TargetAudienceAnalyzer - Using REAL LLM APIs
 Following CLAUDE.md mandatory rules: NO MOCKS ALLOWED
+
+Requirements/Design traceability:
+- AMS-REQ-001: 階層化ペルソナ設計システム（ターゲットオーディエンス分析）
+- AMS-BD-002: 階層モデル前段のオーディエンス分析の妥当性
 """
 
 import os
