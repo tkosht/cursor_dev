@@ -13,6 +13,16 @@ AI Agent（Serena/Cognee 含む）による開発・タスク遂行を、再現�
   - TDD（Red-Green-Refactor）、ATDC（受け入れテスト駆動完了）
   - 完了整合性（背景/継続タスクが残る間は未完了）
 
+## 実行チェックリスト（do_task 統合）
+- /mandatory_rules の実行（必須ルール確認）
+- ブランチ切替（`main/master` 以外、`feature/*|fix/*|docs/*|task/*`）
+- タスク戦略・実行計画の精緻化（DAG前提）
+- レビュー観点のチェックリスト化（受入基準/検証手順）
+- タスク実行（必要に応じサブエージェント委譲、適切なコンテキスト移送）
+- 実行結果レビュー（事実ベース評価）
+- コミット/プッシュ/PR（WHY重視、PRにテスト計画）
+- 注: 実行中に承認が必須な場合は中断して質問
+
 ## 知識ロードプロトコル
 - 出典: `memory-bank/00-core/knowledge_loading_functions.md`
 - 手順: 日付確立 → MCP選択（Serena/Cognee）→ 選択MCPでドメイン知識ロード → 完全性検証 → 実行
@@ -105,6 +115,101 @@ AI Agent（Serena/Cognee 含む）による開発・タスク遂行を、再現�
 
 参照: `cognee_core_patterns.md`（Multi-Agent Coordination, DAG/Parallel, Communication）、`memory-bank/02-organization/ai_coordination_comprehensive_guide.md`
 
+---
+
+## DAG 実行モデル（do_task / dag-debug-enhanced / dagdebugger 統合）
+
+### 目的
+曖昧・未知の解決策を持つ高難易度タスクを、DAG分解しながら動的に枝刈り/拡張し、サブエージェント協調で探索・検証・確定する。
+
+### 状態モデル（Global State）
+- FRONTIER: 展開待ちノード集合（node_id のリスト）
+- CLOSED: 展開済みノード（確定/棄却）
+- SUSPECT_RECENT_EDIT: 直近編集が原因か推定フラグ（bool）
+- BUDGET:
+  - token: {max, used}
+  - tool_calls: {max, used}
+  - depth: {max, current}
+- HEURISTICS:
+  - recent_edit_weight: 0.6
+  - impact_weight: 0.25
+  - severity_weight: 0.15
+- LOG: 主要判断・スコア・剪定理由の記録
+
+### ノードスキーマ（Node State）
+- id: 自動採番
+- parent: 親 node_id | null
+- hypothesis: 原因仮説（Why）
+- plan: 検証計画（How）
+- required_tools: 使用ツール一覧
+- expected_signal: 観測項目/合否判定基準
+- result: 観測結果
+- score:
+  - suspicion: 有望度 0-1
+  - cost_estimate: 予想コスト
+  - priority: suspicion / (1 + cost_estimate) 等
+- status: OPEN | EXPANDED | PROVED | REJECTED | PRUNED
+
+### メインループ（Best-first + 動的更新）
+1. 初期化
+   - 直近差分・時系列から SUSPECT_RECENT_EDIT を推定
+   - ルートノード生成（包括仮説）→ FRONTIER へ
+2. while FRONTIER 非空 かつ 目標未達:
+   - SelectNode: priority 最大を選択（ε-greedyで2-3番手選択を稀に採用）
+   - Expand: 仮説精緻化→子ノード生成→スコア→剪定→実行スケジュール
+   - Execute & Evaluate: 観測と expected_signal 照合 → PROVED/REJECTED
+   - Update: CLOSED へ移動、子を FRONTIER に追加、BUDGET 更新
+3. 終了条件
+   - 再現テストPassの修正案確定／予算上限間近時は最有力仮説と次手順提示／ユーザ中断
+
+### スコアリング/選択/剪定/バックトラック
+- スコア式（例）
+  - suspicion = recent_edit*0.6 + impact*0.25 + severity*0.15
+  - cost_estimate = norm(time + tool + token)
+  - priority = suspicion / (1 + cost_estimate)
+- 剪定ポリシー
+  - 直近編集が有力な場合、広域環境チェック等の低価値枝を初期抑制
+  - 否定された前提再利用枝は剪定
+  - 類似仮説は統合、priority が閾値未満は保持しない
+  - 深さ超過時は打ち切り、要約提示で戦略切替
+- バックトラック
+  - REJECTED/PRUNED の兄弟枝再評価
+  - 新情報で priority 再計算（動的DAG更新）
+
+### ノード実行テンプレ（Serena × Sequential Thinking）
+- 仮説生成（Serena）
+  1. mcp__serena__find_symbol で関連シンボル特定
+  2. mcp__serena__find_referencing_symbols で影響範囲把握
+  3. mcp__serena__get_symbols_overview で全体構造把握
+- 検証計画（Sequential Thinking）
+  1. 前提確認 → 2. テスト設計 → 3. 期待観測定義 → 4. 実行 → 5. 解釈/次手
+- サブエージェント起動規則（エージェント化）
+  - 深いセマンティック解析: Serena Analyst
+  - 複雑推論/並列探索設計: Sequential Thinker
+  - 修正検証/回帰・性能/セキュリティ: Fix Validator
+- 結果統合
+  - ノード文脈を更新し、子へ主要所見を伝播（上/下/水平チャネル）
+
+### 検証要件（Strict Validation Protocol）
+- Pre-fix: ベースライン取得、影響テスト特定、最小再現テスト作成
+- Post-fix: 修正確認、単体/統合テスト、性能確認、必要時セキュリティ走査
+- ドキュメント: 根因説明、修正方針理由、追加テスト説明、ロールバック手順
+
+### パラメータ/制御（実運用のダイヤル）
+- max-depth（既定: 8）/ time-limit 分 / parallel-width（既定: 3）
+- sub-agents（利用数上限）/ serena-depth（探索深度）
+- 予算ガード: トークン/ツール/深さの上限に応じ粗粒度探索へ切替
+
+### フェイルセーフ/ガード
+- 予算ガード: 使用量が上限の80%超で粗探索へ降格
+- ループガード: 同一ノードを新情報なしで2回超再開したら強制剪定/新データ要求
+- 曖昧性ガード: 重要情報が欠落し推定困難な場合は明確化質問
+
+### 出力フォーマット（検証可能性の担保）
+- Summary: problem_statement / root_cause / fix_applied / validation_results
+- Detailed: dag_exploration_trace / thought_process_log / serena_analysis_results / sub_agent_contributions / code_changes / test_additions
+- Actionables: immediate_actions / follow_up_tasks / monitoring / docs_updates
+
 ## エラー対応/回復
 - 検出→分析→解決→予防（完全文脈取得、最小再現、根因特定、回帰テスト追加）
 - リカバリ: バックオフ、フォールバック、安全モード、劣化ログ化
@@ -133,6 +238,9 @@ AI Agent（Serena/Cognee 含む）による開発・タスク遂行を、再現�
 - チェックリスト駆動（Before/During/After）が整備されているか: 追加
 - 参照先の一次情報リンクが十分か: 追加（具体ファイルを明記）
 
+- DAG実行モデル（状態/ノード/アルゴリズム/剪定/ガード/出力）を明文化
+- `do_task` チェックリストを統合し実務オペレーションを標準化
+
 判定: 上記観点は全て満たすように補強/追記済み。
 
 ---
@@ -144,6 +252,8 @@ AI Agent（Serena/Cognee 含む）による開発・タスク遂行を、再現�
   - マルチエージェント協調の具体ルールを強化（役割/通信ACK/共有状態/タイムアウト/メトリクス/チェックリスト）
   - レビュー観点を明文化し、本ドキュメントへレビュー結果を反映
   - 参照箇所（`cognee_core_patterns.md`, `memory-bank/02-organization/ai_coordination_comprehensive_guide.md`）を追記
+  - `dag-debug-enhanced.md` / `dagdebugger.md` / `dagrunner.md` の指針を統合
+  - 曖昧タスク向けのDAG動的更新・並列探索・フェイルセーフを体系化
 - 期待効果:
   - 検証ベース協調の徹底、推測ベース連携の排除
   - 協調タスクの再現性・可観測性・早期異常検知の向上
@@ -155,3 +265,6 @@ AI Agent（Serena/Cognee 含む）による開発・タスク遂行を、再現�
 - `memory-bank/00-core/{knowledge_loading_functions.md,development_workflow.md,task_completion_integrity_mandatory.md}`
 - `serena_project_knowledge.md`, `serena_memory_dynamic_prompt_loading.md`, `serena_memory_mcp_usage_strategy.md`
 - `cognee_core_patterns.md`, `essential_patterns_cognee.md`
+- `.claude/commands/tasks/dag-debug-enhanced.md`
+- `.claude/commands/tasks/dagdebugger.md`
+- `.claude/commands/tasks/dagrunner.md`
