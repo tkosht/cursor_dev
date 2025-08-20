@@ -164,7 +164,6 @@ class TestPersonaEvaluationAgent:
         sample_article,
         sample_analysis_results,
         mock_llm_response,
-        mock_config,
     ):
         """Test successful persona evaluation"""
         from src.agents.evaluator import EvaluationAgent

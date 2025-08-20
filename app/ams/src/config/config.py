@@ -43,7 +43,7 @@ class LLMConfig(BaseModel):
 
     @validator("provider")
     def validate_api_key(cls, v: str, values: dict[str, Any]) -> str:
-        """Ensure API key exists for selected provider"""
+        """Ensure API key exists for selected provider."""
         key_map = {
             "gemini": "google_api_key",
             "openai": "openai_api_key",
@@ -145,8 +145,7 @@ class AMSConfig(BaseSettings):
     visualization: VisualizationConfig = Field(default_factory=VisualizationConfig)
     performance: PerformanceConfig = Field(default_factory=PerformanceConfig)
 
-    # Testing
-    test_mode: bool = Field(default=False)
+    # Testing (TEST_MODE は廃止)
     test_max_cost: float = Field(default=10.0, gt=0.0)
 
     class Config:
@@ -203,7 +202,6 @@ class AMSConfig(BaseSettings):
 
         return cls(
             log_level=os.getenv("AMS_LOG_LEVEL", "INFO"),
-            test_mode=os.getenv("TEST_MODE", "false").lower() == "true",
             llm=llm_config,
             simulation=sim_config,
             visualization=viz_config,
@@ -220,7 +218,6 @@ class AMSConfig(BaseSettings):
             "simulation": self.simulation.model_dump(),
             "visualization": self.visualization.model_dump(),
             "performance": self.performance.model_dump(),
-            "test_mode": self.test_mode,
         }
 
 

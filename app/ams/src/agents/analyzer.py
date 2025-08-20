@@ -97,8 +97,23 @@ class AnalysisAgent:
         6. key_messages: List of key messages/takeaways
         """
 
-        response = await self.llm.ainvoke(prompt)
-        return self._parse_json_response(str(response.content))
+        # Support both LangChain chat models implementations
+        try:
+            response = await self.llm.ainvoke(prompt)  # type: ignore[attr-defined]
+            content = getattr(response, "content", None)
+            if content is None and hasattr(response, "generations"):
+                # LangChain ChatResult path
+                generations = getattr(response, "generations", [])
+                if generations:
+                    content = generations[0].message.content
+            return self._parse_json_response(str(content))
+        except AttributeError:
+            # Fallback to LangChain generate() protocol
+            from langchain_core.messages import HumanMessage
+
+            chat_result = await self.llm.agenerate([[HumanMessage(content=prompt)]])  # type: ignore[attr-defined]
+            content = chat_result.generations[0][0].message.content
+            return self._parse_json_response(str(content))
 
     async def _analyze_structure(self, text: str) -> dict[str, Any]:
         """Analyze article structure"""
@@ -132,8 +147,20 @@ class AnalysisAgent:
         5. bias_indicators: List of potential biases detected
         """
 
-        response = await self.llm.ainvoke(prompt)
-        return self._parse_json_response(str(response.content))
+        try:
+            response = await self.llm.ainvoke(prompt)  # type: ignore[attr-defined]
+            content = getattr(response, "content", None)
+            if content is None and hasattr(response, "generations"):
+                generations = getattr(response, "generations", [])
+                if generations:
+                    content = generations[0].message.content
+            return self._parse_json_response(str(content))
+        except AttributeError:
+            from langchain_core.messages import HumanMessage
+
+            chat_result = await self.llm.agenerate([[HumanMessage(content=prompt)]])  # type: ignore[attr-defined]
+            content = chat_result.generations[0][0].message.content
+            return self._parse_json_response(str(content))
 
     async def _analyze_readability(self, text: str) -> dict[str, Any]:
         """Analyze readability metrics"""
@@ -165,8 +192,20 @@ class AnalysisAgent:
         5. trending_topics: Any trending or timely topics mentioned
         """
 
-        response = await self.llm.ainvoke(prompt)
-        return self._parse_json_response(str(response.content))
+        try:
+            response = await self.llm.ainvoke(prompt)  # type: ignore[attr-defined]
+            content = getattr(response, "content", None)
+            if content is None and hasattr(response, "generations"):
+                generations = getattr(response, "generations", [])
+                if generations:
+                    content = generations[0].message.content
+            return self._parse_json_response(str(content))
+        except AttributeError:
+            from langchain_core.messages import HumanMessage
+
+            chat_result = await self.llm.agenerate([[HumanMessage(content=prompt)]])  # type: ignore[attr-defined]
+            content = chat_result.generations[0][0].message.content
+            return self._parse_json_response(str(content))
 
     async def _analyze_target_audience(self, text: str) -> dict[str, Any]:
         """Identify target audience characteristics"""
@@ -184,8 +223,20 @@ class AnalysisAgent:
         6. interests: List of interests that would attract readers
         """
 
-        response = await self.llm.ainvoke(prompt)
-        return self._parse_json_response(str(response.content))
+        try:
+            response = await self.llm.ainvoke(prompt)  # type: ignore[attr-defined]
+            content = getattr(response, "content", None)
+            if content is None and hasattr(response, "generations"):
+                generations = getattr(response, "generations", [])
+                if generations:
+                    content = generations[0].message.content
+            return self._parse_json_response(str(content))
+        except AttributeError:
+            from langchain_core.messages import HumanMessage
+
+            chat_result = await self.llm.agenerate([[HumanMessage(content=prompt)]])  # type: ignore[attr-defined]
+            content = chat_result.generations[0][0].message.content
+            return self._parse_json_response(str(content))
 
     async def _analyze_technical_depth(self, text: str) -> dict[str, Any]:
         """Analyze technical depth and complexity"""
@@ -203,8 +254,20 @@ class AnalysisAgent:
         6. theoretical_vs_practical: Balance score (0=theoretical, 1=practical)
         """
 
-        response = await self.llm.ainvoke(prompt)
-        return self._parse_json_response(str(response.content))
+        try:
+            response = await self.llm.ainvoke(prompt)  # type: ignore[attr-defined]
+            content = getattr(response, "content", None)
+            if content is None and hasattr(response, "generations"):
+                generations = getattr(response, "generations", [])
+                if generations:
+                    content = generations[0].message.content
+            return self._parse_json_response(str(content))
+        except AttributeError:
+            from langchain_core.messages import HumanMessage
+
+            chat_result = await self.llm.agenerate([[HumanMessage(content=prompt)]])  # type: ignore[attr-defined]
+            content = chat_result.generations[0][0].message.content
+            return self._parse_json_response(str(content))
 
     async def _analyze_emotional_impact(self, text: str) -> dict[str, Any]:
         """Analyze potential emotional impact on readers"""
@@ -222,8 +285,20 @@ class AnalysisAgent:
         6. call_to_action_strength: How compelling is the CTA (1-10)
         """
 
-        response = await self.llm.ainvoke(prompt)
-        return self._parse_json_response(str(response.content))
+        try:
+            response = await self.llm.ainvoke(prompt)  # type: ignore[attr-defined]
+            content = getattr(response, "content", None)
+            if content is None and hasattr(response, "generations"):
+                generations = getattr(response, "generations", [])
+                if generations:
+                    content = generations[0].message.content
+            return self._parse_json_response(str(content))
+        except AttributeError:
+            from langchain_core.messages import HumanMessage
+
+            chat_result = await self.llm.agenerate([[HumanMessage(content=prompt)]])  # type: ignore[attr-defined]
+            content = chat_result.generations[0][0].message.content
+            return self._parse_json_response(str(content))
 
     def _estimate_difficulty(self, words: int, sentences: int, complex_words: int) -> str:
         """Estimate reading difficulty level"""

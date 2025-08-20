@@ -1,4 +1,11 @@
-"""Integration tests for OrchestratorAgent with AggregatorAgent and ReporterAgent."""
+"""Integration tests for OrchestratorAgent with AggregatorAgent and ReporterAgent.
+
+Requirements/Design traceability:
+- AMS-REQ-004: 初期システム設計（フェーズ遷移/制御フロー）
+- AMS-BD-001: システム基本設計（主要コンポーネントと連携）
+- AMS-BD-003: シミュレーションフレームワーク設計（集計/評価の整合）
+- AMS-BD-004: 可視化データ構造（レポート生成のデータ形）
+"""
 
 from datetime import datetime
 from unittest.mock import patch
@@ -61,7 +68,10 @@ class TestOrchestratorIntegration:
                         PersonalityType.NEUROTICISM: 0.3,
                     },
                     information_seeking_behavior="active_searcher",
-                    preferred_channels=[InformationChannel.TECH_BLOGS, InformationChannel.SOCIAL_MEDIA],
+                    preferred_channels=[
+                        InformationChannel.TECH_BLOGS,
+                        InformationChannel.SOCIAL_MEDIA,
+                    ],
                 ),
                 PersonaAttributes(
                     age=35,
@@ -78,7 +88,10 @@ class TestOrchestratorIntegration:
                         PersonalityType.NEUROTICISM: 0.2,
                     },
                     information_seeking_behavior="methodical_researcher",
-                    preferred_channels=[InformationChannel.TECH_BLOGS, InformationChannel.NEWS_WEBSITE],
+                    preferred_channels=[
+                        InformationChannel.TECH_BLOGS,
+                        InformationChannel.NEWS_WEBSITE,
+                    ],
                 ),
                 PersonaAttributes(
                     age=28,

@@ -4,6 +4,11 @@ This test verifies basic functionality with minimal LLM API calls:
 - 3 personas
 - Short article (500 chars)
 - Real API calls (NO MOCKS)
+
+Requirements/Design traceability:
+- AMS-REQ-001: システム要件（LLM実呼び出し、並列/性能制約の検証）
+- AMS-BD-002: 階層的ペルソナ生成（3体の簡易生成）
+- AMS-BD-003: マルチエージェントフローの最小ルート確認
 """
 
 import asyncio
@@ -126,9 +131,11 @@ class TestSmallScaleIntegration:
                 logger.info(f"Persona {i + 1}: {persona.occupation}, Age: {persona.age}")
                 logger.info(f"  Interests: {persona.interests[:2]}")
                 if persona.influence_susceptibility is not None:
-                    logger.info(f"  Influence susceptibility: {persona.influence_susceptibility:.2f}")
+                    logger.info(
+                        f"  Influence susceptibility: {persona.influence_susceptibility:.2f}"
+                    )
                 else:
-                    logger.info(f"  Influence susceptibility: Not calculated")
+                    logger.info("  Influence susceptibility: Not calculated")
 
             # Cost estimation
             elapsed_time = time.time() - start_time

@@ -185,7 +185,8 @@ class PersonaGenerator:
         sharing_likelihood = persona_data.get("article_relationship", {}).get(
             "sharing_likelihood", 0.5
         )
-        influence = persona_data.get("network_position", {}).get("influence", 0.5)
+        # Influence is part of visualization metadata and not used directly here
+        _influence = persona_data.get("network_position", {}).get("influence", 0.5)
 
         # Map to PersonaAttributes fields
         personality_traits_dict = {
@@ -196,8 +197,6 @@ class PersonaGenerator:
             PersonalityType.NEUROTICISM: 0.5,
         }
 
-        from src.core.types import InformationChannel
-        
         return PersonaAttributes(
             # Demographics
             age=persona_data.get("age", 35),
@@ -217,8 +216,7 @@ class PersonaGenerator:
 
     def _create_default_persona(self, persona_id: str) -> PersonaAttributes:
         """Create a default persona."""
-        from src.core.types import InformationChannel
-        
+
         personality_traits_dict = {
             PersonalityType.OPENNESS: 0.7,
             PersonalityType.CONSCIENTIOUSNESS: 0.6,

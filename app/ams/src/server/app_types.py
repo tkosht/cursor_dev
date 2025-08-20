@@ -2,8 +2,9 @@
 Type annotations for FastAPI server
 """
 
+from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import Any, AsyncGenerator, TypedDict
+from typing import Any, TypedDict
 
 from fastapi import FastAPI
 

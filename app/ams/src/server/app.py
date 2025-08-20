@@ -5,14 +5,22 @@ Article Market Simulator のWebAPI/WebSocketサーバー実装。
 シミュレーションの作成、実行、結果取得、リアルタイム更新を提供。
 """
 
-import asyncio
 import uuid
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any, AsyncGenerator
+from typing import Any
 
 import structlog
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
+from fastapi import (
+    BackgroundTasks,
+    FastAPI,
+    HTTPException,
+    Request,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -144,7 +152,9 @@ async def health_check() -> HealthCheckResponse:
 @app.post(
     "/api/simulations", response_model=SimulationResponse, status_code=status.HTTP_201_CREATED
 )
-async def create_simulation(request: SimulationCreateRequest, background_tasks: BackgroundTasks) -> SimulationResponse:
+async def create_simulation(
+    request: SimulationCreateRequest, background_tasks: BackgroundTasks
+) -> SimulationResponse:
     """シミュレーション作成エンドポイント"""
     simulation_id = str(uuid.uuid4())
 

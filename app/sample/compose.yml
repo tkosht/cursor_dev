@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres:16
+    container_name: chainlit-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: ${TZ}
+    ports:
+      - "15432:5432"             # ホストから 5432 で接続
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # ↓ 初期化SQLを置く場合は ./initdb に .sql / .sh を置く（任意）
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h 127.0.0.1 -p 5432"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
+

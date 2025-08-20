@@ -53,8 +53,8 @@ class BaseAgent(IAgent):
         agent_id: AgentID | None = None,
         attributes: PersonaAttributes | None = None,
     ):
-        from .types import PersonalityType, InformationChannel
-        
+        from .types import InformationChannel, PersonalityType
+
         self._agent_id = agent_id or str(uuid.uuid4())
         if attributes is None:
             # Create default PersonaAttributes with minimal valid values
@@ -106,7 +106,9 @@ class BaseAgent(IAgent):
     async def update(self, result: ActionResult) -> None:
         """Update internal state based on action result"""
         self._state["last_action_result"] = result
-        logger.debug(f"Agent {self._agent_id} updated with result: {result.get('success', 'unknown')}")
+        logger.debug(
+            f"Agent {self._agent_id} updated with result: {result.get('success', 'unknown')}"
+        )
 
 
 class BaseEnvironment(IEnvironment):
@@ -133,7 +135,11 @@ class BaseEnvironment(IEnvironment):
             "timestep": self._state.get("timestep", 0),
             "num_agents": len(self._agents),
             "article_metadata": self._state.get("article_metadata", {}),
-            "my_connections": getattr(self._state.get("agents", {}).get(agent_id, None), "connections", []) if agent_id in self._state.get("agents", {}) else [],
+            "my_connections": (
+                getattr(self._state.get("agents", {}).get(agent_id, None), "connections", [])
+                if agent_id in self._state.get("agents", {})
+                else []
+            ),
         }
 
     @abstractmethod

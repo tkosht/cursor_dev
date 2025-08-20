@@ -91,6 +91,27 @@ select = [
     "UP", # pyupgrade
 ]
 
+# Tests and example scripts often include long strings and intentional whitespace
+# for readability of sample content. These per-file ignores keep production code
+# strict while reducing noise in non-production files.
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "W291", # trailing whitespace in test fixtures/strings
+    "W292", # no newline at EOF (non-critical in tests)
+    "W293", # blank line contains whitespace
+    "E501", # long lines in descriptive test names/strings
+    "B017", # assert Exception (acceptable in some negative tests)
+    "B023", # loop variable binding in small inline closures
+    "F841", # assigned but unused (common in perf/assertion scaffolding)
+    "B007", # unused loop control variable
+    "UP038", # isinstance tuple form tolerated in tests
+    "B904", # allow plain raise in except for dependency hints
+    "E402", # allow import position flexibility in tests
+]
+"examples/**/*.py" = [
+    "W291", "W292", "W293", "E501", "F401", "F541"
+]
+
 [tool.coverage.run]
 source = ["src"]
 omit = [

@@ -40,6 +40,18 @@
             "justMyCode": false
         },
         {
+            "name": "Chainlit: Run bot.py (module)",
+            "type": "python",
+            "request": "launch",
+            "module": "chainlit",
+            "args": ["run", "bot.py", "--port", "8000"],  // 必要に応じて -d など
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/app/sample",
+            "envFile": "${workspaceFolder}/app/sample/.env",
+            "justMyCode": false,
+            "subProcess": false
+        },
+        {
             "name": "Python: demo.py",
             "type": "python",
             "request": "launch",

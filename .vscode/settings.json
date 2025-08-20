@@ -3,7 +3,7 @@
         "frontend/**": true,
         "**/mlruns/**": true,
         "**/__pycache__/**": true,
-        "**/[b]k/**": true,
+        "**/[b]k/**": true
     },
     "files.watcherExclude": {
         "**/.git/objects/**": true,
