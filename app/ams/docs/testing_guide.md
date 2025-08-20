@@ -126,6 +126,6 @@ pytest -m "integration"
 3. **環境別設定**
    ```bash
    # .env.test
-   TEST_MODE=true
+  # TEST_MODE は廃止（実APIキー必須）
    MOCK_LLM=true
    ```

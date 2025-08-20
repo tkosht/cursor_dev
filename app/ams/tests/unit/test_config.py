@@ -84,12 +84,12 @@ class TestAMSConfig:
         monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
         monkeypatch.setenv("AMS_LOG_LEVEL", "DEBUG")
         monkeypatch.setenv("AMS_MAX_PERSONAS", "75")
-        monkeypatch.setenv("TEST_MODE", "true")
+        # TEST_MODE は廃止
 
         config = AMSConfig.from_env()
 
         assert config.log_level == "DEBUG"
-        assert config.test_mode is True
+        # TEST_MODE フラグは存在しない
         assert config.llm.provider == "gemini"
         assert config.simulation.max_personas == 75
 

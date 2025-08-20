@@ -4,6 +4,7 @@ Unit tests for article analysis agent - Real LLM API calls only
 
 import asyncio
 import json
+import os
 from datetime import datetime
 import pytest
 
@@ -65,6 +66,12 @@ Key points: transparency, fairness, accountability.
     @pytest.mark.asyncio
     async def test_analyze_success(self, short_article):
         """Test successful article analysis with real LLM"""
+        if not (
+            os.getenv("GOOGLE_API_KEY")
+            or os.getenv("OPENAI_API_KEY")
+            or os.getenv("ANTHROPIC_API_KEY")
+        ):
+            pytest.skip("No LLM API key available for testing")
         # Create agent with real LLM
         agent = AnalysisAgent()
         
@@ -197,6 +204,12 @@ code_block()
     @pytest.mark.asyncio
     async def test_analyze_with_cache(self, short_article):
         """Test that caching works with real LLM"""
+        if not (
+            os.getenv("GOOGLE_API_KEY")
+            or os.getenv("OPENAI_API_KEY")
+            or os.getenv("ANTHROPIC_API_KEY")
+        ):
+            pytest.skip("No LLM API key available for testing")
         agent = AnalysisAgent()
         
         # First analysis (will make API calls)

@@ -67,17 +67,36 @@ class AggregatorAgent(BaseAgent):
         }
         insights = await self._generate_insights_summary(aggregated_data)
 
+        # Additional performance-related metrics expected by tests
+        sharing_values = [float(getattr(e, "sharing_probability", 0.0)) for e in evaluations]
+        engagement_levels = [str(getattr(e, "engagement_level", "unknown")) for e in evaluations]
+        engagement_dist = Counter(engagement_levels)
+
         result = {
             "scores": scores,
             "suggestions": suggestions,
             "sentiment": sentiment,
             "segments": segments,
             "insights": insights,
+            "sharing_likelihood": {
+                "average": round(float(np.mean(sharing_values)), 2) if sharing_values else 0.0,
+                "min": round(float(np.min(sharing_values)), 2) if sharing_values else 0.0,
+                "max": round(float(np.max(sharing_values)), 2) if sharing_values else 0.0,
+            },
+            "engagement": {
+                "distribution": {
+                    "high": int(engagement_dist.get("high", 0)),
+                    "medium": int(engagement_dist.get("medium", 0)),
+                    "low": int(engagement_dist.get("low", 0)),
+                }
+            },
         }
 
         # Always include metadata if we have outlier detection results
         if metadata:
             result["metadata"] = metadata
+            # Also include alias for compatibility with some tests
+            result["outliers"] = metadata
 
         return result
 
@@ -110,6 +129,7 @@ class AggregatorAgent(BaseAgent):
                 "std": float(np.std(scores_array)),
                 "min": float(np.min(scores_array)),
                 "max": float(np.max(scores_array)),
+                "range": float(np.max(scores_array) - np.min(scores_array)),
                 "percentile_25": float(np.percentile(scores_array, 25)),
                 "percentile_75": float(np.percentile(scores_array, 75)),
             }

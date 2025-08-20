@@ -128,10 +128,13 @@ class PopulationArchitect:
 
         try:
             response = await self.llm.ainvoke(segment_prompt)
-            segments = parse_llm_json_response(str(response.content))
+            parsed = parse_llm_json_response(str(response.content))
 
-            if isinstance(segments, dict):
-                segments = segments.get("segments", [])
+            # Accept either a top-level list or an object with "segments"
+            if isinstance(parsed, list):
+                segments = parsed
+            else:
+                segments = parsed.get("segments", []) if isinstance(parsed, dict) else []
 
             # Normalize percentages
             total_percentage = sum(s.get("percentage", 0) for s in segments)
@@ -186,10 +189,12 @@ class PopulationArchitect:
 
         try:
             response = await self.llm.ainvoke(sub_segment_prompt)
-            sub_segs = parse_llm_json_response(str(response.content))
+            parsed = parse_llm_json_response(str(response.content))
 
-            if isinstance(sub_segs, dict):
-                sub_segs = sub_segs.get("sub_segments", [])
+            if isinstance(parsed, list):
+                sub_segs = parsed
+            else:
+                sub_segs = parsed.get("sub_segments", []) if isinstance(parsed, dict) else []
 
             return cast(list[dict[str, Any]], sub_segs)
 

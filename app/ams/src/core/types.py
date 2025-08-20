@@ -61,6 +61,9 @@ class PersonaAttributes(BaseModel):
     decision_making_style: Optional[str] = Field(default=None, description="意思決定スタイル")
     content_sharing_likelihood: Optional[float] = Field(default=None, description="コンテンツ共有確率")
     influence_susceptibility: Optional[float] = Field(default=None, description="影響受容性")
+    # Network-related optional attributes used in tests
+    social_influence_score: Optional[float] = Field(default=None, description="社会的影響スコア")
+    network_size: Optional[str] = Field(default=None, description="ネットワーク規模")
 
 
 class EvaluationResult(BaseModel):

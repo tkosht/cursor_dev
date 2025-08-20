@@ -21,7 +21,7 @@
 ## Test Environment Readiness
 - [ ] Verify `.env` or `.env.test` exists without exposing content
 - [ ] Ensure one of `GOOGLE_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` is set (skip if not)
-- [ ] Set `TEST_MODE=true` for controlled behavior
+- [ ] TEST_MODE は廃止。実APIキーで実行（`.env` の `GOOGLE_API_KEY` 等）
 
 ## Install and Lint
 - [ ] `cd app/ams && poetry install`

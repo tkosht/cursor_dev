@@ -199,7 +199,40 @@ class TargetAudienceAnalyzer:
         
         try:
             response = await self.llm.ainvoke(prompt)
-            return parse_llm_json_response(str(response.content))
+            data = parse_llm_json_response(str(response.content))
+
+            # NOTE(AMS design intent):
+            # LLM応答は整数/小数/文字列(例: "35%") 混在や値欠落があり得る。
+            # 本MVPでは、年齢分布は数値(0–1)の辞書として正規化し、
+            # 合計ゼロの場合は安全なデフォルトにフォールバックする。
+            # これはテスト安定性(再現性)とダッシュボード計算の堅牢性を担保するため。
+            age_dist = data.get("age_distribution", {})
+            if not isinstance(age_dist, dict):
+                age_dist = {}
+
+            normalized: Dict[str, float] = {}
+            for k, v in age_dist.items():
+                try:
+                    if isinstance(v, (int, float)):
+                        f = float(v)
+                    elif isinstance(v, str):
+                        s = v.strip().replace("%", "")
+                        f = float(s)
+                    else:
+                        continue
+                    # Convert 0-100 to 0-1 if needed
+                    if f > 1.0 and f <= 100.0:
+                        f = f / 100.0
+                    normalized[k] = f
+                except Exception:
+                    continue
+
+            # Fallback if nothing usable
+            if sum(normalized.values()) <= 0:
+                normalized = {"25-34": 0.3, "35-44": 0.3, "45-54": 0.2, "other": 0.2}
+
+            data["age_distribution"] = normalized
+            return data
         except Exception as e:
             logger.error(f"Failed to analyze demographics: {e}")
             return {

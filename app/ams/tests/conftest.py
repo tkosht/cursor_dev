@@ -80,8 +80,7 @@ def test_config(monkeypatch):
     if test_env_path.exists():
         load_dotenv(test_env_path, override=True)
     
-    # Ensure we're in test mode
-    monkeypatch.setenv("TEST_MODE", "true")
+    # TEST_MODE は廃止。実APIキーで実行する前提。
     
     # Verify API key is set (fail fast if not)
     provider = os.getenv("TEST_LLM_PROVIDER", "gemini")
