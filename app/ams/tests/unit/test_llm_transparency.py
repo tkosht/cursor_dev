@@ -1,20 +1,22 @@
 """LLM透明性ユーティリティのユニットテスト - Real LLM API calls only"""
 
 import asyncio
-import pytest
 from dataclasses import dataclass
 
+import pytest
+
+from src.utils.llm_factory import create_llm
 from src.utils.llm_transparency import (
     LLMCallTracker,
     TransparentLLM,
     verify_llm_call,
 )
-from src.utils.llm_factory import create_llm
 
 
 @dataclass
 class SimpleLLMResponse:
     """Simple response object for testing"""
+
     content: str
 
 
@@ -44,7 +46,7 @@ class TestTransparentLLM:
 
         # Real LLMが応答を返したことを確認
         assert response is not None
-        assert hasattr(response, 'content')
+        assert hasattr(response, "content")
         assert len(response.content) > 0
 
         # 履歴が記録されていることを確認
@@ -55,11 +57,12 @@ class TestTransparentLLM:
     @pytest.mark.asyncio
     async def test_transparent_llm_error_handling(self):
         """エラーハンドリングのテスト with invalid LLM"""
+
         # Create a broken LLM that always fails
         class BrokenLLM:
             async def ainvoke(self, prompt):
                 raise Exception("Test error")
-        
+
         broken_llm = BrokenLLM()
         transparent_llm = TransparentLLM(broken_llm, enable_verification=False)
 

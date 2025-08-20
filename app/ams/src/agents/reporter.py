@@ -114,7 +114,7 @@ class ReporterAgent(BaseAgent):
             )
         if isinstance(overall_score_data, dict) and "mean" in overall_score_data:
             overall_score = overall_score_data["mean"]
-        elif isinstance(overall_score_data, (int, float)):
+        elif isinstance(overall_score_data, (int | float)):
             overall_score = float(overall_score_data)
         else:
             overall_score = 0.0
@@ -397,13 +397,13 @@ class ReporterAgent(BaseAgent):
         segments: dict[str, dict[str, Any]] = {}
         for persona in personas:
             # Handle both dict and PersonaAttributes objects
-            if hasattr(persona, 'occupation'):
+            if hasattr(persona, "occupation"):
                 occupation = persona.occupation
-                age = persona.age if hasattr(persona, 'age') else None
+                age = persona.age if hasattr(persona, "age") else None
             else:
                 occupation = persona.get("occupation", "Unknown")
                 age = persona.get("age")
-            
+
             if occupation not in segments:
                 segments[occupation] = {"count": 0, "average_age": 0, "interests": []}
             segments[occupation]["count"] += 1
@@ -437,7 +437,7 @@ class ReporterAgent(BaseAgent):
         # Derive overall score from various possible shapes
         overall_score_data = (
             scores.get("overall_score")
-            if isinstance(scores.get("overall_score"), (int, float, dict))
+            if isinstance(scores.get("overall_score"), (int | float | dict))
             else None
         )
         if overall_score_data is None:
@@ -445,7 +445,7 @@ class ReporterAgent(BaseAgent):
 
         if isinstance(overall_score_data, dict) and "mean" in overall_score_data:
             overall_score_value = overall_score_data["mean"]
-        elif isinstance(overall_score_data, (int, float)):
+        elif isinstance(overall_score_data, (int | float)):
             overall_score_value = overall_score_data
         else:
             overall_score_value = 0
@@ -485,7 +485,7 @@ class ReporterAgent(BaseAgent):
         evaluations = state.get("persona_evaluations", {})
         scores = []
         for e in evaluations.values():
-            if hasattr(e, 'overall_score'):
+            if hasattr(e, "overall_score"):
                 scores.append(e.overall_score)
             elif isinstance(e, dict):
                 scores.append(e.get("overall_score", 0))
@@ -620,7 +620,7 @@ class ReporterAgent(BaseAgent):
         # Simple diversity calculation based on unique occupations
         occupations = set()
         for p in personas:
-            if hasattr(p, 'occupation'):
+            if hasattr(p, "occupation"):
                 occupations.add(p.occupation)
             elif isinstance(p, dict) and p.get("occupation"):
                 occupations.add(p.get("occupation"))
@@ -633,7 +633,7 @@ class ReporterAgent(BaseAgent):
 
         scores = []
         for e in evaluations.values():
-            if hasattr(e, 'overall_score'):
+            if hasattr(e, "overall_score"):
                 scores.append(e.overall_score)
             elif isinstance(e, dict):
                 scores.append(e.get("overall_score", 0))
@@ -672,14 +672,16 @@ class ReporterAgent(BaseAgent):
             or 0
         )
         insights.append(
-            f"Overall article quality is approximately {float(overall):.1f} out of 100 based on persona evaluations."
+            "Overall article quality is approximately "
+            f"{float(overall):.1f} out of 100 based on persona evaluations."
         )
 
         metric_avgs = aggregated_scores.get("metric_averages", {})
         if metric_avgs:
             top_metric = max(metric_avgs, key=lambda k: metric_avgs[k])
             insights.append(
-                f"Strength observed in {top_metric}; this metric outperforms others in aggregated scoring."
+                f"Strength observed in {top_metric}; this metric outperforms "
+                "others in aggregated scoring."
             )
 
         sentiment = aggregated_scores.get("sentiment_distribution", {})
@@ -688,11 +690,15 @@ class ReporterAgent(BaseAgent):
             neu = sentiment.get("neutral", 0)
             neg = sentiment.get("negative", 0)
             insights.append(
-                f"Sentiment breakdown indicates positive:{pos}, neutral:{neu}, negative:{neg}, suggesting balanced reception."
+                f"Sentiment breakdown indicates positive:{pos}, neutral:{neu}, "
+                f"negative:{neg}, suggesting balanced reception."
             )
 
         return insights or [
-            "Aggregated data is limited; collect more evaluations to improve statistical confidence."
+            (
+                "Aggregated data is limited; collect more evaluations to improve "
+                "statistical confidence."
+            )
         ]
 
     def _prepare_analysis_structure(self, state: dict[str, Any]) -> dict[str, Any]:

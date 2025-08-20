@@ -5,12 +5,11 @@ Main orchestrator agent using LangGraph
 import logging
 from datetime import datetime
 from typing import Annotated, Any, Literal, TypedDict
-import operator
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
-from langgraph.types import Command, Send
+from langgraph.types import Send
 
 from ..config import get_config
 from ..core.types import EvaluationResult, PersonaAttributes
@@ -120,12 +119,10 @@ class OrchestratorAgent:
                 "complete": END,
             },
         )
-        
+
         # Add conditional edges for parallel persona evaluation
         workflow.add_conditional_edges(
-            "persona_generator",
-            self._send_personas_for_evaluation,
-            ["evaluate_single_persona"]
+            "persona_generator", self._send_personas_for_evaluation, ["evaluate_single_persona"]
         )
 
         # Return to orchestrator after each phase
@@ -141,8 +138,13 @@ class OrchestratorAgent:
     def _orchestrator_node(self, state: ArticleReviewState) -> dict:
         """Main orchestrator logic"""
         current_phase = state["current_phase"]
-        logger.info(f"Orchestrator running - current_phase: {current_phase}, has final_report: {bool(state.get('final_report'))}")
-        
+        has_final_report = bool(state.get("final_report"))
+        logger.info(
+            "Orchestrator running - current_phase: %s, has final_report: %s",
+            current_phase,
+            has_final_report,
+        )
+
         # Check for errors
         if state.get("errors"):
             logger.warning(f"Errors detected: {state['errors']}")
@@ -249,34 +251,34 @@ class OrchestratorAgent:
         # Check for errors first
         if state.get("errors"):
             return "error"
-        
+
         # Check completion conditions in order
         # This allows proper flow even if current_phase is not updated yet
-        
+
         # If we have final report, we're done
         if state.get("final_report") and state["final_report"]:
             return "complete"
-            
+
         # If we have aggregated scores, generate report
         if state.get("aggregated_scores") and state["aggregated_scores"]:
             return "report"
-            
+
         # If evaluation is complete, aggregate
         if state.get("evaluation_complete"):
             return "aggregate"
-            
+
         # If personas are generated, evaluate them
         if state.get("persona_generation_complete") and state.get("generated_personas"):
             return "evaluate"
-            
+
         # If we have analysis results, generate personas
         if state.get("analysis_results"):
             return "generate_personas"
-            
+
         # If we have article content, analyze it
         if state.get("article_content"):
             return "analyze"
-        
+
         # Default to complete if nothing else matches
         return "complete"
 
@@ -329,22 +331,27 @@ class OrchestratorAgent:
             )
 
         return sends
-    
+
     async def _persona_evaluator_node(self, state: ArticleReviewState) -> dict:
         """Mark evaluation as complete after all personas are evaluated"""
         # Check if all personas have been evaluated
         persona_count = len(state.get("generated_personas", []))
         evaluations_count = len(state.get("persona_evaluations", {}))
-        
+
         if evaluations_count >= persona_count and persona_count > 0:
             return {
                 "evaluation_complete": True,
-                "messages": [(("assistant", f"All {persona_count} personas evaluated"))],
+                "messages": [("assistant", f"All {persona_count} personas evaluated")],
             }
         else:
             # This shouldn't happen in normal flow
             return {
-                "messages": [(("system", f"Waiting for evaluation completion: {evaluations_count}/{persona_count}"))],
+                "messages": [
+                    (
+                        "system",
+                        f"Waiting for evaluation completion: {evaluations_count}/{persona_count}",
+                    )
+                ],
             }
 
     async def _aggregator_node(self, state: ArticleReviewState) -> dict:
@@ -423,5 +430,5 @@ class OrchestratorAgent:
         # Return update that will be merged with existing evaluations
         return {
             "persona_evaluations": {state["persona_id"]: result},
-            "messages": [(("system", f"Evaluated {state['persona_id']}"))]
+            "messages": [("system", f"Evaluated {state['persona_id']}")],
         }

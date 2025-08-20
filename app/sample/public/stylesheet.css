@@ -1,0 +1,11 @@
+/* 自作のカスタム要素だけを狙い撃ち（壊れにくくする） */
+#custom-counter {
+  padding: 8px;
+  border: 1px dashed hsl(var(--border));
+  border-radius: var(--radius);
+}
+
+/* SimpleForm のカード間余白など */
+#simple-form {
+  margin-top: 8px;
+}

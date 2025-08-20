@@ -68,7 +68,10 @@ class TestOrchestratorIntegration:
                         PersonalityType.NEUROTICISM: 0.3,
                     },
                     information_seeking_behavior="active_searcher",
-                    preferred_channels=[InformationChannel.TECH_BLOGS, InformationChannel.SOCIAL_MEDIA],
+                    preferred_channels=[
+                        InformationChannel.TECH_BLOGS,
+                        InformationChannel.SOCIAL_MEDIA,
+                    ],
                 ),
                 PersonaAttributes(
                     age=35,
@@ -85,7 +88,10 @@ class TestOrchestratorIntegration:
                         PersonalityType.NEUROTICISM: 0.2,
                     },
                     information_seeking_behavior="methodical_researcher",
-                    preferred_channels=[InformationChannel.TECH_BLOGS, InformationChannel.NEWS_WEBSITE],
+                    preferred_channels=[
+                        InformationChannel.TECH_BLOGS,
+                        InformationChannel.NEWS_WEBSITE,
+                    ],
                 ),
                 PersonaAttributes(
                     age=28,

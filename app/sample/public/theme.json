@@ -1,0 +1,19 @@
+{
+  "custom_fonts": [
+    "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+  ],
+  "variables": {
+    "light": {
+      "--font-sans": "'Inter', sans-serif",
+      "--radius": "0.875rem",
+      "--primary": "262 83% 52%",
+      "--ring": "262 83% 52%"
+    },
+    "dark": {
+      "--font-sans": "'Inter', sans-serif",
+      "--radius": "0.875rem",
+      "--primary": "262 83% 60%",
+      "--ring": "262 83% 60%"
+    }
+  }
+}

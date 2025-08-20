@@ -19,7 +19,6 @@ from core.types import (
     ActionResult,
     AgentID,
     PersonaAttributes,
-    SimulationState,
 )
 
 
@@ -88,8 +87,8 @@ class TestBaseAgent:
 
     def test_agent_with_custom_attributes(self):
         """Test agent with custom attributes"""
-        from core.types import PersonalityType, InformationChannel
-        
+        from core.types import InformationChannel, PersonalityType
+
         attrs = PersonaAttributes(
             age=30,
             occupation="Engineer",
@@ -293,7 +292,9 @@ class TestBaseSimulation:
         agent = MagicMock(spec=IAgent)
         agent.perceive = AsyncMock(return_value={"test": "perception"})
         agent.decide = AsyncMock(return_value=BaseAction("test", {}))
-        agent.act = AsyncMock(return_value={"success": True, "action_type": "test", "agent_id": "agent-1"})
+        agent.act = AsyncMock(
+            return_value={"success": True, "action_type": "test", "agent_id": "agent-1"}
+        )
         agent.update = AsyncMock()
 
         env.add_agent(agent)

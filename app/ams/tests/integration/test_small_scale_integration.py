@@ -131,9 +131,11 @@ class TestSmallScaleIntegration:
                 logger.info(f"Persona {i + 1}: {persona.occupation}, Age: {persona.age}")
                 logger.info(f"  Interests: {persona.interests[:2]}")
                 if persona.influence_susceptibility is not None:
-                    logger.info(f"  Influence susceptibility: {persona.influence_susceptibility:.2f}")
+                    logger.info(
+                        f"  Influence susceptibility: {persona.influence_susceptibility:.2f}"
+                    )
                 else:
-                    logger.info(f"  Influence susceptibility: Not calculated")
+                    logger.info("  Influence susceptibility: Not calculated")
 
             # Cost estimation
             elapsed_time = time.time() - start_time

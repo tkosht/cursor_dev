@@ -8,9 +8,9 @@ Requirements/Design traceability:
 """
 
 import asyncio
+import os
 import time
 
-import os
 import pytest
 
 from src.config import get_config

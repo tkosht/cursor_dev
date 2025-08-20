@@ -4,11 +4,12 @@ Pytest configuration for AMS tests
 
 import asyncio
 import gc
+import os
 
 # Add src to path
 import sys
 from pathlib import Path
-import os
+
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -72,16 +73,16 @@ def event_loop():
 def test_config(monkeypatch):
     """Test configuration with real API keys"""
     # Load test environment from .env.test
-    import os
     from pathlib import Path
+
     from dotenv import load_dotenv
-    
+
     test_env_path = Path(__file__).parent.parent / ".env.test"
     if test_env_path.exists():
         load_dotenv(test_env_path, override=True)
-    
+
     # TEST_MODE は廃止。実APIキーで実行する前提。
-    
+
     # Verify API key is set (fail fast if not)
     provider = os.getenv("TEST_LLM_PROVIDER", "gemini")
     if provider == "gemini" and not os.getenv("GOOGLE_API_KEY"):
@@ -101,6 +102,7 @@ def test_config(monkeypatch):
 def real_llm():
     """Real LLM for testing - NO MOCKS ALLOWED"""
     from llm_test_helper import get_llm_helper
+
     return get_llm_helper()
 
 
@@ -178,25 +180,24 @@ def test_websocket():
     # For websocket, we can use a test implementation since it's not an LLM
     # This is for internal communication, not external API mocking
     import asyncio
-    from unittest.mock import AsyncMock
-    
+
     class TestWebSocket:
         def __init__(self):
             self.messages = []
             self.closed = False
-            
+
         async def send(self, message):
             if self.closed:
                 raise ConnectionError("WebSocket is closed")
             self.messages.append(message)
-            
+
         async def recv(self):
             if self.closed:
                 raise ConnectionError("WebSocket is closed")
             await asyncio.sleep(0.01)  # Simulate network delay
             return '{"type": "test", "data": {}}'
-            
+
         async def close(self):
             self.closed = True
-    
+
     return TestWebSocket()
