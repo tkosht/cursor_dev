@@ -17,13 +17,18 @@ on:
       - 'pyproject.toml'
       - 'poetry.lock'
       - '.github/workflows/ci.yml'
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'memory-bank/**'
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
+        # PR では代表 3.11 のみ、push/main/develop では 3.10/3.11/3.12 を実行
+        python-version: ${{ fromJSON(github.event_name == 'pull_request' && '["3.11"]' || '["3.10","3.11","3.12"]') }}
     defaults:
       run:
         working-directory: app/ams
@@ -79,7 +84,8 @@ jobs:
             --cov-report=xml \
             --cov-report=term-missing \
             --cov-fail-under=85 \
-            -v
+            --maxfail=1 \
+            -q
       
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
