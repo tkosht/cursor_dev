@@ -267,7 +267,45 @@ class TargetAudienceAnalyzer:
 
         try:
             response = await self.llm.ainvoke(prompt)
-            return parse_llm_json_response(str(response.content))
+            data = parse_llm_json_response(str(response.content))
+
+            # NOTE(AMS design intent):
+            # LLM 応答ではフィールド名の揺れが発生し得るため、
+            # 仕様上のキーへ正規化する。テスト安定性と下流ロジックの
+            # 一貫性確保のため、ここで防御的にマッピングを行う。
+            # 期待キー: values, attitudes, lifestyle_preferences, motivations, personality_traits
+
+            # 1) motivations の同義キーを吸収
+            if "motivations" not in data:
+                for alt_key in ("motives", "motivational_factors", "drivers"):
+                    if alt_key in data:
+                        data["motivations"] = data.pop(alt_key)
+                        break
+
+            # 2) 型の安全化（最低限）
+            # values
+            if not isinstance(data.get("values"), list):
+                existing = data.get("values", [])
+                data["values"] = existing if isinstance(existing, list) else []
+
+            # attitudes
+            if not isinstance(data.get("attitudes"), dict):
+                data["attitudes"] = {}
+
+            # lifestyle_preferences
+            if not isinstance(data.get("lifestyle_preferences"), list):
+                data["lifestyle_preferences"] = []
+
+            # motivations
+            if not isinstance(data.get("motivations"), list):
+                # フィールドが欠落 or 型不一致でも、空配列で提供して下流の存在チェックを満たす
+                data["motivations"] = []
+
+            # personality_traits
+            if not isinstance(data.get("personality_traits"), list):
+                data["personality_traits"] = []
+
+            return data
         except Exception as e:
             logger.error(f"Failed to analyze psychographics: {e}")
             return {
