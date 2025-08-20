@@ -47,8 +47,12 @@ class TargetAudienceAnalyzer:
     Generates audience segments based on actual content, not fixed personas
     """
 
+    # Global cache across instances to avoid repeated LLM calls for identical content
+    GLOBAL_ANALYSIS_CACHE: dict[int, "AudienceAnalysis"] = {}
+
     def __init__(self):
         self.llm = create_llm()
+        # Keep per-instance cache for backward compatibility; prefer global cache first
         self.analysis_cache: dict[str, AudienceAnalysis] = {}
 
     async def analyze_audience(
@@ -64,11 +68,12 @@ class TargetAudienceAnalyzer:
         Returns:
             Complete audience analysis with segments
         """
-        # Check cache first
+        # Check cache first (global, then instance)
         cache_key = hash(article_content[:500])  # Use first 500 chars for cache key
-        if cache_key in self.analysis_cache:
+        cached = self.GLOBAL_ANALYSIS_CACHE.get(cache_key) or self.analysis_cache.get(cache_key)  # type: ignore[index]
+        if cached is not None:
             logger.debug("Using cached audience analysis")
-            return self.analysis_cache[cache_key]
+            return cached
 
         # Extract key topics and themes
         topics = await self._extract_topics(article_content)
@@ -76,12 +81,11 @@ class TargetAudienceAnalyzer:
         # Identify potential audience segments
         segments = await self._identify_segments(article_content, topics)
 
-        # Analyze demographics and psychographics
-        demographics = await self._analyze_demographics(article_content, segments)
-        psychographics = await self._analyze_psychographics(article_content, segments)
-
-        # Determine behavioral patterns
-        behaviors = await self._analyze_behaviors(article_content, segments)
+        # Analyze demographics, psychographics, behaviors concurrently for speed
+        # Dependencies: requires identified segments, but tasks are independent among themselves
+        demographics, psychographics, behaviors = await self._analyze_all_patterns(
+            article_content, segments
+        )
 
         # Calculate reach and engagement potential
         reach_potential = self._calculate_reach_potential(segments)
@@ -102,7 +106,8 @@ class TargetAudienceAnalyzer:
             behavioral_patterns=behaviors,
         )
 
-        # Cache the result
+        # Cache the result (global and instance)
+        self.GLOBAL_ANALYSIS_CACHE[cache_key] = analysis
         self.analysis_cache[cache_key] = analysis
 
         return analysis
@@ -384,6 +389,27 @@ class TargetAudienceAnalyzer:
                 "decision_making": "research-based",
                 "information_sources": ["online", "peers"],
             }
+
+    async def _analyze_all_patterns(self, article_content: str, segments: list[AudienceSegment]):
+        """Run demographics/psychographics/behaviors analyses concurrently.
+
+        Concurrency here reduces overall latency without changing semantics,
+        because these analyses are independent once segments are identified.
+        """
+        import asyncio
+
+        demographics_task = asyncio.create_task(
+            self._analyze_demographics(article_content, segments)
+        )
+        psychographics_task = asyncio.create_task(
+            self._analyze_psychographics(article_content, segments)
+        )
+        behaviors_task = asyncio.create_task(self._analyze_behaviors(article_content, segments))
+
+        demographics, psychographics, behaviors = await asyncio.gather(
+            demographics_task, psychographics_task, behaviors_task
+        )
+        return demographics, psychographics, behaviors
 
     def _calculate_reach_potential(self, segments: list[AudienceSegment]) -> float:
         """Calculate total reach potential"""
